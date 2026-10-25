@@ -284,44 +284,77 @@ export function FollowUpChip({ email, className }: { email: Email; className?: s
 
 function OwnFollowUpChip({ email, className }: { email: Email; className?: string }) {
   const t = useTranslations("follow_up");
-  const fmt = useFollowUpFormat();
   const { available, onlyMe, task } = useFollowUp(email);
   if (!available || !task) return null;
+  const open = task.progress !== "completed";
+  return (
+    <FollowUpChipView
+      task={task}
+      testId="follow-up-chip"
+      palette={STATE_CLASSES}
+      data={{ "data-only-me": onlyMe || undefined }}
+      lead={onlyMe ? t("only_me") : null}
+      reminderAt={open ? followUpReminder(task) : null}
+      settles={open && settlesOnReply(task)}
+      titleExtras={[onlyMe && t("kept_only_me_tasks")]}
+      className={className}
+    />
+  );
+}
+
+type DataAttributes = Record<`data-${string}`, string | boolean | undefined>;
+
+/**
+ * A follow-up's chip, as a row shows it: who or "only me" (`lead`), what,
+ * when due, the reminder, ↩ for one that settles itself on an answer.
+ */
+function FollowUpChipView({ task, testId, palette, data, lead, reminderAt, settles = false, titleExtras = [], className }: {
+  task: CalendarTask;
+  testId: string;
+  palette: Record<FollowUpState, string>;
+  data?: DataAttributes;
+  lead: string | null;
+  /** The reminder to show; null for none (done, or not the user's). */
+  reminderAt: Date | null;
+  settles?: boolean;
+  /** More for the tooltip, after what the chip says. */
+  titleExtras?: (string | false | null)[];
+  className?: string;
+}) {
+  const t = useTranslations("follow_up");
+  const fmt = useFollowUpFormat();
   const now = displayNow();
   const state = followUpState(task, now);
   const Icon = state === "done" ? Check : Flag;
-  const action = state === "done" ? null : fmt.action(task);
-  const reminderAt = state === "done" ? null : followUpReminder(task);
   const reminder = reminderAt ? fmt.reminder(reminderAt, now) : null;
-  const settles = state !== "done" && settlesOnReply(task);
-  const text = [onlyMe && t("only_me"), ...(state === "done" ? [t("done")] : [action, fmt.due(task, now)])]
+  const text = [lead, ...(state === "done" ? [t("done")] : [fmt.action(task), fmt.due(task, now)])]
     .filter(Boolean)
     .join(" · ");
   return (
     <span
-      data-testid="follow-up-chip"
+      data-testid={testId}
       data-follow-up={state}
-      data-only-me={onlyMe || undefined}
       data-settles-on-reply={settles || undefined}
+      {...data}
       title={[
         text,
         reminder && t("bar_reminder", { when: reminder }),
         settles && t("reply.settles_short"),
-        onlyMe && t("kept_only_me_tasks"),
+        ...titleExtras,
       ].filter(Boolean).join(" · ")}
-      className={cn("inline-flex max-w-[16rem] shrink-0 items-center gap-1 truncate rounded-full px-2 py-0.5 text-xs", STATE_CLASSES[state], className)}
+      className={cn("inline-flex max-w-[16rem] shrink-0 items-center gap-1 truncate rounded-full px-2 py-0.5 text-xs", palette[state], className)}
     >
       <Icon className="h-3 w-3 shrink-0" />
       <span className="truncate">{text}</span>
       {reminder && (
-        <span data-testid="follow-up-chip-reminder" className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
+        <span data-testid={`${testId}-reminder`} className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
           <span aria-hidden="true">·</span>
           <Bell className="h-3 w-3 shrink-0" aria-label={t("reminder_label")} />
           {reminder}
         </span>
       )}
       {settles && (
-        <span data-testid="follow-up-chip-settles" className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
+        <span data-testid={`${testId}-settles`} className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
           <span aria-hidden="true">·</span>
           <Reply className="h-3 w-3 shrink-0" role="img" aria-label={t("reply.settles_short")} />
         </span>
@@ -378,82 +411,114 @@ export function FollowUpInfoBar({ email }: { email: Email }) {
 
 function OwnFollowUpInfoBar({ email }: { email: Email }) {
   const t = useTranslations("follow_up");
-  const fmt = useFollowUpFormat();
   const controls = useFollowUp(email);
   const { task } = controls;
   if (!controls.available || !task) return null;
+  return (
+    <FollowUpBarView
+      task={task}
+      testId="follow-up-bar"
+      palette={STATE_CLASSES}
+      data={{ "data-only-me": controls.onlyMe || undefined }}
+      lead={controls.onlyMe ? <span data-testid="follow-up-bar-only-me" title={t("kept_only_me_tasks")}>{t("only_me")}</span> : null}
+      reminderAt={followUpReminder(task)}
+      settles={settlesOnReply(task)}
+      onDone={() => void controls.markDone()}
+      onChange={() => controls.openDialog("action")}
+      onRemove={() => void controls.remove()}
+    />
+  );
+}
 
+const SEP = <span aria-hidden="true"> · </span>;
+
+/**
+ * A follow-up's bar above the mail: who or "only me" (`lead`), what, due,
+ * the reminder, settling on an answer, the note; Complete, Change …, Remove.
+ */
+function FollowUpBarView({ task, testId, palette, data, lead, reminderAt, settles = false, busy = false, onDone, onChange, onRemove, children }: {
+  task: CalendarTask;
+  testId: string;
+  palette: Record<FollowUpState, string>;
+  data?: DataAttributes;
+  lead: React.ReactNode;
+  /** The reminder to show; null for none (or not the user's). */
+  reminderAt: Date | null;
+  settles?: boolean;
+  busy?: boolean;
+  onDone: () => void;
+  onChange: () => void;
+  onRemove: () => void;
+  /** After the buttons (a confirmation dialog). */
+  children?: React.ReactNode;
+}) {
+  const t = useTranslations("follow_up");
+  const fmt = useFollowUpFormat();
   const now = displayNow();
   const state = followUpState(task, now);
   const due = followUpDueDay(task);
-  const reminder = followUpReminder(task);
   const note = followUpNote(task);
   const Icon = state === "done" ? Check : Flag;
-  const sep = <span aria-hidden="true"> · </span>;
 
   return (
     <div
-      data-testid="follow-up-bar"
+      data-testid={testId}
       data-follow-up={state}
-      data-only-me={controls.onlyMe || undefined}
+      {...data}
       role="status"
-      className={cn("border-b border-border px-6 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", STATE_CLASSES[state])}
+      className={cn("border-b border-border px-6 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", palette[state])}
     >
       <Icon className="w-4 h-4 shrink-0" />
       <span className="flex-1 min-w-[12rem]">
-        {controls.onlyMe && (
-          <>
-            <span data-testid="follow-up-bar-only-me" title={t("kept_only_me_tasks")}>{t("only_me")}</span>
-            {sep}
-          </>
-        )}
+        {lead && <>{lead}{SEP}</>}
         {state === "done" ? t("bar_done") : (
           <>
-            <b data-testid="follow-up-bar-action">{fmt.action(task) ?? t("bar_action")}</b>
-            {sep}
+            <b data-testid={`${testId}-action`}>{fmt.action(task) ?? t("bar_action")}</b>
+            {SEP}
             {due ? (state === "overdue" ? fmt.due(task, now) : t("due_on", { day: fmt.day(due) })) : t("no_date")}
-            {reminder && (
+            {reminderAt && (
               <>
-                {sep}
-                <span data-testid="follow-up-bar-reminder" className="inline-flex items-center gap-1">
+                {SEP}
+                <span data-testid={`${testId}-reminder`} className="inline-flex items-center gap-1">
                   <Bell className="h-3.5 w-3.5" aria-label={t("reminder_label")} />
-                  {fmt.reminder(reminder, now)}
+                  {fmt.reminder(reminderAt, now)}
                 </span>
               </>
             )}
-            {settlesOnReply(task) && (
+            {settles && (
               <>
-                {sep}
-                <span data-testid="follow-up-bar-settles">{t("reply.settles_short")}</span>
+                {SEP}
+                <span data-testid={`${testId}-settles`}>{t("reply.settles_short")}</span>
               </>
             )}
             {note && (
               <>
-                {sep}
-                <span data-testid="follow-up-bar-note" className="break-words">{t("bar_note", { note })}</span>
+                {SEP}
+                <span data-testid={`${testId}-note`} className="break-words">{t("bar_note", { note })}</span>
               </>
             )}
           </>
         )}
       </span>
       {state !== "done" && (
-        <button type="button" className="underline underline-offset-2 hover:opacity-80" onClick={() => void controls.markDone()}>
+        <button type="button" disabled={busy} className="underline underline-offset-2 hover:opacity-80" onClick={onDone}>
           {t("done_button")}
         </button>
       )}
       {state !== "done" && (
         <button
           type="button"
-          data-testid="follow-up-bar-change"
+          data-testid={`${testId}-change`}
           className="underline underline-offset-2 hover:opacity-80"
-          onClick={() => controls.openDialog("action")}
+          onClick={onChange}
         >
           {t("change_button")}
         </button>
       )}
-      <button type="button" className="underline underline-offset-2 hover:opacity-80" onClick={() => void controls.remove()}>
+      <button type="button" disabled={busy} className="underline underline-offset-2 hover:opacity-80" onClick={onRemove}>
         {t("remove_button")}
       </button>
+      {children}
     </div>
   );
 }
@@ -509,43 +574,25 @@ function GroupFollowUpChips({ email, className }: { email: Email; className?: st
 
 function GroupFollowUpChipList({ tasks, listName, className }: { tasks: CalendarTask[]; listName: string | null; className?: string }) {
   const t = useTranslations("follow_up");
-  const fmt = useFollowUpFormat();
   const people = useGroupPeopleText();
   const mine = useMyAddresses();
-  const now = displayNow();
   return (
     <>
       {tasks.map((task) => {
-        const state = followUpState(task, now);
-        const Icon = state === "done" ? Check : Flag;
         const who = people(task);
-        const reminderAt = state !== "done" && isTaskForMe(task, mine) ? followUpReminder(task) : null;
-        const text = [who.short, ...(state === "done" ? [t("done")] : [fmt.action(task), fmt.due(task, now)])]
-          .filter(Boolean)
-          .join(" · ");
         return (
-          <span
+          <FollowUpChipView
             key={task.id}
-            data-testid="group-follow-up-chip"
-            data-follow-up={state}
-            data-for-me={who.forMe || undefined}
-            title={[
-              text,
-              who.by && `${who.forWhom} ${who.by}`,
-              listName && t("group.chip_title", { group: listName }),
-            ].filter(Boolean).join(" · ")}
-            className={cn("inline-flex max-w-[16rem] shrink-0 items-center gap-1 truncate rounded-full px-2 py-0.5 text-xs", GROUP_STATE_CLASSES[state], className)}
-          >
-            <Icon className="h-3 w-3 shrink-0" />
-            <span className="truncate">{text}</span>
-            {reminderAt && (
-              <span className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
-                <span aria-hidden="true">·</span>
-                <Bell className="h-3 w-3 shrink-0" aria-label={t("reminder_label")} />
-                {fmt.reminder(reminderAt, now)}
-              </span>
-            )}
-          </span>
+            task={task}
+            testId="group-follow-up-chip"
+            palette={GROUP_STATE_CLASSES}
+            data={{ "data-for-me": who.forMe || undefined }}
+            lead={who.short}
+            // The reminder is its owner's alone.
+            reminderAt={task.progress !== "completed" && isTaskForMe(task, mine) ? followUpReminder(task) : null}
+            titleExtras={[who.by && `${who.forWhom} ${who.by}`, listName && t("group.chip_title", { group: listName })]}
+            className={className}
+          />
         );
       })}
     </>
@@ -565,20 +612,12 @@ function GroupFollowUpInfoBars({ email }: { email: Email }) {
 
 function GroupFollowUpInfoBar({ email, task, listName }: { email: Email; task: CalendarTask; listName: string | null }) {
   const t = useTranslations("follow_up");
-  const fmt = useFollowUpFormat();
   const people = useGroupPeopleText();
   const mine = useMyAddresses();
   const client = useAuthStore((s) => s.client);
   const { dialogProps, confirm } = useConfirmDialog();
   const [busy, setBusy] = useState(false);
-  const now = displayNow();
-  const state = followUpState(task, now);
-  const due = followUpDueDay(task);
-  const reminder = isTaskForMe(task, mine) ? followUpReminder(task) : null;
-  const note = followUpNote(task);
   const who = people(task);
-  const Icon = state === "done" ? Check : Flag;
-  const sep = <span aria-hidden="true"> · </span>;
   const messages = { failed: t("failed"), flagFailed: t("flag_failed") };
 
   const markDone = async () => {
@@ -606,65 +645,30 @@ function GroupFollowUpInfoBar({ email, task, listName }: { email: Email; task: C
   };
 
   return (
-    <div
-      data-testid="group-follow-up-bar"
-      data-follow-up={state}
-      role="status"
-      className={cn("border-b border-border px-6 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", GROUP_STATE_CLASSES[state])}
+    <FollowUpBarView
+      task={task}
+      testId="group-follow-up-bar"
+      palette={GROUP_STATE_CLASSES}
+      lead={(
+        <>
+          <span data-testid="group-follow-up-bar-for">{who.by ? `${who.forWhom} (${who.by})` : who.forWhom}</span>
+          {listName && (
+            <>
+              {SEP}
+              <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{t("group.list_of", { group: listName })}</span>
+            </>
+          )}
+        </>
+      )}
+      // The reminder is its owner's alone.
+      reminderAt={isTaskForMe(task, mine) ? followUpReminder(task) : null}
+      busy={busy}
+      onDone={() => void markDone()}
+      onChange={() => useFollowUpDialog.getState().open(email, "action", { taskId: task.id })}
+      onRemove={() => void remove()}
     >
-      <Icon className="w-4 h-4 shrink-0" />
-      <span className="flex-1 min-w-[12rem]">
-        <span data-testid="group-follow-up-bar-for">{who.by ? `${who.forWhom} (${who.by})` : who.forWhom}</span>
-        {listName && (
-          <>
-            {sep}
-            <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{t("group.list_of", { group: listName })}</span>
-          </>
-        )}
-        {sep}
-        {state === "done" ? t("bar_done") : (
-          <>
-            <b>{fmt.action(task) ?? t("bar_action")}</b>
-            {sep}
-            {due ? (state === "overdue" ? fmt.due(task, now) : t("due_on", { day: fmt.day(due) })) : t("no_date")}
-            {reminder && (
-              <>
-                {sep}
-                <span className="inline-flex items-center gap-1">
-                  <Bell className="h-3.5 w-3.5" aria-label={t("reminder_label")} />
-                  {fmt.reminder(reminder, now)}
-                </span>
-              </>
-            )}
-            {note && (
-              <>
-                {sep}
-                <span className="break-words">{t("bar_note", { note })}</span>
-              </>
-            )}
-          </>
-        )}
-      </span>
-      {state !== "done" && (
-        <button type="button" disabled={busy} className="underline underline-offset-2 hover:opacity-80" onClick={() => void markDone()}>
-          {t("done_button")}
-        </button>
-      )}
-      {state !== "done" && (
-        <button
-          type="button"
-          data-testid="group-follow-up-bar-change"
-          className="underline underline-offset-2 hover:opacity-80"
-          onClick={() => useFollowUpDialog.getState().open(email, "action", { taskId: task.id })}
-        >
-          {t("change_button")}
-        </button>
-      )}
-      <button type="button" disabled={busy} className="underline underline-offset-2 hover:opacity-80" onClick={() => void remove()}>
-        {t("remove_button")}
-      </button>
       <ConfirmDialog {...dialogProps} />
-    </div>
+    </FollowUpBarView>
   );
 }
 
