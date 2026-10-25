@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
+import { perStoreEpoch } from "@/lib/store-epoch";
 import { dueTaskReminders } from "@/lib/task-reminders";
 import { followUpMailRef, type ReplyWatch } from "@/lib/follow-ups";
 import {
@@ -99,11 +100,11 @@ export class RoundCache {
  * and Email id: both stay as they are, so a later look is one query. Kept
  * for the session.
  */
-const flaggedMails = new Map<string, { threadId: string; receivedAt: string | null }>();
+const flaggedMails = perStoreEpoch(() => new Map<string, { threadId: string; receivedAt: string | null }>());
 
 /** Forgets what was read of the flagged mails (another login). */
 export function forgetFlaggedMails(): void {
-  flaggedMails.clear();
+  flaggedMails().clear();
 }
 
 /**
@@ -121,13 +122,13 @@ export async function lookForReply(
   // The own account named as none, as every other call for its mail.
   const accountId = ref.accountId && ref.accountId !== client.getAccountId() ? ref.accountId : undefined;
   try {
-    const key = `${accountId ?? ""}\u0000${ref.emailId}`;
-    let flagged = flaggedMails.get(key);
+    const key = `${accountId ?? client.getAccountId()}\u0000${ref.emailId}`;
+    let flagged = flaggedMails().get(key);
     if (!flagged) {
       const [fields] = await client.getEmailFields([ref.emailId], ["threadId", "receivedAt"], accountId);
       if (!fields || typeof fields.threadId !== "string") return { kind: "unknown" };
       flagged = { threadId: fields.threadId, receivedAt: typeof fields.receivedAt === "string" ? fields.receivedAt : null };
-      flaggedMails.set(key, flagged);
+      flaggedMails().set(key, flagged);
     }
     const [mails, folders, addresses] = await Promise.all([
       client.queryEmailFields({ inThread: flagged.threadId }, [...THREAD_MAIL_PROPERTIES], accountId, THREAD_LIMIT),
@@ -156,7 +157,7 @@ function fireTimeOf(task: CalendarTask, nowMs: number): number | null {
 
 let running = false;
 // Tasks whose completion failed, logged once each.
-const unwritten = new Set<string>();
+const unwritten = perStoreEpoch(() => new Set<string>());
 
 /**
  * One round: looks at the threads `replyChecksDue` names, completes the
@@ -195,15 +196,15 @@ export async function checkReplies(
       if (!current || !watch) continue;
       // The user is changing this follow-up right now: looked at again at the next tick.
       const ref = followUpMailRef(current);
-      if (ref && isFollowUpPending(ref.emailId)) continue;
+      if (ref && isFollowUpPending(ref.accountId ?? client.getAccountId(), ref.emailId)) continue;
       const result = await lookForReply(client, current, watch, cache);
       if (result.kind === "answered") {
         const answeredAt = result.mail.receivedAt ?? new Date(started).toISOString();
         const patch = answeredTaskPatch(current, watch, answeredAt, options.note(new Date(answeredAt)), new Date(now()));
         if (await completeTask(client, current, null, patch)) {
           debug.log("tasks", "follow-up: answer came, task completed", current.id);
-        } else if (!unwritten.has(current.id)) {
-          unwritten.add(current.id);
+        } else if (!unwritten().has(current.id)) {
+          unwritten().add(current.id);
           debug.warn("tasks", "follow-up: answer came, but the task could not be completed", current.id);
         }
       }

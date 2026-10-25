@@ -1,5 +1,6 @@
 import type { FollowUpDetails } from "@/hooks/use-follow-ups";
 import type { TaskPerson } from "@/lib/group-follow-ups";
+import { perStoreEpoch } from "@/lib/store-epoch";
 import { NO_ANSWER_CHOICES, scheduleNoAnswer, type NoAnswerChoice, type WorkingTime } from "@/lib/follow-ups";
 
 /**
@@ -153,24 +154,26 @@ export function readSendFollowUp(value: unknown): SendFollowUp | null {
  * session: reopening the draft (or a send undone, which puts the mail back
  * as a draft under the same id) gives the composer its choice back. The
  * server's draft carries nothing of it, so a draft reopened after a reload,
- * or in another client, starts without one.
+ * or in another client, starts without one. Forgotten when another account
+ * comes on screen.
  */
-const byDraft = new Map<string, SendFollowUp | null>();
+const byDraft = perStoreEpoch(() => new Map<string, SendFollowUp | null>());
 const MAX_KEPT = 200;
 
 export function rememberDraftFollowUp(draftId: string | null | undefined, followUp: SendFollowUp | null): void {
   if (!draftId) return;
-  byDraft.delete(draftId);
+  const drafts = byDraft();
+  drafts.delete(draftId);
   if (!followUp) return;
-  byDraft.set(draftId, followUp);
-  while (byDraft.size > MAX_KEPT) byDraft.delete(byDraft.keys().next().value as string);
+  drafts.set(draftId, followUp);
+  while (drafts.size > MAX_KEPT) drafts.delete(drafts.keys().next().value as string);
 }
 
 export function draftFollowUp(draftId: string | null | undefined): SendFollowUp | null {
-  return (draftId && byDraft.get(draftId)) || null;
+  return (draftId && byDraft().get(draftId)) || null;
 }
 
 /** Forget every draft's choice (tests). */
 export function resetDraftFollowUps(): void {
-  byDraft.clear();
+  byDraft().clear();
 }

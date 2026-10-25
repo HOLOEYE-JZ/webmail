@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { useFollowUp, useFollowUpTasks } from '../use-follow-ups';
+import {
+  followUpOnMail,
+  isFollowUpPending,
+  markUnstarredHere,
+  unstarredHereMails,
+  useFollowUp,
+  useFollowUpTasks,
+} from '../use-follow-ups';
+import { bumpStoreEpoch } from '@/lib/store-epoch';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -257,5 +265,34 @@ describe('useFollowUpTasks', () => {
     await vi.waitFor(() => expect(client.getCalendarTasks).toHaveBeenCalled());
     expect(client.getCalendarTasks).toHaveBeenCalledWith(['tasks', 'events']);
     expect(useTaskStore.getState().scope).toEqual(['tasks', 'events']);
+  });
+});
+
+describe('the session state of follow-ups', () => {
+  const details = { action: 'Call', due: null, reminderAt: null, note: '' };
+  const text = { title: (action: string, subject: string) => `${action}: ${subject}`, noSubject: '-', noTaskList: null };
+
+  it('keeps a group mailbox\'s mail and the own mail of the same id apart', async () => {
+    let finish: (() => void) | null = null;
+    client.createCalendarTask.mockImplementationOnce((task: Partial<CalendarTask>) => new Promise((resolve) => {
+      finish = () => resolve({ ...task, id: 'task-g', uid: 'u', updated: '' } as CalendarTask);
+    }));
+    const writing = followUpOnMail(client as unknown as IJMAPClient, { id: 'M1', subject: 'Offer', keywords: {} }, 'grp', details, text, null);
+    await vi.waitFor(() => expect(finish).not.toBeNull());
+    expect(isFollowUpPending('grp', 'M1')).toBe(true);
+    expect(isFollowUpPending('acc', 'M1')).toBe(false);
+    finish!();
+    await writing;
+    expect(isFollowUpPending('grp', 'M1')).toBe(false);
+
+    markUnstarredHere('acc', 'M1');
+    expect(unstarredHereMails('acc')).toEqual(new Set(['M1']));
+    expect(unstarredHereMails('grp').size).toBe(0);
+  });
+
+  it('forgets the mails the star was taken off once another account is on screen', () => {
+    markUnstarredHere('acc', 'M1');
+    bumpStoreEpoch();
+    expect(unstarredHereMails('acc').size).toBe(0);
   });
 });

@@ -15,6 +15,7 @@ import { isFilterEmpty } from "@/lib/jmap/search-utils";
 import { isAllFoldersSearchScope } from "@/lib/search-scope-folders";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { debug } from "@/lib/debug";
+import { perStoreEpoch } from "@/lib/store-epoch";
 import { completedTaskPatch, type TaskPatch } from "@/lib/task-reminders";
 import {
   DEFAULT_WORKING_TIME,
@@ -183,30 +184,44 @@ export function useThreadFollowUpEmail(emails: readonly Email[], latest: Email):
   return threadFollowUpEmail(emails, index) ?? threadFollowUpEmail(emails, groupIndex) ?? latest;
 }
 
+/**
+ * A mail in the session's state: Email ids are unique only within their JMAP
+ * account, so a group mailbox's mail and one of the user's own may share one.
+ */
+function mailKey(accountId: string, emailId: string): string {
+  return `${accountId}\u0000${emailId}`;
+}
+
 // Mails whose follow-up is being written, so a double click writes one task
 // and the check that keeps flag and task in step leaves them alone meanwhile.
-const pending = new Set<string>();
+const pending = perStoreEpoch(() => new Set<string>());
 
-/** Whether the user is changing this mail's follow-up right now. */
-export function isFollowUpPending(emailId: string): boolean {
-  return pending.has(emailId);
+/** Whether the user is changing the follow-up of this mail of `accountId` right now. */
+export function isFollowUpPending(accountId: string, emailId: string): boolean {
+  return pending().has(mailKey(accountId, emailId));
 }
 
-// Mails the user took the star off in the app this session: their open
-// follow-up is completed, never deleted, also when the task list did not
-// hold it yet. Setting the star or a new follow-up here lifts it.
-const unstarredHere = new Set<string>();
+// Mails the user took the star off in the app this session, by account:
+// their open follow-up is completed, also when the task list did not hold it
+// yet. Setting the star or a new follow-up here lifts it. Forgotten when
+// another account comes on screen.
+const unstarredHere = perStoreEpoch(() => new Map<string, Set<string>>());
 
-export function markUnstarredHere(emailId: string): void {
-  unstarredHere.add(emailId);
+export function markUnstarredHere(accountId: string, emailId: string): void {
+  const mails = unstarredHere().get(accountId) ?? new Set<string>();
+  mails.add(emailId);
+  unstarredHere().set(accountId, mails);
 }
 
-export function forgetUnstarredHere(emailId: string): void {
-  unstarredHere.delete(emailId);
+export function forgetUnstarredHere(accountId: string, emailId: string): void {
+  unstarredHere().get(accountId)?.delete(emailId);
 }
 
-export function unstarredHereMails(): ReadonlySet<string> {
-  return unstarredHere;
+const NO_MAILS: ReadonlySet<string> = new Set();
+
+/** The ids of the mails of `accountId` the star was taken off in the app. */
+export function unstarredHereMails(accountId: string): ReadonlySet<string> {
+  return unstarredHere().get(accountId) ?? NO_MAILS;
 }
 
 // Called once the user's own change is written, so the check runs after it.
@@ -270,14 +285,16 @@ export async function mirrorFlag(
  * says so: the follow-up stands, only the mail's flag does not.
  */
 async function changeFollowUp(
-  emailId: string,
+  mail: { accountId: string; emailId: string },
   writeTask: () => Promise<boolean>,
   mirror: () => Promise<unknown>,
   /** Null: no toast (a change the user did not make here), only the log. */
   messages: { failed: string; flagFailed: string } | null,
 ): Promise<boolean> {
-  if (pending.has(emailId)) return false;
-  pending.add(emailId);
+  const key = mailKey(mail.accountId, mail.emailId);
+  const writing = pending();
+  if (writing.has(key)) return false;
+  writing.add(key);
   try {
     let written: boolean;
     try {
@@ -296,7 +313,7 @@ async function changeFollowUp(
     }
     return true;
   } finally {
-    pending.delete(emailId);
+    writing.delete(key);
     afterChange?.();
   }
 }
@@ -363,11 +380,11 @@ export async function followUpOnMail(
   text: FollowUpText,
   messages: { failed: string; flagFailed: string } | null,
 ): Promise<CalendarTask | null> {
-  forgetUnstarredHere(email.id);
+  forgetUnstarredHere(mailAccountId, email.id);
   const own = mailAccountId === client.getAccountId();
   let created: CalendarTask | null = null;
   await changeFollowUp(
-    email.id,
+    { accountId: mailAccountId, emailId: email.id },
     async () => {
       created = await createOwnFollowUp(client, email, mailAccountId, details, text);
       return !!created;
@@ -389,7 +406,7 @@ export async function deleteOwnFollowUp(
   mailAccountId: string,
 ): Promise<boolean> {
   return changeFollowUp(
-    emailId,
+    { accountId: mailAccountId, emailId },
     () => useTaskStore.getState().deleteTask(client, taskId),
     async () => (mailAccountId === client.getAccountId()
       ? mirrorFlag(client, { id: emailId, keywords: {} }, false, mailAccountId, true)
@@ -428,7 +445,7 @@ export async function completeTask(
       return false;
     }
   }
-  return changeFollowUp(ref.emailId, complete, async () => {
+  return changeFollowUp({ accountId: client.getAccountId(), emailId: ref.emailId }, complete, async () => {
     // The row in the list, when it is there, so it follows at once; else the flag as the server has it.
     const listed = useEmailStore.getState().emails.find((e) => e.id === ref.emailId && isOwnMail(e, client));
     if (listed) return mirrorFlag(client, listed, false, client.getAccountId());
@@ -566,11 +583,11 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     writeTask: (client: IJMAPClient, email: Email) => Promise<boolean>,
     flagged: boolean,
   ): Promise<boolean> => {
-    if (!client || !email) return false;
+    if (!client || !email || !mailAccountId) return false;
     return changeFollowUp(
-      email.id,
+      { accountId: mailAccountId, emailId: email.id },
       () => writeTask(client, email),
-      async () => (onlyMe || !mailAccountId ? true : mirrorFlag(client, email, flagged, mailAccountId)),
+      async () => (onlyMe ? true : mirrorFlag(client, email, flagged, mailAccountId)),
       { failed: t("failed"), flagFailed: t("flag_failed") },
     );
   }, [client, email, t, onlyMe, mailAccountId]);
@@ -586,17 +603,17 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
 
   const apply = useCallback(async (choice: FollowUpChoice) => {
     await run(async (client, email) => {
-      forgetUnstarredHere(email.id);
+      if (mailAccountId) forgetUnstarredHere(mailAccountId, email.id);
       const { due, reminder } = scheduleFollowUp(choice, displayNow(), workingTime);
       const reminderAt = reminder ? fromDisplayDate(reminder) : null;
       // Its alarm mail, when it has one, moves with the reminder.
       if (task) return useTaskStore.getState().updateTask(client, task.id, rescheduleFollowUpTask(task, due, reminderAt));
       return create(client, email, { action: t("actions.follow_up"), due, reminderAt, note: "" });
     }, true);
-  }, [run, task, t, workingTime, create]);
+  }, [run, task, t, workingTime, create, mailAccountId]);
 
   const save = useCallback((details: FollowUpDetails) => run(async (client, email) => {
-    forgetUnstarredHere(email.id);
+    if (mailAccountId) forgetUnstarredHere(mailAccountId, email.id);
     const action = details.action.replace(/\s+/g, " ").trim() || t("actions.follow_up");
     if (!task) return create(client, email, { ...details, action });
     // The title changes only with the action, so one set elsewhere stays.

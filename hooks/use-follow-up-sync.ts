@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { onStarToggled, useEmailStore } from "@/stores/email-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
+import { perStoreEpoch } from "@/lib/store-epoch";
 import { completedTaskPatch } from "@/lib/task-reminders";
 import {
   addFollowUpSender,
@@ -69,14 +70,13 @@ function writeMirror(key: string, mirror: FollowUpMirror): void {
 
 // Task objects as a fetch gave them; a task changed here since is a new object.
 const fetched = new WeakSet<CalendarTask>();
-// Flag writes a plugin refused, not asked for again in this session.
-const refused = new Set<string>();
-// Mails gone by id that were looked for by Message-ID in this session.
-const searched = new Set<string>();
+// Flag writes a plugin refused, not asked for again while the same accounts
+// are on screen (task and mail ids mean nothing in another login's).
+const refused = perStoreEpoch(() => new Set<string>());
+// The tasks whose mail, gone by id, was looked for by its Message-ID.
+const searched = perStoreEpoch(() => new Set<string>());
 // While the check reloads the task list itself; that load starts no new check.
 let ownFetches = 0;
-
-const isBusy = (emailId: string) => isFollowUpPending(emailId);
 
 function refusalKey(action: FollowUpSyncAction, task: FollowUpSyncTask | undefined): string {
   const what = action.kind === "flag" ? `flag:${action.flagged}` : action.kind;
@@ -181,6 +181,7 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
   const taskState = useTaskStore.getState();
   if (taskState.loadedBy !== client) return;
   const mailAccountId = client.getAccountId();
+  const isBusy = (emailId: string) => isFollowUpPending(mailAccountId, emailId);
   const key = mirrorKey(loginId, mailAccountId);
   const mirror = readMirror(key);
   // A group mailbox's mail never carries the flag: its follow-ups are left out.
@@ -227,9 +228,9 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
     listed: (calendarId) => !scope || scope.includes(calendarId),
     flags,
     mirror,
-    unstarredHere: unstarredHereMails(),
+    unstarredHere: unstarredHereMails(mailAccountId),
   });
-  const actions = plan.actions.filter((a) => !refused.has(refusalKey(a, tasks.find((t) => t.id === a.taskId))));
+  const actions = plan.actions.filter((a) => !refused().has(refusalKey(a, tasks.find((t) => t.id === a.taskId))));
 
   // A task is completed for a flag cleared elsewhere, or a flag cleared for
   // a task gone, only on a complete task list loaded just now: another tab
@@ -267,7 +268,7 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
       const serverFlagged = flags.get(action.emailId) ?? undefined;
       const written = await mirrorFlag(client, { id: action.emailId, keywords: {} }, action.flagged, mailAccountId, serverFlagged);
       if (!written) {
-        refused.add(refusal);
+        refused().add(refusal);
         keep(action.taskId);
       } else if (action.flagged && task?.fresh) {
         next[task.id] = { emailId: task.emailId, calendarId: task.calendarId, updated: task.updated };
@@ -285,8 +286,8 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
     if (!watched.has(emailId) || isBusy(emailId)) continue;
     const flag = flags.get(emailId);
     if (flag === null) {
-      if (searched.has(task.id)) continue;
-      searched.add(task.id);
+      if (searched().has(task.id)) continue;
+      searched().add(task.id);
       const again = await findByMessageId(client, followUpMessageId(task));
       if (again) await relink(client, task, again);
       continue;
@@ -314,7 +315,7 @@ async function completeForClearedFlag(client: IJMAPClient, taskId: string, email
     const task = useTaskStore.getState().tasks.find((t) => t.id === taskId);
     const patch = task ? completedTaskPatch(task, new Date()) : { progress: "completed" as const };
     if (await useTaskStore.getState().updateTask(client, taskId, patch)) {
-      forgetUnstarredHere(emailId);
+      forgetUnstarredHere(client.getAccountId(), emailId);
       return true;
     }
   } catch (error) {
@@ -323,7 +324,7 @@ async function completeForClearedFlag(client: IJMAPClient, taskId: string, email
   }
   try {
     if (await mirrorFlag(client, { id: emailId, keywords: {} }, true, client.getAccountId(), false)) {
-      forgetUnstarredHere(emailId);
+      forgetUnstarredHere(client.getAccountId(), emailId);
       return true;
     }
   } catch (error) {
@@ -375,13 +376,14 @@ export function useFollowUpSync(): void {
     // own click does, also one the check never saw in step.
     const stopStars = onStarToggled(({ email, starred }) => {
       if (!isOwnMail(email, client)) return;
+      const accountId = client.getAccountId();
       if (starred) {
-        forgetUnstarredHere(email.id);
+        forgetUnstarredHere(accountId, email.id);
         return;
       }
       // The follow-up's own actions clear the flag themselves.
-      if (isFollowUpPending(email.id)) return;
-      markUnstarredHere(email.id);
+      if (isFollowUpPending(accountId, email.id)) return;
+      markUnstarredHere(accountId, email.id);
       schedule(TASKS_DELAY_MS);
     });
     schedule(TASKS_DELAY_MS);

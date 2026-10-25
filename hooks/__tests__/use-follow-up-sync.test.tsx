@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { locateFollowUpMail, useFollowUpSync } from '../use-follow-up-sync';
-import { forgetUnstarredHere, useFollowUp } from '../use-follow-ups';
+import { useFollowUp } from '../use-follow-ups';
+import { bumpStoreEpoch } from '@/lib/store-epoch';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -99,7 +100,8 @@ async function push() {
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   localStorage.clear();
-  forgetUnstarredHere('M1');
+  // Another session: what the last test's left behind is forgotten.
+  bumpStoreEpoch();
   clearAllHooks();
   ({ server, client } = makeServer());
   useAuthStore.setState({ isAuthenticated: true, client: asClient(), activeAccountId: 'login' });
@@ -299,6 +301,17 @@ describe('useFollowUpSync', () => {
     await load();
     expect(server.tasks).toHaveLength(1);
     expect(client.deleteCalendarTask).not.toHaveBeenCalled();
+  });
+
+  it('looks for a mail gone by id once per session, again for another account on screen', async () => {
+    await inStep();
+    server.mails.delete('M1');
+    await push();
+    await push();
+    expect(client.queryEmailFields).toHaveBeenCalledTimes(1);
+    bumpStoreEpoch();
+    await push();
+    expect(client.queryEmailFields).toHaveBeenCalledTimes(2);
   });
 
   it('adds the sender to a follow-up written before it was kept', async () => {
