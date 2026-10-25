@@ -1034,11 +1034,49 @@
       "notifications": "Notifications",
       "reading": "Lecture",
       "composing": "Rédaction",
+      "follow_ups": "Suivi",
       "message_list": "Liste des messages",
       "general": "Général",
       "organize": "Dossiers et étiquettes",
       "addons": "Extensions",
       "backup": "Sauvegarde et réinitialisation"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Actions",
+        "description": "Ce avec quoi vous marquez un e-mail. L'ordre ici est celui du menu ; les actions désactivées n'y figurent pas.",
+        "own": "Personnelle",
+        "company_title": "Défini par votre administrateur",
+        "default_mark": "Par défaut",
+        "in_menu": "« {action} » dans le menu",
+        "move": "Déplacer « {action} » (touches fléchées)",
+        "rename": "Renommer « {action} »",
+        "delete": "Supprimer « {action} »",
+        "rename_field": "Nouveau nom pour « {action} »",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "show_off": "Afficher les actions désactivées ({count})",
+        "new_field": "Nouvelle action",
+        "new_placeholder": "Nouvelle action, p. ex. « Envoyer des échantillons »",
+        "add": "Ajouter"
+      },
+      "problems": {
+        "exists": "Cette action existe déjà.",
+        "too_long": "{max} caractères au maximum.",
+        "full": "{max} actions personnelles au maximum."
+      },
+      "defaults": {
+        "title": "Valeurs par défaut",
+        "description": "Ce qui est déjà choisi pour un nouveau suivi ou rappel.",
+        "action": {
+          "label": "Action présélectionnée",
+          "description": "L'action avec laquelle la boîte de dialogue s'ouvre."
+        },
+        "mail": {
+          "label": "Rappeler aussi par e-mail",
+          "description": "Si un nouveau rappel arrive aussi par e-mail dans votre boîte de réception."
+        }
+      }
     },
     "themes": {
       "title": "Thèmes",
@@ -4610,6 +4648,11 @@
     "action_label": "Indicateur",
     "action_other": "Autre…",
     "action_text": "À faire",
+    "menu_own": "Les miennes",
+    "menu_builtin": "Standard",
+    "menu_organization": "Organisation",
+    "menu_edit": "Modifier la liste…",
+    "add_to_mine": "Ajouter à mes actions",
     "due_label": "Échéance",
     "due_date": "Date d’échéance",
     "reminder_label": "Rappel",

@@ -1034,11 +1034,49 @@
       "notifications": "Meldingen",
       "reading": "Lezen",
       "composing": "Opstellen",
+      "follow_ups": "Opvolgen",
       "message_list": "Berichtenlijst",
       "general": "Algemeen",
       "organize": "Mappen en tags",
       "addons": "Add-ons",
       "backup": "Back-up en herstel"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Acties",
+        "description": "Waarmee u een e-mail markeert. De volgorde hier is die van het menu; uitgeschakelde acties staan niet in het menu.",
+        "own": "Eigen",
+        "company_title": "Ingesteld door uw beheerder",
+        "default_mark": "Standaard",
+        "in_menu": "‘{action}’ in het menu",
+        "move": "‘{action}’ verplaatsen (pijltoetsen)",
+        "rename": "‘{action}’ hernoemen",
+        "delete": "‘{action}’ verwijderen",
+        "rename_field": "Nieuwe naam voor ‘{action}’",
+        "save": "Opslaan",
+        "cancel": "Annuleren",
+        "show_off": "Uitgeschakelde tonen ({count})",
+        "new_field": "Nieuwe actie",
+        "new_placeholder": "Nieuwe actie, bijv. ‘Monsters sturen’",
+        "add": "Toevoegen"
+      },
+      "problems": {
+        "exists": "Deze actie bestaat al.",
+        "too_long": "Maximaal {max} tekens.",
+        "full": "Maximaal {max} eigen acties."
+      },
+      "defaults": {
+        "title": "Standaardwaarden",
+        "description": "Wat bij een nieuwe opvolging of herinnering al gekozen is.",
+        "action": {
+          "label": "Vooraf gekozen actie",
+          "description": "De actie waarmee het venster opent."
+        },
+        "mail": {
+          "label": "Ook per e-mail herinneren",
+          "description": "Of een nieuwe herinnering ook als e-mail in uw inbox komt."
+        }
+      }
     },
     "themes": {
       "title": "Thema's",
@@ -4610,6 +4648,11 @@
     "action_label": "Markeren voor",
     "action_other": "Andere…",
     "action_text": "Wat te doen",
+    "menu_own": "Mijn",
+    "menu_builtin": "Standaard",
+    "menu_organization": "Organisatie",
+    "menu_edit": "Lijst bewerken…",
+    "add_to_mine": "Aan mijn acties toevoegen",
     "due_label": "Vervalt",
     "due_date": "Vervaldatum",
     "reminder_label": "Herinnering",

@@ -1037,11 +1037,49 @@
       "notifications": "Notificacions",
       "reading": "Lectura",
       "composing": "Redacció",
+      "follow_ups": "Seguiment",
       "message_list": "Llista de missatges",
       "general": "General",
       "organize": "Carpetes i etiquetes",
       "addons": "Complements",
       "backup": "Còpia de seguretat i restabliment"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Accions",
+        "description": "Amb què marqueu un correu. L'ordre d'aquí és el del menú; les accions desactivades no hi surten.",
+        "own": "Pròpia",
+        "company_title": "Definida pel vostre administrador",
+        "default_mark": "Predeterminada",
+        "in_menu": "«{action}» al menú",
+        "move": "Mou «{action}» (tecles de fletxa)",
+        "rename": "Canvia el nom de «{action}»",
+        "delete": "Suprimeix «{action}»",
+        "rename_field": "Nom nou per a «{action}»",
+        "save": "Desa",
+        "cancel": "Cancel·la",
+        "show_off": "Mostra les desactivades ({count})",
+        "new_field": "Acció nova",
+        "new_placeholder": "Acció nova, p. ex. «Envia mostres»",
+        "add": "Afegeix"
+      },
+      "problems": {
+        "exists": "Aquesta acció ja existeix.",
+        "too_long": "Com a màxim {max} caràcters.",
+        "full": "Com a màxim {max} accions pròpies."
+      },
+      "defaults": {
+        "title": "Valors predeterminats",
+        "description": "El que ja ve triat en un seguiment o recordatori nou.",
+        "action": {
+          "label": "Acció preseleccionada",
+          "description": "L'acció amb què s'obre el diàleg."
+        },
+        "mail": {
+          "label": "Recorda també per correu",
+          "description": "Si un recordatori nou arriba també com a correu a la safata d'entrada."
+        }
+      }
     },
     "themes": {
       "title": "Temes",
@@ -4610,6 +4648,11 @@
     "action_label": "Marca per",
     "action_other": "Una altra…",
     "action_text": "Què cal fer",
+    "menu_own": "Meves",
+    "menu_builtin": "Estàndard",
+    "menu_organization": "Organització",
+    "menu_edit": "Edita la llista…",
+    "add_to_mine": "Afegeix a les meves accions",
     "due_label": "Venciment",
     "due_date": "Data de venciment",
     "reminder_label": "Recordatori",

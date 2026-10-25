@@ -1034,11 +1034,49 @@
       "notifications": "Paziņojumi",
       "reading": "Lasīšana",
       "composing": "Rakstīšana",
+      "follow_ups": "Turpmākā darbība",
       "message_list": "Ziņu saraksts",
       "general": "Vispārīgi",
       "organize": "Mapes un tagi",
       "addons": "Papildinājumi",
       "backup": "Dublēšana un atiestatīšana"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Darbības",
+        "description": "Ar ko jūs atzīmējat e-pastu. Secība šeit ir izvēlnes secība; izslēgtās darbības izvēlnē nav.",
+        "own": "Sava",
+        "company_title": "Iestatījis administrators",
+        "default_mark": "Noklusējums",
+        "in_menu": "“{action}” izvēlnē",
+        "move": "Pārvietot “{action}” (bulttaustiņi)",
+        "rename": "Pārdēvēt “{action}”",
+        "delete": "Dzēst “{action}”",
+        "rename_field": "Jauns nosaukums darbībai “{action}”",
+        "save": "Saglabāt",
+        "cancel": "Atcelt",
+        "show_off": "Rādīt izslēgtās ({count})",
+        "new_field": "Jauna darbība",
+        "new_placeholder": "Jauna darbība, piem., “Nosūtīt paraugus”",
+        "add": "Pievienot"
+      },
+      "problems": {
+        "exists": "Šāda darbība jau ir.",
+        "too_long": "Ne vairāk kā {max} rakstzīmes.",
+        "full": "Ne vairāk kā {max} savas darbības."
+      },
+      "defaults": {
+        "title": "Noklusējumi",
+        "description": "Kas jaunai turpmākajai darbībai vai atgādinājumam jau ir izvēlēts.",
+        "action": {
+          "label": "Iepriekš izvēlētā darbība",
+          "description": "Darbība, ar kuru atveras dialogs."
+        },
+        "mail": {
+          "label": "Atgādināt arī ar e-pastu",
+          "description": "Vai jauns atgādinājums nāk arī kā e-pasts iesūtnē."
+        }
+      }
     },
     "themes": {
       "title": "Tēmas",
@@ -4610,6 +4648,11 @@
     "action_label": "Atzīmēt ar",
     "action_other": "Cits…",
     "action_text": "Kas jādara",
+    "menu_own": "Manas",
+    "menu_builtin": "Standarta",
+    "menu_organization": "Organizācija",
+    "menu_edit": "Rediģēt sarakstu…",
+    "add_to_mine": "Pievienot manām darbībām",
     "due_label": "Termiņš",
     "due_date": "Termiņa datums",
     "reminder_label": "Atgādinājums",

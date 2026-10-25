@@ -1037,11 +1037,49 @@
       "notifications": "Notificări",
       "reading": "Citire",
       "composing": "Redactarea",
+      "follow_ups": "Urmărire",
       "message_list": "Lista de mesaje",
       "general": "General",
       "organize": "Dosare și etichete",
       "addons": "Suplimente",
       "backup": "Copie de rezervă și resetare"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Acțiuni",
+        "description": "Cu ce semnalizați un e-mail. Ordinea de aici este cea din meniu; acțiunile dezactivate nu apar în meniu.",
+        "own": "Proprie",
+        "company_title": "Stabilită de administrator",
+        "default_mark": "Implicită",
+        "in_menu": "„{action}” în meniu",
+        "move": "Mutați „{action}” (tastele săgeți)",
+        "rename": "Redenumiți „{action}”",
+        "delete": "Ștergeți „{action}”",
+        "rename_field": "Nume nou pentru „{action}”",
+        "save": "Salvează",
+        "cancel": "Anulează",
+        "show_off": "Afișează-le pe cele dezactivate ({count})",
+        "new_field": "Acțiune nouă",
+        "new_placeholder": "Acțiune nouă, de ex. „Trimite mostre”",
+        "add": "Adaugă"
+      },
+      "problems": {
+        "exists": "Această acțiune există deja.",
+        "too_long": "Cel mult {max} caractere.",
+        "full": "Cel mult {max} acțiuni proprii."
+      },
+      "defaults": {
+        "title": "Valori implicite",
+        "description": "Ce are deja ales o nouă urmărire sau un nou memento.",
+        "action": {
+          "label": "Acțiune preselectată",
+          "description": "Acțiunea cu care se deschide dialogul."
+        },
+        "mail": {
+          "label": "Amintește și prin e-mail",
+          "description": "Dacă un memento nou vine și ca e-mail în căsuța de intrare."
+        }
+      }
     },
     "themes": {
       "title": "Teme",
@@ -4610,6 +4648,11 @@
     "action_label": "Semnalizează pentru",
     "action_other": "Alta…",
     "action_text": "Ce e de făcut",
+    "menu_own": "Ale mele",
+    "menu_builtin": "Standard",
+    "menu_organization": "Organizație",
+    "menu_edit": "Editează lista…",
+    "add_to_mine": "Adaugă la acțiunile mele",
     "due_label": "Termen",
     "due_date": "Data termenului",
     "reminder_label": "Memento",

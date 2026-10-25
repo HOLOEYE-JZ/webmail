@@ -10,6 +10,7 @@ export type SettingsSearchTab =
   | 'message_list'
   | 'reading'
   | 'composing'
+  | 'follow_ups'
   | 'vacation'
   | 'filters'
   | 'organize'
@@ -116,6 +117,7 @@ export const tabSearchPaths: Record<Tab, string[]> = {
     'settings.email_behavior.request_read_receipt',
     'settings.email_behavior.read_receipt_response',
   ],
+  follow_ups: ['settings.follow_ups'],
   vacation: ['settings.vacation'],
   filters: ['settings.filters'],
   organize: ['settings.folders', 'settings.keywords'],
@@ -140,6 +142,7 @@ export const tabKeywords: Record<Tab, string> = {
   message_list: 'inbox list preview thread conversation grouping sort order columns archive delete swipe hover favicon avatar tag color',
   reading: 'mark read attachment open monospace mono font plain text images remote content block sender privacy tracking dark light download filename template eml save export',
   composing: 'editor signature plain text reply forward draft compose template snippet quick reply mention undo send receipt attachment reminder',
+  follow_ups: 'follow up flag reminder task action menu default outlook',
   vacation: 'auto reply away out of office holiday responder',
   filters: 'sieve rules block junk forward',
   organize: 'folders mailbox subscribe roles tags labels keywords colors nested',

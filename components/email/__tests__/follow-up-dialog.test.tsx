@@ -10,6 +10,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useTaskStore } from '@/stores/task-store';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
+import { DEFAULT_FOLLOW_UP_ACTION, EMPTY_FOLLOW_UP_MENU, builtInRef, textRef } from '@/lib/follow-up-menu';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { Calendar, CalendarTask, Email } from '@/lib/jmap/types';
 
@@ -32,6 +33,9 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'en',
   useFormatter: () => ({ dateTime: (d: Date | string) => String(d) }),
 }));
+const router = { push: vi.fn() };
+vi.mock('@/i18n/navigation', () => ({ useRouter: () => router }));
+vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ loginCompanyName: 'Holoeye' }) }));
 
 // Monday 26.10.2026, 09:00 on the wall clock.
 const NOW = new Date(2026, 9, 26, 9, 0);
@@ -126,7 +130,11 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
   client = makeClient();
   useAuthStore.setState({ isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login' });
-  useSettingsStore.setState({ enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
+  useSettingsStore.setState({
+    enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1,
+    followUpMenu: EMPTY_FOLLOW_UP_MENU, followUpDefaultAction: DEFAULT_FOLLOW_UP_ACTION, followUpMailReminder: false,
+  });
+  router.push.mockClear();
   useCalendarStore.setState({ supportsCalendar: true, calendars });
   usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: [] } });
   useTaskStore.setState({ tasks: [] });
@@ -281,6 +289,86 @@ describe('FollowUpDialog: the controls', () => {
     expect(help.getAttribute('aria-describedby')).toBe(tips[0].id);
     fireEvent.blur(help);
     expect(tips[0].hidden).toBe(true);
+  });
+});
+
+describe('FollowUpDialog: the action menu as the user keeps it', () => {
+  beforeEach(() => {
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: ['Write a quote'] } });
+    useSettingsStore.setState({
+      followUpMenu: {
+        own: ['Send samples', 'Visit'],
+        order: [textRef('Visit'), builtInRef('call')],
+        shown: { [builtInRef('reply')]: false, [textRef('Send samples')]: false },
+      },
+    });
+  });
+
+  const options = () => screen.getAllByTestId('follow-up-action-option').map((o) => o.textContent);
+
+  it('shows only the actions switched on, by group under their headings, in the user\'s order', () => {
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('follow-up-action'));
+    expect(options().slice(0, 4)).toEqual(['Visit', 'Write a quote', 'Call', 'Follow up']);
+    expect(options()).not.toContain('Reply');
+    expect(options()).not.toContain('Send samples');
+    expect(screen.getByRole('group', { name: 'menu_own' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Holoeye' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'menu_builtin' })).toBeTruthy();
+  });
+
+  it('has no headings with the built-in actions alone', () => {
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: [] } });
+    useSettingsStore.setState({ followUpMenu: EMPTY_FOLLOW_UP_MENU });
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('follow-up-action'));
+    expect(screen.getByTestId('follow-up-action-list').querySelector('[role=group]')).toBeNull();
+    expect(options().slice(0, 3)).toEqual(['Follow up', 'Reply', 'actions.reply_all']);
+  });
+
+  it('starts a new follow-up with the preselected action and the mail as the defaults say', async () => {
+    useSettingsStore.setState({ followUpDefaultAction: textRef('Write a quote'), followUpMailReminder: true });
+    const onClose = vi.fn();
+    render(<FollowUpDialog email={mail} focus="reminder" onClose={onClose} />);
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Write a quote');
+    expect(field('follow-up-reminder-mail').checked).toBe(true);
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    const written = client.createCalendarTask.mock.calls[0][0];
+    expect(written.title).toBe('Write a quote: Offer 4711');
+    expect(written.alerts!['follow-up-mail']).toBeTruthy();
+  });
+
+  it('falls back on "Follow up" when the preselected action is gone, and reads a hidden one back as one of the list', () => {
+    useSettingsStore.setState({ followUpDefaultAction: textRef('Deleted') });
+    const { unmount } = render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Follow up');
+    unmount();
+    useTaskStore.setState({ tasks: [followUp({ title: 'Send samples: Offer 4711' })] });
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Send samples');
+    expect(screen.queryByTestId('follow-up-action-text')).toBeNull();
+  });
+
+  it('keeps an action typed under "Other…" among the user\'s own with one click', () => {
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    choose('follow-up-action', 'Other…');
+    fireEvent.change(field('follow-up-action-text'), { target: { value: 'Visit' } });
+    // One the list has already: nothing to add.
+    expect(screen.queryByTestId('follow-up-action-keep')).toBeNull();
+    fireEvent.change(field('follow-up-action-text'), { target: { value: '  Check   the drawing ' } });
+    fireEvent.click(screen.getByTestId('follow-up-action-keep'));
+    expect(useSettingsStore.getState().followUpMenu.own).toEqual(['Send samples', 'Visit', 'Check the drawing']);
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Check the drawing');
+    expect(screen.queryByTestId('follow-up-action-text')).toBeNull();
+  });
+
+  it('"Edit list…" closes the dialog and opens Settings › Follow-ups', () => {
+    const onClose = vi.fn();
+    render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
+    choose('follow-up-action', 'menu_edit');
+    expect(onClose).toHaveBeenCalled();
+    expect(router.push).toHaveBeenCalledWith('/settings/follow_ups');
   });
 });
 

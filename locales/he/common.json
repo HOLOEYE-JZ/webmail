@@ -999,11 +999,49 @@
       "notifications": "התראות",
       "reading": "קריאה",
       "composing": "הרכבה",
+      "follow_ups": "מעקב",
       "message_list": "רשימת הודעות",
       "general": "כללי",
       "organize": "תיקיות ותגיות",
       "addons": "תוספים",
       "backup": "גיבוי ואיפוס"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "פעולות",
+        "description": "במה אתם מסמנים הודעה. הסדר כאן הוא הסדר בתפריט; פעולות כבויות אינן בתפריט.",
+        "own": "אישית",
+        "company_title": "נקבע על ידי המנהל",
+        "default_mark": "ברירת מחדל",
+        "in_menu": "“{action}” בתפריט",
+        "move": "העברת “{action}” (מקשי חצים)",
+        "rename": "שינוי שם של “{action}”",
+        "delete": "מחיקת “{action}”",
+        "rename_field": "שם חדש עבור “{action}”",
+        "save": "שמירה",
+        "cancel": "ביטול",
+        "show_off": "הצגת הכבויות ({count})",
+        "new_field": "פעולה חדשה",
+        "new_placeholder": "פעולה חדשה, למשל “שליחת דוגמאות”",
+        "add": "הוספה"
+      },
+      "problems": {
+        "exists": "פעולה זו כבר קיימת.",
+        "too_long": "עד {max} תווים.",
+        "full": "עד {max} פעולות אישיות."
+      },
+      "defaults": {
+        "title": "ברירות מחדל",
+        "description": "מה שכבר נבחר במעקב או בתזכורת חדשים.",
+        "action": {
+          "label": "פעולה שנבחרה מראש",
+          "description": "הפעולה שאיתה נפתח החלון."
+        },
+        "mail": {
+          "label": "תזכורת גם בדואר",
+          "description": "האם תזכורת חדשה מגיעה גם כהודעת דואר לתיבת הדואר הנכנס."
+        }
+      }
     },
     "themes": {
       "title": "ערכות נושא",
@@ -4611,6 +4649,11 @@
     "action_label": "סמן לצורך",
     "action_other": "אחר…",
     "action_text": "מה לעשות",
+    "menu_own": "שלי",
+    "menu_builtin": "רגילות",
+    "menu_organization": "הארגון",
+    "menu_edit": "עריכת הרשימה…",
+    "add_to_mine": "הוספה לפעולות שלי",
     "due_label": "יעד",
     "due_date": "תאריך יעד",
     "reminder_label": "תזכורת",

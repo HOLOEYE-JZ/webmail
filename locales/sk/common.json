@@ -1037,11 +1037,49 @@
       "notifications": "Oznámenia",
       "reading": "Čítanie",
       "composing": "Pisanie",
+      "follow_ups": "Spracovať",
       "message_list": "Zoznam správ",
       "general": "Všeobecné",
       "organize": "Priečinky a štítky",
       "addons": "Doplnky",
       "backup": "Záloha a obnovenie"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Akcie",
+        "description": "Čím označujete e-mail. Poradie tu je poradím v ponuke; vypnuté akcie v ponuke nie sú.",
+        "own": "Vlastná",
+        "company_title": "Nastavené správcom",
+        "default_mark": "Predvoľba",
+        "in_menu": "„{action}“ v ponuke",
+        "move": "Presunúť „{action}“ (šípky)",
+        "rename": "Premenovať „{action}“",
+        "delete": "Odstrániť „{action}“",
+        "rename_field": "Nový názov pre „{action}“",
+        "save": "Uložiť",
+        "cancel": "Zrušiť",
+        "show_off": "Zobraziť vypnuté ({count})",
+        "new_field": "Nová akcia",
+        "new_placeholder": "Nová akcia, napr. „Poslať vzorky“",
+        "add": "Pridať"
+      },
+      "problems": {
+        "exists": "Táto akcia už existuje.",
+        "too_long": "Najviac {max} znakov.",
+        "full": "Najviac {max} vlastných akcií."
+      },
+      "defaults": {
+        "title": "Predvolené hodnoty",
+        "description": "Čo má nové spracovanie alebo pripomenutie už predvolené.",
+        "action": {
+          "label": "Predvolená akcia",
+          "description": "Akcia, s ktorou sa dialóg otvorí."
+        },
+        "mail": {
+          "label": "Pripomenúť aj e-mailom",
+          "description": "Či nové pripomenutie príde aj ako e-mail do doručenej pošty."
+        }
+      }
     },
     "themes": {
       "title": "Motívy",
@@ -4610,6 +4648,11 @@
     "action_label": "Označiť na",
     "action_other": "Iné…",
     "action_text": "Čo urobiť",
+    "menu_own": "Moje",
+    "menu_builtin": "Štandardné",
+    "menu_organization": "Organizácia",
+    "menu_edit": "Upraviť zoznam…",
+    "add_to_mine": "Pridať k mojim akciám",
     "due_label": "Termín",
     "due_date": "Dátum termínu",
     "reminder_label": "Pripomenutie",

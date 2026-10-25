@@ -1037,11 +1037,49 @@
       "notifications": "通知",
       "reading": "閱讀",
       "composing": "撰寫",
+      "follow_ups": "待處理",
       "message_list": "郵件清單",
       "general": "一般",
       "organize": "資料夾與標籤",
       "addons": "附加元件",
       "backup": "備份與重設"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "動作",
+        "description": "用來標幟郵件的內容。這裡的順序就是選單中的順序；關閉的動作不會出現在選單中。",
+        "own": "自訂",
+        "company_title": "由管理員設定",
+        "default_mark": "預設",
+        "in_menu": "在選單中顯示「{action}」",
+        "move": "移動「{action}」（方向鍵）",
+        "rename": "重新命名「{action}」",
+        "delete": "刪除「{action}」",
+        "rename_field": "「{action}」的新名稱",
+        "save": "儲存",
+        "cancel": "取消",
+        "show_off": "顯示已關閉的動作（{count}）",
+        "new_field": "新動作",
+        "new_placeholder": "新動作，例如「寄送樣品」",
+        "add": "新增"
+      },
+      "problems": {
+        "exists": "此動作已存在。",
+        "too_long": "最多 {max} 個字元。",
+        "full": "最多 {max} 個自訂動作。"
+      },
+      "defaults": {
+        "title": "預設值",
+        "description": "新的待處理或提醒中預先選好的內容。",
+        "action": {
+          "label": "預選動作",
+          "description": "對話方塊開啟時選取的動作。"
+        },
+        "mail": {
+          "label": "同時以郵件提醒",
+          "description": "新的提醒是否同時以郵件寄到收件匣。"
+        }
+      }
     },
     "themes": {
       "title": "主題",
@@ -4610,6 +4648,11 @@
     "action_label": "標幟為",
     "action_other": "其他…",
     "action_text": "要做的事",
+    "menu_own": "我的",
+    "menu_builtin": "標準",
+    "menu_organization": "組織",
+    "menu_edit": "編輯清單…",
+    "add_to_mine": "新增到我的動作",
     "due_label": "到期",
     "due_date": "到期日",
     "reminder_label": "提醒",

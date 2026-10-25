@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { format, startOfDay } from "date-fns";
 import { dayOfIso, isoDay } from "@/lib/task-dates";
 import { cn } from "@/lib/utils";
-import { Bell, Flag, Lock, Mail, Pencil, Plus, Users, X } from "@/components/icons";
+import { Bell, Flag, Lock, Mail, Pencil, Plus, Settings, Users, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFollowUpFormat } from "@/components/email/follow-up";
@@ -40,7 +40,10 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { followUpCalendars, isRecurringTask } from "@/lib/calendar-tasks";
-import { usePolicyStore } from "@/stores/policy-store";
+import { useSettingsStore } from "@/stores/settings-store";
+import { useFollowUpMenu, useOrganizationName } from "@/hooks/use-follow-up-menu";
+import { useRouter } from "@/i18n/navigation";
+import { buildSettingsPath } from "@/lib/deep-links";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import {
   followUpAction,
@@ -63,7 +66,13 @@ import {
   type FollowUpChoice,
   type WorkingTime,
 } from "@/lib/follow-up-schedule";
-import { FOLLOW_UP_ACTIONS, sanitizeFollowUpActions } from "@/lib/follow-up-actions";
+import { normalizeAction } from "@/lib/follow-up-actions";
+import {
+  defaultFollowUpAction,
+  ownActionProblem,
+  withOwnAction,
+  type FollowUpActionGroup,
+} from "@/lib/follow-up-menu";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
 
 /** A day as the date input holds it; "" for none. */
@@ -273,7 +282,8 @@ export function SendFollowUpDialog({ email, accountId, onlyMe, start, onChoose, 
     start: inGroup ? start : { ...start, groupAccountId: null, person: undefined },
     hint: t("send.dialog_hint"),
   };
-  return <FollowUpForm controls={controls} email={email} focus="action" onClose={onClose} />;
+  // Settings would take the user away from the message being written.
+  return <FollowUpForm controls={controls} email={email} focus="action" onClose={onClose} listLink={false} />;
 }
 
 /**
@@ -309,13 +319,15 @@ const GROUP_SEARCH_FROM = 6;
 const SELECT = "h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 const SMALL_INPUT = "h-8 w-auto px-2 py-1";
 
-function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }: {
+function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, listLink = true }: {
   controls: FormControls;
   /** The mail of a follow-up (what the dialog names of it); none for a reminder without one. */
   email?: Pick<Email, "subject" | "from">;
   title?: string;
   focus: FollowUpDialogFocus;
   onClose: () => void;
+  /** "Edit list…" under the actions, to Settings › Follow-ups. */
+  listLink?: boolean;
 }) {
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
@@ -327,7 +339,9 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   const htmlNote = !!task && isHtmlNote(task);
   const { dialogProps: confirmProps, confirm } = useConfirmDialog();
   const calendars = useCalendarStore((s) => s.calendars);
-  const extraActions = usePolicyStore((s) => s.policy.followUpActions);
+  const { menu, entries, setMenu } = useFollowUpMenu();
+  const defaultRef = useSettingsStore((s) => s.followUpDefaultAction);
+  const mailDefault = useSettingsStore((s) => s.followUpMailReminder);
   const [busy, setBusy] = useState(false);
 
   // A built-in action in the current language, whatever language the task was written in.
@@ -351,7 +365,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       : focus === "reminder" ? propose(due, now, workingTime) : null;
     const action = isReminder
       ? (task ? task.title ?? "" : newTitle)
-      : task ? shownAction(followUpAction(task)) : start ? shownAction(start.action) : t("actions.follow_up");
+      : task ? shownAction(followUpAction(task)) : start ? shownAction(start.action) : defaultFollowUpAction(entries, defaultRef).text;
     // The due select shows the quick choice whose day it is, else the date itself.
     const choice = FOLLOW_UP_CHOICES.find((c) => dayInput(scheduleFollowUp(c, now, workingTime).due) === dayInput(due)) ?? PICK;
     return {
@@ -360,21 +374,26 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       choice: choice as DueChoice,
       reminder,
       note: task ? followUpNote(task) : start?.note ?? "",
-      mail: task ? hasFollowUpMailAlert(task) : start?.mailReminder ?? false,
+      mail: task ? hasFollowUpMailAlert(task) : start?.mailReminder ?? mailDefault,
       settles: task ? settlesOnReply(task) : start?.settlesOnReply ?? false,
       // Alerts the reminder shown leaves out (relative ones, a second one set on a phone): kept as they are.
       otherAlerts: task ? otherFollowUpAlerts(task) : 0,
     };
   });
 
-  const actions = useMemo(() => {
-    const builtIn = FOLLOW_UP_ACTIONS.map((key) => t(`actions.${key}`));
-    const seen = new Set(builtIn.map((a) => a.toLocaleLowerCase()));
-    return [...builtIn, ...sanitizeFollowUpActions(extraActions).filter((a) => !seen.has(a.toLocaleLowerCase()))];
-  }, [t, extraActions]);
+  // The menu: the actions the user shows, by where they come from. One the
+  // user hid still counts as one of the list, not as typed ("Other …").
+  const sections = useMemo(() => {
+    const shown = entries.filter((entry) => entry.shown);
+    return (["own", "company", "builtin"] as const)
+      .map((group) => ({ group, entries: shown.filter((entry) => entry.group === group) }))
+      .filter((section) => section.entries.length > 0);
+  }, [entries]);
 
   const [action, setAction] = useState(initial.action);
-  const [other, setOther] = useState(() => !isReminder && !actions.includes(initial.action));
+  const [other, setOther] = useState(() => !isReminder && !entries.some((entry) => entry.text === initial.action));
+  // "Add to my actions" beside a typed one, when it could be one.
+  const canKeep = other && !!action.trim() && !ownActionProblem(action, entries, menu);
   const [due, setDue] = useState(dayInput(initial.due));
   const [dueChoice, setDueChoice] = useState<DueChoice>(initial.choice);
   const [reminderOn, setReminderOn] = useState(!!initial.reminder);
@@ -653,15 +672,19 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
                 <HelpTip label={t("help")} testId="follow-up-hint">{controls.hint}</HelpTip>
               )}
               <PropertyPopover anchor={actionRef} open={popover === "action"} onClose={closePopover} label={t("action_label")} testId="follow-up-action-list">
-                {actions.map((a) => (
-                  <PopoverOption
-                    key={a}
-                    selected={!other && a === action}
-                    testId="follow-up-action-option"
-                    onSelect={() => { setOther(false); setAction(a); setPopover(null); actionRef.current?.focus(); }}
-                  >
-                    {a}
-                  </PopoverOption>
+                {sections.map((section) => (
+                  <ActionSection key={section.group} group={section.group} headed={sections.length > 1}>
+                    {section.entries.map((entry) => (
+                      <PopoverOption
+                        key={entry.ref}
+                        selected={!other && entry.text === action}
+                        testId="follow-up-action-option"
+                        onSelect={() => { setOther(false); setAction(entry.text); setPopover(null); actionRef.current?.focus(); }}
+                      >
+                        {entry.text}
+                      </PopoverOption>
+                    ))}
+                  </ActionSection>
                 ))}
                 <PopoverSeparator />
                 <PopoverOption
@@ -672,19 +695,41 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
                 >
                   {t("action_other")}
                 </PopoverOption>
+                {listLink && <EditListOption onClose={onClose} />}
               </PropertyPopover>
             </div>
             {other && (
-              <Input
-                data-testid="follow-up-action-text"
-                aria-label={t("action_text")}
-                placeholder={t("action_text")}
-                value={action}
-                maxLength={200}
-                autoFocus
-                onChange={(e) => setAction(e.target.value)}
-                className="col-span-2 h-9"
-              />
+              <div className="col-span-2 flex min-w-0 items-center gap-2">
+                <Input
+                  data-testid="follow-up-action-text"
+                  aria-label={t("action_text")}
+                  placeholder={t("action_text")}
+                  value={action}
+                  maxLength={200}
+                  autoFocus
+                  onChange={(e) => setAction(e.target.value)}
+                  className="h-9 min-w-0 flex-1"
+                />
+                {canKeep && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    data-testid="follow-up-action-keep"
+                    className="h-9 shrink-0 gap-1 text-xs"
+                    onClick={() => {
+                      const kept = normalizeAction(action);
+                      setMenu(withOwnAction(menu, kept));
+                      setAction(kept);
+                      setOther(false);
+                      actionRef.current?.focus();
+                    }}
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t("add_to_mine")}
+                  </Button>
+                )}
+              </div>
             )}
             </>
             )}
@@ -989,5 +1034,41 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
     </div>
     <ConfirmDialog {...confirmProps} />
     </>
+  );
+}
+
+/** One part of the action menu, under its heading when there is more than one. */
+function ActionSection({ group, headed, children }: { group: FollowUpActionGroup; headed: boolean; children: React.ReactNode }) {
+  const t = useTranslations("follow_up");
+  const id = useId();
+  if (!headed) return <>{children}</>;
+  return (
+    <div role="group" aria-labelledby={id}>
+      <PopoverHeading>
+        <span id={id}>{group === "company" ? <OrganizationName /> : t(group === "own" ? "menu_own" : "menu_builtin")}</span>
+      </PopoverHeading>
+      {children}
+    </div>
+  );
+}
+
+/** Whose the operator's actions are. */
+function OrganizationName() {
+  return <>{useOrganizationName()}</>;
+}
+
+/** "Edit list…": Settings › Follow-ups, the dialog closed. */
+function EditListOption({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("follow_up");
+  const router = useRouter();
+  return (
+    <PopoverOption
+      selected={false}
+      testId="follow-up-action-edit-list"
+      icon={<Settings className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
+      onSelect={() => { onClose(); router.push(buildSettingsPath("follow_ups")); }}
+    >
+      {t("menu_edit")}
+    </PopoverOption>
   );
 }

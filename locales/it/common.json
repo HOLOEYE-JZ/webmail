@@ -1034,11 +1034,49 @@
       "notifications": "Notifiche",
       "reading": "Lettura",
       "composing": "Composizione",
+      "follow_ups": "Completamento",
       "message_list": "Elenco messaggi",
       "general": "Generale",
       "organize": "Cartelle ed etichette",
       "addons": "Componenti aggiuntivi",
       "backup": "Backup e ripristino"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Azioni",
+        "description": "Con cosa contrassegni un messaggio. L'ordine qui è quello del menu; le azioni disattivate non vi compaiono.",
+        "own": "Personale",
+        "company_title": "Impostata dall'amministratore",
+        "default_mark": "Predefinita",
+        "in_menu": "«{action}» nel menu",
+        "move": "Sposta «{action}» (tasti freccia)",
+        "rename": "Rinomina «{action}»",
+        "delete": "Elimina «{action}»",
+        "rename_field": "Nuovo nome per «{action}»",
+        "save": "Salva",
+        "cancel": "Annulla",
+        "show_off": "Mostra quelle disattivate ({count})",
+        "new_field": "Nuova azione",
+        "new_placeholder": "Nuova azione, ad es. «Inviare campioni»",
+        "add": "Aggiungi"
+      },
+      "problems": {
+        "exists": "Questa azione esiste già.",
+        "too_long": "Al massimo {max} caratteri.",
+        "full": "Al massimo {max} azioni personali."
+      },
+      "defaults": {
+        "title": "Impostazioni predefinite",
+        "description": "Cosa è già scelto in un nuovo completamento o promemoria.",
+        "action": {
+          "label": "Azione preselezionata",
+          "description": "L'azione con cui si apre la finestra."
+        },
+        "mail": {
+          "label": "Ricorda anche via e-mail",
+          "description": "Se un nuovo promemoria arriva anche come e-mail nella posta in arrivo."
+        }
+      }
     },
     "themes": {
       "title": "Temi",
@@ -4610,6 +4648,11 @@
     "action_label": "Contrassegna per",
     "action_other": "Altro…",
     "action_text": "Cosa fare",
+    "menu_own": "Mie",
+    "menu_builtin": "Standard",
+    "menu_organization": "Organizzazione",
+    "menu_edit": "Modifica elenco…",
+    "add_to_mine": "Aggiungi alle mie azioni",
     "due_label": "Scadenza",
     "due_date": "Data di scadenza",
     "reminder_label": "Promemoria",

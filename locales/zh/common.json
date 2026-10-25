@@ -1034,11 +1034,49 @@
       "notifications": "通知",
       "reading": "阅读",
       "composing": "撰写",
+      "follow_ups": "后续处理",
       "message_list": "邮件列表",
       "general": "常规",
       "organize": "文件夹与标签",
       "addons": "附加组件",
       "backup": "备份与重置"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "操作",
+        "description": "用来标记邮件的内容。这里的顺序就是菜单中的顺序；关闭的操作不会出现在菜单中。",
+        "own": "自定义",
+        "company_title": "由管理员设置",
+        "default_mark": "默认",
+        "in_menu": "在菜单中显示“{action}”",
+        "move": "移动“{action}”（方向键）",
+        "rename": "重命名“{action}”",
+        "delete": "删除“{action}”",
+        "rename_field": "“{action}”的新名称",
+        "save": "保存",
+        "cancel": "取消",
+        "show_off": "显示已关闭的操作（{count}）",
+        "new_field": "新操作",
+        "new_placeholder": "新操作，例如“寄送样品”",
+        "add": "添加"
+      },
+      "problems": {
+        "exists": "此操作已存在。",
+        "too_long": "最多 {max} 个字符。",
+        "full": "最多 {max} 个自定义操作。"
+      },
+      "defaults": {
+        "title": "默认值",
+        "description": "新的跟进或提醒中预先选好的内容。",
+        "action": {
+          "label": "预选操作",
+          "description": "对话框打开时选中的操作。"
+        },
+        "mail": {
+          "label": "同时通过邮件提醒",
+          "description": "新的提醒是否同时以邮件发送到收件箱。"
+        }
+      }
     },
     "themes": {
       "title": "主题",
@@ -4610,6 +4648,11 @@
     "action_label": "标记为",
     "action_other": "其他…",
     "action_text": "要做的事",
+    "menu_own": "我的",
+    "menu_builtin": "标准",
+    "menu_organization": "组织",
+    "menu_edit": "编辑列表…",
+    "add_to_mine": "添加到我的操作",
     "due_label": "到期",
     "due_date": "到期日期",
     "reminder_label": "提醒",

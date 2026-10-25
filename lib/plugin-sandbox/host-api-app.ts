@@ -47,6 +47,7 @@ function availablePages(config: ConfigData | null): Set<SettingsSearchTab> {
   if (client?.supportsSieve?.()) pages.add('filters');
   if (client?.supportsVacationResponse?.()) pages.add('vacation');
   if (client?.supportsCalendars?.() && gate('calendarEnabled')) pages.add('calendar');
+  if (client?.supportsCalendars?.() && useSettingsStore.getState().enableCalendarTasks) pages.add('follow_ups');
   if (gate('contactsEnabled')) pages.add('contacts');
   if (client?.supportsFiles?.() && gate('filesEnabled')) pages.add('files');
   if (gate('sidebarAppsEnabled') || gate('pluginsEnabled')) pages.add('addons');

@@ -1034,11 +1034,49 @@
       "notifications": "Powiadomienia",
       "reading": "Czytanie",
       "composing": "Tworzenie",
+      "follow_ups": "Monituj",
       "message_list": "Lista wiadomości",
       "general": "Ogólne",
       "organize": "Foldery i tagi",
       "addons": "Dodatki",
       "backup": "Kopia zapasowa i reset"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Akcje",
+        "description": "Czym oznaczasz wiadomość. Kolejność tutaj jest kolejnością w menu; wyłączonych akcji nie ma w menu.",
+        "own": "Własna",
+        "company_title": "Ustawione przez administratora",
+        "default_mark": "Domyślna",
+        "in_menu": "„{action}” w menu",
+        "move": "Przenieś „{action}” (klawisze strzałek)",
+        "rename": "Zmień nazwę „{action}”",
+        "delete": "Usuń „{action}”",
+        "rename_field": "Nowa nazwa dla „{action}”",
+        "save": "Zapisz",
+        "cancel": "Anuluj",
+        "show_off": "Pokaż wyłączone ({count})",
+        "new_field": "Nowa akcja",
+        "new_placeholder": "Nowa akcja, np. „Wyślij próbki”",
+        "add": "Dodaj"
+      },
+      "problems": {
+        "exists": "Ta akcja już istnieje.",
+        "too_long": "Najwyżej {max} znaków.",
+        "full": "Najwyżej {max} własnych akcji."
+      },
+      "defaults": {
+        "title": "Ustawienia domyślne",
+        "description": "Co nowy monit lub przypomnienie ma już wybrane.",
+        "action": {
+          "label": "Domyślnie wybrana akcja",
+          "description": "Akcja, z którą otwiera się okno."
+        },
+        "mail": {
+          "label": "Przypominaj też e-mailem",
+          "description": "Czy nowe przypomnienie przychodzi też jako wiadomość do skrzynki odbiorczej."
+        }
+      }
     },
     "themes": {
       "title": "Motywy",
@@ -4610,6 +4648,11 @@
     "action_label": "Oflaguj jako",
     "action_other": "Inne…",
     "action_text": "Co zrobić",
+    "menu_own": "Moje",
+    "menu_builtin": "Standardowe",
+    "menu_organization": "Organizacja",
+    "menu_edit": "Edytuj listę…",
+    "add_to_mine": "Dodaj do moich akcji",
     "due_label": "Termin",
     "due_date": "Data terminu",
     "reminder_label": "Przypomnienie",

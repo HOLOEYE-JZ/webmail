@@ -1034,11 +1034,49 @@
       "notifications": "Bildirimler",
       "reading": "Okuma",
       "composing": "Yazma",
+      "follow_ups": "Takip et",
       "message_list": "İleti listesi",
       "general": "Genel",
       "organize": "Klasörler ve etiketler",
       "addons": "Eklentiler",
       "backup": "Yedekleme ve sıfırlama"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Eylemler",
+        "description": "Bir e-postayı neyle işaretlediğiniz. Buradaki sıra menüdeki sıradır; kapalı eylemler menüde yer almaz.",
+        "own": "Kendi",
+        "company_title": "Yöneticiniz tarafından belirlendi",
+        "default_mark": "Varsayılan",
+        "in_menu": "Menüde “{action}”",
+        "move": "“{action}” öğesini taşı (ok tuşları)",
+        "rename": "“{action}” öğesini yeniden adlandır",
+        "delete": "“{action}” öğesini sil",
+        "rename_field": "“{action}” için yeni ad",
+        "save": "Kaydet",
+        "cancel": "İptal",
+        "show_off": "Kapalı olanları göster ({count})",
+        "new_field": "Yeni eylem",
+        "new_placeholder": "Yeni eylem, ör. “Numune gönder”",
+        "add": "Ekle"
+      },
+      "problems": {
+        "exists": "Bu eylem zaten var.",
+        "too_long": "En fazla {max} karakter.",
+        "full": "En fazla {max} kendi eylem."
+      },
+      "defaults": {
+        "title": "Varsayılanlar",
+        "description": "Yeni bir takip veya hatırlatıcıda zaten seçili olan.",
+        "action": {
+          "label": "Önceden seçili eylem",
+          "description": "İletişim kutusunun açıldığı eylem."
+        },
+        "mail": {
+          "label": "E-postayla da hatırlat",
+          "description": "Yeni bir hatırlatıcının gelen kutunuza e-posta olarak da gelip gelmeyeceği."
+        }
+      }
     },
     "themes": {
       "title": "Temalar",
@@ -4610,6 +4648,11 @@
     "action_label": "İşaretle",
     "action_other": "Diğer…",
     "action_text": "Yapılacak",
+    "menu_own": "Benim",
+    "menu_builtin": "Standart",
+    "menu_organization": "Kuruluş",
+    "menu_edit": "Listeyi düzenle…",
+    "add_to_mine": "Eylemlerime ekle",
     "due_label": "Son tarih",
     "due_date": "Son tarih günü",
     "reminder_label": "Anımsatıcı",

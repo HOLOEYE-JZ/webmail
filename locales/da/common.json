@@ -1037,11 +1037,49 @@
       "notifications": "Notifikationer",
       "reading": "Læsning",
       "composing": "Skrivning",
+      "follow_ups": "Opfølgning",
       "message_list": "Beskedliste",
       "general": "Generelt",
       "organize": "Mapper og tags",
       "addons": "Tilføjelser",
       "backup": "Sikkerhedskopi og nulstilling"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Handlinger",
+        "description": "Det, du markerer en mail med. Rækkefølgen her er den i menuen; handlinger, der er slået fra, står ikke i menuen.",
+        "own": "Egen",
+        "company_title": "Angivet af din administrator",
+        "default_mark": "Forvalgt",
+        "in_menu": "»{action}« i menuen",
+        "move": "Flyt »{action}« (piletaster)",
+        "rename": "Omdøb »{action}«",
+        "delete": "Slet »{action}«",
+        "rename_field": "Nyt navn til »{action}«",
+        "save": "Gem",
+        "cancel": "Annullér",
+        "show_off": "Vis dem, der er slået fra ({count})",
+        "new_field": "Ny handling",
+        "new_placeholder": "Ny handling, f.eks. »Send prøver«",
+        "add": "Tilføj"
+      },
+      "problems": {
+        "exists": "Denne handling findes allerede.",
+        "too_long": "Højst {max} tegn.",
+        "full": "Højst {max} egne handlinger."
+      },
+      "defaults": {
+        "title": "Standarder",
+        "description": "Det, en ny opfølgning eller påmindelse allerede har valgt.",
+        "action": {
+          "label": "Forvalgt handling",
+          "description": "Den handling, dialogen åbner med."
+        },
+        "mail": {
+          "label": "Påmind også via mail",
+          "description": "Om en ny påmindelse også kommer som mail i din indbakke."
+        }
+      }
     },
     "themes": {
       "title": "Temaer",
@@ -4610,6 +4648,11 @@
     "action_label": "Marker til",
     "action_other": "Andet…",
     "action_text": "Hvad skal gøres",
+    "menu_own": "Mine",
+    "menu_builtin": "Standard",
+    "menu_organization": "Organisation",
+    "menu_edit": "Redigér liste…",
+    "add_to_mine": "Føj til mine handlinger",
     "due_label": "Forfald",
     "due_date": "Forfaldsdato",
     "reminder_label": "Påmindelse",

@@ -1034,11 +1034,49 @@
       "notifications": "通知",
       "reading": "閲覧",
       "composing": "作成",
+      "follow_ups": "フォローアップ",
       "message_list": "メッセージ一覧",
       "general": "一般",
       "organize": "フォルダーとタグ",
       "addons": "アドオン",
       "backup": "バックアップとリセット"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "アクション",
+        "description": "メールに付けるフラグの内容です。ここでの順序がメニューの順序です。オフにしたアクションはメニューに表示されません。",
+        "own": "自分用",
+        "company_title": "管理者が設定",
+        "default_mark": "既定",
+        "in_menu": "メニューに「{action}」",
+        "move": "「{action}」を移動（矢印キー）",
+        "rename": "「{action}」の名前を変更",
+        "delete": "「{action}」を削除",
+        "rename_field": "「{action}」の新しい名前",
+        "save": "保存",
+        "cancel": "キャンセル",
+        "show_off": "オフのアクションを表示（{count}）",
+        "new_field": "新しいアクション",
+        "new_placeholder": "新しいアクション（例:「サンプルを送る」）",
+        "add": "追加"
+      },
+      "problems": {
+        "exists": "このアクションは既にあります。",
+        "too_long": "{max} 文字以内にしてください。",
+        "full": "自分用のアクションは {max} 個までです。"
+      },
+      "defaults": {
+        "title": "既定値",
+        "description": "新しいフォローアップやリマインダーで最初から選ばれている内容です。",
+        "action": {
+          "label": "既定のアクション",
+          "description": "ダイアログを開いたときのアクション。"
+        },
+        "mail": {
+          "label": "メールでも通知",
+          "description": "新しいリマインダーを受信トレイへのメールでも通知するかどうか。"
+        }
+      }
     },
     "themes": {
       "title": "テーマ",
@@ -4610,6 +4648,11 @@
     "action_label": "フラグの内容",
     "action_other": "その他…",
     "action_text": "やること",
+    "menu_own": "自分用",
+    "menu_builtin": "標準",
+    "menu_organization": "組織",
+    "menu_edit": "リストを編集…",
+    "add_to_mine": "自分のアクションに追加",
     "due_label": "期限",
     "due_date": "期限日",
     "reminder_label": "アラーム",

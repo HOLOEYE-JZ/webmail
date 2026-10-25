@@ -1037,11 +1037,49 @@
       "notifications": "Notifications",
       "reading": "Reading",
       "composing": "Composing",
+      "follow_ups": "Follow-ups",
       "message_list": "Message list",
       "general": "General",
       "organize": "Folders & tags",
       "addons": "Add-ons",
       "backup": "Backup & reset"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Actions",
+        "description": "What you flag a mail with. The order here is the menu's; actions switched off are not in the menu.",
+        "own": "Own",
+        "company_title": "Set by your administrator",
+        "default_mark": "Default",
+        "in_menu": "\"{action}\" in the menu",
+        "move": "Move \"{action}\" (arrow keys)",
+        "rename": "Rename \"{action}\"",
+        "delete": "Delete \"{action}\"",
+        "rename_field": "New name for \"{action}\"",
+        "save": "Save",
+        "cancel": "Cancel",
+        "show_off": "Show {count} more switched off",
+        "new_field": "New action",
+        "new_placeholder": "New action, e.g. \"Send samples\"",
+        "add": "Add"
+      },
+      "problems": {
+        "exists": "This action exists already.",
+        "too_long": "At most {max} characters.",
+        "full": "At most {max} actions of your own."
+      },
+      "defaults": {
+        "title": "Defaults",
+        "description": "What a new follow-up or reminder starts with.",
+        "action": {
+          "label": "Preselected action",
+          "description": "The action the dialog opens with."
+        },
+        "mail": {
+          "label": "Also remind me by mail",
+          "description": "Whether a new reminder also comes as a mail to your inbox."
+        }
+      }
     },
     "themes": {
       "title": "Themes",
@@ -4610,6 +4648,11 @@
     "action_label": "Flag to",
     "action_other": "Other…",
     "action_text": "What to do",
+    "menu_own": "Mine",
+    "menu_builtin": "Standard",
+    "menu_organization": "Organization",
+    "menu_edit": "Edit list…",
+    "add_to_mine": "Add to my actions",
     "due_label": "Due",
     "due_date": "Due date",
     "reminder_label": "Reminder",

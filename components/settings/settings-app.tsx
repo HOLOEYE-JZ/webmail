@@ -22,6 +22,7 @@ import {
   Puzzle,
   BookOpen,
   PenLine,
+  Flag,
   LayoutList,
   Database,
   X,
@@ -35,6 +36,7 @@ import { GeneralSettings } from '@/components/settings/general-settings';
 import { ReadingSettings } from '@/components/settings/reading-settings';
 import { MessageListSettings } from '@/components/settings/message-list-settings';
 import { ComposingSettings } from '@/components/settings/composing-settings';
+import { FollowUpSettings } from '@/components/settings/follow-up-settings';
 import { AccountSettings } from '@/components/settings/account-settings';
 import { VacationSettings } from '@/components/settings/vacation-settings';
 import { CalendarSettings } from '@/components/settings/calendar-settings';
@@ -123,6 +125,7 @@ const tabIcons: Record<Tab, AppIcon> = {
   message_list: LayoutList,
   reading: BookOpen,
   composing: PenLine,
+  follow_ups: Flag,
   vacation: PalmtreeIcon,
   filters: Filter,
   organize: FolderOpen,
@@ -328,6 +331,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // Admin-pinned apps are searchable too - users can't add them, but they're listed.
   const sidebarAppsList = useResolvedSidebarApps();
   const proInterface = useSettingsStore((s) => s.proInterface);
+  const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
 
   // When set, the settings panel is scoped to a shared/group account: a reduced
   // tab list and a "Managing: <name>" header. null = the user's own account.
@@ -642,6 +646,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     { id: 'message_list', label: t('tabs.message_list'), icon: tabIcons.message_list, group: 'mail' },
     { id: 'reading', label: t('tabs.reading'), icon: tabIcons.reading, group: 'mail' },
     { id: 'composing', label: t('tabs.composing'), icon: tabIcons.composing, group: 'mail' },
+    // Follow-ups are tasks: shown while the user keeps tasks on a calendar server.
+    ...(supportsCalendar && enableCalendarTasks ? [{ id: 'follow_ups' as Tab, label: t('tabs.follow_ups'), icon: tabIcons.follow_ups, group: 'mail' as TabGroup }] : []),
     { id: 'organize', label: isFeatureEnabled('customKeywordsEnabled') ? t('tabs.organize') : t('tabs.folders'), icon: tabIcons.organize, group: 'mail' },
     ...(supportsSieve ? [{ id: 'filters' as Tab, label: t('tabs.filters'), icon: tabIcons.filters, group: 'mail' as TabGroup }] : []),
     ...(supportsVacation ? [{ id: 'vacation' as Tab, label: t('tabs.vacation'), icon: tabIcons.vacation, group: 'mail' as TabGroup }] : []),
@@ -779,6 +785,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       {effectiveActiveTab === 'message_list' && <MessageListSettings />}
       {effectiveActiveTab === 'reading' && <ReadingSettings />}
       {effectiveActiveTab === 'composing' && <ComposingSettings />}
+      {effectiveActiveTab === 'follow_ups' && <FollowUpSettings />}
       {effectiveActiveTab === 'vacation' && <VacationSettings />}
       {effectiveActiveTab === 'filters' && <FilterSettings />}
       {effectiveActiveTab === 'organize' && <OrganizeSettings />}

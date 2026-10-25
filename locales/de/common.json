@@ -1034,11 +1034,49 @@
       "notifications": "Benachrichtigungen",
       "reading": "Lesen",
       "composing": "Verfassen",
+      "follow_ups": "Wiedervorlage",
       "message_list": "Nachrichtenliste",
       "general": "Allgemein",
       "organize": "Ordner & Tags",
       "addons": "Erweiterungen",
       "backup": "Sicherung & Zurücksetzen"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Aktionen",
+        "description": "Womit Sie eine Mail kennzeichnen. Die Reihenfolge hier ist die im Menü; ausgeschaltete stehen nicht im Menü.",
+        "own": "Eigene",
+        "company_title": "Vom Administrator vorgegeben",
+        "default_mark": "Vorauswahl",
+        "in_menu": "„{action}“ im Menü",
+        "move": "„{action}“ verschieben (Pfeiltasten)",
+        "rename": "„{action}“ umbenennen",
+        "delete": "„{action}“ löschen",
+        "rename_field": "Neuer Name für „{action}“",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "show_off": "{count} weitere ausgeschaltete zeigen",
+        "new_field": "Neue Aktion",
+        "new_placeholder": "Neue Aktion, z. B. „Muster schicken“",
+        "add": "Hinzufügen"
+      },
+      "problems": {
+        "exists": "Diese Aktion gibt es schon.",
+        "too_long": "Höchstens {max} Zeichen.",
+        "full": "Höchstens {max} eigene Aktionen."
+      },
+      "defaults": {
+        "title": "Vorgaben",
+        "description": "Was eine neue Wiedervorlage oder Erinnerung schon gewählt hat.",
+        "action": {
+          "label": "Vorauswahl",
+          "description": "Die Aktion, mit der der Dialog öffnet."
+        },
+        "mail": {
+          "label": "Auch als Mail erinnern",
+          "description": "Ob eine neue Erinnerung auch als Mail in den Posteingang kommt."
+        }
+      }
     },
     "themes": {
       "title": "Designs",
@@ -4610,6 +4648,11 @@
     "action_label": "Kennzeichnen mit",
     "action_other": "Andere …",
     "action_text": "Was zu tun ist",
+    "menu_own": "Meine",
+    "menu_builtin": "Standard",
+    "menu_organization": "Organisation",
+    "menu_edit": "Liste bearbeiten …",
+    "add_to_mine": "Zu meinen Aktionen hinzufügen",
     "due_label": "Fällig",
     "due_date": "Fälligkeitsdatum",
     "reminder_label": "Erinnerung",

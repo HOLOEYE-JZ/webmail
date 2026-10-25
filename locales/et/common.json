@@ -1037,11 +1037,49 @@
       "notifications": "Teavitused",
       "reading": "Lugemine",
       "composing": "Kirjutamine",
+      "follow_ups": "Järelkontroll",
       "message_list": "Kirjade loend",
       "general": "Üldine",
       "organize": "Kaustad ja sildid",
       "addons": "Lisad",
       "backup": "Varundus ja lähtestamine"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Toimingud",
+        "description": "Millega te kirja märgite. Siin olev järjestus on menüü järjestus; välja lülitatud toiminguid menüüs pole.",
+        "own": "Oma",
+        "company_title": "Määranud administraator",
+        "default_mark": "Vaikimisi",
+        "in_menu": "„{action}“ menüüs",
+        "move": "Teisalda „{action}“ (nooleklahvid)",
+        "rename": "Nimeta „{action}“ ümber",
+        "delete": "Kustuta „{action}“",
+        "rename_field": "Uus nimi toimingule „{action}“",
+        "save": "Salvesta",
+        "cancel": "Tühista",
+        "show_off": "Näita välja lülitatuid ({count})",
+        "new_field": "Uus toiming",
+        "new_placeholder": "Uus toiming, nt „Saada näidised“",
+        "add": "Lisa"
+      },
+      "problems": {
+        "exists": "See toiming on juba olemas.",
+        "too_long": "Kuni {max} märki.",
+        "full": "Kuni {max} oma toimingut."
+      },
+      "defaults": {
+        "title": "Vaikeväärtused",
+        "description": "Mis on uuel järelkontrollil või meeldetuletusel juba valitud.",
+        "action": {
+          "label": "Eelvalitud toiming",
+          "description": "Toiming, millega dialoog avaneb."
+        },
+        "mail": {
+          "label": "Tuleta meelde ka kirjaga",
+          "description": "Kas uus meeldetuletus tuleb ka kirjana postkasti."
+        }
+      }
     },
     "themes": {
       "title": "Teemad",
@@ -4610,6 +4648,11 @@
     "action_label": "Märgi",
     "action_other": "Muu…",
     "action_text": "Mida teha",
+    "menu_own": "Minu",
+    "menu_builtin": "Standardsed",
+    "menu_organization": "Organisatsioon",
+    "menu_edit": "Muuda loendit…",
+    "add_to_mine": "Lisa minu toimingutesse",
     "due_label": "Tähtaeg",
     "due_date": "Tähtpäev",
     "reminder_label": "Meeldetuletus",

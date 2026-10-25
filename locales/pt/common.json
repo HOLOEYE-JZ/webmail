@@ -1034,11 +1034,49 @@
       "notifications": "Notificações",
       "reading": "Leitura",
       "composing": "Composição",
+      "follow_ups": "Acompanhamento",
       "message_list": "Lista de mensagens",
       "general": "Geral",
       "organize": "Pastas e etiquetas",
       "addons": "Extras",
       "backup": "Cópia de segurança e reposição"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Ações",
+        "description": "Com o que sinaliza um e-mail. A ordem aqui é a do menu; as ações desativadas não aparecem nele.",
+        "own": "Própria",
+        "company_title": "Definida pelo seu administrador",
+        "default_mark": "Predefinida",
+        "in_menu": "«{action}» no menu",
+        "move": "Mover «{action}» (teclas de seta)",
+        "rename": "Mudar o nome de «{action}»",
+        "delete": "Eliminar «{action}»",
+        "rename_field": "Novo nome para «{action}»",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "show_off": "Mostrar as desativadas ({count})",
+        "new_field": "Nova ação",
+        "new_placeholder": "Nova ação, p. ex. «Enviar amostras»",
+        "add": "Adicionar"
+      },
+      "problems": {
+        "exists": "Esta ação já existe.",
+        "too_long": "No máximo {max} caracteres.",
+        "full": "No máximo {max} ações próprias."
+      },
+      "defaults": {
+        "title": "Predefinições",
+        "description": "O que um novo acompanhamento ou lembrete já traz escolhido.",
+        "action": {
+          "label": "Ação pré-selecionada",
+          "description": "A ação com que a caixa de diálogo abre."
+        },
+        "mail": {
+          "label": "Lembrar também por e-mail",
+          "description": "Se um novo lembrete chega também como e-mail à sua caixa de entrada."
+        }
+      }
     },
     "themes": {
       "title": "Temas",
@@ -4610,6 +4648,11 @@
     "action_label": "Sinalizar para",
     "action_other": "Outra…",
     "action_text": "O que fazer",
+    "menu_own": "Minhas",
+    "menu_builtin": "Padrão",
+    "menu_organization": "Organização",
+    "menu_edit": "Editar lista…",
+    "add_to_mine": "Adicionar às minhas ações",
     "due_label": "Prazo",
     "due_date": "Data limite",
     "reminder_label": "Lembrete",

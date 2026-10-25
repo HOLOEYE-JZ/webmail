@@ -1034,11 +1034,49 @@
       "notifications": "Notificaciones",
       "reading": "Lectura",
       "composing": "Redacción",
+      "follow_ups": "Seguimiento",
       "message_list": "Lista de mensajes",
       "general": "General",
       "organize": "Carpetas y etiquetas",
       "addons": "Complementos",
       "backup": "Copia de seguridad y restablecer"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Acciones",
+        "description": "Con qué marca un correo. El orden aquí es el del menú; las acciones desactivadas no aparecen en él.",
+        "own": "Propia",
+        "company_title": "Definida por su administrador",
+        "default_mark": "Predeterminada",
+        "in_menu": "«{action}» en el menú",
+        "move": "Mover «{action}» (teclas de flecha)",
+        "rename": "Cambiar el nombre de «{action}»",
+        "delete": "Eliminar «{action}»",
+        "rename_field": "Nuevo nombre para «{action}»",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "show_off": "Mostrar las desactivadas ({count})",
+        "new_field": "Nueva acción",
+        "new_placeholder": "Nueva acción, p. ej. «Enviar muestras»",
+        "add": "Añadir"
+      },
+      "problems": {
+        "exists": "Esta acción ya existe.",
+        "too_long": "Como máximo {max} caracteres.",
+        "full": "Como máximo {max} acciones propias."
+      },
+      "defaults": {
+        "title": "Valores predeterminados",
+        "description": "Lo que ya viene elegido en un nuevo seguimiento o recordatorio.",
+        "action": {
+          "label": "Acción preseleccionada",
+          "description": "La acción con la que se abre el diálogo."
+        },
+        "mail": {
+          "label": "Recordar también por correo",
+          "description": "Si un recordatorio nuevo llega también como correo a su bandeja de entrada."
+        }
+      }
     },
     "themes": {
       "title": "Temas",
@@ -4610,6 +4648,11 @@
     "action_label": "Marcar con",
     "action_other": "Otra…",
     "action_text": "Qué hacer",
+    "menu_own": "Mías",
+    "menu_builtin": "Estándar",
+    "menu_organization": "Organización",
+    "menu_edit": "Editar lista…",
+    "add_to_mine": "Añadir a mis acciones",
     "due_label": "Vencimiento",
     "due_date": "Fecha de vencimiento",
     "reminder_label": "Recordatorio",

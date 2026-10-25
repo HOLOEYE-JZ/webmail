@@ -1037,11 +1037,49 @@
       "notifications": "Értesítések",
       "reading": "Olvasás",
       "composing": "Írás",
+      "follow_ups": "Nyomon követés",
       "message_list": "Üzenetlista",
       "general": "Általános",
       "organize": "Mappák és címkék",
       "addons": "Bővítmények",
       "backup": "Biztonsági mentés és visszaállítás"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "Műveletek",
+        "description": "Amivel egy levelet megjelöl. A sorrend itt a menü sorrendje; a kikapcsolt műveletek nem szerepelnek a menüben.",
+        "own": "Saját",
+        "company_title": "A rendszergazda állította be",
+        "default_mark": "Alapértelmezett",
+        "in_menu": "„{action}” a menüben",
+        "move": "„{action}” áthelyezése (nyílbillentyűk)",
+        "rename": "„{action}” átnevezése",
+        "delete": "„{action}” törlése",
+        "rename_field": "Új név ehhez: „{action}”",
+        "save": "Mentés",
+        "cancel": "Mégse",
+        "show_off": "Kikapcsoltak megjelenítése ({count})",
+        "new_field": "Új művelet",
+        "new_placeholder": "Új művelet, pl. „Minták küldése”",
+        "add": "Hozzáadás"
+      },
+      "problems": {
+        "exists": "Ez a művelet már létezik.",
+        "too_long": "Legfeljebb {max} karakter.",
+        "full": "Legfeljebb {max} saját művelet."
+      },
+      "defaults": {
+        "title": "Alapértékek",
+        "description": "Ami egy új nyomon követésnél vagy emlékeztetőnél már ki van választva.",
+        "action": {
+          "label": "Előre kiválasztott művelet",
+          "description": "A művelet, amellyel a párbeszédablak megnyílik."
+        },
+        "mail": {
+          "label": "Emlékeztetés e-mailben is",
+          "description": "Egy új emlékeztető e-mailben is megérkezzen-e a beérkezett üzenetek közé."
+        }
+      }
     },
     "themes": {
       "title": "Témák",
@@ -4610,6 +4648,11 @@
     "action_label": "Megjelölés",
     "action_other": "Egyéb…",
     "action_text": "Teendő",
+    "menu_own": "Sajátok",
+    "menu_builtin": "Alap",
+    "menu_organization": "Szervezet",
+    "menu_edit": "Lista szerkesztése…",
+    "add_to_mine": "Hozzáadás a saját műveleteimhez",
     "due_label": "Határidő",
     "due_date": "Határidő dátuma",
     "reminder_label": "Emlékeztető",

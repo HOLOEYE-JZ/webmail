@@ -1034,11 +1034,49 @@
       "notifications": "알림",
       "reading": "읽기",
       "composing": "작성",
+      "follow_ups": "후속 조치",
       "message_list": "메시지 목록",
       "general": "일반",
       "organize": "폴더 및 태그",
       "addons": "추가 기능",
       "backup": "백업 및 초기화"
+    },
+    "follow_ups": {
+      "actions": {
+        "title": "작업",
+        "description": "메일에 지정하는 플래그 내용입니다. 여기의 순서가 메뉴의 순서이며, 끈 작업은 메뉴에 나오지 않습니다.",
+        "own": "내 작업",
+        "company_title": "관리자가 지정함",
+        "default_mark": "기본값",
+        "in_menu": "메뉴에 '{action}' 표시",
+        "move": "'{action}' 이동 (화살표 키)",
+        "rename": "'{action}' 이름 바꾸기",
+        "delete": "'{action}' 삭제",
+        "rename_field": "'{action}'의 새 이름",
+        "save": "저장",
+        "cancel": "취소",
+        "show_off": "꺼진 작업 표시 ({count})",
+        "new_field": "새 작업",
+        "new_placeholder": "새 작업, 예: '샘플 보내기'",
+        "add": "추가"
+      },
+      "problems": {
+        "exists": "이미 있는 작업입니다.",
+        "too_long": "최대 {max}자까지 입력할 수 있습니다.",
+        "full": "내 작업은 최대 {max}개까지 만들 수 있습니다."
+      },
+      "defaults": {
+        "title": "기본값",
+        "description": "새 후속 조치나 알림에서 미리 선택되는 항목입니다.",
+        "action": {
+          "label": "미리 선택된 작업",
+          "description": "대화 상자가 열릴 때 선택되는 작업입니다."
+        },
+        "mail": {
+          "label": "메일로도 알림",
+          "description": "새 알림을 받은편지함으로 메일로도 받을지 여부입니다."
+        }
+      }
     },
     "themes": {
       "title": "테마",
@@ -4610,6 +4648,11 @@
     "action_label": "플래그 지정 내용",
     "action_other": "기타…",
     "action_text": "할 일",
+    "menu_own": "내 작업",
+    "menu_builtin": "기본",
+    "menu_organization": "조직",
+    "menu_edit": "목록 편집…",
+    "add_to_mine": "내 작업에 추가",
     "due_label": "기한",
     "due_date": "기한 날짜",
     "reminder_label": "미리 알림",
