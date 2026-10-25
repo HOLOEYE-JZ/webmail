@@ -11,23 +11,37 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
-import { useFollowUp, type FollowUpControls } from "@/hooks/use-follow-ups";
+import { completeTask, useFollowUp, type FollowUpControls } from "@/hooks/use-follow-ups";
+import { deleteGroupTask, updateGroupTask, useGroupTask } from "@/hooks/use-group-follow-ups";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAuthStore } from "@/stores/auth-store";
+import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
 import { useFollowUpPopover } from "@/stores/follow-up-popover-store";
+import { toast } from "@/stores/toast-store";
+import { debug } from "@/lib/debug";
 import { displayNow, fromDisplayDate } from "@/lib/timezone";
+import { rescheduleFollowUpTask } from "@/lib/follow-ups";
 import { FOLLOW_UP_CHOICES, scheduleFollowUp } from "@/lib/follow-up-schedule";
+import type { Email } from "@/lib/jmap/types";
 import { useFollowUpFormat } from "./follow-up";
 
 /**
  * The popover "Follow up" for the mail `useFollowUpPopover` names, as a
- * menu: the quick choices, Custom …, For a colleague …, done and remove.
+ * menu: the quick choices, Custom …, For a colleague …, done and remove;
+ * for a follow-up in a group mailbox's task list, the same on that one.
  * A choice closes it, as do Escape, Tab and a click outside. Mounted once.
  */
 export function FollowUpPopoverHost() {
   const email = useFollowUpPopover((s) => s.email);
+  const groupTaskId = useFollowUpPopover((s) => s.groupTaskId);
   const position = useFollowUpPopover((s) => s.position);
   const trigger = useFollowUpPopover((s) => s.trigger);
   const close = useFollowUpPopover((s) => s.close);
-  const controls = useFollowUp(email);
+  const { dialogProps, confirm } = useConfirmDialog();
+  const own = useFollowUp(email);
+  const group = useGroupFollowUpControls(own, email, groupTaskId, confirm);
+  const controls = groupTaskId ? group : own;
   const isOpen = !!email && controls.available;
 
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -63,12 +77,67 @@ export function FollowUpPopoverHost() {
   }, [isOpen, close]);
 
   return (
-    <ContextMenu ref={boxRef} isOpen={isOpen} position={position} onClose={close}>
-      <div ref={menuRef} onKeyDown={onKeyDown} data-testid="follow-up-popover" className="w-72 max-w-full">
-        {isOpen && <FollowUpPopoverItems controls={controls} onClose={close} />}
-      </div>
-    </ContextMenu>
+    <>
+      <ContextMenu ref={boxRef} isOpen={isOpen} position={position} onClose={close}>
+        <div ref={menuRef} onKeyDown={onKeyDown} data-testid="follow-up-popover" className="w-72 max-w-full">
+          {isOpen && <FollowUpPopoverItems controls={controls} onClose={close} />}
+        </div>
+      </ContextMenu>
+      <ConfirmDialog {...dialogProps} />
+    </>
   );
+}
+
+type Confirm = ReturnType<typeof useConfirmDialog>["confirm"];
+
+/**
+ * The popover's handle on a follow-up in a group mailbox's task list, which
+ * every member sees and anyone may move, complete or remove: written there,
+ * never a flag on the mail; removing it is asked first.
+ */
+function useGroupFollowUpControls(own: FollowUpControls, email: Email | null, taskId: string | null, confirm: Confirm): FollowUpControls {
+  const t = useTranslations("follow_up");
+  const client = useAuthStore((s) => s.client);
+  const task = useGroupTask(taskId);
+
+  const write = async (change: () => Promise<boolean>) => {
+    try {
+      await change();
+    } catch (error) {
+      debug.error("group follow-up: not written", error);
+      toast.error(t("failed"));
+    }
+  };
+
+  return {
+    ...own,
+    available: own.available && !!own.group && !!task,
+    // Not the user's own: every member sees it.
+    onlyMe: false,
+    task,
+    apply: async (choice) => {
+      if (!client || !task) return;
+      const { due, reminder } = scheduleFollowUp(choice, displayNow(), own.workingTime);
+      await write(() => updateGroupTask(client, task, rescheduleFollowUpTask(task, due, reminder ? fromDisplayDate(reminder) : null)));
+    },
+    openDialog: (focus) => {
+      if (email && task) useFollowUpDialog.getState().open(email, focus, { taskId: task.id });
+    },
+    markDone: async () => {
+      if (client && task) await completeTask(client, task, { failed: t("failed"), flagFailed: t("flag_failed") });
+    },
+    remove: async () => {
+      if (!client || !task) return;
+      // Colleagues see it too: asked first.
+      if (!(await confirm({
+        title: t("group.remove_title"),
+        message: t("group.remove_confirm", { group: own.group?.name ?? "" }),
+        confirmText: t("remove_button"),
+        variant: "destructive",
+      }))) return;
+      await write(() => deleteGroupTask(client, task));
+    },
+  };
 }
 
 /** The entries: each quick choice with its due day and reminder on the right. */

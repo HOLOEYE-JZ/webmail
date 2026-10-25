@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { differenceInCalendarDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -8,27 +8,21 @@ import { Button, type ButtonProps } from "@/components/ui/button";
 import { Bell, Check, ChevronDown, Flag, Reply, Users } from "@/components/icons";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import {
-  completeTask,
   followUpMailAccount,
   useFollowUp,
   useFollowUpsEnabled,
 } from "@/hooks/use-follow-ups";
-import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
 import { useFollowUpPopover } from "@/stores/follow-up-popover-store";
 import {
-  deleteGroupTask,
   groupListOfTask,
   useGroupFollowUpsOf,
   useMyAddresses,
   usePrincipals,
 } from "@/hooks/use-group-follow-ups";
 import { useGroupTasks } from "@/stores/group-task-store";
-import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuthStore } from "@/stores/auth-store";
 import { groupTaskPeople, isTaskForMe } from "@/lib/group-follow-ups";
 import { useSettingsStore } from "@/stores/settings-store";
-import { toast } from "@/stores/toast-store";
 import { displayNow, toDisplayDate } from "@/lib/timezone";
 import {
   followUpAction,
@@ -327,8 +321,9 @@ export function FollowUpMenuEntry({ email, anchor, onOpen, className, iconClassN
 }
 
 /**
- * The reader's bar while the mail has a follow-up: what, due, reminder, note;
- * Complete, Change …, Remove. On a group mailbox's mail it starts with "only
+ * The reader's bar while the mail has a follow-up, one button as Outlook's:
+ * "⚑ Call · due tomorrow, Mon, 26.10. · 🔔 08:00 ▾", opening the popover
+ * "Follow up" under it. On a group mailbox's mail it starts with "only
  * me": the user's own task, which no colleague sees.
  */
 export function FollowUpInfoBar({ email }: { email: Email }) {
@@ -351,12 +346,11 @@ function OwnFollowUpInfoBar({ email }: { email: Email }) {
       testId="follow-up-bar"
       palette={STATE_CLASSES}
       data={{ "data-only-me": controls.onlyMe || undefined }}
-      lead={controls.onlyMe ? <span data-testid="follow-up-bar-only-me" title={t("kept_only_me_tasks")}>{t("only_me")}</span> : null}
+      lead={controls.onlyMe ? <span data-testid="follow-up-bar-only-me">{t("only_me")}</span> : null}
+      title={controls.onlyMe ? t("kept_only_me_tasks") : undefined}
       reminderAt={followUpReminder(task)}
       settles={settlesOnReply(task)}
-      onDone={() => void controls.markDone()}
-      onChange={() => controls.openDialog("action")}
-      onRemove={() => void controls.remove()}
+      onOpen={(element) => useFollowUpPopover.getState().openBelow(email, element)}
     />
   );
 }
@@ -364,24 +358,25 @@ function OwnFollowUpInfoBar({ email }: { email: Email }) {
 const SEP = <span aria-hidden="true"> · </span>;
 
 /**
- * A follow-up's bar above the mail: who or "only me" (`lead`), what, due,
- * the reminder, settling on an answer, the note; Complete, Change …, Remove.
+ * A follow-up's bar above the mail, one button: "only me" (`lead`), what,
+ * whom it is for (`people`), due, the reminder, settling on an answer, the
+ * note, ▾; a click or Enter opens the popover "Follow up" (`onOpen`).
  */
-function FollowUpBarView({ task, testId, palette, data, lead, reminderAt, settles = false, busy = false, onDone, onChange, onRemove, children }: {
+function FollowUpBarView({ task, testId, palette, data, lead = null, people = null, title, reminderAt, settles = false, onOpen }: {
   task: CalendarTask;
   testId: string;
   palette: Record<FollowUpState, string>;
   data?: DataAttributes;
-  lead: React.ReactNode;
+  lead?: React.ReactNode;
+  /** After what: for whom, by whom. */
+  people?: React.ReactNode;
+  /** The tooltip. */
+  title?: string;
   /** The reminder to show; null for none (or not the user's). */
   reminderAt: Date | null;
   settles?: boolean;
-  busy?: boolean;
-  onDone: () => void;
-  onChange: () => void;
-  onRemove: () => void;
-  /** After the buttons (a confirmation dialog). */
-  children?: React.ReactNode;
+  /** Opens the popover under the bar. */
+  onOpen: (element: HTMLElement) => void;
 }) {
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
@@ -390,28 +385,42 @@ function FollowUpBarView({ task, testId, palette, data, lead, reminderAt, settle
   const due = followUpDueDay(task);
   const note = followUpNote(task);
   const Icon = state === "done" ? Check : Flag;
+  const distance = dueDistance(due, now).kind;
 
   return (
-    <div
+    <button
+      type="button"
       data-testid={testId}
       data-follow-up={state}
       {...data}
-      role="status"
-      className={cn("border-b border-border px-6 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", palette[state])}
+      aria-haspopup="menu"
+      title={title}
+      className={cn(
+        "w-full border-b border-border px-6 py-2 flex items-center gap-3 text-start text-sm transition-colors hover:brightness-95 dark:hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+        palette[state],
+      )}
+      onClick={(e) => onOpen(e.currentTarget)}
     >
-      <Icon className="w-4 h-4 shrink-0" />
-      <span className="flex-1 min-w-[12rem]">
+      <Icon className={cn("w-4 h-4 shrink-0", state !== "done" && "fill-current")} />
+      <span className="flex-1 min-w-0 break-words">
         {lead && <>{lead}{SEP}</>}
         {state === "done" ? t("bar_done") : (
           <>
             <b data-testid={`${testId}-action`}>{fmt.action(task) ?? t("bar_action")}</b>
+            {people && <>{SEP}{people}</>}
             {SEP}
-            {due ? (state === "overdue" ? fmt.due(task, now) : t("due_on", { day: fmt.day(due) })) : t("no_date")}
+            <span data-testid={`${testId}-due`}>
+              {!due ? t("no_date")
+                : state === "overdue" ? fmt.due(task, now)
+                // "due tomorrow, Mon, 26.10.": the near ones by name, with their day.
+                : distance === "today" || distance === "tomorrow" ? `${fmt.due(task, now)}, ${fmt.day(due)}`
+                : t("due_on", { day: fmt.day(due) })}
+            </span>
             {reminderAt && (
               <>
                 {SEP}
                 <span data-testid={`${testId}-reminder`} className="inline-flex items-center gap-1">
-                  <Bell className="h-3.5 w-3.5" aria-label={t("reminder_label")} />
+                  <Bell className="h-3.5 w-3.5" role="img" aria-label={t("reminder_label")} />
                   {fmt.reminder(reminderAt, now)}
                 </span>
               </>
@@ -425,32 +434,14 @@ function FollowUpBarView({ task, testId, palette, data, lead, reminderAt, settle
             {note && (
               <>
                 {SEP}
-                <span data-testid={`${testId}-note`} className="break-words">{t("bar_note", { note })}</span>
+                <span data-testid={`${testId}-note`}>{t("bar_note", { note })}</span>
               </>
             )}
           </>
         )}
       </span>
-      {state !== "done" && (
-        <button type="button" disabled={busy} className="underline underline-offset-2 hover:opacity-80" onClick={onDone}>
-          {t("done_button")}
-        </button>
-      )}
-      {state !== "done" && (
-        <button
-          type="button"
-          data-testid={`${testId}-change`}
-          className="underline underline-offset-2 hover:opacity-80"
-          onClick={onChange}
-        >
-          {t("change_button")}
-        </button>
-      )}
-      <button type="button" disabled={busy} className="underline underline-offset-2 hover:opacity-80" onClick={onRemove}>
-        {t("remove_button")}
-      </button>
-      {children}
-    </div>
+      <ChevronDown className="w-4 h-4 shrink-0 opacity-70" aria-hidden="true" />
+    </button>
   );
 }
 
@@ -531,9 +522,9 @@ function GroupFollowUpChipList({ tasks, listName, className }: { tasks: Calendar
 }
 
 /**
- * The reader's bar for each follow-up in the group's list: "for Anna (from
- * Ben) · Task list sales@ · Write a quote · due Thu"; anyone who reads the
- * list may complete, change or remove it.
+ * The reader's bar for each follow-up in the group's list, one button:
+ * "Write a quote · for Anna, from Ben · due Thu"; anyone who reads the list
+ * may move, complete or remove it in the popover it opens.
  */
 function GroupFollowUpInfoBars({ email }: { email: Email }) {
   const { tasks, list } = useMailGroupFollowUps(email);
@@ -545,61 +536,18 @@ function GroupFollowUpInfoBar({ email, task, listName }: { email: Email; task: C
   const t = useTranslations("follow_up");
   const people = useGroupPeopleText();
   const mine = useMyAddresses();
-  const client = useAuthStore((s) => s.client);
-  const { dialogProps, confirm } = useConfirmDialog();
-  const [busy, setBusy] = useState(false);
   const who = people(task);
-  const messages = { failed: t("failed"), flagFailed: t("flag_failed") };
-
-  const markDone = async () => {
-    if (!client || busy) return;
-    setBusy(true);
-    await completeTask(client, task, messages);
-    setBusy(false);
-  };
-  const remove = async () => {
-    if (!client || busy) return;
-    // Colleagues see it too: asked first.
-    if (!(await confirm({
-      title: t("group.remove_title"),
-      message: t("group.remove_confirm", { group: listName ?? "" }),
-      confirmText: t("remove_button"),
-      variant: "destructive",
-    }))) return;
-    setBusy(true);
-    try {
-      await deleteGroupTask(client, task);
-    } catch {
-      toast.error(t("failed"));
-    }
-    setBusy(false);
-  };
-
   return (
     <FollowUpBarView
       task={task}
       testId="group-follow-up-bar"
       palette={GROUP_STATE_CLASSES}
-      lead={(
-        <>
-          <span data-testid="group-follow-up-bar-for">{who.by ? `${who.forWhom} (${who.by})` : who.forWhom}</span>
-          {listName && (
-            <>
-              {SEP}
-              <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{t("group.list_of", { group: listName })}</span>
-            </>
-          )}
-        </>
-      )}
+      people={<span data-testid="group-follow-up-bar-for">{[who.forWhom, who.by].filter(Boolean).join(", ")}</span>}
+      title={listName ? t("group.chip_title", { group: listName }) : undefined}
       // The reminder is its owner's alone.
       reminderAt={isTaskForMe(task, mine) ? followUpReminder(task) : null}
-      busy={busy}
-      onDone={() => void markDone()}
-      onChange={() => useFollowUpDialog.getState().open(email, "action", { taskId: task.id })}
-      onRemove={() => void remove()}
-    >
-      <ConfirmDialog {...dialogProps} />
-    </FollowUpBarView>
+      onOpen={(element) => useFollowUpPopover.getState().openBelow(email, element, task.id)}
+    />
   );
 }
 

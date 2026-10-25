@@ -625,14 +625,45 @@ describe('the follow-up popover', () => {
 });
 
 describe('what the row and the reader show', () => {
-  it('the info bar names the action, the due day, the reminder and the note, and opens the dialog', () => {
+  it('the info bar is one button naming the action, the due day, the reminder and the note, without links', () => {
     useTaskStore.setState({ tasks: [followUp()] });
     render(<FollowUpInfoBar email={mail} />);
+    const bar = screen.getByTestId('follow-up-bar');
+    expect(bar.tagName).toBe('BUTTON');
+    expect(bar.getAttribute('aria-haspopup')).toBe('menu');
     expect(screen.getByTestId('follow-up-bar-action').textContent).toBe('Write a quote');
+    expect(screen.getByTestId('follow-up-bar-due').textContent).toMatch(/^due_on/);
     expect(screen.getByTestId('follow-up-bar-reminder')).toBeTruthy();
     expect(screen.getByTestId('follow-up-bar-note').textContent).toBe('bar_note{"note":"Two units"}');
-    fireEvent.click(screen.getByTestId('follow-up-bar-change'));
-    expect(useFollowUpDialog.getState()).toMatchObject({ email: mail, focus: 'action' });
+    expect(bar.querySelectorAll('button, a')).toHaveLength(0);
+    expect(screen.queryByText('done_button')).toBeNull();
+    expect(screen.queryByText('change_button')).toBeNull();
+    expect(screen.queryByText('remove_button')).toBeNull();
+  });
+
+  it('names a follow-up due tomorrow so, with its day, and an overdue one by how long', () => {
+    useTaskStore.setState({ tasks: [followUp({ due: '2026-10-27T00:00:00' })] });
+    const tomorrow = render(<FollowUpInfoBar email={mail} />);
+    expect(screen.getByTestId('follow-up-bar-due').textContent).toMatch(/^due_tomorrow, /);
+    tomorrow.unmount();
+
+    useTaskStore.setState({ tasks: [followUp({ due: '2026-10-23T00:00:00' })] });
+    render(<FollowUpInfoBar email={mail} />);
+    expect(screen.getByTestId('follow-up-bar').getAttribute('data-follow-up')).toBe('overdue');
+    expect(screen.getByTestId('follow-up-bar-due').textContent).toBe('overdue_days{"count":3}');
+  });
+
+  it('a click on the info bar opens the popover under it, and its "Custom…" the dialog', () => {
+    useTaskStore.setState({ tasks: [followUp()] });
+    render(<><FollowUpInfoBar email={mail} /><FollowUpPopoverHost /></>);
+    const bar = screen.getByTestId('follow-up-bar');
+    fireEvent.click(bar);
+    expect(useFollowUpPopover.getState().email).toBe(mail);
+    expect(useFollowUpPopover.getState().trigger).toBe(bar);
+    expect(useFollowUpPopover.getState().groupTaskId).toBeNull();
+    fireEvent.click(screen.getByTestId('follow-up-custom'));
+    expect(useFollowUpDialog.getState().email).toBe(mail);
+    expect(useFollowUpDialog.getState().group).toBeNull();
   });
 
   it('the chip names an action other than the default and the reminder', () => {

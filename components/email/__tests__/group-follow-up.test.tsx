@@ -369,27 +369,68 @@ describe('"only me" and tasks naming no one', () => {
 });
 
 describe('at the mail', () => {
-  it('every reader sees the chip and the bar: for whom, set by whom, in which list', async () => {
+  it('every reader sees the chip and the bar: what, for whom, set by whom, in which list', async () => {
     setGroupList(groupList(), [groupTask()]);
     render(<><FollowUpChip email={groupMail} /><FollowUpInfoBar email={groupMail} /></>);
     expect(screen.getByTestId('group-follow-up-chip').textContent).toMatch(/^Anna · Write a quote · due_on/);
     // The reminder is Anna's: not shown to the user.
     expect(screen.getByTestId('group-follow-up-chip').textContent).not.toContain('reminder');
+    const bar = screen.getByTestId('group-follow-up-bar');
+    expect(bar.tagName).toBe('BUTTON');
+    expect(bar.textContent).toMatch(/^Write a quote · group\.for_person\{"name":"Anna"\}, group\.by_person\{"name":"Ben"\} · due_on/);
     expect(screen.getByTestId('group-follow-up-bar-for').textContent)
-      .toBe('group.for_person{"name":"Anna"} (group.by_person{"name":"Ben"})');
-    expect(screen.getByTestId('group-follow-up-bar').textContent).toContain('group.list_of{"group":"sales@example.com"}');
+      .toBe('group.for_person{"name":"Anna"}, group.by_person{"name":"Ben"}');
+    expect(bar.title).toBe('group.chip_title{"group":"sales@example.com"}');
+    expect(screen.queryByTestId('group-follow-up-bar-reminder')).toBeNull();
     // No own follow-up: no "only me" chip.
     expect(screen.queryByTestId('follow-up-chip')).toBeNull();
   });
 
-  it('anyone may complete it: written in the group\'s list, no flag', async () => {
+  it('the bar opens the popover on that task: "Custom…" edits it in the group\'s list', () => {
     setGroupList(groupList(), [groupTask()]);
-    render(<FollowUpInfoBar email={groupMail} />);
-    await act(async () => { fireEvent.click(screen.getByText('done_button')); });
+    render(<><FollowUpInfoBar email={groupMail} /><FollowUpPopoverHost /></>);
+    fireEvent.click(screen.getByTestId('group-follow-up-bar'));
+    expect(useFollowUpPopover.getState().groupTaskId).toBe('grp:t1');
+    expect(screen.getByTestId('follow-up-popover').textContent).toContain('menu_title');
+    expect(screen.getByTestId('follow-up-popover').textContent).not.toContain('menu_title_only_me');
+    fireEvent.click(screen.getByTestId('follow-up-custom'));
+    expect(useFollowUpDialog.getState().group).toEqual({ taskId: 'grp:t1' });
+    expect(useFollowUpDialog.getState().email?.id).toBe('M1');
+  });
+
+  it('anyone may complete it there: written in the group\'s list, no flag', async () => {
+    setGroupList(groupList(), [groupTask()]);
+    render(<><FollowUpInfoBar email={groupMail} /><FollowUpPopoverHost /></>);
+    fireEvent.click(screen.getByTestId('group-follow-up-bar'));
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-done')); });
     await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalled());
     expect(client.updateCalendarTask.mock.calls[0][1]).toMatchObject({ progress: 'completed' });
     expect(useGroupTasks.getState().tasks[0].progress).toBe('completed');
     expect(client.toggleStar).not.toHaveBeenCalled();
+  });
+
+  it('a quick choice moves it in the group\'s list', async () => {
+    setGroupList(groupList(), [groupTask()]);
+    render(<><FollowUpInfoBar email={groupMail} /><FollowUpPopoverHost /></>);
+    fireEvent.click(screen.getByTestId('group-follow-up-bar'));
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-tomorrow')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalled());
+    expect(client.updateCalendarTask.mock.calls[0][0]).toBe('grp:t1');
+    expect(client.updateCalendarTask.mock.calls[0][1]).toMatchObject({ due: '2026-10-27T00:00:00', progress: 'needs-action' });
+    expect(client.createCalendarTask).not.toHaveBeenCalled();
+    expect(client.toggleStar).not.toHaveBeenCalled();
+  });
+
+  it('removing it asks first, colleagues seeing it too', async () => {
+    setGroupList(groupList(), [groupTask()]);
+    render(<><FollowUpInfoBar email={groupMail} /><FollowUpPopoverHost /></>);
+    fireEvent.click(screen.getByTestId('group-follow-up-bar'));
+    fireEvent.click(screen.getByTestId('follow-up-remove'));
+    expect(await screen.findByText('group.remove_confirm{"group":"sales@example.com"}')).toBeTruthy();
+    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
+    await act(async () => { fireEvent.click(screen.getByText('remove_button')); });
+    await waitFor(() => expect(client.deleteCalendarTask).toHaveBeenCalled());
+    expect(useGroupTasks.getState().tasks).toHaveLength(0);
   });
 
   it('the user\'s own task says "me", and its reminder shows', () => {
