@@ -5,7 +5,7 @@ import {
   followUpMailSummary,
   followUpMessageId,
   followUpMailRef,
-  isDestructiveSyncAction,
+  waitsForFreshTasks,
   parseFollowUpMirror,
   planFollowUpSync,
   relinkFollowUpTask,
@@ -56,7 +56,7 @@ describe('planFollowUpSync', () => {
   it('clears the flag of a task deleted elsewhere', () => {
     const { actions, mirror } = plan({ tasks: [], present: new Set(), flagged: true, mirror: seen });
     expect(actions).toEqual([{ kind: 'flag', taskId: 'T1', emailId: 'M1', flagged: false, taskGone: true }]);
-    expect(actions.every(isDestructiveSyncAction)).toBe(true);
+    expect(actions.every(waitsForFreshTasks)).toBe(true);
     expect(mirror).toEqual({});
   });
 
@@ -71,23 +71,24 @@ describe('planFollowUpSync', () => {
     expect(actions).toEqual([{ kind: 'flag', taskId: 'T1', emailId: 'M1', flagged: true }]);
   });
 
-  it('counts only what takes something away as destructive', () => {
-    expect(isDestructiveSyncAction({ kind: 'delete-task', taskId: 'T1', emailId: 'M1' })).toBe(true);
-    expect(isDestructiveSyncAction({ kind: 'flag', taskId: 'T1', emailId: 'M1', flagged: false })).toBe(false);
-    expect(isDestructiveSyncAction({ kind: 'flag', taskId: 'T1', emailId: 'M1', flagged: true })).toBe(false);
+  it('waits for a fresh task list only for what the list or the flag no longer says', () => {
+    expect(waitsForFreshTasks({ kind: 'complete-task', taskId: 'T1', emailId: 'M1', flagClearedElsewhere: true })).toBe(true);
+    expect(waitsForFreshTasks({ kind: 'complete-task', taskId: 'T1', emailId: 'M1' })).toBe(false);
+    expect(waitsForFreshTasks({ kind: 'flag', taskId: 'T1', emailId: 'M1', flagged: false })).toBe(false);
+    expect(waitsForFreshTasks({ kind: 'flag', taskId: 'T1', emailId: 'M1', flagged: true })).toBe(false);
   });
 
-  it('deletes the open task when the flag was cleared elsewhere (Clear Flag)', () => {
+  it('completes the open task when the flag was cleared elsewhere, never deletes it', () => {
     const { actions, mirror } = plan({ flagged: false, mirror: seen });
-    expect(actions).toEqual([{ kind: 'delete-task', taskId: 'T1', emailId: 'M1' }]);
-    expect(mirror).toEqual({});
+    expect(actions).toEqual([{ kind: 'complete-task', taskId: 'T1', emailId: 'M1', flagClearedElsewhere: true }]);
+    expect(mirror).toEqual(seen);
   });
 
-  it('completes instead of deleting the open task of a mail whose star was taken off in the app', () => {
-    const { actions, mirror } = plan({ flagged: false, mirror: seen, unstarredHere: new Set(['M1']) });
+  it('completes the open task of a mail whose star was taken off in the app, also one never seen in step', () => {
+    const { actions, mirror } = plan({ flagged: false, unstarredHere: new Set(['M1']) });
     expect(actions).toEqual([{ kind: 'complete-task', taskId: 'T1', emailId: 'M1' }]);
-    expect(actions.some(isDestructiveSyncAction)).toBe(false);
-    expect(mirror).toEqual(seen);
+    expect(actions.some(waitsForFreshTasks)).toBe(false);
+    expect(mirror).toEqual({});
   });
 
   it('lets the task win when it changed since it was last seen in step', () => {

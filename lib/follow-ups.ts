@@ -1111,18 +1111,20 @@ export type FollowUpSyncAction =
    * cleared because the task is no longer in the list.
    */
   | { kind: "flag"; taskId: string; emailId: string; flagged: boolean; taskGone?: true }
-  /** The flag was cleared elsewhere: the open task goes, as Outlook's Clear Flag. */
-  | { kind: "delete-task"; taskId: string; emailId: string }
-  /** The user took the star off in this app: the open task is completed. */
-  | { kind: "complete-task"; taskId: string; emailId: string };
+  /**
+   * The open task is completed: the user took the star off in this app, or
+   * (`flagClearedElsewhere`) the flag was cleared in another client. The
+   * check never deletes a task.
+   */
+  | { kind: "complete-task"; taskId: string; emailId: string; flagClearedElsewhere?: true };
 
 /**
- * Whether an action takes something away on the strength of what the task
- * list lacks or the flag no longer says: it waits for a complete task list
- * loaded just before.
+ * Whether an action acts on the strength of what the task list lacks or the
+ * flag no longer says: it waits for a complete task list loaded just before,
+ * so a task another tab or device changed a moment ago is seen as it is now.
  */
-export function isDestructiveSyncAction(action: FollowUpSyncAction): boolean {
-  return action.kind === "delete-task" || (action.kind === "flag" && !!action.taskGone);
+export function waitsForFreshTasks(action: FollowUpSyncAction): boolean {
+  return action.kind === "complete-task" ? !!action.flagClearedElsewhere : !!action.taskGone;
 }
 
 export interface FollowUpSyncInput {
@@ -1137,7 +1139,7 @@ export interface FollowUpSyncInput {
   mirror: FollowUpMirror;
   /**
    * Mails the user took the star off in this app (this session): their open
-   * follow-up is completed, never deleted, whatever the list held then.
+   * follow-up is completed, also one never seen in step here.
    */
   unstarredHere?: ReadonlySet<string>;
 }
@@ -1152,8 +1154,11 @@ export function isOpenFollowUp(task: Pick<CalendarTask, "progress">): boolean {
  * the original, the flag its mirror:
  *
  * - A task completed or deleted clears the flag; one reopened sets it.
- * - A flag cleared elsewhere deletes the open task, unless the task changed
- *   since it was last seen in step (then the task wins and the flag is set).
+ * - A flag cleared elsewhere (another client, a phone) completes the open
+ *   task, unless the task changed since it was last seen in step (then the
+ *   task wins and the flag is set). Nothing here ever deletes a task, so a
+ *   flag cleared in another tab whose own write of the task is late or
+ *   failed only completes what that tab meant to complete.
  * - A flag set elsewhere on a mail without an open follow-up stays a plain
  *   flag.
  * - A mail that is gone changes nothing; its task stays.
@@ -1178,17 +1183,16 @@ export function planFollowUpSync(input: FollowUpSyncInput): { actions: FollowUpS
       if (task.fresh) mirror[task.id] = { emailId: task.emailId, calendarId: task.calendarId, updated: task.updated };
     } else if (task.open && input.unstarredHere?.has(task.emailId)) {
       actions.push({ kind: "complete-task", taskId: task.id, emailId: task.emailId });
-      if (seen) mirror[task.id] = seen;
     } else if (task.open) {
       if (seen && seen.emailId === task.emailId && seen.updated === task.updated) {
-        actions.push({ kind: "delete-task", taskId: task.id, emailId: task.emailId });
-        delete mirror[task.id];
+        // Kept until the completion is written; the next check forgets it.
+        actions.push({ kind: "complete-task", taskId: task.id, emailId: task.emailId, flagClearedElsewhere: true });
       } else {
         // New, reopened, moved to another day, or never seen in step here.
         // Known limit: a browser without the entry (a new one, or storage
         // cleared) cannot tell a flag cleared elsewhere from a task reopened
-        // elsewhere, so it sets the flag again rather than delete the task;
-        // a Clear Flag made before its first check is undone once. That errs
+        // elsewhere, so it sets the flag again rather than complete the task;
+        // a flag cleared before its first check comes back once. That errs
         // on the side that loses nothing.
         actions.push({ kind: "flag", taskId: task.id, emailId: task.emailId, flagged: true });
       }

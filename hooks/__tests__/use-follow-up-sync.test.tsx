@@ -156,15 +156,34 @@ describe('useFollowUpSync', () => {
     expect(flagOf('M1')).toBe(true);
   });
 
-  it('deletes the open task when the flag is cleared elsewhere, as Outlook\'s Clear Flag', async () => {
+  it('completes the open task when the flag is cleared elsewhere (another client, a phone), never deletes it', async () => {
     await inStep();
     server.mails.get('M1')!.keywords = {};
     await push();
-    expect(client.deleteCalendarTask).toHaveBeenCalledWith('T1');
-    expect(server.tasks).toEqual([]);
-    expect(useTaskStore.getState().tasks).toEqual([]);
-    // Its own delete starts nothing further.
+    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
+    expect(server.tasks[0].progress).toBe('completed');
+    expect(useTaskStore.getState().tasks[0].progress).toBe('completed');
+    // Its own write starts nothing further.
+    await push();
+    await load();
     expect(client.toggleStar).not.toHaveBeenCalled();
+    expect(client.updateCalendarTask).toHaveBeenCalledTimes(1);
+  });
+
+  it('a star taken off in another tab whose completion comes late or fails: this tab completes the task, deletes nothing', async () => {
+    await inStep();
+    // The other tab cleared the flag; its write of the task has not come (or failed).
+    server.mails.get('M1')!.keywords = {};
+    await push();
+    expect(server.tasks[0].progress).toBe('completed');
+    // The other tab's completion comes late after all.
+    server.tasks = [{ ...server.tasks[0], progress: 'completed', updated: '2026-10-26T10:00:00Z' }];
+    await load();
+    await push();
+    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
+    expect(client.toggleStar).not.toHaveBeenCalled();
+    expect(flagOf('M1')).toBe(false);
+    expect(server.tasks).toHaveLength(1);
   });
 
   it('keeps a task completed in another tab a moment ago: the flag it cleared deletes nothing', async () => {
@@ -251,14 +270,13 @@ describe('useFollowUpSync', () => {
     await inStep();
     server.tasks = [...server.tasks, followUp('T2', 'M1', {}, 'group')];
     await load();
-    // The flag cleared elsewhere: the own follow-up goes (Clear Flag), the group's stays.
+    // The flag cleared elsewhere: the own follow-up is completed, the group's stays open.
     server.mails.set('M1', { keywords: {}, messageId: ['M1@example.com'] });
     await push();
-    expect(client.deleteCalendarTask).toHaveBeenCalledWith('T1');
-    expect(client.deleteCalendarTask).not.toHaveBeenCalledWith('T2');
-    expect(server.tasks.map((t) => t.id)).toEqual(['T2']);
+    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
+    expect(server.tasks.map((t) => [t.id, t.progress])).toEqual([['T1', 'completed'], ['T2', 'needs-action']]);
     // Completed, the group's follow-up asks for no flag either.
-    server.tasks = [{ ...server.tasks[0], progress: 'completed', updated: '2026-10-26T10:00:00Z' }];
+    server.tasks = [server.tasks[0], { ...server.tasks[1], progress: 'completed', updated: '2026-10-26T10:00:00Z' }];
     await load();
     expect(client.toggleStar).not.toHaveBeenCalled();
     for (const [ids] of client.getEmailFields.mock.calls) expect(ids).toEqual(['M1']);
@@ -310,16 +328,17 @@ describe('useFollowUpSync takes nothing away on a list read in part', () => {
     expect(server.tasks).toHaveLength(1);
   });
 
-  it('deletes no task for a cleared flag when the reload before it is read in part', async () => {
+  it('completes no task for a cleared flag when the reload before it is read in part', async () => {
     await inStep();
     server.mails.get('M1')!.keywords = {};
     server.complete = false;
     await push();
-    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
-    // Once the task list loads in full again, the Clear Flag goes through.
+    expect(client.updateCalendarTask).not.toHaveBeenCalled();
+    // Once the task list loads in full again, the cleared flag completes the task.
     server.complete = true;
     await load();
-    expect(client.deleteCalendarTask).toHaveBeenCalledWith('T1');
+    expect(server.tasks[0].progress).toBe('completed');
+    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
   });
 
   it('clears no flag for a task the list lacks until a complete load shows it gone', async () => {
@@ -346,15 +365,17 @@ describe('useFollowUpSync tries again after a failure', () => {
     expect(flagOf('M1')).toBe(false);
   });
 
-  it('deletes the task at the next check when the first delete failed', async () => {
+  it('completes the task at the next check when the first write failed, without putting the flag back', async () => {
     await inStep();
-    client.deleteCalendarTask.mockRejectedValueOnce(new Error('down'));
+    client.updateCalendarTask.mockRejectedValueOnce(new Error('down'));
     server.mails.get('M1')!.keywords = {};
     await push();
-    expect(server.tasks).toHaveLength(1);
-    await push();
-    expect(server.tasks).toEqual([]);
+    expect(server.tasks[0].progress).toBe('needs-action');
     expect(flagOf('M1')).toBe(false);
+    await push();
+    expect(server.tasks[0].progress).toBe('completed');
+    expect(flagOf('M1')).toBe(false);
+    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
   });
 });
 
@@ -431,7 +452,7 @@ describe('the star taken off in the app', () => {
     expect(client.deleteCalendarTask).not.toHaveBeenCalled();
   });
 
-  it('lifts the mark when the star is set again in the app: a later Clear Flag elsewhere deletes as usual', async () => {
+  it('lifts the mark when the star is set again in the app: a flag cleared elsewhere later completes as usual', async () => {
     useEmailStore.setState({ emails: [row] });
     await inStep();
     await act(async () => {
@@ -444,7 +465,8 @@ describe('the star taken off in the app', () => {
     expect(flagOf('M1')).toBe(true);
     server.mails.get('M1')!.keywords = {};
     await push();
-    expect(client.deleteCalendarTask).toHaveBeenCalledWith('T1');
+    expect(server.tasks[0].progress).toBe('completed');
+    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
   });
 
   it('leaves the follow-up of a star taken off another account\'s mail alone', async () => {

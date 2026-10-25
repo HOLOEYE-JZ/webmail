@@ -12,7 +12,6 @@ import {
   followUpMailSummary,
   followUpMessageId,
   followUpsByEmailId,
-  isDestructiveSyncAction,
   isOpenFollowUp,
   parseFollowUpMirror,
   planFollowUpSync,
@@ -20,6 +19,7 @@ import {
   type FollowUpMirror,
   type FollowUpSyncAction,
   type FollowUpSyncTask,
+  waitsForFreshTasks,
 } from "@/lib/follow-ups";
 import type { CalendarTask, EmailAddress } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
@@ -174,8 +174,8 @@ function calendarOf(task: CalendarTask): string {
 
 /**
  * One check: reads the flags of the mails with an open (or remembered)
- * follow-up, then sets or clears flags and deletes tasks as `planFollowUpSync`
- * says. Exported for tests.
+ * follow-up, then sets or clears flags and completes tasks as
+ * `planFollowUpSync` says. Exported for tests.
  */
 export async function checkFollowUps(client: IJMAPClient, loginId: string | null, refetched = false): Promise<void> {
   const taskState = useTaskStore.getState();
@@ -231,11 +231,11 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
   });
   const actions = plan.actions.filter((a) => !refused.has(refusalKey(a, tasks.find((t) => t.id === a.taskId))));
 
-  // Nothing is taken away (a task deleted, a flag cleared for a task gone)
-  // but on a complete task list loaded just now: another tab or device may
-  // have completed the task a moment ago and cleared the flag itself, and a
-  // list read only in part lacks tasks that still exist.
-  if (!refetched && actions.some(isDestructiveSyncAction)) {
+  // A task is completed for a flag cleared elsewhere, or a flag cleared for
+  // a task gone, only on a complete task list loaded just now: another tab
+  // or device may have changed the task a moment ago, and a list read only
+  // in part lacks tasks that still exist.
+  if (!refetched && actions.some(waitsForFreshTasks)) {
     ownFetches += 1;
     try {
       await useTaskStore.getState().fetchTasks(client, scope);
@@ -260,15 +260,8 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
     const refusal = refusalKey(action, task);
     try {
       if (action.kind === "complete-task") {
-        if (!(await completeUnstarred(client, action.taskId, action.emailId))) keep(action.taskId);
-        continue;
-      }
-      if (action.kind === "delete-task") {
-        debug.log("tasks", "follow-up: flag cleared elsewhere, task deleted", action.taskId);
-        if (!(await useTaskStore.getState().deleteTask(client, action.taskId))) {
-          refused.add(refusal);
-          keep(action.taskId);
-        }
+        if (action.flagClearedElsewhere) debug.log("tasks", "follow-up: flag cleared elsewhere, task completed", action.taskId);
+        if (!(await completeForClearedFlag(client, action.taskId, action.emailId))) keep(action.taskId);
         continue;
       }
       const serverFlagged = flags.get(action.emailId) ?? undefined;
@@ -310,13 +303,13 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
 }
 
 /**
- * Completes the follow-up of a mail the user took the star off in the app.
- * Should the task not be written (a plugin refused, the server failed), the
- * star goes back on: the task stays the original. The mail stays marked
- * until one of the two is written, so a later check tries again and never
- * deletes the task. Resolves whether task and star are in step.
+ * Completes the follow-up of a mail whose star was taken off, in the app or
+ * elsewhere. Should a plugin refuse it, the star goes back on: the task
+ * stays the original. Should the server fail, nothing else is written and a
+ * later check tries again. The mail stays marked until one of the two is
+ * written. Resolves whether task and star are in step.
  */
-async function completeUnstarred(client: IJMAPClient, taskId: string, emailId: string): Promise<boolean> {
+async function completeForClearedFlag(client: IJMAPClient, taskId: string, emailId: string): Promise<boolean> {
   try {
     const task = useTaskStore.getState().tasks.find((t) => t.id === taskId);
     const patch = task ? completedTaskPatch(task, new Date()) : { progress: "completed" as const };
@@ -326,6 +319,7 @@ async function completeUnstarred(client: IJMAPClient, taskId: string, emailId: s
     }
   } catch (error) {
     debug.error("follow-up: not completed after the star was taken off", error);
+    return false;
   }
   try {
     if (await mirrorFlag(client, { id: emailId, keywords: {} }, true, client.getAccountId(), false)) {
@@ -378,8 +372,7 @@ export function useFollowUpSync(): void {
     });
     onFollowUpChanged(() => schedule(TASKS_DELAY_MS));
     // Taking the star off in the app completes the follow-up, as the flag's
-    // own click does; it never deletes it (the check would read the missing
-    // flag as Clear Flag otherwise).
+    // own click does, also one the check never saw in step.
     const stopStars = onStarToggled(({ email, starred }) => {
       if (!isOwnMail(email, client)) return;
       if (starred) {
