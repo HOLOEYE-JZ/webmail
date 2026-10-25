@@ -122,7 +122,7 @@ export function scheduleFollowUp(
 }
 
 /**
- * The composer's "Remind me if no answer by …" (plan 037 decision 10): a sent
+ * The composer's "Remind me if no answer by …": a sent
  * mail comes back three working days or a week after the day it goes out.
  */
 export const NO_ANSWER_CHOICES = ["three-workdays", "week"] as const;

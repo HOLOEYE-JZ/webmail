@@ -847,7 +847,7 @@ export function EmailComposer({
   const [priority, setPriority] = useState<MessagePriority>(initialData?.priority ?? 'normal');
   const priorityRef = useRef(priority);
   priorityRef.current = priority;
-  // "Follow up" (plan 037 decision 10): written on the sent copy once the mail has left.
+  // "Follow up": written on the sent copy once the mail has left.
   const [followUp, setFollowUpState] = useState<SendFollowUp | null>(() => readSendFollowUp(initialData?.followUp));
   const followUpRef = useRef(followUp);
   followUpRef.current = followUp;

@@ -522,7 +522,7 @@ function FollowUpBarView({ task, testId, palette, data, lead, reminderAt, settle
 }
 
 // ---------------------------------------------------------------------------
-// A group mailbox's task list (plan 037 decisions 2, 3)
+// A group mailbox's task list
 // ---------------------------------------------------------------------------
 
 const GROUP_STATE_CLASSES: Record<FollowUpState, string> = {
@@ -599,7 +599,7 @@ function GroupFollowUpChipList({ tasks, listName, className }: { tasks: Calendar
 
 /**
  * The reader's bar for each follow-up in the group's list: "for Anna (from
- * Ben) · Task list vertrieb@ · Write a quote · due Thu"; anyone who reads the
+ * Ben) · Task list sales@ · Write a quote · due Thu"; anyone who reads the
  * list may complete, change or remove it.
  */
 function GroupFollowUpInfoBars({ email }: { email: Email }) {
@@ -672,7 +672,7 @@ function GroupFollowUpInfoBar({ email, task, listName }: { email: Email; task: C
 
 /**
  * Where a task of a group's list comes from, before what the pane and the
- * reminders window say of it: "👥 vertrieb@ · from Ben · ". Nothing for a
+ * reminders window say of it: "👥 sales@ · from Ben · ". Nothing for a
  * task of the user's own list.
  */
 export function GroupTaskSource({ task }: { task: CalendarTask }) {

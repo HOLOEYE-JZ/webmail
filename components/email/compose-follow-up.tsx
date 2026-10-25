@@ -37,7 +37,7 @@ function useFromAccount(client: IJMAPClient | null, fromEmail: string | undefine
 }
 
 /**
- * "⚑ Follow up" under the message being written (plan 037 decision 10):
+ * "⚑ Follow up" under the message being written:
  * none, "Remind me if no answer by <day>" three working days or a week on,
  * or "Custom …" (the follow-up dialog, its choices kept until sending). Once
  * the mail has left, the follow-up stands on its sent copy, for the user

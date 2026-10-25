@@ -52,7 +52,7 @@ function groupList(shareWith: Record<string, CalendarRights> = { anna: read, ben
 }
 
 const principals: Principal[] = [
-  { id: 'me', type: 'individual', name: 'me@example.com', email: 'me@example.com', description: 'Jacob' },
+  { id: 'me', type: 'individual', name: 'me@example.com', email: 'me@example.com', description: 'Mia' },
   { id: 'anna', type: 'individual', name: 'anna@example.com', email: 'anna@example.com', description: 'Anna' },
   { id: 'ben', type: 'individual', name: 'ben@example.com', email: 'ben@example.com', description: 'Ben' },
   { id: 'grp', type: 'group', name: 'sales@example.com', email: 'sales@example.com' },
@@ -157,7 +157,7 @@ beforeEach(() => {
   client = makeClient();
   useAuthStore.setState({
     isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login',
-    username: 'me@example.com', identities: [{ id: 'i', name: 'Jacob', email: 'me@example.com', mayDelete: false }],
+    username: 'me@example.com', identities: [{ id: 'i', name: 'Mia', email: 'me@example.com', mayDelete: false }],
   });
   useSettingsStore.setState({ enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
   useCalendarStore.setState({ supportsCalendar: true, calendars: [...ownCalendars, groupList()], participantIdentities: [] });
@@ -390,7 +390,7 @@ describe('at the mail', () => {
 
   it('the user\'s own task says "me", and its reminder shows', () => {
     setGroupList(groupList(), [groupTask({
-      participants: { for: { '@type': 'Participant', name: 'Jacob', calendarAddress: 'mailto:me@example.com', roles: { owner: true } } as never },
+      participants: { for: { '@type': 'Participant', name: 'Mia', calendarAddress: 'mailto:me@example.com', roles: { owner: true } } as never },
     })]);
     render(<FollowUpChip email={groupMail} />);
     const chip = screen.getByTestId('group-follow-up-chip');

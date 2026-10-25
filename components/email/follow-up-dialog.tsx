@@ -105,8 +105,8 @@ export function FollowUpDialogHost() {
 }
 
 /**
- * Where a new task can go besides the user's own list, and for whom (plan
- * 037 decision 8): "Visible" (only me / everyone in a group mailbox) and
+ * Where a new task can go besides the user's own list, and for whom:
+ * "Visible" (only me / everyone in a group mailbox) and
  * "For" (me / the people the group's task list is shared with).
  */
 interface PlaceChoice {
@@ -221,7 +221,7 @@ export function FollowUpDialog({ email, focus, group, onClose }: {
   } else {
     controls = {
       ...own,
-      // "Visible: everyone in vertrieb@" turns a new follow-up into one of the group's list.
+      // "Visible: everyone in sales@" turns a new follow-up into one of the group's list.
       save: (details) => (details.groupAccountId && list ? writeGroup(list, null, details) : own.save(details)),
       place: !own.task && list
         ? { groups: [list], fixed: false, initialGroup: null, initialPerson: null, colleague: false }
@@ -232,7 +232,7 @@ export function FollowUpDialog({ email, focus, group, onClose }: {
 }
 
 /**
- * The composer's "Follow up: Custom …" (plan 037 decision 10): the follow-up
+ * The composer's "Follow up: Custom …": the follow-up
  * dialog for a mail not sent yet. It writes nothing: Save hands the choices
  * to the composer (`onChoose`), which keeps them with the draft and has them
  * written on the sent copy once the mail has left. `accountId` is the mail
@@ -504,7 +504,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   // Where it is kept: the task's own list, else where a new one goes.
   const taskCalendarId = task ? Object.keys(task.calendarIds ?? {})[0] : undefined;
   const list = (taskCalendarId && calendars.find((c) => c.id === taskCalendarId)) || followUpCalendars(calendars)[0];
-  // "Settles itself when an answer comes" (plan 037 decision 9), for a mail's
+  // "Settles itself when an answer comes", for a mail's
   // follow-up only: the server would send the alarm mail all the same, so it
   // is not offered then (and taken off a task that has one).
   // Neither is offered for a group's list: the alarm mail would go to the

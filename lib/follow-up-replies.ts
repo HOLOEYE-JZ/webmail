@@ -5,8 +5,8 @@ import { parseDate, utcDateTime } from "@/lib/task-dates";
 import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
 
 /**
- * Follow-ups that settle themselves when an answer comes (plan 037 decision
- * 9, Gmail's nudge the other way round): before Bulwark shows such a
+ * Follow-ups that settle themselves when an answer comes (Gmail's nudge the
+ * other way round): before Bulwark shows such a
  * reminder, and when it loads the tasks, it looks in the mail's thread for an
  * answer; one found completes the task, and no reminder comes.
  *
@@ -20,7 +20,7 @@ import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
  * folder or come back as a Cc copy) names the mail too, and is no answer.
  *
  * Why the thread: Stalwart's `header` search finds nothing where `headers`
- * is not among its indexed fields (plan 037 M3), and matches tokens where it
+ * is not among its indexed fields, and matches tokens where it
  * is; the thread holds the answers, and each one's headers are read and
  * compared here. An answer whose subject changed so much that the server put
  * it in a thread of its own is not found: the reminder comes.
@@ -36,7 +36,7 @@ import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
 // ---------------------------------------------------------------------------
 
 /**
- * "Settles itself when an answer comes" (plan 037 decision 9), kept on the
+ * "Settles itself when an answer comes", kept on the
  * task's relation to the mail's Message-ID (`relatedTo`) as an RFC 8984 §3.3
  * vendor-specific property: the Message-ID is what an answer names, so the
  * mark belongs to it. Its value is a `ReplyWatchValue`.
@@ -45,7 +45,7 @@ import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
  * which knows nothing of answers, and Stalwart sends an alarm mail even for a
  * task answered meanwhile), so the reminder's time, and whether it was
  * dismissed, live in the mark too. A vendor property on the task itself is
- * refused by Stalwart (plan 037 M2); on the relation it is kept, written and
+ * refused by Stalwart; on the relation it is kept, written and
  * patched by path, and goes to iCalendar as `JSPROP`
  * (draft-ietf-calext-jscalendar-icalendar), which a CalDAV client that keeps
  * unknown properties writes back. A keyword would become a category a phone

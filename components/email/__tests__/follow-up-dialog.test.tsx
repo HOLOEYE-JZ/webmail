@@ -394,7 +394,7 @@ describe('FollowUpDialog: the reminder also as a mail', () => {
   });
 
   it('is not offered for a task in a shared list (a group mailbox\'s), whose alarm mail stays as it is', async () => {
-    useCalendarStore.setState({ calendars: [...calendars, { id: 'group', name: 'vertrieb@', isShared: true } as Calendar] });
+    useCalendarStore.setState({ calendars: [...calendars, { id: 'group', name: 'sales@', isShared: true } as Calendar] });
     const task = followUp({ id: 'group-task', calendarIds: { group: true }, isShared: true, links: null, title: 'Call back' });
     task.alerts = { ...task.alerts, 'follow-up-mail': mailAlert(new Date(2026, 9, 28, 10, 0)) };
     useTaskStore.setState({ tasks: [task] });

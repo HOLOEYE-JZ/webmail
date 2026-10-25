@@ -7,7 +7,7 @@ import {
 import { NO_ANSWER_CHOICES, scheduleNoAnswer, type NoAnswerChoice, type WorkingTime } from "@/lib/follow-up-schedule";
 
 /**
- * "⚑ Follow up" in the composer (plan 037 decision 10): what the user chose
+ * "⚑ Follow up" in the composer: what the user chose
  * for the mail being written, kept with the composer's draft until it is
  * sent, and turned into a follow-up on its sent copy once it has left.
  *

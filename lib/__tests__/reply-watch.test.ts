@@ -26,7 +26,7 @@ import type { CalendarEventAlert, CalendarTask } from '../jmap/types';
 // alert: the phone and the mail server know nothing of answers.
 
 const NOW = new Date('2026-10-28T09:30:00Z');
-const KEY = '<M1@holoeye.example>';
+const KEY = '<M1@example.com>';
 const minutes = (n: number) => new Date(NOW.getTime() + n * 60_000);
 const utc = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
@@ -34,7 +34,7 @@ const input = (over: Partial<FollowUpTaskInput> = {}): FollowUpTaskInput => ({
   title: 'Follow up: Offer',
   mailUrl: 'https://mail.example/mail/message/M1',
   subject: 'Offer',
-  messageId: ['M1@holoeye.example'],
+  messageId: ['M1@example.com'],
   calendarId: 'tasks',
   due: new Date(2026, 9, 30),
   reminderAt: minutes(60),
@@ -79,7 +79,7 @@ describe('a new follow-up that settles on an answer', () => {
 describe('replyWatch', () => {
   it('reads only an object: a watch taken off is kept as null by Stalwart', () => {
     const task = stored(buildFollowUpTask(input({ settlesOnReply: true })));
-    expect(replyWatch(task)).toMatchObject({ key: KEY, messageId: 'M1@holoeye.example', reminder: minutes(60) });
+    expect(replyWatch(task)).toMatchObject({ key: KEY, messageId: 'M1@example.com', reminder: minutes(60) });
     const off = { ...task, relatedTo: { [KEY]: { '@type': 'Relation', relation: { parent: true }, [REPLY_WATCH_PROPERTY]: null } } } as unknown as CalendarTask;
     expect(replyWatch(off)).toBeNull();
     expect(replyWatch({ relatedTo: null })).toBeNull();
@@ -103,7 +103,7 @@ describe('editing a follow-up', () => {
   it('turned on for a task written without the relation, which it gets', () => {
     const before = { ...plain(), relatedTo: null };
     const patch = editFollowUpTask(before, {
-      title: null, due: null, reminderAt: null, note: '', settlesOnReply: true, messageId: ['M1@holoeye.example'],
+      title: null, due: null, reminderAt: null, note: '', settlesOnReply: true, messageId: ['M1@example.com'],
     });
     const after = applyPatchObject(before as CalendarTask, patch);
     expect(settlesOnReply(after)).toBe(true);

@@ -12,9 +12,9 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 /**
  * The task lists of the group mailboxes the user reaches, and their tasks
  * (lib/group-follow-ups.ts; read by hooks/use-group-follow-ups.ts). Kept
- * apart from the task store, which holds the user's own list: the flag keeping (#341) and the pane read that one alone,
- * and a group account that cannot be read never makes the own list count as
- * read in part. Only one list per group account is read, the one follow-ups
+ * apart from the task store, which holds the user's own list: keeping the
+ * flags in step and the pane read that one alone, and a group account that
+ * cannot be read never makes the own list count as read in part. Only one list per group account is read, the one follow-ups
  * go into, so the cost stays that of the groups the user is in.
  */
 

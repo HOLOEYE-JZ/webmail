@@ -51,7 +51,7 @@ export const FOLLOW_UP_ALERT_ID = "follow-up";
 /**
  * The key of the reminder's alarm mail: an alert `action: email` with the
  * reminder, which the server sends into the user's inbox even when no client
- * runs (Stalwart does so for tasks too, plan 037 M1).
+ * runs (Stalwart does so for tasks too).
  */
 export const FOLLOW_UP_MAIL_ALERT_ID = "follow-up-mail";
 
@@ -122,7 +122,7 @@ export interface FollowUpTaskInput {
   /** Whether the reminder also comes as a mail into the inbox (`mailReminderOffered`). */
   mailReminder?: boolean;
   /**
-   * Whether it settles itself when an answer comes (plan 037 decision 9):
+   * Whether it settles itself when an answer comes:
    * then the task gets no alert, the reminder is kept in its reply watch, and
    * no alarm mail is written. Needs the Message-ID; without one, a plain
    * follow-up is written.
@@ -404,7 +404,7 @@ export interface FollowUpDetails {
   note: string;
   /** Whether the reminder also comes as a mail into the inbox; left out where the dialog did not offer it. */
   mailReminder?: boolean;
-  /** Whether it settles itself when an answer comes (plan 037 decision 9); left out: as the task has it. */
+  /** Whether it settles itself when an answer comes; left out: as the task has it. */
   settlesOnReply?: boolean;
   /**
    * Where it is kept, as the dialog's "Visible" says: left out or null, the
@@ -764,7 +764,7 @@ export function hasFollowUpMailAlert(task: Pick<CalendarTask, "alerts">): boolea
  * server sends it into the inbox of the account whose task list holds the
  * task, so only for the user's own list: in a group mailbox's list it would
  * reach the group's inbox, not the member. Not for a follow-up that settles
- * itself when an answer comes (`settlesOnReply`, plan 037 decision 9): the
+ * itself when an answer comes (`settlesOnReply`): the
  * server would send it all the same.
  */
 export function mailReminderOffered(

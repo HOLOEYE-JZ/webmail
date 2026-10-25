@@ -5571,7 +5571,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         }
       }
 
-      // A group mailbox's task list changed (plan 037): its follow-ups at the
+      // A group mailbox's task list changed: its follow-ups at the
       // mails and its reminders for the user are read again; a changed list
       // (its shares) reloads the calendars, which reload the lists.
       const otherCalendarAccounts = Object.entries(change.changed)

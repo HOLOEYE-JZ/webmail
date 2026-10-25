@@ -23,7 +23,7 @@ import type { Calendar, CalendarRights, CalendarTask, Principal } from '../jmap/
 const ME = new Set(['me@example.com', 'jacob@example.com']);
 const anna = { id: 'anna', name: 'Anna', email: 'anna@example.com' };
 const ben = { id: 'ben', name: 'Ben', email: 'ben@example.com' };
-const me = { id: null, name: 'Jacob', email: 'me@example.com' };
+const me = { id: null, name: 'Mia', email: 'me@example.com' };
 
 const rights = (over: Partial<CalendarRights> = {}): CalendarRights => ({
   mayReadFreeBusy: true, mayReadItems: true, mayWriteAll: true, mayWriteOwn: true,
@@ -47,7 +47,7 @@ function task(over: Partial<CalendarTask> = {}): CalendarTask {
 const forAnna = () => groupTaskParticipants(anna, ben);
 
 describe('the owner participant', () => {
-  it('names whom it is for by calendarAddress, as owner, with who set it (plan 037 M2)', () => {
+  it('names whom it is for by calendarAddress, as owner, with who set it', () => {
     const participants = groupTaskParticipants(anna, me);
     expect(participants[GROUP_OWNER_PARTICIPANT_ID]).toMatchObject({
       '@type': 'Participant',
@@ -55,7 +55,7 @@ describe('the owner participant', () => {
       calendarAddress: 'mailto:anna@example.com',
       kind: 'individual',
       roles: { owner: true },
-      [SET_BY_PROPERTY]: { name: 'Jacob', email: 'me@example.com' },
+      [SET_BY_PROPERTY]: { name: 'Mia', email: 'me@example.com' },
     });
   });
 

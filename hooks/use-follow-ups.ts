@@ -445,15 +445,15 @@ export interface FollowUpControls {
   /**
    * The mail lies in a group mailbox (another JMAP account): its follow-up is
    * kept in the user's own task list alone ("only me"), no colleague sees it,
-   * and nothing is set on the mail, never $flagged (plan 037 decisions 2, 5).
+   * and nothing is set on the mail, never $flagged.
    */
   onlyMe: boolean;
   /** The group mailbox's name, when the mail lies in one and its name is known. */
   mailboxName: string | null;
   /**
    * The group mailbox's task list, when the mail lies in a group mailbox
-   * whose list the user may write: a follow-up there can be for a colleague
-   * (plan 037 decisions 2, 3). Null on the user's own mail.
+   * whose list the user may write: a follow-up there can be for a
+   * colleague. Null on the user's own mail.
    */
   group: GroupTaskList | null;
   /** Opens the dialog for a new follow-up in the group's list ("For a colleague …"). */

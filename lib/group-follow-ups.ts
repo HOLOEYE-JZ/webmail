@@ -4,8 +4,8 @@ import { followUpMailRef } from "@/lib/follow-ups";
 import { isOpenTask } from "@/lib/calendar-tasks";
 
 /**
- * Follow-ups and reminders in a group mailbox's task list (plan 037
- * decisions 2, 3, 8): kept in the task list of the group's own account,
+ * Follow-ups and reminders in a group mailbox's task list: kept in the task
+ * list of the group's own account,
  * which everyone it is shared with sees, and for one of them.
  *
  * Whom it is for is the task's owner participant (RFC 8984 `participants`,
@@ -170,7 +170,7 @@ export function groupTaskOwnerPatch(
 
 /**
  * The group account's task list: the one holding only tasks, else its
- * default calendar (Stalwart makes one per account, plan 037 M4), else the
+ * default calendar (Stalwart makes one per account), else the
  * first. Only a calendar of that account, never a user's, and one the user
  * may write to. Null when there is none.
  */
@@ -279,7 +279,7 @@ export function groupFollowUpsByEmailId(
 /** A group account's task list, with the account's name. */
 export interface GroupTaskList {
   accountId: string;
-  /** The account's name, its address in Stalwart ("vertrieb@example.com"). */
+  /** The account's name, its address in Stalwart ("sales@example.com"). */
   name: string;
   list: Calendar;
 }

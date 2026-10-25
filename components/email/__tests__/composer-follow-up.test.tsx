@@ -101,7 +101,7 @@ vi.mock('@/stores/settings-store', () => {
     signaturePosition: 'below_quote',
     signatureSeparatorEnabled: true,
     requestReadReceiptDefault: false,
-    // Follow-ups on (plan 037): the composer offers "Follow up".
+    // With follow-ups on, the composer offers "Follow up".
     enableCalendarTasks: true,
     calendarWorkingDays: [1, 2, 3, 4, 5],
     firstDayOfWeek: 1,
@@ -196,7 +196,7 @@ vi.mock('@/lib/template-utils', () => ({ substitutePlaceholders: (s: string) => 
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-// Plan 037 decision 10: "Follow up" under the message; the choice goes to the
+// "Follow up" under the message; the choice goes to the
 // host with the send, which sets it on the sent copy once the mail has left.
 
 const DRAFT = {

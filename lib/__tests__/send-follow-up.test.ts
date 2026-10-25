@@ -12,7 +12,7 @@ import {
   type SendFollowUp,
 } from '../send-follow-up';
 
-// The composer's "Follow up" (plan 037 decision 10): a sent mail comes back
+// The composer's "Follow up": a sent mail comes back
 // when no answer came by a day, counted from the day it goes out.
 
 const at = (day: number, hour = 9, minute = 0) => new Date(2026, 9, day, hour, minute);

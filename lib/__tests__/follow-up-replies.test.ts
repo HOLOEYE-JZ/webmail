@@ -20,8 +20,8 @@ function mail(id: string, over: Partial<ThreadMail> = {}): ThreadMail {
   return {
     id,
     messageId: [`${id}@kessler.example`],
-    inReplyTo: ['M1@holoeye.example'],
-    references: ['M1@holoeye.example'],
+    inReplyTo: ['M1@example.com'],
+    references: ['M1@example.com'],
     receivedAt: '2026-10-27T10:00:00Z',
     mailboxIds: { inbox: true },
     keywords: {},
@@ -30,12 +30,12 @@ function mail(id: string, over: Partial<ThreadMail> = {}): ThreadMail {
 }
 
 const find = (mails: ThreadMail[], after: string | null = null) =>
-  findReply({ messageId: 'M1@holoeye.example', flagged: FLAGGED, mails, ownFolderIds: SENT, after });
+  findReply({ messageId: 'M1@example.com', flagged: FLAGGED, mails, ownFolderIds: SENT, after });
 
 describe('findReply', () => {
   it('finds a received mail naming the flagged one in In-Reply-To or References', () => {
     expect(find([mail('A')])?.id).toBe('A');
-    expect(find([mail('B', { inReplyTo: ['other@x'], references: ['root@x', '<M1@holoeye.example>'] })])?.id).toBe('B');
+    expect(find([mail('B', { inReplyTo: ['other@x'], references: ['root@x', '<M1@example.com>'] })])?.id).toBe('B');
     expect(find([mail('C', { inReplyTo: null, references: null })])).toBeNull();
   });
 
@@ -47,7 +47,7 @@ describe('findReply', () => {
 
   it('leaves out the flagged mail, a copy of it, and mails received before it', () => {
     expect(find([{ ...mail('M1'), receivedAt: '2026-10-27T10:00:00Z' }])).toBeNull();
-    expect(find([mail('copy', { messageId: ['<M1@holoeye.example>'] })])).toBeNull();
+    expect(find([mail('copy', { messageId: ['<M1@example.com>'] })])).toBeNull();
     expect(find([mail('early', { receivedAt: '2026-10-25T10:00:00Z' })])).toBeNull();
     expect(find([mail('same', { receivedAt: FLAGGED.receivedAt })])).toBeNull();
   });
@@ -63,14 +63,14 @@ describe('findReply', () => {
   });
 
   it('counts no mail from the account\'s own addresses, wherever it lies', () => {
-    const own = new Set(['jz@holoeye.example', 'sales@holoeye.example']);
-    const findOwn = (m: ThreadMail) => findReply({ messageId: 'M1@holoeye.example', flagged: FLAGGED, mails: [m], ownFolderIds: SENT, ownAddresses: own });
+    const own = new Set(['me@example.com', 'sales@example.com']);
+    const findOwn = (m: ThreadMail) => findReply({ messageId: 'M1@example.com', flagged: FLAGGED, mails: [m], ownFolderIds: SENT, ownAddresses: own });
     // A nudge sent, then filed into an archive folder.
-    expect(findOwn(mail('nudge', { mailboxIds: { archive: true }, from: [{ email: 'JZ@holoeye.example' }] }))).toBeNull();
+    expect(findOwn(mail('nudge', { mailboxIds: { archive: true }, from: [{ email: 'ME@example.com' }] }))).toBeNull();
     // The user's own copy by Cc, in the inbox.
-    expect(findOwn(mail('cc', { mailboxIds: { inbox: true }, from: [{ email: 'jz@holoeye.example' }] }))).toBeNull();
+    expect(findOwn(mail('cc', { mailboxIds: { inbox: true }, from: [{ email: 'me@example.com' }] }))).toBeNull();
     // A group mailbox's answer sent from the group's address.
-    expect(findOwn(mail('group', { from: [{ email: 'sales@holoeye.example' }] }))).toBeNull();
+    expect(findOwn(mail('group', { from: [{ email: 'sales@example.com' }] }))).toBeNull();
     expect(findOwn(mail('rita', { from: [{ email: 'rita@kessler.example' }] }))?.id).toBe('rita');
   });
 
@@ -92,7 +92,7 @@ function watched(id: string, over: Partial<CalendarTask> = {}, reminderAt: Date 
       title: 'Follow up: Offer',
       mailUrl: `https://mail.example/mail/message/${id}-mail`,
       subject: 'Offer',
-      messageId: [`${id}@holoeye.example`],
+      messageId: [`${id}@example.com`],
       calendarId: 'tasks',
       due: new Date(2026, 9, 30),
       reminderAt,
@@ -107,11 +107,11 @@ function watched(id: string, over: Partial<CalendarTask> = {}, reminderAt: Date 
 
 describe('watchesForReply', () => {
   it('names the open, own, single follow-ups that settle on an answer', () => {
-    expect(watchesForReply(watched('T1'))?.messageId).toBe('T1@holoeye.example');
+    expect(watchesForReply(watched('T1'))?.messageId).toBe('T1@example.com');
     expect(watchesForReply(watched('T2', { progress: 'completed' }))).toBeNull();
     expect(watchesForReply(watched('T3', { isShared: true }))).toBeNull();
     expect(watchesForReply(watched('T4', { recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'daily' }] } as Partial<CalendarTask>))).toBeNull();
-    const plain = { ...watched('T5'), relatedTo: { '<T5@holoeye.example>': { '@type': 'Relation' as const, relation: { parent: true } } } };
+    const plain = { ...watched('T5'), relatedTo: { '<T5@example.com>': { '@type': 'Relation' as const, relation: { parent: true } } } };
     expect(watchesForReply(plain)).toBeNull();
   });
 });
@@ -155,7 +155,7 @@ describe('answeredTaskPatch', () => {
     const after = applyPatchObject(task, answeredTaskPatch(task, watch, '2026-10-27T10:00:00Z', 'Answer received on 27/10/2026', now));
     expect(after.progress).toBe('completed');
     expect(after.description).toBe('Ask about the price\nAnswer received on 27/10/2026');
-    const value = (after.relatedTo?.['<T1@holoeye.example>'] as unknown as Record<string, Record<string, unknown>>)[REPLY_WATCH_PROPERTY];
+    const value = (after.relatedTo?.['<T1@example.com>'] as unknown as Record<string, Record<string, unknown>>)[REPLY_WATCH_PROPERTY];
     expect(value.answeredAt).toBe('2026-10-27T10:00:00Z');
     expect(value.acknowledged).toBe('2026-10-28T09:00:00Z');
     expect(after.alerts ?? null).toBeNull();

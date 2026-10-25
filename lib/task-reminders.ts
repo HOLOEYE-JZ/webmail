@@ -40,7 +40,7 @@ import { isGroupFollowUpTask, isTaskForMe } from "@/lib/group-follow-ups";
  *   it fired; a snooze is this app's matter), so the dialog still reads
  *   "also as a mail"; only a new time set in the dialog or by a quick choice
  *   writes it anew. Completing the task takes it off (`completedTaskPatch`):
- *   Stalwart sends it for a completed task too (plan 037 M1). An alarm mail
+ *   Stalwart sends it for a completed task too. An alarm mail
  *   set elsewhere is never touched.
  * - Each write names the alerts it changes by path
  *   (`alerts/<id>/acknowledged`), never the whole map, so a change another

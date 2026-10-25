@@ -19,7 +19,7 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) => (values ? `${key}${JSON.stringify(values)}` : key),
 }));
 
-// The composer's "Follow up" (plan 037 decision 10): once a mail has left, its
+// The composer's "Follow up": once a mail has left, its
 // sent copy gets the follow-up, for the user.
 
 const calendars = [

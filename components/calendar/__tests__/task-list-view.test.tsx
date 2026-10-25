@@ -59,7 +59,7 @@ const groupCalendar = {
 } as Calendar;
 
 const principals: Principal[] = [
-  { id: 'me', type: 'individual', name: 'me@example.com', email: 'me@example.com', description: 'Jacob' },
+  { id: 'me', type: 'individual', name: 'me@example.com', email: 'me@example.com', description: 'Mia' },
   { id: 'anna', type: 'individual', name: 'anna@example.com', email: 'anna@example.com', description: 'Anna' },
   { id: 'grp', type: 'group', name: 'sales@example.com', email: 'sales@example.com' },
 ] as Principal[];
@@ -138,7 +138,7 @@ beforeEach(() => {
   client = makeClient();
   useAuthStore.setState({
     isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login',
-    username: 'me@example.com', identities: [{ id: 'i', name: 'Jacob', email: 'me@example.com', mayDelete: false }],
+    username: 'me@example.com', identities: [{ id: 'i', name: 'Mia', email: 'me@example.com', mayDelete: false }],
   });
   useSettingsStore.setState({ enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1, timeFormat: '24h' });
   useCalendarStore.setState({ supportsCalendar: true, calendars: [...ownCalendars, groupCalendar], participantIdentities: [] });
@@ -205,7 +205,7 @@ describe('the task list in the calendar', () => {
   });
 
   it("filters: follow-ups on mails, reminders without one, a group's list whole", () => {
-    const forMe = groupTask('grp:g1', 'Price list', day(29), 'me@example.com', 'Jacob');
+    const forMe = groupTask('grp:g1', 'Price list', day(29), 'me@example.com', 'Mia');
     const forAnna = groupTask('grp:g2', 'Call back Haverkamp', day(30), 'anna@example.com', 'Anna');
     useTaskStore.setState({ tasks: [mailFollowUp, reminder('r1', 'Order toner', day(29))] });
     setGroup([forMe, forAnna]);
@@ -249,7 +249,7 @@ describe('the task list in the calendar', () => {
     const updated = vi.fn();
     taskHooks.onTaskToggleComplete.register('p', toggled);
     taskHooks.onTaskUpdate.register('p', updated);
-    setGroup([groupTask('grp:g1', 'Price list', day(29), 'me@example.com', 'Jacob')]);
+    setGroup([groupTask('grp:g1', 'Price list', day(29), 'me@example.com', 'Mia')]);
     useTaskStore.setState({ tasks: [reminder('r1', 'Order toner', day(29)), mailFollowUp] });
     render(<Harness />);
 
@@ -274,7 +274,7 @@ describe('the task list in the calendar', () => {
 
   it('reopens a group task in its list, and completes a cancelled task as before', async () => {
     useTaskStore.setState({ showCompleted: true, tasks: [reminder('c1', 'Cancelled', day(29), null, { progress: 'cancelled' })] });
-    setGroup([groupTask('grp:g1', 'Price list', day(29), 'me@example.com', 'Jacob')]);
+    setGroup([groupTask('grp:g1', 'Price list', day(29), 'me@example.com', 'Mia')]);
     useGroupTasks.setState({ tasks: [{ ...useGroupTasks.getState().tasks[0], progress: 'completed' }] });
     render(<Harness />);
     await act(async () => { fireEvent.click(within(item('grp:g1')).getByTestId('task-toggle')); });

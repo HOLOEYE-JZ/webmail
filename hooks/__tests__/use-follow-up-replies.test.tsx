@@ -13,7 +13,7 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { CalendarTask } from '@/lib/jmap/types';
 
 // Before a follow-up that settles on an answer reminds, its mail's thread is
-// looked at; an answer completes the task instead (plan 037 decision 9).
+// looked at; an answer completes the task instead.
 
 interface ServerMail {
   account: string;
@@ -42,8 +42,8 @@ function makeServer() {
     queryEmailFields: vi.fn(async (filter: { inThread?: string }, _props: string[], account?: string) => [...mails.entries()]
       .filter(([, m]) => m.account === of(account) && m.threadId === filter.inThread)
       .map(([id, m]) => ({ id, ...m }))),
-    getIdentities: vi.fn(async () => [{ id: 'i1', email: 'jz@holoeye.example' }]),
-    getSharedAccounts: vi.fn(() => [{ id: 'acc', name: 'jz@holoeye.example' }, { id: 'group', name: 'sales@holoeye.example' }]),
+    getIdentities: vi.fn(async () => [{ id: 'i1', email: 'me@example.com' }]),
+    getSharedAccounts: vi.fn(() => [{ id: 'acc', name: 'me@example.com' }, { id: 'group', name: 'sales@example.com' }]),
     getMailboxes: vi.fn(async (account?: string) => [
       { id: 'inbox', role: 'inbox', accountId: of(account) },
       { id: 'sent', role: 'sent', accountId: of(account) },
@@ -70,7 +70,7 @@ function followUp(id: string, emailId: string, mailAccount: string | null = null
       title: 'Follow up: Offer',
       mailUrl: `https://mail.example/mail/message/${emailId}${mailAccount ? `?mailAccount=${mailAccount}` : ''}`,
       subject: 'Offer',
-      messageId: [`${emailId}@holoeye.example`],
+      messageId: [`${emailId}@example.com`],
       calendarId: 'tasks',
       due: new Date(2026, 9, 30),
       reminderAt: new Date(NOW - 10 * 60_000),
@@ -85,15 +85,15 @@ function followUp(id: string, emailId: string, mailAccount: string | null = null
 
 function flagged(id: string, account = 'acc', over: Partial<ServerMail> = {}) {
   server.mails.set(id, {
-    account, threadId: `th-${id}`, messageId: [`${id}@holoeye.example`], receivedAt: '2026-10-26T08:00:00Z',
+    account, threadId: `th-${id}`, messageId: [`${id}@example.com`], receivedAt: '2026-10-26T08:00:00Z',
     mailboxIds: { sent: true }, keywords: { $flagged: account === 'acc' }, ...over,
   });
 }
 
 function answer(id: string, to: string, account = 'acc', over: Partial<ServerMail> = {}) {
   server.mails.set(id, {
-    account, threadId: `th-${to}`, messageId: [`${id}@kessler.example`], inReplyTo: [`${to}@holoeye.example`],
-    references: [`${to}@holoeye.example`], receivedAt: '2026-10-27T10:00:00Z', mailboxIds: { inbox: true }, keywords: {}, ...over,
+    account, threadId: `th-${to}`, messageId: [`${id}@kessler.example`], inReplyTo: [`${to}@example.com`],
+    references: [`${to}@example.com`], receivedAt: '2026-10-27T10:00:00Z', mailboxIds: { inbox: true }, keywords: {}, ...over,
   });
 }
 
@@ -165,9 +165,9 @@ describe('checkReplies', () => {
 
   it('counts neither an own nudge filed elsewhere nor a group\'s answer from its own address', async () => {
     flagged('M1');
-    answer('N1', 'M1', 'acc', { mailboxIds: { archive: true }, from: [{ email: 'jz@holoeye.example' }] });
+    answer('N1', 'M1', 'acc', { mailboxIds: { archive: true }, from: [{ email: 'me@example.com' }] });
     flagged('G1', 'group');
-    answer('GA', 'G1', 'group', { from: [{ email: 'sales@holoeye.example' }] });
+    answer('GA', 'G1', 'group', { from: [{ email: 'sales@example.com' }] });
     server.setTasks([followUp('T1', 'M1'), followUp('T2', 'G1', 'group')]);
     await check();
     expect(server.tasks().map((t) => t.progress)).toEqual(['needs-action', 'needs-action']);

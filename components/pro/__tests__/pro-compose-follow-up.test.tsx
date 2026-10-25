@@ -13,7 +13,7 @@ import { cancelAnnouncedSend, resetAnnouncedSends } from '@/lib/plugin-after-sen
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { Calendar, CalendarTask } from '@/lib/jmap/types';
 
-// The host path of the composer's "Follow up" (plan 037 decision 10): the
+// The host path of the composer's "Follow up": the
 // compose tab hands the send to the store, then writes the follow-up on the
 // sent copy once the mail has left. An undo hold (the "send delay" setting,
 // submitted as delayedUntil) holds it back; a send undone writes nothing.
