@@ -3639,7 +3639,24 @@
       "quick_add_placeholder": "Pievienot uzdevumu...",
       "due_today": "Šodien",
       "due_tomorrow": "Rīt",
-      "overdue": "Kavēts"
+      "overdue": "Kavēts",
+      "scope_label": "Rādīt",
+      "scope_all": "Rādītie kalendāri",
+      "scope_mine": "Man",
+      "scope_follow_ups": "Atgādinājumi par vēstulēm",
+      "scope_reminders": "Atgādinājumi bez vēstules",
+      "scope_group": "{group} (viss)",
+      "scope_group_title": "Viss {group} uzdevumu sarakstā, neatkarīgi no tā, kam tas paredzēts",
+      "repeats": "Atkārtojas: rādīts nākamajā reizē",
+      "groups": {
+        "overdue": "Nokavēti",
+        "today": "Šodien",
+        "tomorrow": "Rīt",
+        "this_week": "Šonedēļ",
+        "later": "Vēlāk",
+        "no_date": "Bez datuma",
+        "done": "Paveikti"
+      }
     },
     "birthday_calendar": "Dzimšanas dienas",
     "months": {

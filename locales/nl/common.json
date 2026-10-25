@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "Taak toevoegen...",
       "due_today": "Vervalt vandaag",
       "due_tomorrow": "Vervalt morgen",
-      "overdue": "Achterstallig"
+      "overdue": "Achterstallig",
+      "scope_label": "Tonen",
+      "scope_all": "Getoonde agenda’s",
+      "scope_mine": "Voor mij",
+      "scope_follow_ups": "Opvolgingen (e-mails)",
+      "scope_reminders": "Herinneringen zonder e-mail",
+      "scope_group": "{group} (alles)",
+      "scope_group_title": "Alles in de takenlijst van {group}, voor wie ook",
+      "repeats": "Herhaalt: getoond bij de volgende keer",
+      "groups": {
+        "overdue": "Te laat",
+        "today": "Vandaag",
+        "tomorrow": "Morgen",
+        "this_week": "Deze week",
+        "later": "Later",
+        "no_date": "Zonder datum",
+        "done": "Afgerond"
+      }
     },
     "months": {
       "jan": "jan",

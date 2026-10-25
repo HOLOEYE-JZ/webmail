@@ -8,6 +8,7 @@ import type { Calendar } from "@/lib/jmap/types";
 import { CalendarColorPicker } from "@/components/settings/calendar-management-settings";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { taskListGroupOf } from '@/lib/task-list';
 import { useTaskStore } from "@/stores/task-store";
 import { useAccountStore } from "@/stores/account-store";
 import { BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
@@ -107,9 +108,10 @@ export function CalendarSidebarPanel({
   const setViewMode = useCalendarStore((s) => s.setViewMode);
 
   const pendingTaskCount = useMemo(() => tasks.filter(t => t.progress !== 'completed' && t.progress !== 'cancelled').length, [tasks]);
+  // Overdue as the task list groups them: due before today, never a repeating task.
   const overdueTaskCount = useMemo(() => {
     const now = displayNow();
-    return tasks.filter(t => t.progress !== 'completed' && t.progress !== 'cancelled' && t.due && new Date(t.due) < now).length;
+    return tasks.filter(t => taskListGroupOf(t, now) === 'overdue').length;
   }, [tasks]);
 
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<Calendar>();

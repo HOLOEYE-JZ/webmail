@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "افزودن وظیفه...",
       "due_today": "امروز",
       "due_tomorrow": "فردا",
-      "overdue": "عقب‌افتاده"
+      "overdue": "عقب‌افتاده",
+      "scope_label": "نمایش",
+      "scope_all": "تقویم‌های نمایش‌داده‌شده",
+      "scope_mine": "برای من",
+      "scope_follow_ups": "پیگیری‌ها (ایمیل‌ها)",
+      "scope_reminders": "یادآوری‌های بدون ایمیل",
+      "scope_group": "{group} (همه)",
+      "scope_group_title": "همه چیز در فهرست کارهای {group}، برای هر کس که باشد",
+      "repeats": "تکرارشونده: در نوبت بعدی نشان داده می‌شود",
+      "groups": {
+        "overdue": "گذشته از موعد",
+        "today": "امروز",
+        "tomorrow": "فردا",
+        "this_week": "این هفته",
+        "later": "بعداً",
+        "no_date": "بدون تاریخ",
+        "done": "انجام‌شده"
+      }
     },
     "toolbar": {
       "more": "اقدامات بیشتر",

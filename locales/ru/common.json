@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "Добавить задачу...",
       "due_today": "Сегодня",
       "due_tomorrow": "Завтра",
-      "overdue": "Просрочено"
+      "overdue": "Просрочено",
+      "scope_label": "Показать",
+      "scope_all": "Показанные календари",
+      "scope_mine": "Для меня",
+      "scope_follow_ups": "Напоминания по письмам",
+      "scope_reminders": "Напоминания без письма",
+      "scope_group": "{group} (все)",
+      "scope_group_title": "Всё в списке задач {group}, для кого бы ни было",
+      "repeats": "Повторяется: показана на ближайшую дату",
+      "groups": {
+        "overdue": "Просрочено",
+        "today": "Сегодня",
+        "tomorrow": "Завтра",
+        "this_week": "На этой неделе",
+        "later": "Позже",
+        "no_date": "Без даты",
+        "done": "Выполнено"
+      }
     },
     "months": {
       "jan": "янв.",

@@ -25,7 +25,7 @@ import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
 import { CalendarWeekView } from "@/components/calendar/calendar-week-view";
 import { CalendarDayView } from "@/components/calendar/calendar-day-view";
 import { CalendarAgendaView } from "@/components/calendar/calendar-agenda-view";
-import { TaskListView, filterTasksForList } from "@/components/calendar/task-list-view";
+import { TaskListView } from "@/components/calendar/task-list-view";
 import { TaskToolbar } from "@/components/calendar/task-toolbar";
 import { TaskModal } from "@/components/calendar/task-modal";
 import { MiniCalendar } from "@/components/calendar/mini-calendar";
@@ -67,6 +67,9 @@ import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
 import { canCreateEventsIn } from "@/lib/calendar-editability";
 import { QuickCreatePopover, type QuickCreateDraft } from "@/components/calendar/quick-create-popover";
 import { useTaskStore } from "@/stores/task-store";
+import { useTaskList } from "@/hooks/use-task-list";
+import { useFollowUpsEnabled } from "@/hooks/use-follow-ups";
+import { deleteGroupTask, isGroupTask, updateGroupTask } from "@/hooks/use-group-follow-ups";
 import { useContactStore } from "@/stores/contact-store";
 import { cn, generateUUID } from "@/lib/utils";
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRights, CalendarTask } from "@/lib/jmap/types";
@@ -668,10 +671,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   }, [client, toggleTaskCompleteFn]);
 
   // false: a plugin stopped it and said why, so the task form stays open.
+  // A group mailbox's task is written so its list (kept apart) follows too.
   const handleSaveTask = useCallback(async (data: Partial<import("@/lib/jmap/types").CalendarTask>) => {
     if (!client) return false;
     const saved = editTask
-      ? await taskStore.updateTask(client, editTask.id, data)
+      ? isGroupTask(editTask)
+        ? await updateGroupTask(client, editTask, data)
+        : await taskStore.updateTask(client, editTask.id, data)
       : (await taskStore.createTask(client, data)) !== null;
     if (!saved) return false;
     setShowTaskModal(false);
@@ -681,10 +687,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   const handleDeleteTask = useCallback(async (id: string) => {
     if (!client) return;
-    if (!(await taskStore.deleteTask(client, id))) return;
+    const deleted = isGroupTask({ id })
+      ? await deleteGroupTask(client, editTask ?? ({ id } as CalendarTask))
+      : await taskStore.deleteTask(client, id);
+    if (!deleted) return;
     setShowTaskModal(false);
     setEditTask(null);
-  }, [client, taskStore]);
+  }, [client, taskStore, editTask]);
 
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1495,10 +1504,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     return filtered;
   }, [events, selectedCalendarIds, showBirthdayCalendar, birthdayEvents]);
 
-  // The tasks the task list shows; plugin buttons in its toolbar act on them.
-  const listedTaskIds = useMemo(
-    () => filterTasksForList(taskStore.tasks, selectedCalendarIds, taskStore.filter, taskStore.showCompleted).map((task) => task.id),
-    [taskStore.tasks, selectedCalendarIds, taskStore.filter, taskStore.showCompleted],
+  // The task list, grouped by due day; plugin buttons in its toolbar act on the tasks it shows.
+  const taskList = useTaskList(selectedCalendarIds);
+  const followUpsEnabled = useFollowUpsEnabled();
+  const listedTaskIds = taskList.ids;
+  const taskScopeLists = useMemo(
+    () => taskList.groupLists.map((l) => ({ accountId: l.accountId, name: l.name })),
+    [taskList.groupLists],
   );
 
   // Tasks on the month, week and day grids follow the calendar filter like
@@ -1694,15 +1706,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 onCreateTask={openCreateTaskModal}
                 taskIds={listedTaskIds}
                 compact={isMobile}
+                scope={followUpsEnabled ? taskList.scope : undefined}
+                onScopeChange={taskStore.setListScope}
+                groupLists={taskScopeLists}
               />
               <TaskListView
-                tasks={taskStore.tasks}
+                sections={taskList.sections}
                 calendars={displayCalendars}
-                selectedCalendarIds={selectedCalendarIds}
-                filter={taskStore.filter}
-                showCompleted={taskStore.showCompleted}
                 onSelectTask={openEditTaskModal}
-                onToggleComplete={handleToggleTaskComplete}
                 selectedTaskId={taskStore.selectedTaskId}
                 onQuickCreate={(title) => {
                   if (client) {

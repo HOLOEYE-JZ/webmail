@@ -3666,7 +3666,24 @@
       "quick_add_placeholder": "Görev ekle...",
       "due_today": "Bugün",
       "due_tomorrow": "Yarın",
-      "overdue": "Gecikmiş"
+      "overdue": "Gecikmiş",
+      "scope_label": "Göster",
+      "scope_all": "Gösterilen takvimler",
+      "scope_mine": "Benim için",
+      "scope_follow_ups": "Takipler (e-postalar)",
+      "scope_reminders": "E-postasız hatırlatıcılar",
+      "scope_group": "{group} (tümü)",
+      "scope_group_title": "{group} görev listesindeki her şey, kimin için olursa olsun",
+      "repeats": "Tekrarlanır: bir sonraki zamanında gösterilir",
+      "groups": {
+        "overdue": "Gecikmiş",
+        "today": "Bugün",
+        "tomorrow": "Yarın",
+        "this_week": "Bu hafta",
+        "later": "Daha sonra",
+        "no_date": "Tarihsiz",
+        "done": "Tamamlandı"
+      }
     },
     "nav_open_menu": "Menüyü aç",
     "toolbar": {

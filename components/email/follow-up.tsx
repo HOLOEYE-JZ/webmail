@@ -481,7 +481,7 @@ function useMailGroupFollowUps(email: Email) {
 }
 
 /** "for Anna (from Ben)", "for me", "for Anna": whom a group task is for and who set it. */
-function useGroupPeopleText() {
+export function useGroupPeopleText() {
   const t = useTranslations("follow_up");
   const mine = useMyAddresses();
   const principals = usePrincipals();

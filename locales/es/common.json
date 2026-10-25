@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "Agregar una tarea...",
       "due_today": "Vence hoy",
       "due_tomorrow": "Vence mañana",
-      "overdue": "Vencida"
+      "overdue": "Vencida",
+      "scope_label": "Mostrar",
+      "scope_all": "Calendarios mostrados",
+      "scope_mine": "Para mí",
+      "scope_follow_ups": "Seguimientos (correos)",
+      "scope_reminders": "Recordatorios sin correo",
+      "scope_group": "{group} (todo)",
+      "scope_group_title": "Todo lo de la lista de tareas de {group}, sea para quien sea",
+      "repeats": "Se repite: se muestra en su próxima vez",
+      "groups": {
+        "overdue": "Vencidas",
+        "today": "Hoy",
+        "tomorrow": "Mañana",
+        "this_week": "Esta semana",
+        "later": "Más adelante",
+        "no_date": "Sin fecha",
+        "done": "Hechas"
+      }
     },
     "months": {
       "jan": "Ene",

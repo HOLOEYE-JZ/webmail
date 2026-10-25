@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "Aufgabe hinzufügen...",
       "due_today": "Heute fällig",
       "due_tomorrow": "Morgen fällig",
-      "overdue": "Überfällig"
+      "overdue": "Überfällig",
+      "scope_label": "Anzeigen",
+      "scope_all": "Angezeigte Kalender",
+      "scope_mine": "Für mich",
+      "scope_follow_ups": "Wiedervorlagen (Mails)",
+      "scope_reminders": "Erinnerungen ohne Mail",
+      "scope_group": "{group} (alle)",
+      "scope_group_title": "Alles in der Aufgabenliste von {group}, egal für wen",
+      "repeats": "Wiederholt sich: steht beim nächsten Termin",
+      "groups": {
+        "overdue": "Überfällig",
+        "today": "Heute",
+        "tomorrow": "Morgen",
+        "this_week": "Diese Woche",
+        "later": "Später",
+        "no_date": "Ohne Datum",
+        "done": "Erledigt"
+      }
     },
     "months": {
       "jan": "Jan",

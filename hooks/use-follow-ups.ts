@@ -410,10 +410,12 @@ export async function completeTask(
   /** Null: failures are only logged (a completion in the background). */
   messages: { failed: string; flagFailed: string } | null,
   patch?: TaskPatch,
+  /** Writes the completion instead (the task list's check box, which plugins see as a toggle). */
+  write?: () => Promise<boolean>,
 ): Promise<boolean> {
   // Its reminders that fired are dismissed with it, so reopened it does not remind of them again.
   // A group's task is written there (its list is kept apart from the own one).
-  const complete = () => updateAnyTask(client, task, patch ?? completedTaskPatch(task, new Date()));
+  const complete = write ?? (() => updateAnyTask(client, task, patch ?? completedTaskPatch(task, new Date())));
   const ref = task.isShared ? null : followUpMailRef(task);
   // A group mailbox's mail carries no flag: its follow-up is only completed.
   if (!ref || isOtherAccountMail(ref, client.getAccountId())) {

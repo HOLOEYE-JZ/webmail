@@ -3666,7 +3666,24 @@
       "quick_add_placeholder": "Ajouter une tâche...",
       "due_today": "Échéance aujourd'hui",
       "due_tomorrow": "Échéance demain",
-      "overdue": "En retard"
+      "overdue": "En retard",
+      "scope_label": "Afficher",
+      "scope_all": "Calendriers affichés",
+      "scope_mine": "Pour moi",
+      "scope_follow_ups": "Suivis (e-mails)",
+      "scope_reminders": "Rappels sans e-mail",
+      "scope_group": "{group} (tout)",
+      "scope_group_title": "Tout ce qui est dans la liste de tâches de {group}, pour qui que ce soit",
+      "repeats": "Se répète : affichée à sa prochaine occurrence",
+      "groups": {
+        "overdue": "En retard",
+        "today": "Aujourd’hui",
+        "tomorrow": "Demain",
+        "this_week": "Cette semaine",
+        "later": "Plus tard",
+        "no_date": "Sans date",
+        "done": "Terminées"
+      }
     },
     "nav_open_menu": "Ouvrir le menu",
     "toolbar": {

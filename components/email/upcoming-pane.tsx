@@ -8,6 +8,7 @@ import { Bell, ExternalLink, Mail, MoreHorizontal, X } from "@/components/icons"
 import { Link } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useTaskStore } from "@/stores/task-store";
 import { completeTask, useFollowUpDialog } from "@/hooks/use-follow-ups";
 import { addReminderToday, openTaskItem, useDisplayNow, useUpcomingTasks } from "@/hooks/use-upcoming";
 import { GroupTaskSource, useFollowUpFormat } from "@/components/email/follow-up";
@@ -18,6 +19,9 @@ import type { CalendarTask } from "@/lib/jmap/types";
 
 /** The task list in the calendar, where everything the pane leaves out is. */
 const TASK_LIST_PATH = "/calendar/tasks";
+
+/** The task list opened from here shows the user's tasks, as this pane does. */
+const showMine = () => useTaskStore.getState().setListScope("mine");
 
 const GROUP_KEYS: Record<UpcomingGroup, string> = {
   overdue: "overdue",
@@ -70,6 +74,7 @@ export function UpcomingPane({ onOpenMail, className }: {
         <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{t("upcoming.title")}</h2>
         <Link
           href={TASK_LIST_PATH}
+          onClick={showMine}
           className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label={t("upcoming.all_tasks")}
           title={t("upcoming.all_tasks")}
@@ -138,6 +143,7 @@ export function UpcomingPane({ onOpenMail, className }: {
         {later > 0 && (
           <Link
             href={TASK_LIST_PATH}
+            onClick={showMine}
             data-testid="upcoming-more"
             className="mx-4 mt-3 block text-xs text-primary hover:underline"
           >

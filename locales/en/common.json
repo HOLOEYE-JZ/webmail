@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "Add a task...",
       "due_today": "Today",
       "due_tomorrow": "Tomorrow",
-      "overdue": "Overdue"
+      "overdue": "Overdue",
+      "scope_label": "Show",
+      "scope_all": "Calendars shown",
+      "scope_mine": "For me",
+      "scope_follow_ups": "Follow-ups (mails)",
+      "scope_reminders": "Reminders without a mail",
+      "scope_group": "{group} (all)",
+      "scope_group_title": "Everything in the task list of {group}, whoever it is for",
+      "repeats": "Repeats: shown at its next time",
+      "groups": {
+        "overdue": "Overdue",
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "this_week": "This week",
+        "later": "Later",
+        "no_date": "No date",
+        "done": "Done"
+      }
     },
     "toolbar": {
       "more": "More actions",

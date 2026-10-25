@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "Přidat úkol...",
       "due_today": "Dnes",
       "due_tomorrow": "Zítra",
-      "overdue": "Po termínu"
+      "overdue": "Po termínu",
+      "scope_label": "Zobrazit",
+      "scope_all": "Zobrazené kalendáře",
+      "scope_mine": "Pro mě",
+      "scope_follow_ups": "Sledování (e-maily)",
+      "scope_reminders": "Připomínky bez e-mailu",
+      "scope_group": "{group} (vše)",
+      "scope_group_title": "Vše v seznamu úkolů {group}, ať je pro kohokoli",
+      "repeats": "Opakuje se: zobrazeno u dalšího termínu",
+      "groups": {
+        "overdue": "Po termínu",
+        "today": "Dnes",
+        "tomorrow": "Zítra",
+        "this_week": "Tento týden",
+        "later": "Později",
+        "no_date": "Bez data",
+        "done": "Hotovo"
+      }
     },
     "months": {
       "jan": "led",

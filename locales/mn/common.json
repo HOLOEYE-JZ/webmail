@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "Даалгавар нэмэх...",
       "due_today": "Өнөөдөр",
       "due_tomorrow": "Маргааш",
-      "overdue": "Хугацаа хэтэрсэн"
+      "overdue": "Хугацаа хэтэрсэн",
+      "scope_label": "Харуулах",
+      "scope_all": "Харуулсан хуанлиуд",
+      "scope_mine": "Надад",
+      "scope_follow_ups": "Дагах (имэйл)",
+      "scope_reminders": "Имэйлгүй сануулга",
+      "scope_group": "{group} (бүгд)",
+      "scope_group_title": "{group}-ийн даалгаврын жагсаалтад байгаа бүх зүйл, хэнд зориулсан ч",
+      "repeats": "Давтагдана: дараагийн удаад харагдана",
+      "groups": {
+        "overdue": "Хугацаа хэтэрсэн",
+        "today": "Өнөөдөр",
+        "tomorrow": "Маргааш",
+        "this_week": "Энэ долоо хоног",
+        "later": "Дараа",
+        "no_date": "Огноогүй",
+        "done": "Дууссан"
+      }
     },
     "toolbar": {
       "more": "Бусад үйлдэл",

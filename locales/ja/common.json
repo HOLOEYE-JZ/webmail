@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "タスクを追加...",
       "due_today": "今日が期限",
       "due_tomorrow": "明日が期限",
-      "overdue": "期限切れ"
+      "overdue": "期限切れ",
+      "scope_label": "表示",
+      "scope_all": "表示中のカレンダー",
+      "scope_mine": "自分宛て",
+      "scope_follow_ups": "フォローアップ（メール）",
+      "scope_reminders": "メールなしのリマインダー",
+      "scope_group": "{group}（すべて）",
+      "scope_group_title": "{group} のタスクリストのすべて（宛先を問わず）",
+      "repeats": "繰り返し: 次回の日付に表示",
+      "groups": {
+        "overdue": "期限切れ",
+        "today": "今日",
+        "tomorrow": "明日",
+        "this_week": "今週",
+        "later": "後で",
+        "no_date": "日付なし",
+        "done": "完了"
+      }
     },
     "months": {
       "jan": "1月",

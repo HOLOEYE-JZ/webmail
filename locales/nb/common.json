@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "Legg til en oppgave...",
       "due_today": "I dag",
       "due_tomorrow": "I morgen",
-      "overdue": "Forfalt"
+      "overdue": "Forfalt",
+      "scope_label": "Vis",
+      "scope_all": "Viste kalendere",
+      "scope_mine": "For meg",
+      "scope_follow_ups": "Oppfølginger (e-post)",
+      "scope_reminders": "Påminnelser uten e-post",
+      "scope_group": "{group} (alle)",
+      "scope_group_title": "Alt i oppgavelisten til {group}, uansett hvem den er for",
+      "repeats": "Gjentas: vises ved neste gang",
+      "groups": {
+        "overdue": "Forfalt",
+        "today": "I dag",
+        "tomorrow": "I morgen",
+        "this_week": "Denne uken",
+        "later": "Senere",
+        "no_date": "Uten dato",
+        "done": "Fullført"
+      }
     },
     "toolbar": {
       "more": "Flere handlinger",

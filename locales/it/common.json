@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "Aggiungi un'attività...",
       "due_today": "Scade oggi",
       "due_tomorrow": "Scade domani",
-      "overdue": "Scaduta"
+      "overdue": "Scaduta",
+      "scope_label": "Mostra",
+      "scope_all": "Calendari mostrati",
+      "scope_mine": "Per me",
+      "scope_follow_ups": "Promemoria (e-mail)",
+      "scope_reminders": "Promemoria senza e-mail",
+      "scope_group": "{group} (tutto)",
+      "scope_group_title": "Tutto nell’elenco attività di {group}, per chiunque sia",
+      "repeats": "Si ripete: mostrata alla prossima occorrenza",
+      "groups": {
+        "overdue": "Scadute",
+        "today": "Oggi",
+        "tomorrow": "Domani",
+        "this_week": "Questa settimana",
+        "later": "Più avanti",
+        "no_date": "Senza data",
+        "done": "Completate"
+      }
     },
     "months": {
       "jan": "gen",

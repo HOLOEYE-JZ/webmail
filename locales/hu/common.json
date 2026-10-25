@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "Feladat hozzáadása...",
       "due_today": "Ma",
       "due_tomorrow": "Holnap",
-      "overdue": "Lejárt"
+      "overdue": "Lejárt",
+      "scope_label": "Megjelenítés",
+      "scope_all": "Megjelenített naptárak",
+      "scope_mine": "Nekem",
+      "scope_follow_ups": "Utánkövetések (levelek)",
+      "scope_reminders": "Emlékeztetők levél nélkül",
+      "scope_group": "{group} (mind)",
+      "scope_group_title": "Minden {group} feladatlistájában, bárkinek is szól",
+      "repeats": "Ismétlődik: a következő alkalomnál látszik",
+      "groups": {
+        "overdue": "Lejárt",
+        "today": "Ma",
+        "tomorrow": "Holnap",
+        "this_week": "Ezen a héten",
+        "later": "Később",
+        "no_date": "Dátum nélkül",
+        "done": "Kész"
+      }
     },
     "toolbar": {
       "more": "További műveletek",

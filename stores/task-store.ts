@@ -6,6 +6,7 @@ import { taskHooks } from '@/lib/plugin-hooks';
 import { taskToView } from '@/lib/plugin-projection';
 import { applyPatchObject } from '@/lib/jmap/patch-object';
 import { completedTaskPatch, withCompletion } from '@/lib/task-reminders';
+import type { TaskListScope } from '@/lib/task-list';
 
 export type TaskViewFilter = 'all' | 'pending' | 'completed' | 'overdue';
 
@@ -14,6 +15,8 @@ interface TaskStore {
   selectedTaskId: string | null;
   filter: TaskViewFilter;
   showCompleted: boolean;
+  /** Which tasks the list shows: the calendars shown, the user's, or a group mailbox's list (lib/task-list.ts). */
+  listScope: TaskListScope;
   isLoading: boolean;
   error: string | null;
   /**
@@ -32,6 +35,7 @@ interface TaskStore {
   setSelectedTaskId: (id: string | null) => void;
   setFilter: (filter: TaskViewFilter) => void;
   setShowCompleted: (show: boolean) => void;
+  setListScope: (scope: TaskListScope) => void;
   fetchTasks: (client: IJMAPClient, calendarIds?: string[]) => Promise<void>;
   /** Resolves to null when a plugin stopped the create. */
   createTask: (client: IJMAPClient, task: Partial<CalendarTask>) => Promise<CalendarTask | null>;
@@ -47,6 +51,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   selectedTaskId: null,
   filter: 'all',
   showCompleted: false,
+  listScope: 'all',
   isLoading: false,
   error: null,
   scope: undefined,
@@ -63,6 +68,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     set({ showCompleted: show });
     void taskHooks.onTaskFilterChange.emit({ filter: get().filter, showCompleted: show });
   },
+  setListScope: (listScope) => set({ listScope }),
 
   fetchTasks: async (client, calendarIds) => {
     debug.log('tasks', 'TaskStore/fetchTasks start', { calendarIds: calendarIds || 'all' });

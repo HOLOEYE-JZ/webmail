@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "Додати завдання...",
       "due_today": "Сьогодні",
       "due_tomorrow": "завтра",
-      "overdue": "Прострочена"
+      "overdue": "Прострочена",
+      "scope_label": "Показати",
+      "scope_all": "Показані календарі",
+      "scope_mine": "Для мене",
+      "scope_follow_ups": "Нагадування за листами",
+      "scope_reminders": "Нагадування без листа",
+      "scope_group": "{group} (усе)",
+      "scope_group_title": "Усе в списку завдань {group}, для кого б не було",
+      "repeats": "Повторюється: показано на найближчу дату",
+      "groups": {
+        "overdue": "Прострочено",
+        "today": "Сьогодні",
+        "tomorrow": "Завтра",
+        "this_week": "Цього тижня",
+        "later": "Пізніше",
+        "no_date": "Без дати",
+        "done": "Виконано"
+      }
     },
     "months": {
       "jan": "січ.",

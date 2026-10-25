@@ -3549,7 +3549,24 @@
       "quick_add_placeholder": "הוסף משימה...",
       "due_today": "היום",
       "due_tomorrow": "מחר",
-      "overdue": "באיחור"
+      "overdue": "באיחור",
+      "scope_label": "הצג",
+      "scope_all": "לוחות שנה מוצגים",
+      "scope_mine": "בשבילי",
+      "scope_follow_ups": "מעקבים (הודעות)",
+      "scope_reminders": "תזכורות ללא הודעה",
+      "scope_group": "{group} (הכול)",
+      "scope_group_title": "כל מה שברשימת המשימות של {group}, לא משנה למי",
+      "repeats": "חוזרת: מוצגת במועד הבא",
+      "groups": {
+        "overdue": "באיחור",
+        "today": "היום",
+        "tomorrow": "מחר",
+        "this_week": "השבוע",
+        "later": "מאוחר יותר",
+        "no_date": "ללא תאריך",
+        "done": "בוצעו"
+      }
     },
     "months": {
       "jan": "ינו׳",

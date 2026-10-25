@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "Lisa ülesanne...",
       "due_today": "Täna",
       "due_tomorrow": "Homme",
-      "overdue": "Tähtaeg möödas"
+      "overdue": "Tähtaeg möödas",
+      "scope_label": "Näita",
+      "scope_all": "Näidatud kalendrid",
+      "scope_mine": "Minule",
+      "scope_follow_ups": "Järelkontrollid (kirjad)",
+      "scope_reminders": "Meeldetuletused ilma kirjata",
+      "scope_group": "{group} (kõik)",
+      "scope_group_title": "Kõik {group} ülesannete loendis, ükskõik kellele",
+      "repeats": "Kordub: näidatakse järgmisel korral",
+      "groups": {
+        "overdue": "Tähtaeg möödas",
+        "today": "Täna",
+        "tomorrow": "Homme",
+        "this_week": "Sel nädalal",
+        "later": "Hiljem",
+        "no_date": "Kuupäevata",
+        "done": "Tehtud"
+      }
     },
     "toolbar": {
       "more": "Rohkem toiminguid",

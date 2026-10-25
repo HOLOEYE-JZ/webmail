@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "Pridať úlohu...",
       "due_today": "Dnes",
       "due_tomorrow": "Zajtra",
-      "overdue": "Po termíne"
+      "overdue": "Po termíne",
+      "scope_label": "Zobraziť",
+      "scope_all": "Zobrazené kalendáre",
+      "scope_mine": "Pre mňa",
+      "scope_follow_ups": "Sledovania (e-maily)",
+      "scope_reminders": "Pripomienky bez e-mailu",
+      "scope_group": "{group} (všetko)",
+      "scope_group_title": "Všetko v zozname úloh {group}, nech je pre kohokoľvek",
+      "repeats": "Opakuje sa: zobrazené pri ďalšom termíne",
+      "groups": {
+        "overdue": "Po termíne",
+        "today": "Dnes",
+        "tomorrow": "Zajtra",
+        "this_week": "Tento týždeň",
+        "later": "Neskôr",
+        "no_date": "Bez dátumu",
+        "done": "Hotové"
+      }
     },
     "toolbar": {
       "more": "Ďalšie akcie",

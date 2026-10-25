@@ -2,11 +2,18 @@
 
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Plus } from "@/components/icons";
+import { Plus, Users } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PluginActions } from "@/components/plugins/plugin-actions";
 import type { TaskViewFilter } from "@/stores/task-store";
+import { TASK_LIST_SCOPES, groupScope, type TaskListScope } from "@/lib/task-list";
+
+/** A group mailbox's task list the scope can name. */
+export interface TaskScopeList {
+  accountId: string;
+  name: string;
+}
 
 interface TaskToolbarProps {
   filter: TaskViewFilter;
@@ -18,7 +25,21 @@ interface TaskToolbarProps {
   taskIds?: string[];
   /** Icon-only plugin buttons (phones). */
   compact?: boolean;
+  /** Which tasks the list shows (lib/task-list.ts); without it, no choice is offered. */
+  scope?: TaskListScope;
+  onScopeChange?: (scope: TaskListScope) => void;
+  /** The group mailboxes' task lists, one choice each. */
+  groupLists?: readonly TaskScopeList[];
 }
+
+const NO_LISTS: readonly TaskScopeList[] = [];
+
+const SCOPE_KEYS: Record<(typeof TASK_LIST_SCOPES)[number], string> = {
+  all: "scope_all",
+  mine: "scope_mine",
+  "follow-ups": "scope_follow_ups",
+  reminders: "scope_reminders",
+};
 
 const NO_IDS: string[] = [];
 
@@ -32,12 +53,47 @@ export function TaskToolbar({
   onCreateTask,
   taskIds = NO_IDS,
   compact,
+  scope,
+  onScopeChange,
+  groupLists = NO_LISTS,
 }: TaskToolbarProps) {
   const t = useTranslations("calendar");
   const pluginContext = useMemo(() => ({ taskIds }), [taskIds]);
 
+  const scopeButton = (value: TaskListScope, label: React.ReactNode, title?: string) => (
+    <button
+      key={value}
+      type="button"
+      data-testid={`task-scope-${value}`}
+      aria-pressed={value === scope}
+      title={title}
+      onClick={() => onScopeChange?.(value)}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+        value === scope
+          ? "border-primary bg-primary/10 text-primary"
+          : "border-border text-muted-foreground hover:bg-muted"
+      )}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-wrap">
+      {scope && onScopeChange && (
+        <div role="group" aria-label={t("tasks.scope_label")} className="flex w-full flex-wrap items-center gap-1.5 pb-1">
+          {TASK_LIST_SCOPES.map((value) => scopeButton(value, t(`tasks.${SCOPE_KEYS[value]}`)))}
+          {groupLists.map((list) => scopeButton(
+            groupScope(list.accountId),
+            <>
+              <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              {t("tasks.scope_group", { group: list.name })}
+            </>,
+            t("tasks.scope_group_title", { group: list.name }),
+          ))}
+        </div>
+      )}
       <div className="flex border border-border rounded-md overflow-hidden">
         {FILTERS.map((f) => (
           <button

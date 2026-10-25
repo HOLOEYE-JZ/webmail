@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "新增任務…",
       "due_today": "今天",
       "due_tomorrow": "明天",
-      "overdue": "逾期"
+      "overdue": "逾期",
+      "scope_label": "顯示",
+      "scope_all": "已顯示的行事曆",
+      "scope_mine": "給我的",
+      "scope_follow_ups": "後續追蹤（郵件）",
+      "scope_reminders": "沒有郵件的提醒",
+      "scope_group": "{group}（全部）",
+      "scope_group_title": "{group} 工作清單中的所有項目，不論對象",
+      "repeats": "重複：顯示於下一次",
+      "groups": {
+        "overdue": "逾期",
+        "today": "今天",
+        "tomorrow": "明天",
+        "this_week": "本週",
+        "later": "稍後",
+        "no_date": "無日期",
+        "done": "已完成"
+      }
     },
     "toolbar": {
       "more": "更多動作",

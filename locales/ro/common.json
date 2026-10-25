@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "Adăugați o sarcină...",
       "due_today": "Astăzi",
       "due_tomorrow": "Mâine",
-      "overdue": "Restant"
+      "overdue": "Restant",
+      "scope_label": "Afișează",
+      "scope_all": "Calendare afișate",
+      "scope_mine": "Pentru mine",
+      "scope_follow_ups": "Urmăriri (e-mailuri)",
+      "scope_reminders": "Mementouri fără e-mail",
+      "scope_group": "{group} (tot)",
+      "scope_group_title": "Tot ce este în lista de sarcini a {group}, indiferent pentru cine",
+      "repeats": "Se repetă: afișată la următoarea apariție",
+      "groups": {
+        "overdue": "Restante",
+        "today": "Azi",
+        "tomorrow": "Mâine",
+        "this_week": "Săptămâna aceasta",
+        "later": "Mai târziu",
+        "no_date": "Fără dată",
+        "done": "Finalizate"
+      }
     },
     "toolbar": {
       "more": "Mai multe acțiuni",

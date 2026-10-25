@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "할 일 추가...",
       "due_today": "오늘 마감",
       "due_tomorrow": "내일 마감",
-      "overdue": "기한 지남"
+      "overdue": "기한 지남",
+      "scope_label": "표시",
+      "scope_all": "표시된 캘린더",
+      "scope_mine": "나에게",
+      "scope_follow_ups": "후속 조치(메일)",
+      "scope_reminders": "메일 없는 미리 알림",
+      "scope_group": "{group}(전체)",
+      "scope_group_title": "{group}의 작업 목록 전체(대상 무관)",
+      "repeats": "반복: 다음 일정에 표시",
+      "groups": {
+        "overdue": "기한 지남",
+        "today": "오늘",
+        "tomorrow": "내일",
+        "this_week": "이번 주",
+        "later": "나중에",
+        "no_date": "날짜 없음",
+        "done": "완료"
+      }
     },
     "months": {
       "jan": "1월",

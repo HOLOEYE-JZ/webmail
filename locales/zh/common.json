@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "添加任务...",
       "due_today": "今天",
       "due_tomorrow": "明天",
-      "overdue": "逾期"
+      "overdue": "逾期",
+      "scope_label": "显示",
+      "scope_all": "已显示的日历",
+      "scope_mine": "给我的",
+      "scope_follow_ups": "后续跟进（邮件）",
+      "scope_reminders": "没有邮件的提醒",
+      "scope_group": "{group}（全部）",
+      "scope_group_title": "{group} 任务列表中的所有项目，不论对象",
+      "repeats": "重复：显示于下一次",
+      "groups": {
+        "overdue": "逾期",
+        "today": "今天",
+        "tomorrow": "明天",
+        "this_week": "本周",
+        "later": "稍后",
+        "no_date": "无日期",
+        "done": "已完成"
+      }
     },
     "months": {
       "jan": "1月",

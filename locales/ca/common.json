@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "Afegiu una tasca...",
       "due_today": "Avui",
       "due_tomorrow": "Demà",
-      "overdue": "Vençuda"
+      "overdue": "Vençuda",
+      "scope_label": "Mostra",
+      "scope_all": "Calendaris mostrats",
+      "scope_mine": "Per a mi",
+      "scope_follow_ups": "Seguiments (correus)",
+      "scope_reminders": "Recordatoris sense correu",
+      "scope_group": "{group} (tot)",
+      "scope_group_title": "Tot el que hi ha a la llista de tasques de {group}, sigui per a qui sigui",
+      "repeats": "Es repeteix: es mostra a la propera vegada",
+      "groups": {
+        "overdue": "Endarrerides",
+        "today": "Avui",
+        "tomorrow": "Demà",
+        "this_week": "Aquesta setmana",
+        "later": "Més endavant",
+        "no_date": "Sense data",
+        "done": "Fetes"
+      }
     },
     "toolbar": {
       "more": "Més accions",

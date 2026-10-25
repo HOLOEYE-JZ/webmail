@@ -3640,7 +3640,24 @@
       "quick_add_placeholder": "Dodaj zadanie...",
       "due_today": "Dzisiaj",
       "due_tomorrow": "Jutro",
-      "overdue": "Zaległe"
+      "overdue": "Zaległe",
+      "scope_label": "Pokaż",
+      "scope_all": "Wyświetlane kalendarze",
+      "scope_mine": "Dla mnie",
+      "scope_follow_ups": "Monity (e-maile)",
+      "scope_reminders": "Przypomnienia bez e-maila",
+      "scope_group": "{group} (wszystko)",
+      "scope_group_title": "Wszystko z listy zadań {group}, niezależnie od tego, dla kogo",
+      "repeats": "Powtarza się: widoczne przy następnym terminie",
+      "groups": {
+        "overdue": "Zaległe",
+        "today": "Dziś",
+        "tomorrow": "Jutro",
+        "this_week": "W tym tygodniu",
+        "later": "Później",
+        "no_date": "Bez daty",
+        "done": "Wykonane"
+      }
     },
     "months": {
       "jan": "sty",

@@ -3666,7 +3666,24 @@
       "quick_add_placeholder": "Tilføj en opgave...",
       "due_today": "I dag",
       "due_tomorrow": "I morgen",
-      "overdue": "Forfalden"
+      "overdue": "Forfalden",
+      "scope_label": "Vis",
+      "scope_all": "Viste kalendere",
+      "scope_mine": "Til mig",
+      "scope_follow_ups": "Opfølgninger (mails)",
+      "scope_reminders": "Påmindelser uden mail",
+      "scope_group": "{group} (alle)",
+      "scope_group_title": "Alt i opgavelisten for {group}, uanset hvem det er til",
+      "repeats": "Gentages: vises ved næste gang",
+      "groups": {
+        "overdue": "Forfaldne",
+        "today": "I dag",
+        "tomorrow": "I morgen",
+        "this_week": "Denne uge",
+        "later": "Senere",
+        "no_date": "Uden dato",
+        "done": "Udført"
+      }
     },
     "nav_open_menu": "Åbn menu",
     "toolbar": {

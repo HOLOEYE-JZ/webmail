@@ -3667,7 +3667,24 @@
       "quick_add_placeholder": "أضف مهمة...",
       "due_today": "اليوم",
       "due_tomorrow": "غدًا",
-      "overdue": "متأخرة"
+      "overdue": "متأخرة",
+      "scope_label": "عرض",
+      "scope_all": "التقويمات المعروضة",
+      "scope_mine": "لي",
+      "scope_follow_ups": "المتابعات (رسائل)",
+      "scope_reminders": "تذكيرات بدون رسالة",
+      "scope_group": "{group} (الكل)",
+      "scope_group_title": "كل ما في قائمة مهام {group}، أيًا كان صاحبه",
+      "repeats": "متكررة: تظهر في موعدها التالي",
+      "groups": {
+        "overdue": "متأخرة",
+        "today": "اليوم",
+        "tomorrow": "غدًا",
+        "this_week": "هذا الأسبوع",
+        "later": "لاحقًا",
+        "no_date": "بدون تاريخ",
+        "done": "منجزة"
+      }
     },
     "toolbar": {
       "more": "إجراءات أخرى",
