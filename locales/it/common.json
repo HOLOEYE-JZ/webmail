@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Mostra una vista attività nel calendario per gestire le cose da fare",
       "show_tasks_on_calendar": "Mostra attività nel calendario",
       "show_tasks_on_calendar_desc": "Mostra le attività nelle viste mensile, settimanale e giornaliera del calendario",
-      "show_upcoming_pane": "Mostra «In arrivo» accanto alla posta",
-      "show_upcoming_pane_desc": "Le tue attività aperte e i completamenti per scadenza, accanto all’elenco dei messaggi",
       "hover_preview": "Anteprima al passaggio del mouse",
       "hover_preview_desc": "Mostra un popover dettagliato al passaggio del mouse sugli eventi del calendario",
       "hover_preview_instant": "Istantaneo",

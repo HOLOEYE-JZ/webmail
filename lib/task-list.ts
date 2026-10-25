@@ -11,7 +11,7 @@ import type { TaskViewFilter } from "@/stores/task-store";
 /**
  * The task list in the calendar, grouped by when a task is due: overdue,
  * today, tomorrow, this week, later, without a
- * date, done. Overdue to this week as "Upcoming" beside the mail list
+ * date, done. Overdue to this week as the tasks panel beside the mail list
  * (lib/upcoming-tasks.ts) has them.
  *
  * Which tasks it lists is its scope:

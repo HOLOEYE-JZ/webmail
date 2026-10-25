@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Pokaż widok zadań w kalendarzu do zarządzania zadaniami",
       "show_tasks_on_calendar": "Pokaż zadania w kalendarzu",
       "show_tasks_on_calendar_desc": "Wyświetlaj zadania w miesięcznym, tygodniowym i dziennym widoku kalendarza",
-      "show_upcoming_pane": "Pokazuj „Nadchodzące” obok poczty",
-      "show_upcoming_pane_desc": "Otwarte zadania i monity według terminu, obok listy wiadomości",
       "hover_preview": "Podgląd wydarzenia po najechaniu",
       "hover_preview_desc": "Pokaż wyskakujące okno szczegółów po najechaniu na wydarzenia w kalendarzu",
       "hover_preview_instant": "Natychmiast",

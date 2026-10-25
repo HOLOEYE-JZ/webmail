@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Afișați o vizualizare a sarcinilor în calendar pentru gestionarea sarcinilor de îndeplinit",
       "show_tasks_on_calendar": "Afișați sarcinile în calendar",
       "show_tasks_on_calendar_desc": "Afișați sarcinile în vizualizările lunare, săptămânale și zilnice ale calendarului",
-      "show_upcoming_pane": "Afișează „Urmează” lângă e-mail",
-      "show_upcoming_pane_desc": "Sarcinile deschise și urmăririle după scadență, lângă lista de mesaje",
       "hover_preview": "Previzualizare la trecerea cursorului peste elemente",
       "hover_preview_desc": "Afișați o fereastră pop-up cu detalii atunci când treceți cu mouse-ul peste evenimentele din calendar",
       "hover_preview_instant": "Instant",

@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Mostra una vista de tasques al calendari per gestionar pendents",
       "show_tasks_on_calendar": "Mostra les tasques al calendari",
       "show_tasks_on_calendar_desc": "Mostra les tasques a les vistes de mes, setmana i dia del calendari",
-      "show_upcoming_pane": "Mostra «Pendent» al costat del correu",
-      "show_upcoming_pane_desc": "Les tasques obertes i els seguiments per data de venciment, al costat de la llista de missatges",
       "hover_preview": "Previsualització en passar el cursor",
       "hover_preview_desc": "Mostra una finestra emergent de detalls en passar el cursor per sobre dels esdeveniments",
       "hover_preview_instant": "Instantània",

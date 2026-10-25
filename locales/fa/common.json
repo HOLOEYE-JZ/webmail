@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "نمایش نمای وظایف در تقویم برای مدیریت کارها",
       "show_tasks_on_calendar": "نمایش وظایف روی تقویم",
       "show_tasks_on_calendar_desc": "نمایش وظایف در نماهای ماه، هفته و روز",
-      "show_upcoming_pane": "نمایش «پیش‌رو» کنار نامه‌ها",
-      "show_upcoming_pane_desc": "کارهای باز و پیگیری‌ها بر اساس سررسید، کنار فهرست نامه‌ها",
       "hover_preview": "پیش‌نمایش هاور رویداد",
       "hover_preview_desc": "نمایش popover جزئیات هنگام هاور روی رویدادهای تقویم",
       "hover_preview_instant": "بلافاصله",

@@ -399,8 +399,8 @@ export async function deleteOwnFollowUp(
 }
 
 /**
- * Marks a task done from a list that holds only the task (the pane
- * "Upcoming"), as the mail's own "Mark complete" does: a follow-up on a mail
+ * Marks a task done from a list that holds only the task (the tasks
+ * panel), as the mail's own "Mark complete" does: a follow-up on a mail
  * of the user's own account clears that mail's flag too. Any other task is
  * only completed. `patch` completes it otherwise than Mark Complete (an
  * answer that settled it). Resolves whether the task was written.

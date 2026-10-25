@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "在日历中显示任务视图以管理待办事项",
       "show_tasks_on_calendar": "在日历上显示任务",
       "show_tasks_on_calendar_desc": "在日历的月/周/日视图中显示任务",
-      "show_upcoming_pane": "在邮件旁显示“待办”",
-      "show_upcoming_pane_desc": "在邮件列表旁按到期日显示未完成的任务和后续处理",
       "hover_preview": "事件悬停预览",
       "hover_preview_desc": "将鼠标悬停在日历事件上时显示详细信息弹出窗口",
       "hover_preview_instant": "立即",

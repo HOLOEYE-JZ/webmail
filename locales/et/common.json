@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Kuva kalendris ülesannete vaade tegemiste haldamiseks",
       "show_tasks_on_calendar": "Kuva ülesanded kalendris",
       "show_tasks_on_calendar_desc": "Kuva ülesannete sildid päeva- ja nädalavaates",
-      "show_upcoming_pane": "Näita „Ees ootav“ kirjade kõrval",
-      "show_upcoming_pane_desc": "Avatud ülesanded ja järelkontrollid tähtaja järgi kirjade loendi kõrval",
       "hover_preview": "Sündmuse hõljutusega eelvaade",
       "hover_preview_desc": "Kuva kalendrisündmuse kohal hõljutades üksikasjade hüpikaken",
       "hover_preview_instant": "Koheselt",

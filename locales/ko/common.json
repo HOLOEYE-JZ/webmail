@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "캘린더에 할 일을 관리할 수 있는 메뉴를 추가해요",
       "show_tasks_on_calendar": "캘린더에 할 일 표시",
       "show_tasks_on_calendar_desc": "월간, 주간 및 일간 캘린더에 할 일을 보여줘요",
-      "show_upcoming_pane": "메일 옆에 “예정 작업” 표시",
-      "show_upcoming_pane_desc": "열린 작업과 후속 조치를 기한순으로 메시지 목록 옆에 표시합니다",
       "hover_preview": "마우스 호버 미리보기",
       "hover_preview_desc": "캘린더 일정 위에 마우스를 올리면 세부 정보 팝업을 띄워요",
       "hover_preview_instant": "즉시",

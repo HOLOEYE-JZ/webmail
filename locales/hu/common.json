@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Feladatnézet mutatása a naptárban a teendők kezeléséhez",
       "show_tasks_on_calendar": "Feladatok mutatása a naptárban",
       "show_tasks_on_calendar_desc": "Feladatok mutatása a havi, heti és napi naptárnézetben",
-      "show_upcoming_pane": "„Teendők” megjelenítése a levelek mellett",
-      "show_upcoming_pane_desc": "Nyitott feladatai és nyomon követései határidő szerint, a levéllista mellett",
       "hover_preview": "Esemény előnézet egérrel",
       "hover_preview_desc": "Részletes felugró ablak mutatása az események fölé húzva",
       "hover_preview_instant": "Azonnali",

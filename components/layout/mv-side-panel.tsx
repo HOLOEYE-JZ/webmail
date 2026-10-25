@@ -24,7 +24,7 @@ import { getTimedEventBoundsForDay } from "@/lib/calendar-utils";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { formatDateTime, cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
-import { TasksPanel } from "@/components/calendar/tasks-panel";
+import { TASK_LIST_PATH, TasksPanel, showMyTasks, type OpenTaskMail } from "@/components/calendar/tasks-panel";
 import type { CalendarEvent } from "@/lib/jmap/types";
 
 export type MvSidePanelId = "calendar" | "tasks" | "contacts";
@@ -36,7 +36,10 @@ const HOUR_PX = 48;
  * that Gmail has, each opening a narrow panel next to the mail - today's
  * calendar, the task list, the address book - without leaving the inbox.
  */
-export function MvSidePanel() {
+export function MvSidePanel({ onOpenMail }: {
+  /** Opens a task's mail (a follow-up's) in the mail view beside the panel. */
+  onOpenMail: OpenTaskMail;
+}) {
   const t = useTranslations("sidebar");
   const client = useAuthStore((s) => s.client);
   const supportsCalendar = useCalendarStore((s) => s.supportsCalendar);
@@ -70,8 +73,8 @@ export function MvSidePanel() {
           {active === "calendar" && <CalendarPanel onClose={() => setOpen(null)} />}
           {active === "tasks" && (
             <>
-              <PanelHeader title={t("mv_tasks")} href="/calendar" onClose={() => setOpen(null)} />
-              <TasksPanel />
+              <PanelHeader title={t("mv_tasks")} href={TASK_LIST_PATH} onNavigate={showMyTasks} onClose={() => setOpen(null)} />
+              <TasksPanel onOpenMail={onOpenMail} />
             </>
           )}
           {active === "contacts" && <ContactsPanel onClose={() => setOpen(null)} />}
@@ -104,10 +107,12 @@ export function MvSidePanel() {
   );
 }
 
-function PanelHeader({ title, subtitle, href, onClose, children }: {
+function PanelHeader({ title, subtitle, href, onNavigate, onClose, children }: {
   title: string;
   subtitle?: React.ReactNode;
   href: string;
+  /** Runs as the "open in full" link is followed. */
+  onNavigate?: () => void;
   onClose: () => void;
   children?: React.ReactNode;
 }) {
@@ -122,6 +127,7 @@ function PanelHeader({ title, subtitle, href, onClose, children }: {
       {children}
       <Link
         href={href}
+        onClick={onNavigate}
         className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         title={t("mv_open_full")}
         aria-label={t("mv_open_full")}

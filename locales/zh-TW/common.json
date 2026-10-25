@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "在行事曆中顯示任務檢視以管理待辦事項",
       "show_tasks_on_calendar": "在行事曆上顯示任務",
       "show_tasks_on_calendar_desc": "在行事曆的月／週／日檢視中顯示任務",
-      "show_upcoming_pane": "在郵件旁顯示「待辦」",
-      "show_upcoming_pane_desc": "在郵件清單旁，依到期日顯示未完成的工作與待處理事項",
       "hover_preview": "活動游標暫留預覽",
       "hover_preview_desc": "游標移至行事曆活動上方時顯示詳細資料浮動視窗",
       "hover_preview_instant": "立即",

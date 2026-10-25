@@ -1,7 +1,7 @@
 import { act, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { UpcomingPane } from '../upcoming-pane';
-import { FollowUpDialogHost } from '../follow-up-dialog';
+import { TasksPanel, TasksSidebar, useTasksPanelOpen } from '../tasks-panel';
+import { FollowUpDialogHost } from '@/components/email/follow-up-dialog';
 import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
 import { useDueTaskCount } from '@/hooks/use-upcoming';
 import { useAuthStore } from '@/stores/auth-store';
@@ -102,7 +102,7 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
   client = makeClient();
   useAuthStore.setState({ isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login' });
-  useSettingsStore.setState({ enableCalendarTasks: true, showUpcomingPane: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
+  useSettingsStore.setState({ enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
   useCalendarStore.setState({ supportsCalendar: true, calendars });
   usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: [] } });
   useTaskStore.setState({ tasks: [] });
@@ -114,7 +114,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('UpcomingPane', () => {
+describe('TasksPanel', () => {
   it('groups the open tasks of the own list: overdue, today, tomorrow, this week, the rest counted', () => {
     useTaskStore.setState({
       tasks: [
@@ -127,7 +127,7 @@ describe('UpcomingPane', () => {
         reminder('r6', 'Done already', day(28), { progress: 'completed' }),
       ],
     });
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     expect(titles('overdue')[0]).toContain('Check the dunning run');
     expect(titles('today')[0]).toContain('Call');
     expect(titles('today')[0]).toContain('Lena Brandt · Offer 4711');
@@ -139,7 +139,7 @@ describe('UpcomingPane', () => {
 
   it('shows an HTML note as text', () => {
     useTaskStore.setState({ tasks: [reminder('r1', 'Order toner', day(28), { description: '<p>HP <b>410A</b></p>', descriptionContentType: 'text/html' })] });
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     expect(titles('today')[0]).toContain('HP 410A');
     expect(titles('today')[0]).not.toContain('<');
   });
@@ -150,20 +150,20 @@ describe('UpcomingPane', () => {
         recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' }] as unknown as CalendarTask['recurrenceRules'],
       })],
     });
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     expect(screen.queryByTestId('upcoming-group-overdue')).toBeNull();
     expect(screen.queryByTestId('upcoming-done')).toBeNull();
     expect(screen.getByText('upcoming.more{"count":1}')).toBeTruthy();
   });
 
   it('says when nothing is due', () => {
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     expect(screen.getByTestId('upcoming-empty')).toBeTruthy();
     expect(screen.queryByText(/upcoming\.more/)).toBeNull();
   });
 
   it('adds a reminder due today on Enter, without a mail, and lists it under Today at once', async () => {
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     fireEvent.change(field('upcoming-quick'), { target: { value: '  Check the dunning run ' } });
     await act(async () => { fireEvent.submit(field('upcoming-quick').closest('form')!); });
 
@@ -177,7 +177,7 @@ describe('UpcomingPane', () => {
   });
 
   it('opens the dialog with what was typed from "…"', () => {
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     fireEvent.change(field('upcoming-quick'), { target: { value: 'Order toner' } });
     fireEvent.click(screen.getByTestId('upcoming-quick-more'));
     expect(useFollowUpDialog.getState().reminder).toEqual({ taskId: null, title: 'Order toner' });
@@ -187,7 +187,7 @@ describe('UpcomingPane', () => {
 
   it('marks a reminder done without touching any mail', async () => {
     useTaskStore.setState({ tasks: [reminder('r1', 'Check the dunning run', day(28))] });
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     await act(async () => { fireEvent.click(screen.getByTestId('upcoming-done')); });
 
     await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledWith('r1', { progress: 'completed' }));
@@ -198,7 +198,7 @@ describe('UpcomingPane', () => {
 
   it('marks a mail\'s follow-up done as the mail does: the flag goes too', async () => {
     useTaskStore.setState({ tasks: [mailFollowUp('f1', day(28))] });
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     await act(async () => { fireEvent.click(screen.getByTestId('upcoming-done')); });
 
     await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledWith('f1', { progress: 'completed' }));
@@ -210,7 +210,7 @@ describe('UpcomingPane', () => {
   it('clears the flag of a mail not in the list by the server\'s state', async () => {
     useEmailStore.setState({ emails: [] });
     useTaskStore.setState({ tasks: [mailFollowUp('f1', day(28))] });
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+    render(<TasksPanel onOpenMail={vi.fn()} />);
     await act(async () => { fireEvent.click(screen.getByTestId('upcoming-done')); });
     await waitFor(() => expect(client.toggleStar).toHaveBeenCalledTimes(1));
     expect(client.toggleStar.mock.calls[0].slice(0, 2)).toEqual(['M1', false]);
@@ -219,7 +219,7 @@ describe('UpcomingPane', () => {
   it('opens a follow-up\'s mail, and any other task in the dialog', async () => {
     const onOpenMail = vi.fn();
     useTaskStore.setState({ tasks: [mailFollowUp('f1', day(28)), reminder('r1', 'Order toner', day(29))] });
-    render(<UpcomingPane onOpenMail={onOpenMail} />);
+    render(<TasksPanel onOpenMail={onOpenMail} />);
 
     await act(async () => { fireEvent.click(within(screen.getByTestId('upcoming-group-today')).getByTestId('upcoming-open')); });
     await waitFor(() => expect(onOpenMail).toHaveBeenCalledWith('M1', 'acc'));
@@ -234,7 +234,7 @@ describe('UpcomingPane', () => {
     const groupFollowUp = { ...mailFollowUp('g1', day(28)) };
     groupFollowUp.links = { ...groupFollowUp.links, mail: { ...groupFollowUp.links!.mail, href: 'https://host/mail/message/M1?mailAccount=grp' } };
     useTaskStore.setState({ tasks: [groupFollowUp] });
-    render(<UpcomingPane onOpenMail={onOpenMail} />);
+    render(<TasksPanel onOpenMail={onOpenMail} />);
     await act(async () => { fireEvent.click(screen.getByTestId('upcoming-open')); });
     // Looked for in the group's account, then opened there.
     await waitFor(() => expect(onOpenMail).toHaveBeenCalledWith('M1', 'grp'));
@@ -250,17 +250,55 @@ describe('UpcomingPane', () => {
     const elsewhere = { ...mailFollowUp('e1', day(28)) };
     elsewhere.links = { ...elsewhere.links, mail: { ...elsewhere.links!.mail, href: 'https://host/mail/message/M1?mailAccount=elsewhere' } };
     useTaskStore.setState({ tasks: [elsewhere] });
-    render(<UpcomingPane onOpenMail={onOpenMail} />);
+    render(<TasksPanel onOpenMail={onOpenMail} />);
     await act(async () => { fireEvent.click(screen.getByTestId('upcoming-open')); });
     await waitFor(() => expect(useFollowUpDialog.getState().reminder).toEqual({ taskId: 'e1' }));
     expect(onOpenMail).not.toHaveBeenCalled();
     expect(client.getEmailFields).not.toHaveBeenCalled();
   });
 
-  it('hides itself, kept in the settings', () => {
-    render(<UpcomingPane onOpenMail={vi.fn()} />);
+});
+
+describe('TasksSidebar', () => {
+  it('frames the panel in the default layout, and closes from its ✕', () => {
+    const onClose = vi.fn();
+    useTaskStore.setState({ tasks: [reminder('r1', 'Order toner', day(28))] });
+    render(<TasksSidebar onClose={onClose} onOpenMail={vi.fn()} />);
+    expect(screen.getByRole('complementary', { name: 'upcoming.title' })).toBeTruthy();
+    expect(titles('today')[0]).toContain('Order toner');
     fireEvent.click(screen.getByTestId('upcoming-hide'));
-    expect(useSettingsStore.getState().showUpcomingPane).toBe(false);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useTasksPanelOpen', () => {
+  afterEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it('starts open, and keeps a choice in this browser, not in the settings', () => {
+    const settings = useSettingsStore.getState();
+    const first = renderHook(() => useTasksPanelOpen());
+    expect(first.result.current[0]).toBe(true);
+    act(() => first.result.current[1](false));
+    expect(first.result.current[0]).toBe(false);
+    expect(localStorage.getItem('tasksPanelOpen')).toBe('0');
+    expect(useSettingsStore.getState()).toEqual(settings);
+
+    const again = renderHook(() => useTasksPanelOpen());
+    expect(again.result.current[0]).toBe(false);
+    act(() => again.result.current[1](true));
+    expect(renderHook(() => useTasksPanelOpen()).result.current[0]).toBe(true);
+  });
+
+  it('opens, and still toggles, when the browser keeps no storage', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked'); });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked'); });
+    const { result } = renderHook(() => useTasksPanelOpen());
+    expect(result.current[0]).toBe(true);
+    act(() => result.current[1](false));
+    expect(result.current[0]).toBe(false);
   });
 });
 

@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Mostrar uma visualização de tarefas no calendário para gerenciar pendências",
       "show_tasks_on_calendar": "Mostrar tarefas no calendário",
       "show_tasks_on_calendar_desc": "Exibir tarefas nas visualizações mensal, semanal e diária do calendário",
-      "show_upcoming_pane": "Mostrar «Próximo» ao lado do e-mail",
-      "show_upcoming_pane_desc": "As suas tarefas abertas e acompanhamentos por data de vencimento, ao lado da lista de mensagens",
       "hover_preview": "Pré-visualização ao passar o rato",
       "hover_preview_desc": "Mostrar um popover de detalhes ao passar o rato sobre eventos do calendário",
       "hover_preview_instant": "Instantâneo",

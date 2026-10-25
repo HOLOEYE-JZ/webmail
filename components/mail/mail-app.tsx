@@ -61,7 +61,7 @@ import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboa
 import { findNextUnreadIndex } from "@/lib/next-unread-email";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import { useFollowUpTasks, useFollowUpsEnabled } from "@/hooks/use-follow-ups";
-import { UpcomingPane } from "@/components/email/upcoming-pane";
+import { TasksSidebar, useTasksPanelOpen } from "@/components/calendar/tasks-panel";
 import { ownsReminderMails, useReminderMailOpener } from "@/hooks/use-task-reminders";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { usePromptDialog } from "@/hooks/use-prompt-dialog";
@@ -211,7 +211,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // The task list, so rows and reader know which mails have a follow-up.
   useFollowUpTasks();
   const followUpsEnabled = useFollowUpsEnabled();
-  const showUpcomingPane = useSettingsStore((state) => state.showUpcomingPane);
+  // The tasks panel beside the mail list in the default layout, open until closed (per browser).
+  const [tasksPanelOpen, setTasksPanelOpen] = useTasksPanelOpen();
   const t = useTranslations();
   const tCommon = useTranslations('common');
   const appName = productName(useConfig().appName);
@@ -1879,14 +1880,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const applyMailDeepLinkRef = useRef(applyMailDeepLink);
   applyMailDeepLinkRef.current = applyMailDeepLink;
 
-  // The reminders window opens a reminder's mail here, as the pane
-  // "Upcoming" does: only from the mail view on screen, so a hidden Pro tab
-  // never opens it out of sight.
+  // The reminders window opens a reminder's mail here, as the tasks panel
+  // does: only from the mail view on screen, so a hidden Pro tab never opens
+  // it out of sight.
   const isFocusedProTab = useIsFocusedProTab();
   const ownsReminderMail = ownsReminderMails({ embedded: isEmbedded, focusedProTab: isFocusedProTab, proInterface: proInterfaceActive });
-  useReminderMailOpener(ownsReminderMail, (emailId, mailAccountId) => {
+  // A task's mail, from the tasks panel or the reminders window, opens as its link would.
+  const openTaskMail = (emailId: string, mailAccountId: string | null) => {
     void applyMailDeepLinkRef.current({ kind: 'message', id: emailId, ...(mailAccountId ? { mailAccountId } : {}) });
-  });
+  };
+  useReminderMailOpener(ownsReminderMail, openTaskMail);
 
   // Pro shell only: this MailApp stays mounted for the whole session, so the
   // mount-time consume below never sees a link that arrives later (an in-app
@@ -4919,16 +4922,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   >
                     <RotateCcw className={cn("w-4 h-4", isManualRefreshing && "animate-spin")} />
                   </button>
-                  {/* "Upcoming for me" beside the mail, shown or hidden (kept in the settings) */}
+                  {/* The tasks panel ("Upcoming for me") beside the mail, shown or hidden */}
                   {followUpsEnabled && !isMobile && !isTablet && !isEmbedded && (
                     <button
                       type="button"
                       data-testid="upcoming-toggle"
-                      onClick={() => useSettingsStore.getState().updateSetting('showUpcomingPane', !showUpcomingPane)}
-                      aria-pressed={showUpcomingPane}
+                      onClick={() => setTasksPanelOpen(!tasksPanelOpen)}
+                      aria-pressed={tasksPanelOpen}
                       className={cn(
                         "flex-shrink-0 p-2 rounded-md transition-colors",
-                        showUpcomingPane
+                        tasksPanelOpen
                           ? "bg-primary/10 text-primary"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       )}
@@ -5504,19 +5507,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             />
           )}
         </div>
-        {/* "Upcoming for me", as Outlook's To-Do bar: the user's open tasks
-            by due day, beside the mail. Desktop only; Mountain View has its
-            own task panel. */}
-        {followUpsEnabled && showUpcomingPane && !isMobile && !isTablet && !isEmbedded && !mvShell && !inlineApp && !fullscreenReading && (
-          <UpcomingPane
-            onOpenMail={(emailId, mailAccountId) => {
-              void applyMailDeepLinkRef.current({ kind: 'message', id: emailId, ...(mailAccountId ? { mailAccountId } : {}) });
-            }}
-          />
+        {/* The tasks panel ("Upcoming for me", as Outlook's To-Do bar): the
+            user's open tasks by due day, beside the mail. Desktop only;
+            Mountain View shows the same panel from its side panel's icon. */}
+        {followUpsEnabled && tasksPanelOpen && !isMobile && !isTablet && !isEmbedded && !mvShell && !inlineApp && !fullscreenReading && (
+          <TasksSidebar onClose={() => setTasksPanelOpen(false)} onOpenMail={openTaskMail} />
         )}
         {/* Mountain View: Gmail's side panel - calendar, tasks and contacts
             next to the mail, with their icons down the right edge. */}
-        {mvShell && !inlineApp && !fullscreenReading && <MvSidePanel />}
+        {mvShell && !inlineApp && !fullscreenReading && <MvSidePanel onOpenMail={openTaskMail} />}
         </div>
 
         {/* Keyboard Shortcuts Modal */}

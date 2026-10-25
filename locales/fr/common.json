@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Afficher une vue des tâches dans le calendrier pour gérer les choses à faire",
       "show_tasks_on_calendar": "Afficher les tâches dans le calendrier",
       "show_tasks_on_calendar_desc": "Afficher les tâches dans les vues mois, semaine et jour du calendrier",
-      "show_upcoming_pane": "Afficher « À venir » à côté des messages",
-      "show_upcoming_pane_desc": "Vos tâches ouvertes et suivis par échéance, à côté de la liste des messages",
       "hover_preview": "Aperçu au survol",
       "hover_preview_desc": "Afficher un popover de détails au survol des événements du calendrier",
       "hover_preview_instant": "Instantané",

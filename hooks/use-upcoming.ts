@@ -48,9 +48,9 @@ function useOwnTaskListIds(): ReadonlySet<string> {
 const NOTHING_UPCOMING: UpcomingList = { groups: [], later: 0 };
 
 /**
- * The pane "Upcoming": the user's open tasks by due day. It reads the task
- * store, which every change made here and every push refreshes, so it
- * follows them at once.
+ * The tasks panel beside the mail: the user's open tasks by due day. It
+ * reads the task store, which every change made here and every push
+ * refreshes, so it follows them at once.
  */
 export function useUpcomingTasks(): UpcomingList {
   const enabled = useFollowUpsEnabled();
@@ -78,7 +78,7 @@ export function useDueTaskCount(): number {
 }
 
 /**
- * Opens a task from a list that holds only the task (the pane "Upcoming",
+ * Opens a task from a list that holds only the task (the tasks panel,
  * the reminders window): a mail's follow-up opens its mail through
  * `openMail` (a moved mail found again first, the task pointed at it), any
  * other task the follow-up dialog. A mail that is gone is said, and the
@@ -114,8 +114,8 @@ async function reminderCalendar(client: IJMAPClient): Promise<string | null> {
 }
 
 /**
- * Adds a reminder without a mail, due today, without an alert: the pane's
- * line on Enter. Resolves whether it was written.
+ * Adds a reminder without a mail, due today, without an alert: the tasks
+ * panel's line on Enter. Resolves whether it was written.
  */
 export async function addReminderToday(
   client: IJMAPClient,

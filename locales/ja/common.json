@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "カレンダーにタスク表示を追加して、ToDoを管理します",
       "show_tasks_on_calendar": "カレンダーにタスクを表示",
       "show_tasks_on_calendar_desc": "月表示・週表示・日表示にタスクを表示します",
-      "show_upcoming_pane": "メールの横に「予定タスク」を表示",
-      "show_upcoming_pane_desc": "未完了のタスクとフォローアップを期限順にメッセージ一覧の横に表示します",
       "hover_preview": "イベントホバープレビュー",
       "hover_preview_desc": "カレンダーイベントにマウスを合わせたときに詳細ポップオーバーを表示",
       "hover_preview_instant": "即時",

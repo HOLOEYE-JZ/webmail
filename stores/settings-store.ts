@@ -598,8 +598,6 @@ interface SettingsState {
   calendarNotificationsEnabled: boolean;
   calendarNotificationSound: boolean;
   calendarInvitationParsingEnabled: boolean;
-  // "Upcoming for me" beside the mail list (follow-ups and reminders), while tasks are on.
-  showUpcomingPane: boolean;
 
   // Layout
   toolbarPosition: ToolbarPosition;
@@ -889,7 +887,6 @@ const DEFAULT_SETTINGS = {
   calendarNotificationsEnabled: true,
   calendarNotificationSound: true,
   calendarInvitationParsingEnabled: true,
-  showUpcomingPane: true,
 
   // Layout
   toolbarPosition: 'top' as ToolbarPosition,
@@ -1217,7 +1214,6 @@ export const useSettingsStore = create<SettingsState>()(
           calendarNotificationsEnabled: state.calendarNotificationsEnabled,
           calendarNotificationSound: state.calendarNotificationSound,
           calendarInvitationParsingEnabled: state.calendarInvitationParsingEnabled,
-          showUpcomingPane: state.showUpcomingPane,
           enableCalendarTasks: state.enableCalendarTasks,
           showTasksOnCalendar: state.showTasksOnCalendar,
           showBirthdayCalendar: state.showBirthdayCalendar,

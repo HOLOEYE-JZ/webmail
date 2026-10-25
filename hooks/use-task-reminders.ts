@@ -44,7 +44,7 @@ let mailOpener: MailOpener | null = null;
 
 /**
  * The mail view, while it is mounted, opens a reminder's mail in place (as
- * the pane "Upcoming" does); elsewhere the window goes to the mail's
+ * the tasks panel does); elsewhere the window goes to the mail's
  * permalink.
  */
 export function setReminderMailOpener(opener: MailOpener | null): void {

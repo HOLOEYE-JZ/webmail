@@ -1,83 +1,283 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
-import { format } from "date-fns";
-import { Plus } from "@/components/icons";
+import { isSameDay } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Bell, ExternalLink, Mail, MoreHorizontal, X } from "@/components/icons";
+import { Link } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
-import { useCalendarStore } from "@/stores/calendar-store";
 import { useTaskStore } from "@/stores/task-store";
-import { defaultTaskCalendar } from "@/lib/calendar-tasks";
+import { completeTask } from "@/hooks/use-follow-ups";
+import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
+import { addReminderToday, openTaskItem, useUpcomingTasks } from "@/hooks/use-upcoming";
+import { useDisplayNow } from "@/hooks/use-clock";
+import { GroupTaskSource, useFollowUpFormat } from "@/components/email/follow-up";
+import { toDisplayDate } from "@/lib/timezone";
+import { followUpDueDay, followUpMailRef, followUpMailSummary, followUpNote, followUpReminder } from "@/lib/follow-ups";
+import { isRecurringTask } from "@/lib/calendar-tasks";
+import type { UpcomingGroup } from "@/lib/upcoming-tasks";
+import type { CalendarTask } from "@/lib/jmap/types";
+
+/** The task list in the calendar, where everything the panel leaves out is. */
+export const TASK_LIST_PATH = "/calendar/tasks";
+
+/** The task list opened from here shows the user's tasks, as this panel does. */
+export const showMyTasks = () => useTaskStore.getState().setListScope("mine");
+
+/** Opens a follow-up's mail in the mail view; `mailAccountId` when the link names an account. */
+export type OpenTaskMail = (emailId: string, mailAccountId: string | null) => void;
+
+const GROUP_KEYS: Record<UpcomingGroup, string> = {
+  overdue: "overdue",
+  today: "today",
+  tomorrow: "tomorrow",
+  "this-week": "this_week",
+};
+
+/** Whether the panel beside the default layout's mail list is open; per browser, open until closed. */
+const OPEN_KEY = "tasksPanelOpen";
+
+function readOpen(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return localStorage.getItem(OPEN_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
 
 /**
- * The task list beside the mail: what is still open, a box to tick it off,
- * and a line to add one. The host draws the frame and the header around it
- * (Mountain View's side panel).
+ * The default layout's choice to show the tasks panel beside the mail. Kept
+ * in this browser only, as the panel widths are: it is how this screen is
+ * laid out, not an account setting. Mountain View opens its panels from its
+ * own icons instead.
  */
-export function TasksPanel() {
-  const tCal = useTranslations("calendar");
+export function useTasksPanelOpen(): [boolean, (open: boolean) => void] {
+  const [open, setOpenState] = useState(readOpen);
+  const setOpen = useCallback((next: boolean) => {
+    setOpenState(next);
+    try {
+      localStorage.setItem(OPEN_KEY, next ? "1" : "0");
+    } catch {
+      // Storage blocked: open or closed for this visit only.
+    }
+  }, []);
+  return [open, setOpen];
+}
+
+/**
+ * The task list beside the mail, as Outlook's To-Do bar: the user's open
+ * tasks overdue, due today, tomorrow and this week, the rest counted. A
+ * mail's follow-up opens its mail, any other task the dialog; the check box
+ * marks it done. Its first line adds a task due today (Enter), or opens the
+ * dialog for one with day, time and note. The host draws the frame and the
+ * header: Mountain View's side panel, or `TasksSidebar` in the default
+ * layout.
+ */
+export function TasksPanel({ onOpenMail }: { onOpenMail: OpenTaskMail }) {
+  const t = useTranslations("follow_up");
   const client = useAuthStore((s) => s.client);
-  const calendars = useCalendarStore((s) => s.calendars);
-  const fetchCalendars = useCalendarStore((s) => s.fetchCalendars);
-  const tasks = useTaskStore((s) => s.tasks);
-  const fetchTasks = useTaskStore((s) => s.fetchTasks);
-  const createTask = useTaskStore((s) => s.createTask);
-  const toggleTaskComplete = useTaskStore((s) => s.toggleTaskComplete);
+  const { groups, later } = useUpcomingTasks();
   const [draft, setDraft] = useState("");
+  const [adding, setAdding] = useState(false);
 
-  useEffect(() => {
-    if (!client) return;
-    if (calendars.length === 0) void fetchCalendars(client);
-    void fetchTasks(client);
-  }, [client, calendars.length, fetchCalendars, fetchTasks]);
+  const add = async () => {
+    const title = draft.trim();
+    if (!client || !title || adding) return;
+    setAdding(true);
+    setDraft("");
+    const written = await addReminderToday(client, title, { failed: t("reminder.failed"), noTaskList: t("no_task_list") });
+    // Not written (a plugin stopped it, or it failed): the user's text comes back.
+    if (!written) setDraft((current) => current || title);
+    setAdding(false);
+  };
 
-  const pending = tasks.filter((task) => task.progress !== "completed" && task.progress !== "cancelled");
-  const taskCalendar = defaultTaskCalendar(calendars);
+  const openDialog = () => {
+    useFollowUpDialog.getState().openReminder({ taskId: null, title: draft.trim() }, "reminder");
+    setDraft("");
+  };
 
   return (
     <>
-      {client && taskCalendar && (
-        <form
-          className="px-4 pb-2"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const title = draft.trim();
-            if (!title) return;
-            setDraft("");
-            // null: a plugin stopped it; give the user their text back.
-            const created = await createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [taskCalendar.id]: true } });
-            if (!created) setDraft(title);
-          }}
+      <form
+        className="flex items-center gap-1 px-3 py-2"
+        onSubmit={(e) => { e.preventDefault(); void add(); }}
+      >
+        <input
+          data-testid="upcoming-quick"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={t("upcoming.quick_placeholder")}
+          aria-label={t("upcoming.quick_label")}
+          maxLength={200}
+          className="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+        <button
+          type="button"
+          data-testid="upcoming-quick-more"
+          onClick={openDialog}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-input text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label={t("upcoming.quick_more")}
+          title={t("upcoming.quick_more")}
         >
-          <label className="flex items-center gap-3 rounded-full px-1 py-1.5 text-sm text-primary hover:bg-muted/60">
-            <Plus className="h-5 w-5 shrink-0" />
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={tCal("tasks.create")}
-              className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-primary focus:outline-none"
-            />
-          </label>
-        </form>
-      )}
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-        {pending.length === 0 && <p className="px-3 py-6 text-center text-sm text-muted-foreground">{tCal("tasks.no_tasks")}</p>}
-        {pending.map((task) => (
-          <div key={task.id} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-muted/50" data-mv-panel-task="">
-            <button
-              type="button"
-              onClick={() => client && void toggleTaskComplete(client, task)}
-              className="mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 border-muted-foreground/60 hover:border-primary"
-              aria-label={tCal("tasks.mark_complete")}
-              title={tCal("tasks.mark_complete")}
-            />
-            <div className="min-w-0 flex-1">
-              <div className="text-sm">{task.title || tCal("tasks.no_title")}</div>
-              {task.due && <div className="text-xs text-muted-foreground">{format(new Date(task.due), "PP")}</div>}
-            </div>
-          </div>
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
+      </form>
+
+      <div className="min-h-0 flex-1 overflow-y-auto pb-3">
+        {groups.length === 0 && (
+          <p data-testid="upcoming-empty" className="px-4 py-6 text-center text-sm text-muted-foreground">{t("upcoming.empty")}</p>
+        )}
+        {groups.map(({ group, tasks }) => (
+          <section key={group} data-testid={`upcoming-group-${group}`} aria-labelledby={`upcoming-${group}`}>
+            <h3
+              id={`upcoming-${group}`}
+              className={cn(
+                "px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider",
+                group === "overdue" ? "text-destructive" : "text-muted-foreground",
+              )}
+            >
+              {t(`upcoming.groups.${GROUP_KEYS[group]}`)}
+            </h3>
+            <ul>
+              {tasks.map((task) => (
+                <TaskItem key={task.id} task={task} group={group} onOpenMail={onOpenMail} />
+              ))}
+            </ul>
+          </section>
         ))}
+        {later > 0 && (
+          <Link
+            href={TASK_LIST_PATH}
+            onClick={showMyTasks}
+            data-testid="upcoming-more"
+            className="mx-4 mt-3 block text-xs text-primary hover:underline"
+          >
+            {t("upcoming.more", { count: later })}
+          </Link>
+        )}
       </div>
     </>
+  );
+}
+
+/** The default layout's frame for the panel: beside the mail list, with its title, a link to all tasks and ✕. */
+export function TasksSidebar({ onClose, onOpenMail, className }: {
+  onClose: () => void;
+  onOpenMail: OpenTaskMail;
+  className?: string;
+}) {
+  const t = useTranslations("follow_up");
+  return (
+    <aside
+      data-testid="upcoming-pane"
+      aria-label={t("upcoming.title")}
+      className={cn("flex h-full w-64 shrink-0 flex-col border-s border-border bg-background", className)}
+    >
+      <div className="flex h-14 items-center gap-1 border-b border-border ps-4 pe-2">
+        <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{t("upcoming.title")}</h2>
+        <Link
+          href={TASK_LIST_PATH}
+          onClick={showMyTasks}
+          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label={t("upcoming.all_tasks")}
+          title={t("upcoming.all_tasks")}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Link>
+        <button
+          type="button"
+          data-testid="upcoming-hide"
+          onClick={onClose}
+          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label={t("upcoming.hide")}
+          title={t("upcoming.hide")}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <TasksPanel onOpenMail={onOpenMail} />
+    </aside>
+  );
+}
+
+function TaskItem({ task, group, onOpenMail }: {
+  task: CalendarTask;
+  group: UpcomingGroup;
+  onOpenMail: OpenTaskMail;
+}) {
+  const t = useTranslations("follow_up");
+  const fmt = useFollowUpFormat();
+  const client = useAuthStore((s) => s.client);
+  const now = useDisplayNow();
+  const [busy, setBusy] = useState(false);
+
+  const mail = followUpMailRef(task);
+  const summary = mail ? followUpMailSummary(task) : null;
+  const title = mail ? fmt.action(task) ?? t("bar_action") : task.title?.trim() || t("upcoming.no_title");
+  const sub = mail
+    ? [summary?.sender, summary?.subject || t("no_subject")].filter(Boolean).join(" · ")
+    : followUpNote(task) || t("upcoming.no_mail");
+  const due = followUpDueDay(task);
+  const when = group === "overdue" ? fmt.due(task, now) : group === "this-week" && due ? fmt.day(due) : null;
+  const reminderAt = followUpReminder(task);
+  const reminder = reminderAt
+    ? (isSameDay(toDisplayDate(reminderAt), now) ? fmt.time(reminderAt) : fmt.reminder(reminderAt, now))
+    : null;
+
+  const markDone = async () => {
+    if (!client || busy) return;
+    setBusy(true);
+    await completeTask(client, task, { failed: t("failed"), flagFailed: t("flag_failed") });
+    setBusy(false);
+  };
+
+  const open = async () => {
+    if (!mail) {
+      useFollowUpDialog.getState().openReminder({ taskId: task.id });
+      return;
+    }
+    if (client) await openTaskItem(client, task, onOpenMail, t("mail_gone"));
+  };
+
+  return (
+    <li data-testid="upcoming-item" data-task={task.id} data-mv-panel-task="" className="group flex items-start gap-2 px-3 py-1.5 hover:bg-muted/50">
+      {/* A series is completed in the task list, never whole from here (the panel does not list one anyway). */}
+      {!isRecurringTask(task) && <input
+        type="checkbox"
+        data-testid="upcoming-done"
+        checked={false}
+        disabled={busy}
+        onChange={() => void markDone()}
+        aria-label={t("upcoming.done_label", { title })}
+        title={t("mark_done")}
+        className="mt-1 h-4 w-4 shrink-0 rounded border-input"
+      />}
+      <button
+        type="button"
+        data-testid="upcoming-open"
+        onClick={() => void open()}
+        title={mail ? t("open_mail") : t("upcoming.edit")}
+        className="min-w-0 flex-1 text-start"
+      >
+        <span className="flex items-baseline gap-2">
+          <span className="min-w-0 flex-1 truncate text-sm text-foreground">{title}</span>
+          {when && (
+            <span className={cn("shrink-0 text-xs", group === "overdue" ? "text-destructive" : "text-muted-foreground")}>{when}</span>
+          )}
+        </span>
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          {mail && <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />}
+          <span className="min-w-0 flex-1 truncate"><GroupTaskSource task={task} />{sub}</span>
+          {reminder && (
+            <span className="inline-flex shrink-0 items-center gap-0.5">
+              <Bell className="h-3 w-3" aria-label={t("reminder_label")} />
+              {reminder}
+            </span>
+          )}
+        </span>
+      </button>
+    </li>
   );
 }

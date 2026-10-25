@@ -5,7 +5,7 @@ import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
 import { startOfWeekOf } from "@/lib/follow-up-schedule";
 
 /**
- * "Upcoming for me", the pane beside the mail list, as Outlook's To-Do bar:
+ * "Upcoming for me", the tasks panel beside the mail list, as Outlook's To-Do bar:
  * the user's open tasks by when they are due.
  *
  * Which tasks: every open task of the user's own task list, the calendars
@@ -23,11 +23,11 @@ import { startOfWeekOf } from "@/lib/follow-up-schedule";
  * Pure: `now` is a display date (see lib/timezone.ts).
  */
 
-/** The pane's groups, in order. Anything further out or without a date is only counted. */
+/** The panel's groups, in order. Anything further out or without a date is only counted. */
 export const UPCOMING_GROUPS = ["overdue", "today", "tomorrow", "this-week"] as const;
 export type UpcomingGroup = (typeof UPCOMING_GROUPS)[number];
 
-/** Where a task due on `due` stands: one of the pane's groups, or "later" (further out, or no due day). */
+/** Where a task due on `due` stands: one of the panel's groups, or "later" (further out, or no due day). */
 export function upcomingGroupOf(due: Date | null, now: Date, firstDayOfWeek = 1): UpcomingGroup | "later" {
   if (!due) return "later";
   const days = differenceInCalendarDays(due, now);
@@ -72,7 +72,7 @@ export interface UpcomingList {
   later: number;
 }
 
-/** The pane's contents from the task list. */
+/** The panel's contents from the task list. */
 export function upcomingTasks(
   tasks: readonly CalendarTask[],
   calendarIds: ReadonlySet<string>,

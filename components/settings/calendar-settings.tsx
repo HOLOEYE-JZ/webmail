@@ -38,7 +38,6 @@ export function CalendarSettings() {
     calendarFreeScroll,
     enableCalendarTasks,
     showTasksOnCalendar,
-    showUpcomingPane,
     showBirthdayCalendar,
     calendarHoverPreview,
     calendarLimitHours,
@@ -271,18 +270,6 @@ export function CalendarSettings() {
           <ToggleSwitch
             checked={showTasksOnCalendar}
             onChange={(checked) => updateSetting('showTasksOnCalendar', checked)}
-          />
-        </SettingItem>
-      )}
-
-      {enableCalendarTasks && (
-        <SettingItem
-          label={t('show_upcoming_pane')}
-          description={t('show_upcoming_pane_desc')}
-        >
-          <ToggleSwitch
-            checked={showUpcomingPane}
-            onChange={(checked) => updateSetting('showUpcomingPane', checked)}
           />
         </SettingItem>
       )}

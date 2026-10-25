@@ -3410,8 +3410,6 @@
       "enable_tasks_desc": "Een takenweergave in de agenda tonen om to-do's te beheren",
       "show_tasks_on_calendar": "Taken in agenda tonen",
       "show_tasks_on_calendar_desc": "Taken tonen in de maand-, week- en dagweergave van de agenda",
-      "show_upcoming_pane": "‘Binnenkort’ naast de e-mail tonen",
-      "show_upcoming_pane_desc": "Je open taken en opvolgingen op vervaldatum, naast de berichtenlijst",
       "hover_preview": "Voorvertoning bij hover",
       "hover_preview_desc": "Toon een detailpopover bij het hoveren over agenda-evenementen",
       "hover_preview_instant": "Direct",

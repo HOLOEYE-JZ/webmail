@@ -164,7 +164,7 @@ export function useGroupFollowUpsOf(emailId: string | null | undefined, accountI
   return (emailId && index.get(emailId)) || NO_TASKS;
 }
 
-/** The group tasks for the user (open or not): the pane and the reminders read them beside the own list. */
+/** The group tasks for the user (open or not): the tasks panel and the reminders read them beside the own list. */
 export function useGroupTasksForMe(): CalendarTask[] {
   const enabled = useFollowUpsEnabled();
   const tasks = useGroupTasks((s) => s.tasks);
