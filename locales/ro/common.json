@@ -4643,6 +4643,18 @@
       "delete_title": "Ștergeți sarcina?",
       "delete_confirm": "„{title}” va fi ștearsă din lista dvs. de sarcini, și de pe telefon. Acțiunea nu poate fi anulată."
     },
+    "send": {
+      "label": "Urmărire:",
+      "none": "Niciuna",
+      "no_answer_by": "Amintește-mi dacă nu vine niciun răspuns până {day}",
+      "hint_no_answer": "Se încheie singură dacă sosește un răspuns în această conversație; altfel ți se amintește în dimineața acelei zile.",
+      "where_own": "Urmărirea stă apoi pe mesajul din Trimise.",
+      "where_group": "Din {group}: doar în lista mea de activități, dacă „{custom}” nu o pune în cea a grupului.",
+      "dialog_hint": "Se pune pe mesajul din Trimise după trimitere; o trimitere eșuată sau anulată nu pune nimic.",
+      "not_found": "Mesajul a fost trimis, dar urmărirea nu a putut fi setată: copia trimisă nu a fost găsită.",
+      "group_gone": "Lista de activități a căsuței de grup nu este accesibilă: urmărirea rămâne în propria ta listă.",
+      "plugin_sent": "Un plugin a trimis singur acest mesaj: nu s-a putut seta o urmărire."
+    },
     "reply": {
       "settles": "Se încheie singură când sosește un răspuns la acest e-mail",
       "settles_hint": "(Bulwark caută un răspuns înainte să îți amintească; mementoul apare atunci doar în Bulwark, nu pe telefon și nici ca e-mail)",

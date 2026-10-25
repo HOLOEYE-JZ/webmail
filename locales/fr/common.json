@@ -4643,6 +4643,18 @@
       "delete_title": "Supprimer la tâche ?",
       "delete_confirm": "« {title} » sera supprimée de votre liste de tâches, sur votre téléphone aussi. Cette action est irréversible."
     },
+    "send": {
+      "label": "Suivi :",
+      "none": "Aucun",
+      "no_answer_by": "Me le rappeler sans réponse d'ici le {day}",
+      "hint_no_answer": "Se termine d'elle-même si une réponse arrive dans cette conversation ; sinon, rappel ce matin-là.",
+      "where_own": "Le suivi figure ensuite sur le message dans Envoyés.",
+      "where_group": "Depuis {group} : uniquement dans ma liste de tâches, sauf si « {custom} » le place dans celle du groupe.",
+      "dialog_hint": "Posé sur le message dans Envoyés une fois envoyé ; un envoi qui échoue ou est annulé ne pose rien.",
+      "not_found": "Le message est envoyé, mais son suivi n'a pas pu être posé : la copie envoyée est introuvable.",
+      "group_gone": "La liste de tâches de la boîte du groupe est inaccessible : le suivi est gardé dans votre propre liste.",
+      "plugin_sent": "Un module a envoyé ce message lui-même : aucun suivi n'a pu être posé."
+    },
     "reply": {
       "settles": "Se termine d'elle-même quand une réponse à ce message arrive",
       "settles_hint": "(Bulwark cherche une réponse avant de vous le rappeler ; le rappel n'apparaît alors que dans Bulwark, ni sur le téléphone ni par e-mail)",

@@ -4643,6 +4643,18 @@
       "delete_title": "Kas kustutada ülesanne?",
       "delete_confirm": "„{title}“ kustutatakse sinu ülesannete loendist, ka telefonis. Seda ei saa tagasi võtta."
     },
+    "send": {
+      "label": "Järelkontroll:",
+      "none": "Puudub",
+      "no_answer_by": "Tuleta meelde, kui {day} pole vastust",
+      "hint_no_answer": "Lõpeb ise, kui selles vestluses tuleb vastus; muidu tuletatakse sulle meelde selle päeva hommikul.",
+      "where_own": "Järelkontroll on seejärel kirja juures kaustas Saadetud.",
+      "where_group": "Kontolt {group}: ainult minu ülesannete loendis, kui „{custom}“ ei pane seda grupi omasse.",
+      "dialog_hint": "Pannakse kirjale kaustas Saadetud pärast saatmist; ebaõnnestunud või tagasi võetud saatmine ei pane midagi.",
+      "not_found": "Kiri saadeti, kuid järelkontrolli ei saanud määrata: saadetud koopiat ei leitud.",
+      "group_gone": "Grupipostkasti ülesannete loendile ei pääse ligi: järelkontroll jääb sinu enda loendisse.",
+      "plugin_sent": "Selle kirja saatis lisandmoodul ise: järelkontrolli ei saanud määrata."
+    },
     "reply": {
       "settles": "Lõpeb ise, kui sellele kirjale tuleb vastus",
       "settles_hint": "(Bulwark otsib enne meeldetuletust vastust; meeldetuletus tuleb siis ainult Bulwarkis, mitte telefoni ega kirjana)",

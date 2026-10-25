@@ -4643,6 +4643,18 @@
       "delete_title": "¿Eliminar la tarea?",
       "delete_confirm": "«{title}» se eliminará de tu lista de tareas, también en el teléfono. No se puede deshacer."
     },
+    "send": {
+      "label": "Seguimiento:",
+      "none": "Ninguno",
+      "no_answer_by": "Recordármelo si no hay respuesta antes del {day}",
+      "hint_no_answer": "Se completa sola si llega una respuesta en esta conversación; si no, te lo recuerda esa mañana.",
+      "where_own": "Después el seguimiento queda en el mensaje en Enviados.",
+      "where_group": "Desde {group}: solo en mi lista de tareas, salvo que «{custom}» lo ponga en la del grupo.",
+      "dialog_hint": "Se pone en el mensaje en Enviados una vez enviado; un envío que falla o se deshace no pone nada.",
+      "not_found": "El mensaje se envió, pero no se pudo poner su seguimiento: no se encontró la copia enviada.",
+      "group_gone": "No se puede acceder a la lista de tareas del buzón del grupo: el seguimiento se guarda en tu propia lista.",
+      "plugin_sent": "Un complemento envió este mensaje por sí mismo: no se pudo poner ningún seguimiento."
+    },
     "reply": {
       "settles": "Se completa sola cuando llega una respuesta a este correo",
       "settles_hint": "(Bulwark busca una respuesta antes de recordártelo; el recordatorio entonces solo aparece en Bulwark, no en el móvil ni como correo)",

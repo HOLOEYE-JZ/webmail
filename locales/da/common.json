@@ -4643,6 +4643,18 @@
       "delete_title": "Slet opgave?",
       "delete_confirm": "»{title}« slettes fra din opgaveliste, også på telefonen. Det kan ikke fortrydes."
     },
+    "send": {
+      "label": "Opfølgning:",
+      "none": "Ingen",
+      "no_answer_by": "Påmind mig, hvis der ikke er svar senest {day}",
+      "hint_no_answer": "Klares af sig selv, hvis der kommer et svar i denne samtale; ellers bliver du påmindet den morgen.",
+      "where_own": "Opfølgningen står derefter på mailen i Sendt.",
+      "where_group": "Fra {group}: kun på min opgaveliste, medmindre „{custom}“ lægger den på gruppens.",
+      "dialog_hint": "Sættes på mailen i Sendt, når den er sendt; en afsendelse, der mislykkes eller fortrydes, sætter intet.",
+      "not_found": "Mailen er sendt, men dens opfølgning kunne ikke sættes: den sendte kopi blev ikke fundet.",
+      "group_gone": "Gruppepostkassens opgaveliste kan ikke nås: opfølgningen gemmes på din egen opgaveliste.",
+      "plugin_sent": "Et plugin sendte selv denne mail: der kunne ikke sættes en opfølgning på den."
+    },
     "reply": {
       "settles": "Klares af sig selv, når der kommer et svar på denne mail",
       "settles_hint": "(Bulwark kigger efter et svar, før det minder dig om det; påmindelsen kommer så kun i Bulwark, ikke på telefonen eller som mail)",

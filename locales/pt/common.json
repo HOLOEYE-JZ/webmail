@@ -4643,6 +4643,18 @@
       "delete_title": "Eliminar a tarefa?",
       "delete_confirm": "«{title}» será eliminada da sua lista de tarefas, também no telemóvel. Não é possível anular."
     },
+    "send": {
+      "label": "Acompanhamento:",
+      "none": "Nenhum",
+      "no_answer_by": "Lembrar-me se não houver resposta até {day}",
+      "hint_no_answer": "Conclui-se sozinho se chegar uma resposta nesta conversa; caso contrário, é lembrado nessa manhã.",
+      "where_own": "O acompanhamento fica depois na mensagem em Enviados.",
+      "where_group": "De {group}: só na minha lista de tarefas, a menos que «{custom}» o coloque na do grupo.",
+      "dialog_hint": "Colocado na mensagem em Enviados depois de enviada; um envio que falha ou é anulado não coloca nada.",
+      "not_found": "A mensagem foi enviada, mas não foi possível definir o acompanhamento: a cópia enviada não foi encontrada.",
+      "group_gone": "A lista de tarefas da caixa do grupo não está acessível: o acompanhamento fica na sua própria lista.",
+      "plugin_sent": "Um plugin enviou esta mensagem por si: não foi possível definir um acompanhamento."
+    },
     "reply": {
       "settles": "Conclui-se sozinho quando chega uma resposta a este e-mail",
       "settles_hint": "(O Bulwark procura uma resposta antes de lembrar você; o lembrete então aparece só no Bulwark, não no telefone nem por e-mail)",

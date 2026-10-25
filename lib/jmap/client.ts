@@ -17,9 +17,9 @@ import { decodeFileNodeName } from "./filenode-name";
 import { contactFromWire, contactToWire } from "./contact-wire";
 import { SchedulingDeniedError } from "./scheduling-error";
 import { PrincipalsRequestError } from "./principals-error";
-import { RescheduleRestoredError } from "./reschedule-error";
+import { RescheduleRestoredError, RescheduleUnscheduledError } from "./reschedule-error";
 
-export { SchedulingDeniedError, RescheduleRestoredError };
+export { SchedulingDeniedError, RescheduleRestoredError, RescheduleUnscheduledError };
 import { acceptedFileName, fileNameRulesFrom, type FileNameRules } from "@/lib/file-name-rules";
 import { getEffectiveTimeZone, toLocalDateTime } from "@/lib/timezone";
 import { buildEmailSort, compareEmails, hasKeywordLevels, type KeywordSortPolarity, type SortLevel } from "@/lib/message-list-order";
@@ -4201,6 +4201,8 @@ export class JMAPClient implements IJMAPClient {
     const normalizedReferences = references?.map(stripMessageIdBrackets).filter(Boolean);
 
     const sanitizedFromName = sanitizeIdentityDisplayName(fromName);
+    // Returned with the result, so a follow-up on the sent copy can name it.
+    const outgoingMessageId = generateMessageId(fromEmail || this.username);
     // Always create a new email with the final body content
     const emailCreate: Record<string, unknown> = {
       from: [{ ...(sanitizedFromName ? { name: sanitizedFromName } : {}), email: fromEmail || this.username }],
@@ -4212,7 +4214,7 @@ export class JMAPClient implements IJMAPClient {
       cc: cc?.length ? cc.map(parseRecipientString) : undefined,
       bcc: bcc?.length ? bcc.map(parseRecipientString) : undefined,
       subject,
-      messageId: [generateMessageId(fromEmail || this.username)],
+      messageId: [outgoingMessageId],
       inReplyTo: normalizedInReplyTo?.length ? normalizedInReplyTo : undefined,
       references: normalizedReferences?.length ? normalizedReferences : undefined,
       keywords: { "$seen": true, "$draft": true },
@@ -4476,9 +4478,10 @@ export class JMAPClient implements IJMAPClient {
     }
 
     const rejectedRecipientsResult = rejected.length ? rejected : undefined;
+    const sent = { emailAccountId: targetAccountId, messageId: outgoingMessageId };
     return delayedUntil
-      ? { scheduled: true, emailId: createdEmailId, emailSubmissionId, sendAt: serverSendAt, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult }
-      : { scheduled: false, emailId: createdEmailId, emailSubmissionId, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult };
+      ? { scheduled: true, emailId: createdEmailId, emailSubmissionId, sendAt: serverSendAt, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult, ...sent }
+      : { scheduled: false, emailId: createdEmailId, emailSubmissionId, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult, ...sent };
   }
 
   /**
@@ -10038,7 +10041,7 @@ export class JMAPClient implements IJMAPClient {
           console.error('Failed to move the message back to Drafts after reschedule failure:', draftError);
         }
       }
-      throw new Error(`Reschedule failed and the message is no longer scheduled: ${message}`);
+      throw new RescheduleUnscheduledError(`Reschedule failed and the message is no longer scheduled: ${message}`);
     }
     const finalSendAt = replacement.sendAt || await this.getEmailSubmissionSendAt(replacement.id, submissionAccountId);
     return { scheduled: true, emailId, emailSubmissionId: replacement.id, sendAt: finalSendAt };

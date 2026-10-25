@@ -4643,6 +4643,18 @@
       "delete_title": "Taak verwijderen?",
       "delete_confirm": "‘{title}’ wordt uit je takenlijst verwijderd, ook op je telefoon. Dit kan niet ongedaan worden gemaakt."
     },
+    "send": {
+      "label": "Opvolgen:",
+      "none": "Geen",
+      "no_answer_by": "Herinner me als er vóór {day} geen antwoord is",
+      "hint_no_answer": "Handelt zichzelf af als er in dit gesprek een antwoord komt; anders word je die ochtend herinnerd.",
+      "where_own": "De opvolging staat daarna bij het bericht in Verzonden.",
+      "where_group": "Vanuit {group}: alleen in mijn takenlijst, tenzij „{custom}” hem in die van de groep zet.",
+      "dialog_hint": "Wordt na verzenden bij het bericht in Verzonden gezet; een verzending die mislukt of ongedaan wordt gemaakt, zet niets.",
+      "not_found": "Het bericht is verzonden, maar de opvolging kon niet worden ingesteld: de verzonden kopie is niet gevonden.",
+      "group_gone": "De takenlijst van de groepsmailbox is niet bereikbaar: de opvolging blijft in je eigen takenlijst.",
+      "plugin_sent": "Een plug-in heeft dit bericht zelf verzonden: er kon geen opvolging worden ingesteld."
+    },
     "reply": {
       "settles": "Handelt zichzelf af als er een antwoord op deze mail komt",
       "settles_hint": "(Bulwark zoekt naar een antwoord voordat het je herinnert; de herinnering komt dan alleen in Bulwark, niet op de telefoon of als mail)",

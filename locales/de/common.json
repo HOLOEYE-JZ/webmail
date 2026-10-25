@@ -4643,6 +4643,18 @@
       "delete_title": "Aufgabe löschen?",
       "delete_confirm": "„{title}“ wird aus Ihrer Aufgabenliste gelöscht, auch auf dem Handy. Das lässt sich nicht rückgängig machen."
     },
+    "send": {
+      "label": "Nachverfolgen:",
+      "none": "Keine",
+      "no_answer_by": "Erinnern, falls bis {day} keine Antwort",
+      "hint_no_answer": "Kommt bis dahin eine Antwort im selben Verlauf, erledigt sie sich; sonst erinnert sie an dem Tag früh.",
+      "where_own": "Die Wiedervorlage steht danach an der Mail in „Gesendet“.",
+      "where_group": "Von {group}: nur in meiner Aufgabenliste, wenn „{custom}“ nicht die der Gruppe wählt.",
+      "dialog_hint": "Wird nach dem Senden an der Mail in „Gesendet“ gesetzt; ein gescheitertes oder rückgängig gemachtes Senden setzt nichts.",
+      "not_found": "Die Mail ist gesendet, ihre Wiedervorlage aber nicht gesetzt: die gesendete Mail wurde nicht gefunden.",
+      "group_gone": "Die Aufgabenliste des Gruppenpostfachs ist nicht erreichbar: die Wiedervorlage steht in Ihrer eigenen Aufgabenliste.",
+      "plugin_sent": "Ein Plugin hat die Mail selbst gesendet: eine Wiedervorlage konnte nicht gesetzt werden."
+    },
     "reply": {
       "settles": "erledigt sich, wenn auf diese Mail eine Antwort kommt",
       "settles_hint": "(Bulwark sieht vor der Erinnerung nach einer Antwort; die Erinnerung kommt dann nur in Bulwark, nicht aufs Telefon und nicht als Mail)",

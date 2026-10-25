@@ -55,6 +55,8 @@ type PendingUndoSend = {
    *  was sent from a shared identity (#874). Distinct from localAccountId,
    *  which selects *which login's client* to talk to. */
   submissionAccountId?: string;
+  /** JMAP account the sent copy lies in (SendEmailResult.emailAccountId). */
+  emailAccountId?: string;
 };
 
 /** Drop the matching emails from a key-based selection. */
@@ -3244,6 +3246,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
               sendAt: result.sendAt,
               isSmime: false,
               submissionAccountId: result.submissionAccountId,
+              emailAccountId: result.emailAccountId,
               // Cross-account send: undo/send-now must talk to the account that
               // holds the submission, not the active one (#461).
               localAccountId: options?.localAccountId,

@@ -4643,6 +4643,18 @@
       "delete_title": "Delete task?",
       "delete_confirm": "“{title}” is deleted from your task list, also on your phone. This cannot be undone."
     },
+    "send": {
+      "label": "Follow up:",
+      "none": "None",
+      "no_answer_by": "Remind me if no answer by {day}",
+      "hint_no_answer": "Settles itself if an answer comes in this conversation; otherwise you are reminded that morning.",
+      "where_own": "The follow-up then stands on the mail in Sent.",
+      "where_group": "From {group}: only in my task list, unless “{custom}” puts it into the group's.",
+      "dialog_hint": "Set on the mail in Sent once it has been sent; a send that fails or is undone sets nothing.",
+      "not_found": "The mail was sent, but its follow-up could not be set: the sent copy was not found.",
+      "group_gone": "The group mailbox's task list cannot be reached: the follow-up is kept in your own task list.",
+      "plugin_sent": "A plugin sent this mail itself: no follow-up could be set on it."
+    },
     "reply": {
       "settles": "Settles itself when an answer to this mail comes",
       "settles_hint": "(Bulwark looks for an answer before it reminds you; the reminder then comes only in Bulwark, not on the phone or as a mail)",

@@ -4643,6 +4643,18 @@
       "delete_title": "Usunąć zadanie?",
       "delete_confirm": "„{title}” zostanie usunięte z Twojej listy zadań, także na telefonie. Tej operacji nie można cofnąć."
     },
+    "send": {
+      "label": "Monituj:",
+      "none": "Brak",
+      "no_answer_by": "Przypomnij, jeśli do {day} nie będzie odpowiedzi",
+      "hint_no_answer": "Załatwia się samo, jeśli w tej rozmowie przyjdzie odpowiedź; w przeciwnym razie przypomnienie przyjdzie rano tego dnia.",
+      "where_own": "Monit pojawi się potem przy wiadomości w Wysłanych.",
+      "where_group": "Z {group}: tylko na mojej liście zadań, chyba że „{custom}” umieści go na liście grupy.",
+      "dialog_hint": "Ustawiany przy wiadomości w Wysłanych po jej wysłaniu; wysyłka nieudana lub cofnięta niczego nie ustawia.",
+      "not_found": "Wiadomość została wysłana, ale nie udało się ustawić monitu: nie znaleziono wysłanej kopii.",
+      "group_gone": "Lista zadań skrzynki grupowej jest niedostępna: monit pozostaje na Twojej własnej liście.",
+      "plugin_sent": "Tę wiadomość wysłała sama wtyczka: nie udało się ustawić monitu."
+    },
     "reply": {
       "settles": "Załatwia się samo, gdy przyjdzie odpowiedź na tę wiadomość",
       "settles_hint": "(Bulwark przed przypomnieniem szuka odpowiedzi; przypomnienie pojawia się wtedy tylko w Bulwarku, nie na telefonie ani jako e-mail)",

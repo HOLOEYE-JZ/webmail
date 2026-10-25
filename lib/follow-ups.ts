@@ -128,6 +128,41 @@ export function scheduleFollowUp(
   }
 }
 
+/**
+ * The composer's "Remind me if no answer by …" (plan 037 decision 10): a sent
+ * mail comes back three working days or a week after the day it goes out.
+ */
+export const NO_ANSWER_CHOICES = ["three-workdays", "week"] as const;
+export type NoAnswerChoice = (typeof NO_ANSWER_CHOICES)[number];
+
+/**
+ * Due day and reminder of a no-answer choice, counted from `sent` (the day the
+ * mail goes out, a display date):
+ *
+ * - Three working days: due the third working day after it.
+ * - A week: due the same weekday a week on, or the next working day after
+ *   that when it is none.
+ *
+ * Reminded when that day's work starts; never in the past.
+ */
+export function scheduleNoAnswer(
+  choice: NoAnswerChoice,
+  sent: Date,
+  work: WorkingTime = DEFAULT_WORKING_TIME,
+): { due: Date; reminder: Date | null } {
+  const working = workingDaysOf(work);
+  const day = startOfDay(sent);
+  let due: Date;
+  if (choice === "three-workdays") {
+    due = addWorkdays(day, 3, working);
+  } else {
+    due = addDays(day, 7);
+    while (!working.has(due.getDay())) due = addDays(due, 1);
+  }
+  const reminder = atHour(due, work.startHour);
+  return { due, reminder: reminder.getTime() > sent.getTime() ? reminder : null };
+}
+
 // ---------------------------------------------------------------------------
 // The task
 // ---------------------------------------------------------------------------

@@ -12,6 +12,7 @@ import {
   followUpCalendars,
   useFollowUp,
   useFollowUpDialog,
+  useWorkingTime,
   type FollowUpDetails,
   type FollowUpDialogFocus,
   type GroupDialogTarget,
@@ -20,12 +21,14 @@ import { useReminder } from "@/hooks/use-upcoming";
 import {
   deleteGroupTask,
   useGroupTask,
+  useGroupTaskList,
   useMyAddresses,
   useTaskListSharees,
   writeGroupTask,
   type GroupTaskList,
 } from "@/hooks/use-group-follow-ups";
 import { useAuthStore } from "@/stores/auth-store";
+import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
 import { groupTaskOwner, type TaskPerson } from "@/lib/group-follow-ups";
@@ -141,6 +144,10 @@ interface FormControls {
   remove: () => Promise<void>;
   /** Offered where a group's list can take it; none: the user's own list, for the user. */
   place?: PlaceChoice;
+  /** What a new one starts with instead of the defaults (the composer's choice, chosen before). */
+  start?: FollowUpDetails;
+  /** A line under the mail: the composer's, "set on the sent mail once it is sent". */
+  hint?: string;
 }
 
 /** A group task's owner as the form's "For" holds it: null for the user, `NOBODY` for none. */
@@ -234,6 +241,51 @@ export function FollowUpDialog({ email, focus, group, onClose }: {
 }
 
 /**
+ * The composer's "Follow up: Custom …" (plan 037 decision 10): the follow-up
+ * dialog for a mail not sent yet. It writes nothing: Save hands the choices
+ * to the composer (`onChoose`), which keeps them with the draft and has them
+ * written on the sent copy once the mail has left. `accountId` is the mail
+ * account the mail goes out from: from a group mailbox the follow-up is the
+ * user's own ("only me") unless "Visible" puts it into the group's list.
+ */
+export function SendFollowUpDialog({ email, accountId, onlyMe, start, onChoose, onClose }: {
+  /** What the dialog names of the mail: its subject and From. */
+  email: Pick<Email, "subject" | "from">;
+  accountId: string | null;
+  /** The mail goes out of a group mailbox (`accountId` is not the user's own). */
+  onlyMe: boolean;
+  start: FollowUpDetails;
+  onChoose: (details: FollowUpDetails) => void;
+  onClose: () => void;
+}) {
+  const t = useTranslations("follow_up");
+  const workingTime = useWorkingTime();
+  const list = useGroupTaskList(onlyMe ? accountId : null);
+  const mailboxName = useEmailStore((s) => (onlyMe
+    ? s.mailboxes.find((m) => m.isShared && m.accountId === accountId && m.accountName)?.accountName ?? null
+    : null));
+  const inGroup = !!list && !!start.groupAccountId && start.groupAccountId === list.accountId;
+  const controls: FormControls = {
+    available: true,
+    onlyMe,
+    mailboxName: mailboxName ?? list?.name ?? null,
+    task: null,
+    workingTime,
+    save: async (details) => {
+      onChoose(details);
+      return true;
+    },
+    remove: async () => {},
+    place: list
+      ? { groups: [list], fixed: false, initialGroup: inGroup ? list.accountId : null, initialPerson: inGroup ? start.person ?? null : null, colleague: false }
+      : undefined,
+    start: inGroup ? start : { ...start, groupAccountId: null, person: undefined },
+    hint: t("send.dialog_hint"),
+  };
+  return <FollowUpForm controls={controls} email={email} focus="action" onClose={onClose} />;
+}
+
+/**
  * A reminder without a mail ("Check the dunning run"): what, the due day,
  * the reminder and a note, in the user's own task list. Also any task of
  * that list that is not a mail's follow-up, opened from the pane "Upcoming".
@@ -259,8 +311,8 @@ export function ReminderDialog({ taskId, title, focus, onClose }: {
 
 function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }: {
   controls: FormControls;
-  /** The mail of a follow-up; none for a reminder without one. */
-  email?: Email;
+  /** The mail of a follow-up (what the dialog names of it); none for a reminder without one. */
+  email?: Pick<Email, "subject" | "from">;
   title?: string;
   focus: FollowUpDialogFocus;
   onClose: () => void;
@@ -286,25 +338,26 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   // Read once when the dialog opens: a push meanwhile must not overwrite what the user typed.
   const [initial] = useState(() => {
     const now = displayNow();
+    const start = task ? undefined : controls.start;
     // A reminder is due today unless it says otherwise, a mail's follow-up tomorrow.
     const due = task
       ? followUpDueDay(task)
-      : isReminder ? startOfDay(now) : scheduleFollowUp("tomorrow", now, workingTime).due;
-    const stored = task ? followUpReminder(task) : null;
+      : start ? start.due : isReminder ? startOfDay(now) : scheduleFollowUp("tomorrow", now, workingTime).due;
+    const stored = task ? followUpReminder(task) : start?.reminderAt ?? null;
     const propose = isReminder ? proposedReminder : proposedFollowUpReminder;
     const reminder = stored
       ? toDisplayDate(stored)
       : focus === "reminder" ? propose(due, now, workingTime) : null;
     const action = isReminder
       ? (task ? task.title ?? "" : newTitle)
-      : task ? shownAction(followUpAction(task)) : t("actions.follow_up");
+      : task ? shownAction(followUpAction(task)) : start ? shownAction(start.action) : t("actions.follow_up");
     return {
       action,
       due,
       reminder,
-      note: task ? followUpNote(task) : "",
-      mail: task ? hasFollowUpMailAlert(task) : false,
-      settles: task ? settlesOnReply(task) : false,
+      note: task ? followUpNote(task) : start?.note ?? "",
+      mail: task ? hasFollowUpMailAlert(task) : start?.mailReminder ?? false,
+      settles: task ? settlesOnReply(task) : start?.settlesOnReply ?? false,
       // Alerts the reminder shown leaves out (relative ones, a second one set on a phone): kept as they are.
       otherAlerts: task ? otherFollowUpAlerts(task) : 0,
     };
@@ -540,6 +593,9 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
                 {[controls.mailboxName, sender, email?.subject || t("no_subject")].filter(Boolean).join(" · ")}
               </span>
             </p>
+            {controls.hint && (
+              <p data-testid="follow-up-hint" className="text-xs text-muted-foreground">{controls.hint}</p>
+            )}
 
             <div className="space-y-1.5">
               <label htmlFor={`${id}-action`} className="block font-medium text-foreground">{t("action_label")}</label>

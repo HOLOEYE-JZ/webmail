@@ -439,9 +439,11 @@ export interface GroupTaskWrite {
   person: TaskPerson | null | undefined;
   details: FollowUpDetails;
   /** The mail of a follow-up, and its account; none for a reminder without one. */
-  mail?: { email: Email; accountId: string } | null;
+  mail?: { email: Pick<Email, "id" | "subject" | "from" | "messageId">; accountId: string } | null;
   /** Titles in the user's language. */
   text: { title: (action: string, subject: string) => string; noSubject: string; followUp: string };
+  /** Told the task a new one was written as. */
+  created?: (task: CalendarTask) => void;
 }
 
 /**
@@ -472,6 +474,7 @@ export async function writeGroupTask(client: IJMAPClient, write: GroupTaskWrite)
         note: details.note,
         participants: groupTaskParticipants(owner, me),
       }));
+      if (created) write.created?.(created);
       return !!created;
     }
     const title = details.action.replace(/\s+/g, " ").trim();

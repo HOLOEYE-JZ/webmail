@@ -4643,6 +4643,18 @@
       "delete_title": "Slette oppgaven?",
       "delete_confirm": "«{title}» slettes fra oppgavelisten din, også på telefonen. Dette kan ikke angres."
     },
+    "send": {
+      "label": "Oppfølging:",
+      "none": "Ingen",
+      "no_answer_by": "Påminn meg hvis det ikke er svar innen {day}",
+      "hint_no_answer": "Ordner seg selv hvis det kommer et svar i denne samtalen; ellers blir du påminnet den morgenen.",
+      "where_own": "Oppfølgingen står deretter på e-posten i Sendt.",
+      "where_group": "Fra {group}: bare i oppgavelisten min, med mindre «{custom}» legger den i gruppens.",
+      "dialog_hint": "Settes på e-posten i Sendt når den er sendt; en sending som mislykkes eller angres, setter ingenting.",
+      "not_found": "E-posten ble sendt, men oppfølgingen kunne ikke settes: den sendte kopien ble ikke funnet.",
+      "group_gone": "Gruppepostkassens oppgaveliste kan ikke nås: oppfølgingen lagres i din egen oppgaveliste.",
+      "plugin_sent": "Et programtillegg sendte e-posten selv: ingen oppfølging kunne settes på den."
+    },
     "reply": {
       "settles": "Ordner seg selv når det kommer et svar på denne e-posten",
       "settles_hint": "(Bulwark ser etter et svar før det minner deg på det; påminnelsen kommer da bare i Bulwark, ikke på telefonen eller som e-post)",

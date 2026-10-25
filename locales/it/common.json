@@ -4643,6 +4643,18 @@
       "delete_title": "Eliminare l’attività?",
       "delete_confirm": "«{title}» verrà eliminata dal tuo elenco attività, anche sul telefono. L’operazione non può essere annullata."
     },
+    "send": {
+      "label": "Completamento:",
+      "none": "Nessuno",
+      "no_answer_by": "Ricordamelo se non c'è risposta entro {day}",
+      "hint_no_answer": "Si completa da sola se arriva una risposta in questa conversazione; altrimenti te lo ricorda quella mattina.",
+      "where_own": "Il completamento resta poi sul messaggio in Inviata.",
+      "where_group": "Da {group}: solo nel mio elenco attività, a meno che «{custom}» non lo metta in quello del gruppo.",
+      "dialog_hint": "Impostato sul messaggio in Inviata una volta inviato; un invio non riuscito o annullato non imposta nulla.",
+      "not_found": "Il messaggio è stato inviato, ma non è stato possibile impostarne il completamento: la copia inviata non è stata trovata.",
+      "group_gone": "L'elenco attività della casella di gruppo non è raggiungibile: il completamento resta nel tuo elenco.",
+      "plugin_sent": "Un plugin ha inviato questo messaggio da sé: non è stato possibile impostare un completamento."
+    },
     "reply": {
       "settles": "Si completa da sola quando arriva una risposta a questa email",
       "settles_hint": "(Bulwark cerca una risposta prima di ricordartelo; il promemoria allora appare solo in Bulwark, non sul telefono né come email)",

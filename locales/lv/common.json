@@ -4643,6 +4643,18 @@
       "delete_title": "Dzēst uzdevumu?",
       "delete_confirm": "“{title}” tiks izdzēsts no jūsu uzdevumu saraksta, arī tālrunī. To nevar atsaukt."
     },
+    "send": {
+      "label": "Turpmākā darbība:",
+      "none": "Nav",
+      "no_answer_by": "Atgādināt, ja līdz {day} nav atbildes",
+      "hint_no_answer": "Izpildās pats, ja šajā sarakstē pienāk atbilde; citādi tajā rītā tiek atgādināts.",
+      "where_own": "Pēc tam turpmākā darbība ir pie vēstules mapē Nosūtītie.",
+      "where_group": "No {group}: tikai manā uzdevumu sarakstā, ja vien „{custom}” to neieliek grupas sarakstā.",
+      "dialog_hint": "Tiek iestatīta vēstulei mapē Nosūtītie pēc nosūtīšanas; neizdevusies vai atsaukta nosūtīšana neko neiestata.",
+      "not_found": "Vēstule ir nosūtīta, bet turpmāko darbību neizdevās iestatīt: nosūtītā kopija netika atrasta.",
+      "group_gone": "Grupas pastkastes uzdevumu saraksts nav pieejams: turpmākā darbība paliek jūsu sarakstā.",
+      "plugin_sent": "Šo vēstuli nosūtīja spraudnis pats: turpmāko darbību nevarēja iestatīt."
+    },
     "reply": {
       "settles": "Izpildās pats, kad uz šo vēstuli pienāk atbilde",
       "settles_hint": "(Bulwark pirms atgādinājuma meklē atbildi; atgādinājums tad parādās tikai Bulwark, nevis tālrunī vai kā e-pasts)",

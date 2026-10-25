@@ -4643,6 +4643,18 @@
       "delete_title": "Törli a feladatot?",
       "delete_confirm": "A(z) „{title}” törlődik a feladatlistájából, a telefonján is. Ez nem vonható vissza."
     },
+    "send": {
+      "label": "Nyomon követés:",
+      "none": "Nincs",
+      "no_answer_by": "Emlékeztessen, ha {day}-ig nincs válasz",
+      "hint_no_answer": "Magától lezárul, ha ebben a beszélgetésben válasz érkezik; különben aznap reggel emlékeztet.",
+      "where_own": "A nyomon követés ezután az Elküldött mappában lévő levélen áll.",
+      "where_group": "{group} fiókból: csak a saját feladatlistámban, hacsak a „{custom}” nem a csoportéba teszi.",
+      "dialog_hint": "Küldés után kerül az Elküldött mappában lévő levélre; a sikertelen vagy visszavont küldés semmit sem állít be.",
+      "not_found": "A levél elment, de a nyomon követést nem sikerült beállítani: az elküldött példány nem található.",
+      "group_gone": "A csoportpostafiók feladatlistája nem érhető el: a nyomon követés a saját feladatlistájában marad.",
+      "plugin_sent": "Ezt a levelet egy bővítmény küldte el: nyomon követést nem lehetett beállítani rá."
+    },
     "reply": {
       "settles": "Magától lezárul, ha erre a levélre válasz érkezik",
       "settles_hint": "(A Bulwark az emlékeztető előtt választ keres; az emlékeztető ekkor csak a Bulwarkban jelenik meg, nem a telefonon és nem levélként)",

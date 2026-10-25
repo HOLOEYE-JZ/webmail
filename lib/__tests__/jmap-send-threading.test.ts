@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { JMAPClient, RescheduleRestoredError } from '../jmap/client';
+import { JMAPClient, RescheduleRestoredError, RescheduleUnscheduledError } from '../jmap/client';
 
 function createClient(): JMAPClient {
   const client = new JMAPClient('https://jmap.example.com', 'user@example.com', 'pass');
@@ -347,8 +347,10 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
     const client = createClient();
     const { calls } = scriptServer(client, { creates: ['reject', 'reject'] });
 
-    await expect(client.rescheduleEmailSubmission('sub-old', 'email-1', 'identity-1', inTenMinutes()))
-      .rejects.toThrow('no longer scheduled');
+    const failure = await client.rescheduleEmailSubmission('sub-old', 'email-1', 'identity-1', inTenMinutes()).catch((e: unknown) => e);
+    expect((failure as Error).message).toContain('no longer scheduled');
+    // Typed, so the host takes off the follow-up of a mail that will not leave.
+    expect(failure).toBeInstanceOf(RescheduleUnscheduledError);
 
     const draftUpdate = calls.find(c => c.method === 'Email/set')?.args.update as Record<string, Record<string, unknown>> | undefined;
     expect(draftUpdate?.['email-1']).toMatchObject({ mailboxIds: { 'mb-drafts': true }, 'keywords/$draft': true });

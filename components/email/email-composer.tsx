@@ -130,6 +130,9 @@ import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
 import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
 import { toUnicodeEmail } from "@/lib/idn";
+import { readSendFollowUp, rememberDraftFollowUp, type SendFollowUp } from "@/lib/send-follow-up";
+// "Follow up" loads only where follow-ups are on: it brings the task and calendar stores along.
+const ComposeFollowUp = React.lazy(() => import("@/components/email/compose-follow-up").then((m) => ({ default: m.ComposeFollowUp })));
 
 /**
  * Derives the text/plain alternative from the composer's HTML body, preserving
@@ -217,6 +220,8 @@ export interface ComposerDraftData {
   references?: string[];
   /** Priority of a re-opened draft, read back from its headers (#970). */
   priority?: MessagePriority;
+  /** The "Follow up" chosen for this message (lib/send-follow-up.ts); kept across remounts. */
+  followUp?: SendFollowUp | null;
 }
 
 interface EmailComposerProps {
@@ -250,6 +255,13 @@ interface EmailComposerProps {
     requireTls?: boolean;
     /** Importance / X-Priority; absent for normal (#970). */
     priority?: MessagePriority;
+    /** The follow-up to set on the sent copy once the mail has left (lib/send-follow-up.ts). */
+    followUp?: SendFollowUp | null;
+    /**
+     * `delayedUntil` is the "send delay" setting's undo hold, not a time the
+     * user scheduled: the follow-up is written only once the hold runs out.
+     */
+    undoHold?: boolean;
   }) => void | Promise<void>;
   onScheduledSendCreated?: () => void | Promise<void>;
   onClose?: () => void;
@@ -425,6 +437,7 @@ export function EmailComposer({
   const tCommon = useTranslations('common');
   const tQuote = useTranslations('quote_header');
   const tViewer = useTranslations('email_viewer');
+  const tFollowUp = useTranslations('follow_up');
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const plainTextModeDefault = useSettingsStore((state) => state.plainTextMode);
   // Per-message format (#1022). Seeded from the "plain text only" setting -
@@ -834,6 +847,10 @@ export function EmailComposer({
   const [priority, setPriority] = useState<MessagePriority>(initialData?.priority ?? 'normal');
   const priorityRef = useRef(priority);
   priorityRef.current = priority;
+  // "Follow up" (plan 037 decision 10): written on the sent copy once the mail has left.
+  const [followUp, setFollowUpState] = useState<SendFollowUp | null>(() => readSendFollowUp(initialData?.followUp));
+  const followUpRef = useRef(followUp);
+  followUpRef.current = followUp;
   const [draftId, setDraftId] = useState<string | null>(initialData?.draftId ?? null);
   // Mirror of draftId for synchronous reads inside chained saves; React's
   // setDraftId is async, so a queued saveDraft would otherwise see the old
@@ -1002,6 +1019,14 @@ export function EmailComposer({
   const currentIdentityRawId = currentIdentityParts.rawId ?? currentIdentity?.id;
   // Login that owns the blobs uploaded through `composerClient`.
   const composerAccountId = currentIdentityParts.localAccountId ?? activeAccountId ?? undefined;
+  // "Follow up" is kept for a mail of the active login only, as every follow-up (hooks/use-follow-ups.ts).
+  const followUpAllowed = !!composerAccountId && composerAccountId === activeAccountIdNow;
+  const tasksOn = useSettingsStore((state) => state.enableCalendarTasks);
+  const setFollowUp = useCallback((value: SendFollowUp | null) => {
+    setFollowUpState(value);
+    followUpRef.current = value;
+    rememberDraftFollowUp(draftIdRef.current, value);
+  }, []);
 
   // Forwarded attachments and quoted inline images reference part blobs of the
   // original message, which only the account that holds it can resolve. When
@@ -1591,6 +1616,7 @@ export function EmailComposer({
           mode,
           replyTo,
           priority: priorityRef.current,
+          followUp: followUpRef.current,
         });
       }
     };
@@ -2540,6 +2566,9 @@ export function EmailComposer({
       // doesn't try to destroy the just-replaced draft.
       draftIdRef.current = savedDraftId;
       draftAccountIdRef.current = draftAccountId ?? null;
+      // The draft's "Follow up" goes with it for this session (lib/send-follow-up.ts).
+      if (previousDraftId && previousDraftId !== savedDraftId) rememberDraftFollowUp(previousDraftId, null);
+      rememberDraftFollowUp(savedDraftId, followUpRef.current);
       setDraftId(savedDraftId);
       lastSavedDataRef.current = currentData;
       savedVersionRef.current = versionAtStart;
@@ -3307,6 +3336,8 @@ export function EmailComposer({
       const sendHandledByPlugin = pluginOutcome === 'handled';
       if (sendHandledByPlugin) {
         sentRef.current = true;
+        // The plugin sent it itself: no sent copy is known here to follow up.
+        if (followUpAllowed && followUpRef.current) toast.info(tFollowUp('send.plugin_sent'));
         if (finalDraftId) {
           // The draft was created through the identity's owning account
           // (see saveDraft), so clean it up there too - not on the active
@@ -3388,7 +3419,11 @@ export function EmailComposer({
           requireTls: requireTls || undefined,
           priority: priority !== 'normal' ? priority : undefined,
           delayedUntil: effectiveDelayedUntil,
+          // The "send delay" setting's hold, not a time the user chose: its follow-up waits for it.
+          undoHold: !delayedUntil && !!effectiveDelayedUntil,
+          followUp: followUpAllowed ? followUp : null,
         });
+        if (finalDraftId) rememberDraftFollowUp(finalDraftId, null);
 
         if (mode === 'reply' || mode === 'replyAll') {
           for (const recipient of [...outgoing.to, ...outgoing.cc].filter(Boolean)) {
@@ -4316,6 +4351,19 @@ export function EmailComposer({
               )}
             </div>
           </div>
+        )}
+
+        {followUpAllowed && tasksOn && (
+          <React.Suspense fallback={null}>
+          <ComposeFollowUp
+            value={followUp}
+            onChange={setFollowUp}
+            client={composerClient}
+            fromEmail={(fromOverrideEnabled && fromOverrideEmail.trim()) || currentIdentity?.email || undefined}
+            fromName={(fromOverrideEnabled && fromOverrideEmail.trim() ? fromOverrideName.trim() : currentIdentity?.name) || undefined}
+            subject={subject}
+          />
+          </React.Suspense>
         )}
 
         {/* Plugin buttons get their own row: the composer is often too narrow

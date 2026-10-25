@@ -215,7 +215,7 @@ export function onFollowUpChanged(listener: (() => void) | null): void {
 }
 
 /** The mail's Message-ID, read from the server when the list did not give it. */
-export async function messageIdOf(client: IJMAPClient, email: Email, accountId: string): Promise<string | readonly string[] | null> {
+export async function messageIdOf(client: IJMAPClient, email: Pick<Email, "id" | "messageId">, accountId: string): Promise<string | readonly string[] | null> {
   if (email.messageId) return email.messageId;
   try {
     const [fields] = await client.getEmailFields([email.id], ["messageId"], accountId === client.getAccountId() ? undefined : accountId);
@@ -298,6 +298,103 @@ async function changeFollowUp(
     pending.delete(emailId);
     afterChange?.();
   }
+}
+
+/** What a new follow-up's task says, in the user's language. */
+export interface FollowUpText {
+  title: (action: string, subject: string) => string;
+  noSubject: string;
+  /** Said when the user has no task list to put it in; null: only logged. */
+  noTaskList: string | null;
+}
+
+/** The mail a follow-up is written for: what its task names of it. */
+export type FollowUpMail = Pick<Email, "id" | "subject" | "from" | "messageId" | "keywords">;
+
+/**
+ * Writes a new follow-up into the user's own task list, also for a group
+ * mailbox's mail: its link names the mail's JMAP account `mailAccountId`.
+ */
+export async function createOwnFollowUp(
+  client: IJMAPClient,
+  email: FollowUpMail,
+  mailAccountId: string,
+  details: FollowUpDetails,
+  text: FollowUpText,
+): Promise<CalendarTask | null> {
+  const calendarStore = useCalendarStore.getState();
+  if (calendarStore.calendars.length === 0) await calendarStore.fetchCalendars(client);
+  const [calendar] = followUpCalendars(useCalendarStore.getState().calendars);
+  if (!calendar) {
+    if (text.noTaskList) toast.error(text.noTaskList);
+    else debug.warn("follow-up", "no task list to put the follow-up in");
+    return null;
+  }
+  const subject = email.subject || text.noSubject;
+  const created = await useTaskStore.getState().createTask(client, buildFollowUpTask({
+    title: text.title(details.action, subject),
+    mailUrl: appUrl(buildMailMessageLink(email.id, mailAccountId)),
+    subject: email.subject,
+    messageId: await messageIdOf(client, email, mailAccountId),
+    from: email.from?.[0] ?? null,
+    calendarId: calendar.id,
+    due: details.due,
+    reminderAt: details.reminderAt,
+    note: details.note,
+    mailReminder: details.mailReminder,
+    settlesOnReply: details.settlesOnReply,
+  }));
+  return created;
+}
+
+/**
+ * A new follow-up in the user's own task list on a mail the user is not
+ * looking at (the sent copy of a mail just sent), as the menu's choices write
+ * one: the task, then $flagged on a mail of the user's own mailbox (never on a
+ * group mailbox's), the check that keeps flag and task in step held off
+ * meanwhile. Resolves the task written, or null.
+ */
+export async function followUpOnMail(
+  client: IJMAPClient,
+  email: FollowUpMail,
+  mailAccountId: string,
+  details: FollowUpDetails,
+  text: FollowUpText,
+  messages: { failed: string; flagFailed: string } | null,
+): Promise<CalendarTask | null> {
+  forgetUnstarredHere(email.id);
+  const own = mailAccountId === client.getAccountId();
+  let created: CalendarTask | null = null;
+  await changeFollowUp(
+    email.id,
+    async () => {
+      created = await createOwnFollowUp(client, email, mailAccountId, details, text);
+      return !!created;
+    },
+    async () => (own ? mirrorFlag(client, { id: email.id, keywords: email.keywords ?? {} }, true, mailAccountId, !!email.keywords?.$flagged) : true),
+    messages,
+  );
+  return created;
+}
+
+/**
+ * Deletes one follow-up of the user's own list by its id, and clears the
+ * flag of its mail when that is the user's own; failures are only logged.
+ */
+export async function deleteOwnFollowUp(
+  client: IJMAPClient,
+  taskId: string,
+  emailId: string,
+  mailAccountId: string,
+): Promise<boolean> {
+  return changeFollowUp(
+    emailId,
+    () => useTaskStore.getState().deleteTask(client, taskId),
+    async () => (mailAccountId === client.getAccountId()
+      ? mirrorFlag(client, { id: emailId, keywords: {} }, false, mailAccountId, true)
+      : true),
+    null,
+  );
 }
 
 /**
@@ -475,34 +572,13 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     );
   }, [client, email, t, onlyMe, mailAccountId]);
 
-  /**
-   * Writes a new follow-up into the user's own task list, also for a group
-   * mailbox's mail: its link names the group's account.
-   */
   const create = useCallback(async (client: IJMAPClient, email: Email, details: FollowUpDetails) => {
     if (!mailAccountId) return false;
-    const calendarStore = useCalendarStore.getState();
-    if (calendarStore.calendars.length === 0) await calendarStore.fetchCalendars(client);
-    const [calendar] = followUpCalendars(useCalendarStore.getState().calendars);
-    if (!calendar) {
-      toast.error(t("no_task_list"));
-      return false;
-    }
-    const subject = email.subject || t("no_subject");
-    const created = await useTaskStore.getState().createTask(client, buildFollowUpTask({
-      title: t("task_title", { action: details.action, subject }),
-      mailUrl: appUrl(buildMailMessageLink(email.id, mailAccountId)),
-      subject: email.subject,
-      messageId: await messageIdOf(client, email, mailAccountId),
-      from: email.from?.[0] ?? null,
-      calendarId: calendar.id,
-      due: details.due,
-      reminderAt: details.reminderAt,
-      note: details.note,
-      mailReminder: details.mailReminder,
-      settlesOnReply: details.settlesOnReply,
+    return !!(await createOwnFollowUp(client, email, mailAccountId, details, {
+      title: (action, subject) => t("task_title", { action, subject }),
+      noSubject: t("no_subject"),
+      noTaskList: t("no_task_list"),
     }));
-    return !!created;
   }, [t, mailAccountId]);
 
   const apply = useCallback(async (choice: FollowUpChoice) => {

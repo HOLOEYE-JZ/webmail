@@ -4643,6 +4643,18 @@
       "delete_title": "Smazat úkol?",
       "delete_confirm": "„{title}“ bude smazán z vašeho seznamu úkolů, i v telefonu. Nelze to vrátit zpět."
     },
+    "send": {
+      "label": "Zpracovat:",
+      "none": "Nic",
+      "no_answer_by": "Připomenout, pokud do {day} nepřijde odpověď",
+      "hint_no_answer": "Vyřídí se samo, pokud v této konverzaci přijde odpověď; jinak vám ráno toho dne připomene.",
+      "where_own": "Úkol pak bude u e-mailu v Odeslaných.",
+      "where_group": "Z {group}: jen v mém seznamu úkolů, pokud ho „{custom}“ nedá do seznamu skupiny.",
+      "dialog_hint": "Nastaví se u e-mailu v Odeslaných, jakmile je odeslán; neúspěšné nebo vrácené odeslání nenastaví nic.",
+      "not_found": "E-mail byl odeslán, ale úkol se nepodařilo nastavit: odeslaná kopie nebyla nalezena.",
+      "group_gone": "Seznam úkolů skupinové schránky není dostupný: úkol zůstane ve vašem vlastním seznamu.",
+      "plugin_sent": "Tento e-mail odeslal sám plugin: úkol k němu nebylo možné nastavit."
+    },
     "reply": {
       "settles": "Vyřídí se samo, až na tento e-mail přijde odpověď",
       "settles_hint": "(Bulwark před připomenutím hledá odpověď; připomenutí pak přijde jen v Bulwarku, ne do telefonu ani e-mailem)",

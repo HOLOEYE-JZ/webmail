@@ -4643,6 +4643,18 @@
       "delete_title": "Odstrániť úlohu?",
       "delete_confirm": "„{title}“ sa odstráni z vášho zoznamu úloh, aj v telefóne. Nedá sa to vrátiť späť."
     },
+    "send": {
+      "label": "Spracovať:",
+      "none": "Nič",
+      "no_answer_by": "Pripomenúť, ak do {day} nepríde odpoveď",
+      "hint_no_answer": "Vybaví sa samo, ak v tejto konverzácii príde odpoveď; inak vám v to ráno pripomenie.",
+      "where_own": "Úloha bude potom pri e-maile v Odoslaných.",
+      "where_group": "Z {group}: len v mojom zozname úloh, ak ju „{custom}“ nedá do zoznamu skupiny.",
+      "dialog_hint": "Nastaví sa pri e-maile v Odoslaných po odoslaní; neúspešné alebo vrátené odoslanie nenastaví nič.",
+      "not_found": "E-mail bol odoslaný, ale úlohu sa nepodarilo nastaviť: odoslaná kópia sa nenašla.",
+      "group_gone": "Zoznam úloh skupinovej schránky nie je dostupný: úloha zostane vo vašom vlastnom zozname.",
+      "plugin_sent": "Tento e-mail odoslal sám doplnok: úlohu k nemu nebolo možné nastaviť."
+    },
     "reply": {
       "settles": "Vybaví sa samo, keď na tento e-mail príde odpoveď",
       "settles_hint": "(Bulwark pred pripomenutím hľadá odpoveď; pripomenutie potom príde len v Bulwarku, nie do telefónu ani e-mailom)",

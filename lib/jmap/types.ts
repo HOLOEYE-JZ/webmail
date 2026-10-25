@@ -110,6 +110,14 @@ export interface SendEmailResult {
    */
   submissionAccountId?: string;
   /**
+   * JMAP account the sent copy (`emailId`) lies in: the one owning the From
+   * identity, a group mailbox's for a group identity. Not always the
+   * submission account.
+   */
+  emailAccountId?: string;
+  /** The Message-ID the sent mail carries, without angle brackets. */
+  messageId?: string;
+  /**
    * Set when the submission succeeded but a post-send step was rejected
    * (the implicit onSuccessUpdateEmail filing patch, or destroying the
    * old draft). The mail left the server - callers should warn, not fail.

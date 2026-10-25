@@ -9,3 +9,15 @@ export class RescheduleRestoredError extends Error {
     this.name = 'RescheduleRestoredError';
   }
 }
+
+/**
+ * A reschedule canceled the original submission and neither the replacement
+ * nor the original could be created again: the message is not scheduled any
+ * more and was put back into Drafts.
+ */
+export class RescheduleUnscheduledError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RescheduleUnscheduledError';
+  }
+}

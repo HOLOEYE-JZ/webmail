@@ -4643,6 +4643,18 @@
       "delete_title": "Görev silinsin mi?",
       "delete_confirm": "“{title}” görev listenizden, telefonunuzda da silinecek. Bu işlem geri alınamaz."
     },
+    "send": {
+      "label": "Takip et:",
+      "none": "Yok",
+      "no_answer_by": "{day} tarihine kadar yanıt gelmezse hatırlat",
+      "hint_no_answer": "Bu yazışmada yanıt gelirse kendiliğinden tamamlanır; gelmezse o sabah hatırlatılırsınız.",
+      "where_own": "Takip ardından Gönderilmiş klasöründeki postada durur.",
+      "where_group": "{group} hesabından: yalnızca görev listemde, „{custom}“ onu grubun listesine koymadıkça.",
+      "dialog_hint": "Gönderildikten sonra Gönderilmiş klasöründeki postaya konur; başarısız olan veya geri alınan gönderim hiçbir şey koymaz.",
+      "not_found": "Posta gönderildi, ancak takibi ayarlanamadı: gönderilen kopya bulunamadı.",
+      "group_gone": "Grup posta kutusunun görev listesine ulaşılamıyor: takip kendi görev listenizde tutuluyor.",
+      "plugin_sent": "Bu postayı bir eklenti kendisi gönderdi: takip ayarlanamadı."
+    },
     "reply": {
       "settles": "Bu iletiye yanıt gelince kendiliğinden tamamlanır",
       "settles_hint": "(Bulwark hatırlatmadan önce bir yanıt arar; hatırlatma o zaman yalnızca Bulwark'ta gelir, telefona veya e-posta olarak gelmez)",
