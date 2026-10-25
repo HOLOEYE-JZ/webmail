@@ -3,6 +3,14 @@ import {
   DEFAULT_WORKING_TIME,
   buildFollowUpTask,
   dueDistance,
+  editFollowUpTask,
+  followUpAction,
+  followUpActionKey,
+  followUpReminderAlert,
+  otherFollowUpAlerts,
+  sameFollowUpAction,
+  followUpNote,
+  proposedFollowUpReminder,
   followUpMailRef,
   followUpReminder,
   followUpState,
@@ -13,7 +21,7 @@ import {
   type FollowUpChoice,
   type WorkingTime,
 } from '../follow-ups';
-import type { CalendarTask } from '@/lib/jmap/types';
+import type { CalendarEventAlert, CalendarTask } from '@/lib/jmap/types';
 
 // Display dates: local fields are the user's wall clock. 26.10.2026 is a Monday.
 const at = (day: number, hour = 0, minute = 0, month = 10) => new Date(2026, month - 1, day, hour, minute);
@@ -305,5 +313,139 @@ describe('dueDistance', () => {
     expect(dueDistance(at(2, 0, 0, 11), now)).toEqual({ kind: 'date', day: at(2, 0, 0, 11) });
     expect(dueDistance(at(25), now)).toEqual({ kind: 'yesterday' });
     expect(dueDistance(at(23), now)).toEqual({ kind: 'days_ago', count: 3 });
+  });
+});
+
+describe('the dialog: action, note and reminder read back from the task', () => {
+  const input = {
+    title: 'Follow up: Offer 4711',
+    mailUrl: 'https://mail.example.com/mail/message/M123',
+    subject: 'Offer 4711',
+    calendarId: 'cal-tasks',
+    due: at(30),
+    reminderAt: null,
+  };
+  const mailLink = (title: string | null) => ({
+    mail: { '@type': 'Link' as const, href: 'https://host/mail/message/M1?mailAccount=acc', cid: null, contentType: null, size: null, rel: 'describedby', display: null, title },
+  });
+
+  it('reads the action as the title before the mail subject', () => {
+    expect(followUpAction({ title: 'Write a quote: Offer 4711', links: mailLink('Offer 4711') })).toBe('Write a quote');
+    // French puts a space before the colon.
+    expect(followUpAction({ title: 'Assurer un suivi : Offre', links: mailLink('Offre') })).toBe('Assurer un suivi');
+    // The subject may hold a colon itself.
+    expect(followUpAction({ title: 'Call: Re: Offer', links: mailLink('Re: Offer') })).toBe('Call');
+  });
+
+  it('reads the action of a mail without a subject by the title it was given', () => {
+    expect(followUpAction({ title: 'Reply: (no subject)', links: mailLink(null) })).toBe('Reply');
+    // Written in German, read in another language.
+    expect(followUpAction({ title: 'Anrufen: (kein Betreff)', links: mailLink(null) })).toBe('Anrufen');
+  });
+
+  it('takes a title changed elsewhere whole as the action', () => {
+    expect(followUpAction({ title: 'Ring Claire back', links: mailLink('Offer 4711') })).toBe('Ring Claire back');
+    // Ending in the subject without a separator is no action of ours either.
+    expect(followUpAction({ title: 'About Offer 4711', links: mailLink('Offer 4711') })).toBe('About Offer 4711');
+    expect(followUpAction({ title: 'Offer 4711', links: mailLink('Offer 4711') })).toBe('Offer 4711');
+  });
+
+  it('keeps the note as the description', () => {
+    const task = buildFollowUpTask({ ...input, note: '  Two units, delivery January  ' });
+    expect(task.description).toBe('Two units, delivery January');
+    expect(followUpNote({ description: '  x ' })).toBe('x');
+    expect(buildFollowUpTask(input)).not.toHaveProperty('description');
+  });
+
+  it('proposes the due day\'s start of work as the reminder, else the next working day\'s', () => {
+    const monday = at(26, 7, 0);
+    expect(proposedFollowUpReminder(at(29), monday)).toEqual(at(29, 8));
+    // Due today, but work has started: tomorrow.
+    expect(proposedFollowUpReminder(at(26), at(26, 9, 0))).toEqual(at(27, 8));
+    // No due day; Friday afternoon: Monday.
+    expect(proposedFollowUpReminder(null, at(30, 15, 0))).toEqual(at(2, 8, 0, 11));
+  });
+
+  it('writes every field, the title only when the action changed, and opens a completed one again', () => {
+    const task = { title: 'Follow up: Offer', description: '', progress: 'completed' as const, alerts: null };
+    const reminderAt = new Date('2026-10-28T09:00:00Z');
+    expect(editFollowUpTask(task, { title: 'Call: Offer', due: at(29), reminderAt, note: ' ask for Lena ' })).toEqual({
+      title: 'Call: Offer',
+      due: '2026-10-29T00:00:00',
+      showWithoutTime: true,
+      alerts: {
+        'follow-up': {
+          '@type': 'Alert',
+          trigger: { '@type': 'AbsoluteTrigger', when: '2026-10-28T09:00:00Z' },
+          action: 'display',
+          acknowledged: null,
+          relatedTo: null,
+        },
+      },
+      description: 'ask for Lena',
+      progress: 'needs-action',
+    });
+    expect(editFollowUpTask(
+      { title: 'Follow up: Offer', description: 'ask for Lena', progress: 'in-process', alerts: null },
+      { title: null, due: null, reminderAt: null, note: 'ask for Lena' },
+    )).toEqual({ due: null, showWithoutTime: true });
+  });
+
+  const alert = (trigger: CalendarEventAlert['trigger'], acknowledged: string | null = null): CalendarEventAlert => ({
+    '@type': 'Alert', trigger, action: 'display', acknowledged, relatedTo: null,
+  });
+  const relative = alert({ '@type': 'OffsetTrigger', offset: '-PT15M', relativeTo: 'start' });
+  const own = (when: string, acknowledged: string | null = null) => alert({ '@type': 'AbsoluteTrigger', when }, acknowledged);
+  const base = { title: 'Call: Offer', description: '', progress: 'needs-action' as const };
+
+  it('leaves the alerts alone while the reminder stays: a note changed keeps a relative one and an acknowledged one', () => {
+    const alerts = { 'follow-up': own('2026-10-28T09:00:00Z', '2026-10-28T09:01:00Z'), phone: relative };
+    const patch = editFollowUpTask({ ...base, alerts }, {
+      title: null, due: at(29), reminderAt: new Date('2026-10-28T09:00:00Z'), note: 'new note',
+    });
+    expect(patch).not.toHaveProperty('alerts');
+    expect(patch.description).toBe('new note');
+  });
+
+  it('replaces or removes only the reminder it shows, keeping every other alert', () => {
+    const alerts = { 'follow-up': own('2026-10-28T09:00:00Z', '2026-10-28T09:01:00Z'), phone: relative };
+    const moved = editFollowUpTask({ ...base, alerts }, {
+      title: null, due: at(29), reminderAt: new Date('2026-10-29T10:00:00Z'), note: '',
+    });
+    expect(moved.alerts).toEqual({ 'follow-up': own('2026-10-29T10:00:00Z'), phone: relative });
+    const off = editFollowUpTask({ ...base, alerts }, { title: null, due: at(29), reminderAt: null, note: '' });
+    expect(off.alerts).toEqual({ phone: relative });
+    expect(editFollowUpTask({ ...base, alerts: { 'follow-up': own('2026-10-28T09:00:00Z') } }, {
+      title: null, due: at(29), reminderAt: null, note: '',
+    }).alerts).toBeNull();
+  });
+
+  it('shows and changes a fixed-time alert set elsewhere under its own key', () => {
+    const task = { ...base, alerts: { phone: relative, 'ios-1': own('2026-10-28T09:00:00Z') } };
+    expect(followUpReminderAlert(task)).toEqual({ id: 'ios-1', when: new Date('2026-10-28T09:00:00Z') });
+    expect(otherFollowUpAlerts(task)).toBe(1);
+    expect(editFollowUpTask(task, { title: null, due: at(29), reminderAt: new Date('2026-10-29T10:00:00Z'), note: '' }).alerts)
+      .toEqual({ phone: relative, 'ios-1': own('2026-10-29T10:00:00Z') });
+    // Only a relative one: no reminder shown, but it is counted.
+    expect(followUpReminderAlert({ alerts: { phone: relative } })).toBeNull();
+    expect(otherFollowUpAlerts({ alerts: { phone: relative } })).toBe(1);
+  });
+});
+
+describe('actions across languages', () => {
+  it('knows a built-in action in any locale, and nothing else', () => {
+    expect(followUpActionKey('Nachverfolgen')).toBe('follow_up');
+    expect(followUpActionKey('follow UP')).toBe('follow_up');
+    expect(followUpActionKey('Anrufen')).toBe('call');
+    expect(followUpActionKey('Angebot schreiben')).toBeNull();
+    expect(followUpActionKey('')).toBeNull();
+  });
+
+  it('takes the same built-in action in two languages for the same', () => {
+    expect(sameFollowUpAction('Call', 'Anrufen')).toBe(true);
+    expect(sameFollowUpAction('Follow up', 'Nachverfolgen')).toBe(true);
+    expect(sameFollowUpAction('Write a quote', ' write a  quote')).toBe(true);
+    expect(sameFollowUpAction('Call', 'Reply')).toBe(false);
+    expect(sameFollowUpAction('Angebot schreiben', 'Write a quote')).toBe(false);
   });
 });

@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { isSameDay } from "date-fns";
+import { differenceInCalendarDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Check, ChevronDown, Flag } from "@/components/icons";
+import { Bell, Check, ChevronDown, Flag, Pencil } from "@/components/icons";
 import {
   ContextMenu,
   ContextMenuHeader,
@@ -15,10 +15,13 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { useFollowUp, type FollowUpControls } from "@/hooks/use-follow-ups";
 import { useSettingsStore } from "@/stores/settings-store";
-import { displayNow, fromDisplayDate } from "@/lib/timezone";
+import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import {
   FOLLOW_UP_CHOICES,
   dueDistance,
+  followUpAction,
+  followUpActionKey,
+  followUpNote,
   followUpDueDay,
   followUpReminder,
   followUpState,
@@ -58,7 +61,25 @@ function useFollowUpFormat() {
       }
     };
 
-    return { day, dayTime, time, weekdayTime, due };
+    /** A reminder: "Wed 10:00" within the week ahead, else "Fri, 06.11., 10:00". */
+    const reminder = (instant: Date, now: Date) => {
+      const days = differenceInCalendarDays(toDisplayDate(instant), now);
+      return days >= 0 && days < 7 ? weekdayTime(instant) : dayTime(instant);
+    };
+
+    /**
+     * What the follow-up asks for, a built-in action in the current language
+     * whatever language it was written in; null for the default ("Follow
+     * up"), which goes without saying.
+     */
+    const action = (task: CalendarTask) => {
+      const text = followUpAction(task);
+      const key = followUpActionKey(text);
+      if (!text || key === "follow_up") return null;
+      return key ? t(`actions.${key}`) : text;
+    };
+
+    return { day, dayTime, time, weekdayTime, due, reminder, action };
   }, [t, format, displayFormat, hour12]);
 }
 
@@ -111,6 +132,18 @@ export function FollowUpMenuItems({ controls, onClose, heading = true }: {
           />
         );
       })}
+      <ContextMenuItem
+        icon={Pencil}
+        label={t("custom")}
+        testId="follow-up-custom"
+        onClick={() => { onClose(); controls.openDialog("action"); }}
+      />
+      <ContextMenuItem
+        icon={Bell}
+        label={t("add_reminder")}
+        testId="follow-up-add-reminder"
+        onClick={() => { onClose(); controls.openDialog("reminder"); }}
+      />
       <ContextMenuSeparator />
       <ContextMenuItem
         icon={Check}
@@ -195,7 +228,10 @@ export function FollowUpFlagButton({ email, className, onlyWhenSet = false, reve
   );
 }
 
-/** The row's chip: "⚑ due tomorrow", red "overdue for 3 days", "✓ completed". */
+/**
+ * The row's chip: "⚑ due tomorrow", "⚑ Call · due Thu · 🔔 Wed 10:00", red
+ * "overdue for 3 days", "✓ completed".
+ */
 export function FollowUpChip({ email, className }: { email: Email; className?: string }) {
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
@@ -204,14 +240,26 @@ export function FollowUpChip({ email, className }: { email: Email; className?: s
   const now = displayNow();
   const state = followUpState(task, now);
   const Icon = state === "done" ? Check : Flag;
+  const action = state === "done" ? null : fmt.action(task);
+  const reminderAt = state === "done" ? null : followUpReminder(task);
+  const reminder = reminderAt ? fmt.reminder(reminderAt, now) : null;
+  const text = state === "done" ? t("done") : [action, fmt.due(task, now)].filter(Boolean).join(" · ");
   return (
     <span
       data-testid="follow-up-chip"
       data-follow-up={state}
-      className={cn("inline-flex max-w-[12rem] shrink-0 items-center gap-1 truncate rounded-full px-2 py-0.5 text-xs", STATE_CLASSES[state], className)}
+      title={[text, reminder && t("bar_reminder", { when: reminder })].filter(Boolean).join(" · ")}
+      className={cn("inline-flex max-w-[16rem] shrink-0 items-center gap-1 truncate rounded-full px-2 py-0.5 text-xs", STATE_CLASSES[state], className)}
     >
       <Icon className="h-3 w-3 shrink-0" />
-      <span className="truncate">{state === "done" ? t("done") : fmt.due(task, now)}</span>
+      <span className="truncate">{text}</span>
+      {reminder && (
+        <span data-testid="follow-up-chip-reminder" className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
+          <span aria-hidden="true">·</span>
+          <Bell className="h-3 w-3 shrink-0" aria-label={t("reminder_label")} />
+          {reminder}
+        </span>
+      )}
     </span>
   );
 }
@@ -248,7 +296,10 @@ export function FollowUpReaderButton({ email }: { email: Email }) {
   );
 }
 
-/** The reader's bar while the mail has a follow-up: what, due, reminder; Complete, Remove. */
+/**
+ * The reader's bar while the mail has a follow-up: what, due, reminder, note;
+ * Complete, Change …, Remove.
+ */
 export function FollowUpInfoBar({ email }: { email: Email }) {
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
@@ -260,14 +311,9 @@ export function FollowUpInfoBar({ email }: { email: Email }) {
   const state = followUpState(task, now);
   const due = followUpDueDay(task);
   const reminder = followUpReminder(task);
-  const parts = state === "done"
-    ? [t("bar_done")]
-    : [
-        t("bar_action"),
-        due ? (state === "overdue" ? fmt.due(task, now) : t("due_on", { day: fmt.day(due) })) : t("no_date"),
-        ...(reminder ? [t("bar_reminder", { when: fmt.dayTime(reminder) })] : []),
-      ];
+  const note = followUpNote(task);
   const Icon = state === "done" ? Check : Flag;
+  const sep = <span aria-hidden="true"> · </span>;
 
   return (
     <div
@@ -277,10 +323,43 @@ export function FollowUpInfoBar({ email }: { email: Email }) {
       className={cn("border-b border-border px-6 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", STATE_CLASSES[state])}
     >
       <Icon className="w-4 h-4 shrink-0" />
-      <span className="flex-1 min-w-[12rem]">{parts.join(" · ")}</span>
+      <span className="flex-1 min-w-[12rem]">
+        {state === "done" ? t("bar_done") : (
+          <>
+            <b data-testid="follow-up-bar-action">{fmt.action(task) ?? t("bar_action")}</b>
+            {sep}
+            {due ? (state === "overdue" ? fmt.due(task, now) : t("due_on", { day: fmt.day(due) })) : t("no_date")}
+            {reminder && (
+              <>
+                {sep}
+                <span data-testid="follow-up-bar-reminder" className="inline-flex items-center gap-1">
+                  <Bell className="h-3.5 w-3.5" aria-label={t("reminder_label")} />
+                  {fmt.reminder(reminder, now)}
+                </span>
+              </>
+            )}
+            {note && (
+              <>
+                {sep}
+                <span data-testid="follow-up-bar-note" className="break-words">{t("bar_note", { note })}</span>
+              </>
+            )}
+          </>
+        )}
+      </span>
       {state !== "done" && (
         <button type="button" className="underline underline-offset-2 hover:opacity-80" onClick={() => void controls.markDone()}>
           {t("done_button")}
+        </button>
+      )}
+      {state !== "done" && (
+        <button
+          type="button"
+          data-testid="follow-up-bar-change"
+          className="underline underline-offset-2 hover:opacity-80"
+          onClick={() => controls.openDialog("action")}
+        >
+          {t("change_button")}
         </button>
       )}
       <button type="button" className="underline underline-offset-2 hover:opacity-80" onClick={() => void controls.remove()}>

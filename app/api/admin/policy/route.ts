@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
           pushRelayUrl: '',
           pushRelayUrlLocked: false,
           defaultSidebarApps: [],
+          followUpActions: [],
         },
         { headers: { 'Cache-Control': 'no-store', [POLICY_SCOPE_HEADER]: 'public' } },
       );
@@ -71,6 +72,9 @@ export async function PUT(request: NextRequest) {
     }
     if (policy.defaultSidebarApps !== undefined && !Array.isArray(policy.defaultSidebarApps)) {
       return NextResponse.json({ error: 'defaultSidebarApps must be an array' }, { status: 400 });
+    }
+    if (policy.followUpActions !== undefined && !Array.isArray(policy.followUpActions)) {
+      return NextResponse.json({ error: 'followUpActions must be an array' }, { status: 400 });
     }
 
     await configManager.setPolicy(policy);

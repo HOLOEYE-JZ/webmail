@@ -1,6 +1,8 @@
 import { addDays, differenceInCalendarDays, format, parseISO, startOfDay } from "date-fns";
 import type { CalendarEventAlert, CalendarLink, CalendarTask } from "@/lib/jmap/types";
 import { MAIL_ACCOUNT_PARAM } from "@/lib/deep-links";
+import { FOLLOW_UP_ACTIONS, type FollowUpActionKey } from "@/lib/follow-up-actions";
+import { FOLLOW_UP_ACTION_NAMES, FOLLOW_UP_NO_SUBJECT } from "@/lib/follow-up-action-names";
 
 /**
  * Follow-ups on a mail, as Outlook's "Flag for follow up" does them.
@@ -182,6 +184,8 @@ export interface FollowUpTaskInput {
   due: Date | null;
   /** The reminder as a real instant (not a display date). */
   reminderAt: Date | null;
+  /** The user's note, kept as the task's description. */
+  note?: string;
 }
 
 /**
@@ -213,6 +217,7 @@ export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTas
     showWithoutTime: true,
     progress: "needs-action",
     alerts: alertsOf(input.reminderAt),
+    ...(input.note?.trim() ? { description: input.note.trim() } : {}),
     links,
     relatedTo: messageId ? { [`<${messageId}>`]: { "@type": "Relation", relation: { parent: true } } } : null,
   };
@@ -255,6 +260,122 @@ export function rescheduleFollowUpTask(due: Date | null, reminderAt: Date | null
     progress: "needs-action",
     alerts: alertsOf(reminderAt),
   };
+}
+
+// ---------------------------------------------------------------------------
+// What the dialog edits
+// ---------------------------------------------------------------------------
+
+/**
+ * Between what to do and the mail's subject in the task's title; a full-width
+ * colon too, and French puts a space before it ("Assurer un suivi : …").
+ */
+const TITLE_SEPARATOR = /\s*[:：]\s*$/u;
+
+/**
+ * What the follow-up asks for ("Flag to"), read back from the task's title.
+ *
+ * The title is "<action>: <subject>" in the language it was written in
+ * (`follow_up.task_title`), so a phone's task list shows what to do. The
+ * subject is also the mail link's title, which nothing but this code writes,
+ * so the action is the title's part in front of it and its separator. A title
+ * changed elsewhere so that it no longer ends with the subject is taken whole
+ * as the action: the user wrote there what to do. A mail without a subject
+ * has "(no subject)" in the title in the language it was written in, so
+ * every locale's text counts.
+ */
+export function followUpAction(task: Pick<CalendarTask, "title" | "links">): string {
+  const title = (task.title ?? "").trim();
+  const { subject } = followUpMailSummary(task);
+  for (const candidate of [subject?.trim(), ...FOLLOW_UP_NO_SUBJECT]) {
+    if (!candidate || title.length <= candidate.length || !title.endsWith(candidate)) continue;
+    const head = title.slice(0, title.length - candidate.length);
+    if (!TITLE_SEPARATOR.test(head)) continue;
+    const action = head.replace(TITLE_SEPARATOR, "").trim();
+    if (action) return action;
+  }
+  return title;
+}
+
+const actionText = (text: string) => text.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+
+/**
+ * The built-in action a text names in any language ("Anrufen", "Call"), or
+ * null for one of the user's or an operator's own.
+ */
+export function followUpActionKey(text: string): FollowUpActionKey | null {
+  const wanted = actionText(text);
+  if (!wanted) return null;
+  return FOLLOW_UP_ACTIONS.find((key) => FOLLOW_UP_ACTION_NAMES[key].some((name) => actionText(name) === wanted)) ?? null;
+}
+
+/** Whether two action texts mean the same: equal, or the same built-in action in two languages. */
+export function sameFollowUpAction(a: string, b: string): boolean {
+  if (actionText(a) === actionText(b)) return true;
+  const key = followUpActionKey(a);
+  return key !== null && key === followUpActionKey(b);
+}
+
+/** The user's note on a follow-up: the task's description. */
+export function followUpNote(task: Pick<CalendarTask, "description">): string {
+  return (task.description ?? "").trim();
+}
+
+/**
+ * The reminder the dialog proposes when the user turns one on: the due day's
+ * start of work, else (no due day, or that time has passed) the next working
+ * day's start.
+ */
+export function proposedFollowUpReminder(due: Date | null, now: Date, work: WorkingTime = DEFAULT_WORKING_TIME): Date {
+  if (due) {
+    const onDue = atHour(due, work.startHour);
+    if (onDue.getTime() > now.getTime()) return onDue;
+  }
+  return scheduleFollowUp("tomorrow", now, work).reminder ?? atHour(addDays(startOfDay(now), 1), work.startHour);
+}
+
+/** What the dialog writes. */
+export interface FollowUpEdit {
+  /** The new title, or null to keep the task's (the action did not change). */
+  title: string | null;
+  /** Midnight of the due day (a display date), or null for none. */
+  due: Date | null;
+  /** The reminder as a real instant, or null for none. */
+  reminderAt: Date | null;
+  note: string;
+}
+
+/**
+ * The patch the dialog writes to an existing follow-up: every field it shows,
+ * the title only when the action changed (a title set elsewhere stays), and
+ * a completed or cancelled one opened again.
+ *
+ * Of the alerts it touches only the reminder it shows
+ * (`followUpReminderAlert`) and only when its time changed: an unchanged one
+ * keeps its `acknowledged`, so it does not fire again; any other alert (a
+ * relative one, a second one set on a phone) stays as it is.
+ */
+export function editFollowUpTask(
+  task: Pick<CalendarTask, "title" | "description" | "progress" | "alerts">,
+  edit: FollowUpEdit,
+): Partial<CalendarTask> {
+  const patch: Partial<CalendarTask> = {
+    due: dueOf(edit.due),
+    showWithoutTime: true,
+  };
+  const shown = followUpReminderAlert(task);
+  if ((shown?.when.getTime() ?? null) !== (edit.reminderAt?.getTime() ?? null)) {
+    const alerts = { ...(task.alerts ?? {}) };
+    delete alerts[shown?.id ?? FOLLOW_UP_ALERT_ID];
+    const own = alertsOf(edit.reminderAt);
+    if (own) alerts[shown?.id ?? FOLLOW_UP_ALERT_ID] = own[FOLLOW_UP_ALERT_ID];
+    patch.alerts = Object.keys(alerts).length > 0 ? alerts : null;
+  }
+  if (edit.title !== null && edit.title !== task.title) patch.title = edit.title;
+  const note = edit.note.trim();
+  if (note !== followUpNote(task)) patch.description = note;
+  if (!isOpenFollowUp(task)) patch.progress = "needs-action";
+  return patch;
 }
 
 const MAIL_MESSAGE_PATH = /\/mail\/message\/([^/?#]+)/;
@@ -394,12 +515,37 @@ export function followUpState(task: Pick<CalendarTask, "due" | "progress">, now:
   return due && differenceInCalendarDays(due, now) < 0 ? "overdue" : "open";
 }
 
-/** When a follow-up's reminder fires, or null when it has none. */
-export function followUpReminder(task: Pick<CalendarTask, "alerts">): Date | null {
-  const alert = task.alerts?.[FOLLOW_UP_ALERT_ID] ?? Object.values(task.alerts ?? {})[0];
+function absoluteTime(alert: CalendarEventAlert | null | undefined): Date | null {
   if (!alert || alert.trigger["@type"] !== "AbsoluteTrigger") return null;
   const when = new Date(alert.trigger.when);
   return Number.isNaN(when.getTime()) ? null : when;
+}
+
+/**
+ * The follow-up's reminder as the list, the reader and the dialog show it:
+ * its own alert, else the first one at a fixed time (set elsewhere), with the
+ * alert's key so the dialog changes that one. Null when none fires at a fixed
+ * time.
+ */
+export function followUpReminderAlert(task: Pick<CalendarTask, "alerts">): { id: string; when: Date } | null {
+  const own = absoluteTime(task.alerts?.[FOLLOW_UP_ALERT_ID]);
+  if (own) return { id: FOLLOW_UP_ALERT_ID, when: own };
+  for (const [id, alert] of Object.entries(task.alerts ?? {})) {
+    const when = absoluteTime(alert);
+    if (when) return { id, when };
+  }
+  return null;
+}
+
+/** When a follow-up's reminder fires, or null when it has none. */
+export function followUpReminder(task: Pick<CalendarTask, "alerts">): Date | null {
+  return followUpReminderAlert(task)?.when ?? null;
+}
+
+/** How many of the follow-up's alerts the reminder it shows leaves out (relative ones, a second one). */
+export function otherFollowUpAlerts(task: Pick<CalendarTask, "alerts">): number {
+  const shown = followUpReminderAlert(task);
+  return Object.entries(task.alerts ?? {}).filter(([id, alert]) => alert && id !== shown?.id).length;
 }
 
 /**

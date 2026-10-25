@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { create } from "zustand";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useEmailStore } from "@/stores/email-store";
@@ -16,6 +17,10 @@ import { debug } from "@/lib/debug";
 import {
   DEFAULT_WORKING_TIME,
   buildFollowUpTask,
+  editFollowUpTask,
+  followUpAction,
+  followUpMailSummary,
+  sameFollowUpAction,
   followUpsByEmailId,
   rescheduleFollowUpTask,
   scheduleFollowUp,
@@ -213,6 +218,35 @@ export async function mirrorFlag(
   return true;
 }
 
+/** Where the follow-up dialog puts the cursor first. */
+export type FollowUpDialogFocus = "action" | "reminder";
+
+interface FollowUpDialogState {
+  /** The mail whose follow-up the dialog edits, null while it is closed. */
+  email: Email | null;
+  focus: FollowUpDialogFocus;
+  open: (email: Email, focus?: FollowUpDialogFocus) => void;
+  close: () => void;
+}
+
+/** The one follow-up dialog of the mail view (`FollowUpDialogHost`), opened from any row, menu or bar. */
+export const useFollowUpDialog = create<FollowUpDialogState>((set) => ({
+  email: null,
+  focus: "action",
+  open: (email, focus = "action") => set({ email, focus }),
+  close: () => set({ email: null }),
+}));
+
+/** What the dialog sets: the action as the user typed or picked it, days and times as for a quick choice. */
+export interface FollowUpDetails {
+  action: string;
+  /** Midnight of the due day (a display date), or null for none. */
+  due: Date | null;
+  /** The reminder as a real instant, or null for none. */
+  reminderAt: Date | null;
+  note: string;
+}
+
 export interface FollowUpControls {
   /** Whether this mail can get a follow-up here. */
   available: boolean;
@@ -221,6 +255,10 @@ export interface FollowUpControls {
   workingTime: WorkingTime;
   /** Sets (or moves) the follow-up to a quick choice. */
   apply: (choice: FollowUpChoice) => Promise<void>;
+  /** Sets the follow-up as the dialog says; resolves whether it was written. */
+  save: (details: FollowUpDetails) => Promise<boolean>;
+  /** Opens the dialog for this mail. */
+  openDialog: (focus?: FollowUpDialogFocus) => void;
   markDone: () => Promise<void>;
   remove: () => Promise<void>;
   /** Outlook's Quick Click: none → Today, open → done, done → removed. */
@@ -244,8 +282,8 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
   const run = useCallback(async (
     writeTask: (client: IJMAPClient, email: Email) => Promise<boolean>,
     flagged: boolean,
-  ) => {
-    if (!client || !email || pending.has(email.id)) return;
+  ): Promise<boolean> => {
+    if (!client || !email || pending.has(email.id)) return false;
     pending.add(email.id);
     try {
       let written: boolean;
@@ -254,27 +292,24 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
       } catch (error) {
         debug.error("follow-up: task not written", error);
         toast.error(t("failed"));
-        return;
+        return false;
       }
-      if (!written) return;
+      if (!written) return false;
       try {
         await mirrorFlag(client, email, flagged);
       } catch (error) {
         debug.error("follow-up: flag not mirrored", error);
         toast.error(t("flag_failed"));
       }
+      return true;
     } finally {
       pending.delete(email.id);
       afterChange?.();
     }
   }, [client, email, t]);
 
-  const apply = useCallback((choice: FollowUpChoice) => run(async (client, email) => {
-    forgetUnstarredHere(email.id);
-    const { due, reminder } = scheduleFollowUp(choice, displayNow(), workingTime);
-    const reminderAt = reminder ? fromDisplayDate(reminder) : null;
-    const store = useTaskStore.getState();
-    if (task) return store.updateTask(client, task.id, rescheduleFollowUpTask(due, reminderAt));
+  /** Writes a new follow-up into the user's task list. */
+  const create = useCallback(async (client: IJMAPClient, email: Email, details: FollowUpDetails) => {
     const calendarStore = useCalendarStore.getState();
     if (calendarStore.calendars.length === 0) await calendarStore.fetchCalendars(client);
     const [calendar] = followUpCalendars(useCalendarStore.getState().calendars);
@@ -283,26 +318,57 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
       return false;
     }
     const subject = email.subject || t("no_subject");
-    const created = await store.createTask(client, buildFollowUpTask({
-      title: t("task_title", { subject }),
+    const created = await useTaskStore.getState().createTask(client, buildFollowUpTask({
+      title: t("task_title", { action: details.action, subject }),
       mailUrl: appUrl(buildMailMessageLink(email.id, client.getAccountId())),
       subject: email.subject,
       messageId: await messageIdOf(client, email),
       from: email.from?.[0] ?? null,
       calendarId: calendar.id,
-      due,
-      reminderAt,
+      due: details.due,
+      reminderAt: details.reminderAt,
+      note: details.note,
     }));
     return !!created;
-  }, true), [run, task, t, workingTime]);
+  }, [t]);
 
-  const markDone = useCallback(() => run(async (client) => (
-    !!task && useTaskStore.getState().updateTask(client, task.id, { progress: "completed" })
-  ), false), [run, task]);
+  const apply = useCallback(async (choice: FollowUpChoice) => {
+    await run(async (client, email) => {
+      forgetUnstarredHere(email.id);
+      const { due, reminder } = scheduleFollowUp(choice, displayNow(), workingTime);
+      const reminderAt = reminder ? fromDisplayDate(reminder) : null;
+      if (task) return useTaskStore.getState().updateTask(client, task.id, rescheduleFollowUpTask(due, reminderAt));
+      return create(client, email, { action: t("actions.follow_up"), due, reminderAt, note: "" });
+    }, true);
+  }, [run, task, t, workingTime, create]);
 
-  const remove = useCallback(() => run(async (client) => (
-    !task || useTaskStore.getState().deleteTask(client, task.id)
-  ), false), [run, task]);
+  const save = useCallback((details: FollowUpDetails) => run(async (client, email) => {
+    forgetUnstarredHere(email.id);
+    const action = details.action.replace(/\s+/g, " ").trim() || t("actions.follow_up");
+    if (!task) return create(client, email, { ...details, action });
+    // The title changes only with the action, so one set elsewhere stays.
+    // The same action in another language (written in German, kept in English) is no change either.
+    const title = sameFollowUpAction(action, followUpAction(task))
+      ? null
+      : t("task_title", { action, subject: followUpMailSummary(task).subject || email.subject || t("no_subject") });
+    return useTaskStore.getState().updateTask(client, task.id, editFollowUpTask(task, { ...details, title }));
+  }, true), [run, task, t, create]);
+
+  const openDialog = useCallback((focus?: FollowUpDialogFocus) => {
+    if (email) useFollowUpDialog.getState().open(email, focus);
+  }, [email]);
+
+  const markDone = useCallback(async () => {
+    await run(async (client) => (
+      !!task && useTaskStore.getState().updateTask(client, task.id, { progress: "completed" })
+    ), false);
+  }, [run, task]);
+
+  const remove = useCallback(async () => {
+    await run(async (client) => (
+      !task || useTaskStore.getState().deleteTask(client, task.id)
+    ), false);
+  }, [run, task]);
 
   const quickClick = useCallback(async () => {
     if (!task) return apply("today");
@@ -310,5 +376,5 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     return markDone();
   }, [task, apply, remove, markDone]);
 
-  return { available, task, workingTime, apply, markDone, remove, quickClick };
+  return { available, task, workingTime, apply, save, openDialog, markDone, remove, quickClick };
 }

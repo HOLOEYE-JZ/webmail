@@ -184,6 +184,13 @@ export interface SettingsPolicy {
    * operator can ship a fixed set while forbidding custom ones.
    */
   defaultSidebarApps?: AdminSidebarApp[];
+  /**
+   * Extra actions a follow-up can ask for, offered to every user after the
+   * built-in ones ("Flag to" in Outlook), e.g. a step in the company's own
+   * systems. Sanitized on policy load and save; empty offers the built-in
+   * ones only. Users can always type their own.
+   */
+  followUpActions?: string[];
 }
 
 /** Set to `public` on a policy answered with the pre-login subset. */
@@ -201,6 +208,7 @@ export const DEFAULT_POLICY: SettingsPolicy = {
   pushRelayUrl: '',
   pushRelayUrlLocked: false,
   defaultSidebarApps: [],
+  followUpActions: [],
 };
 
 export interface AuditEntry {

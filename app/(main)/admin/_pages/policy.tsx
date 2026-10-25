@@ -23,6 +23,7 @@ import { AdminSaveBar } from '@/components/admin/save-bar';
 import { Badge } from '@/components/admin/badge';
 import { Flash, useFlash } from '@/components/admin/flash-message';
 import { inputClass } from '@/components/admin/config-items';
+import { MAX_EXTRA_FOLLOW_UP_ACTIONS, MAX_FOLLOW_UP_ACTION_LENGTH } from '@/lib/follow-up-actions';
 
 // `allMailViewEnabled` is deprecated (folded into `crossAllViewEnabled`, normalized
 // forward on policy load), so it is hidden from the admin UI.
@@ -216,6 +217,13 @@ export function PolicyPage() {
       [apps[index], apps[target]] = [apps[target], apps[index]];
       return { ...prev, defaultSidebarApps: apps };
     });
+    setDirty(true);
+    setMessage(null);
+  }
+
+  function setFollowUpActions(text: string) {
+    // One per line; blank lines and duplicates are dropped when the policy is saved.
+    setPolicy(prev => ({ ...prev, followUpActions: text.split('\n') }));
     setDirty(true);
     setMessage(null);
   }
@@ -581,6 +589,28 @@ export function PolicyPage() {
                 </div>
               );
             })}
+          </SettingsSection>
+
+          <SettingsSection
+            id="follow-up-actions"
+            title="Follow-up actions"
+            description="Extra actions users can flag a mail with, offered after the built-in ones (Follow up, Reply, Call, Forward, Read and so on), e.g. a step in your own systems. Users can always type their own."
+          >
+            <div>
+              <label htmlFor="follow-up-actions" className={fieldLabelClass}>One action per line</label>
+              <textarea
+                id="follow-up-actions"
+                rows={4}
+                spellCheck={false}
+                value={(policy.followUpActions ?? []).join('\n')}
+                onChange={(e) => setFollowUpActions(e.target.value)}
+                placeholder="Write a quote"
+                className={cn(inputClass, 'h-auto w-full py-2')}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                At most {MAX_EXTRA_FOLLOW_UP_ACTIONS}, each up to {MAX_FOLLOW_UP_ACTION_LENGTH} characters. Not translated: write them in your users&apos; language.
+              </p>
+            </div>
           </SettingsSection>
 
           <SettingsSection
