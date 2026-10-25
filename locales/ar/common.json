@@ -4507,6 +4507,28 @@
     "level_warning": "تحذير"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, zero {لا تذكيرات} one {تذكير واحد} two {تذكيران} few {# تذكيرات} many {# تذكيرًا} other {# تذكير}}",
+      "list_label": "التذكيرات المستحقة",
+      "mail": "متابعة رسالة",
+      "open": "فتح",
+      "dismiss": "تجاهل",
+      "dismiss_all": "تجاهل الكل",
+      "snooze_label": "التذكير مجددًا:",
+      "snooze": "غفوة",
+      "snooze_choices": {
+        "5m": "بعد 5 دقائق",
+        "15m": "بعد 15 دقيقة",
+        "1h": "بعد ساعة",
+        "4h": "بعد 4 ساعات",
+        "tomorrow": "صباح الغد ({when})",
+        "next_week": "صباح {weekday} القادم ({when})",
+        "due_day": "في يوم الاستحقاق ({when})"
+      },
+      "toast_open": "كل التذكيرات…",
+      "toast_more": "{count, plural, other {و# غيرها}}",
+      "failed": "تعذر تغيير التذكير."
+    },
     "menu_title": "متابعة",
     "reader_button": "متابعة",
     "flag_set": "متابعة اليوم (نقر بزر الفأرة الأيمن: المزيد)",

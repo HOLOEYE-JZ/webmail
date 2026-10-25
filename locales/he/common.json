@@ -4508,6 +4508,28 @@
     "level_warning": "אזהרה"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {תזכורת אחת} two {שתי תזכורות} other {# תזכורות}}",
+      "list_label": "תזכורות שהגיע מועדן",
+      "mail": "מעקב אחר הודעה",
+      "open": "פתיחה",
+      "dismiss": "ביטול",
+      "dismiss_all": "ביטול הכול",
+      "snooze_label": "להזכיר שוב:",
+      "snooze": "נודניק",
+      "snooze_choices": {
+        "5m": "בעוד 5 דקות",
+        "15m": "בעוד 15 דקות",
+        "1h": "בעוד שעה",
+        "4h": "בעוד 4 שעות",
+        "tomorrow": "מחר בבוקר ({when})",
+        "next_week": "ביום {weekday} הבא בבוקר ({when})",
+        "due_day": "ביום היעד ({when})"
+      },
+      "toast_open": "כל התזכורות…",
+      "toast_more": "{count, plural, one {ועוד אחת} two {ועוד שתיים} other {ועוד #}}",
+      "failed": "לא ניתן היה לשנות את התזכורת."
+    },
     "menu_title": "מעקב",
     "reader_button": "מעקב",
     "flag_set": "מעקב היום (לחיצה ימנית: עוד)",

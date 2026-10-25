@@ -4507,6 +4507,28 @@
     "level_warning": "Varovanie"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# pripomienka} few {# pripomienky} many {# pripomienky} other {# pripomienok}}",
+      "list_label": "Splatné pripomienky",
+      "mail": "Sledovanie správy",
+      "open": "Otvoriť",
+      "dismiss": "Zavrieť pripomienku",
+      "dismiss_all": "Zavrieť všetky",
+      "snooze_label": "Pripomenúť znova:",
+      "snooze": "Odložiť",
+      "snooze_choices": {
+        "5m": "O 5 minút",
+        "15m": "O 15 minút",
+        "1h": "O 1 hodinu",
+        "4h": "O 4 hodiny",
+        "tomorrow": "Zajtra ráno ({when})",
+        "next_week": "Budúci {weekday} ráno ({when})",
+        "due_day": "V deň splatnosti ({when})"
+      },
+      "toast_open": "Všetky pripomienky…",
+      "toast_more": "{count, plural, one {a # ďalšia} few {a # ďalšie} many {a # ďalšej} other {a # ďalších}}",
+      "failed": "Pripomienku sa nepodarilo zmeniť."
+    },
     "menu_title": "Spracovať",
     "reader_button": "Spracovať",
     "flag_set": "Spracovať dnes (pravé tlačidlo: ďalšie)",

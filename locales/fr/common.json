@@ -4507,6 +4507,28 @@
     "level_warning": "Avertissement"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# rappel} other {# rappels}}",
+      "list_label": "Rappels échus",
+      "mail": "Suivi d'un message",
+      "open": "Ouvrir",
+      "dismiss": "Ignorer",
+      "dismiss_all": "Tout ignorer",
+      "snooze_label": "Me le rappeler :",
+      "snooze": "Répéter",
+      "snooze_choices": {
+        "5m": "Dans 5 minutes",
+        "15m": "Dans 15 minutes",
+        "1h": "Dans 1 heure",
+        "4h": "Dans 4 heures",
+        "tomorrow": "Demain matin ({when})",
+        "next_week": "{weekday} prochain au matin ({when})",
+        "due_day": "Le jour de l'échéance ({when})"
+      },
+      "toast_open": "Tous les rappels…",
+      "toast_more": "{count, plural, one {et # autre} other {et # autres}}",
+      "failed": "Le rappel n'a pas pu être modifié."
+    },
     "menu_title": "Suivi",
     "reader_button": "Suivi",
     "flag_set": "Assurer le suivi aujourd'hui (clic droit : plus)",

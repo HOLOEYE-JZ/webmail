@@ -4507,6 +4507,28 @@
     "level_warning": "Warnung"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# Erinnerung} other {# Erinnerungen}}",
+      "list_label": "Fällige Erinnerungen",
+      "mail": "Wiedervorlage einer Mail",
+      "open": "Öffnen",
+      "dismiss": "Schließen",
+      "dismiss_all": "Alle schließen",
+      "snooze_label": "Erneut erinnern:",
+      "snooze": "Erneut erinnern",
+      "snooze_choices": {
+        "5m": "In 5 Minuten",
+        "15m": "In 15 Minuten",
+        "1h": "In 1 Stunde",
+        "4h": "In 4 Stunden",
+        "tomorrow": "Morgen früh ({when})",
+        "next_week": "Nächsten {weekday} früh ({when})",
+        "due_day": "Am Fälligkeitstag ({when})"
+      },
+      "toast_open": "Alle Erinnerungen …",
+      "toast_more": "{count, plural, one {und # weitere} other {und # weitere}}",
+      "failed": "Die Erinnerung konnte nicht geändert werden."
+    },
     "menu_title": "Wiedervorlage",
     "reader_button": "Wiedervorlage",
     "flag_set": "Heute nachverfolgen (Rechtsklick: Menü)",

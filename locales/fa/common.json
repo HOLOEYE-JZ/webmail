@@ -4507,6 +4507,28 @@
     "level_warning": "هشدار"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# یادآوری} other {# یادآوری}}",
+      "list_label": "یادآوری‌های سررسیدشده",
+      "mail": "پیگیری یک نامه",
+      "open": "باز کردن",
+      "dismiss": "رد کردن",
+      "dismiss_all": "رد کردن همه",
+      "snooze_label": "دوباره یادآوری کن:",
+      "snooze": "تعویق",
+      "snooze_choices": {
+        "5m": "۵ دقیقه دیگر",
+        "15m": "۱۵ دقیقه دیگر",
+        "1h": "۱ ساعت دیگر",
+        "4h": "۴ ساعت دیگر",
+        "tomorrow": "فردا صبح ({when})",
+        "next_week": "صبح {weekday} آینده ({when})",
+        "due_day": "در روز سررسید ({when})"
+      },
+      "toast_open": "همه یادآوری‌ها…",
+      "toast_more": "{count, plural, one {و # مورد دیگر} other {و # مورد دیگر}}",
+      "failed": "یادآوری تغییر نکرد."
+    },
     "menu_title": "پیگیری",
     "reader_button": "پیگیری",
     "flag_set": "پیگیری امروز (کلیک راست: بیشتر)",

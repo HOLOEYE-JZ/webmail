@@ -4507,6 +4507,28 @@
     "level_warning": "Waarschuwing"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# herinnering} other {# herinneringen}}",
+      "list_label": "Herinneringen die vervallen zijn",
+      "mail": "Opvolging van een e-mail",
+      "open": "Openen",
+      "dismiss": "Negeren",
+      "dismiss_all": "Alles negeren",
+      "snooze_label": "Opnieuw herinneren:",
+      "snooze": "Uitstellen",
+      "snooze_choices": {
+        "5m": "Over 5 minuten",
+        "15m": "Over 15 minuten",
+        "1h": "Over 1 uur",
+        "4h": "Over 4 uur",
+        "tomorrow": "Morgenochtend ({when})",
+        "next_week": "Volgende {weekday}ochtend ({when})",
+        "due_day": "Op de vervaldag ({when})"
+      },
+      "toast_open": "Alle herinneringen…",
+      "toast_more": "{count, plural, one {en # andere} other {en # andere}}",
+      "failed": "De herinnering kon niet worden gewijzigd."
+    },
     "menu_title": "Opvolgen",
     "reader_button": "Opvolgen",
     "flag_set": "Vandaag opvolgen (rechtsklik: meer)",

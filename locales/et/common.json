@@ -4507,6 +4507,28 @@
     "level_warning": "Hoiatus"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# meeldetuletus} other {# meeldetuletust}}",
+      "list_label": "Tähtajaga meeldetuletused",
+      "mail": "Kirja järelkontroll",
+      "open": "Ava",
+      "dismiss": "Loobu",
+      "dismiss_all": "Loobu kõigist",
+      "snooze_label": "Tuleta uuesti meelde:",
+      "snooze": "Edasi lükata",
+      "snooze_choices": {
+        "5m": "5 minuti pärast",
+        "15m": "15 minuti pärast",
+        "1h": "1 tunni pärast",
+        "4h": "4 tunni pärast",
+        "tomorrow": "Homme hommikul ({when})",
+        "next_week": "Järgmisel {weekday} hommikul ({when})",
+        "due_day": "Tähtpäeval ({when})"
+      },
+      "toast_open": "Kõik meeldetuletused…",
+      "toast_more": "{count, plural, one {ja veel #} other {ja veel #}}",
+      "failed": "Meeldetuletust ei õnnestunud muuta."
+    },
     "menu_title": "Järelkontroll",
     "reader_button": "Järelkontroll",
     "flag_set": "Kontrolli täna (paremklõps: veel)",

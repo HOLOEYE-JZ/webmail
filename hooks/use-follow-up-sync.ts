@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { onStarToggled, useEmailStore } from "@/stores/email-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
+import { completedTaskPatch } from "@/lib/task-reminders";
 import {
   addFollowUpSender,
   followUpMailRef,
@@ -311,7 +312,9 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
  */
 async function completeUnstarred(client: IJMAPClient, taskId: string, emailId: string): Promise<boolean> {
   try {
-    if (await useTaskStore.getState().updateTask(client, taskId, { progress: "completed" })) {
+    const task = useTaskStore.getState().tasks.find((t) => t.id === taskId);
+    const patch = task ? completedTaskPatch(task, new Date()) : { progress: "completed" as const };
+    if (await useTaskStore.getState().updateTask(client, taskId, patch)) {
       forgetUnstarredHere(emailId);
       return true;
     }

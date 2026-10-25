@@ -4507,6 +4507,28 @@
     "level_warning": "Avís"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# recordatori} other {# recordatoris}}",
+      "list_label": "Recordatoris pendents",
+      "mail": "Seguiment d'un correu",
+      "open": "Obre",
+      "dismiss": "Descarta",
+      "dismiss_all": "Descarta-ho tot",
+      "snooze_label": "Torna a recordar-m'ho:",
+      "snooze": "Posposa",
+      "snooze_choices": {
+        "5m": "D'aquí a 5 minuts",
+        "15m": "D'aquí a 15 minuts",
+        "1h": "D'aquí a 1 hora",
+        "4h": "D'aquí a 4 hores",
+        "tomorrow": "Demà al matí ({when})",
+        "next_week": "El {weekday} vinent al matí ({when})",
+        "due_day": "El dia de venciment ({when})"
+      },
+      "toast_open": "Tots els recordatoris…",
+      "toast_more": "{count, plural, one {i # més} other {i # més}}",
+      "failed": "No s'ha pogut canviar el recordatori."
+    },
     "menu_title": "Seguiment",
     "reader_button": "Seguiment",
     "flag_set": "Fer seguiment avui (clic dret: més)",

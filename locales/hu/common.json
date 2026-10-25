@@ -4507,6 +4507,28 @@
     "level_warning": "Figyelmeztetés"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# emlékeztető} other {# emlékeztető}}",
+      "list_label": "Esedékes emlékeztetők",
+      "mail": "Levél nyomon követése",
+      "open": "Megnyitás",
+      "dismiss": "Elvetés",
+      "dismiss_all": "Összes elvetése",
+      "snooze_label": "Emlékeztessen újra:",
+      "snooze": "Szundi",
+      "snooze_choices": {
+        "5m": "5 perc múlva",
+        "15m": "15 perc múlva",
+        "1h": "1 óra múlva",
+        "4h": "4 óra múlva",
+        "tomorrow": "Holnap reggel ({when})",
+        "next_week": "Jövő {weekday} reggel ({when})",
+        "due_day": "A határnapon ({when})"
+      },
+      "toast_open": "Összes emlékeztető…",
+      "toast_more": "{count, plural, one {és még #} other {és még #}}",
+      "failed": "Az emlékeztetőt nem sikerült módosítani."
+    },
     "menu_title": "Nyomon követés",
     "reader_button": "Nyomon követés",
     "flag_set": "Nyomon követés ma (jobb klikk: továbbiak)",

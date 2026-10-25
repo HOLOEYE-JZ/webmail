@@ -4507,6 +4507,28 @@
     "level_warning": "Advertencia"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# recordatorio} other {# recordatorios}}",
+      "list_label": "Recordatorios pendientes",
+      "mail": "Seguimiento de un correo",
+      "open": "Abrir",
+      "dismiss": "Descartar",
+      "dismiss_all": "Descartar todo",
+      "snooze_label": "Recordármelo de nuevo:",
+      "snooze": "Posponer",
+      "snooze_choices": {
+        "5m": "En 5 minutos",
+        "15m": "En 15 minutos",
+        "1h": "En 1 hora",
+        "4h": "En 4 horas",
+        "tomorrow": "Mañana por la mañana ({when})",
+        "next_week": "El próximo {weekday} por la mañana ({when})",
+        "due_day": "El día de vencimiento ({when})"
+      },
+      "toast_open": "Todos los recordatorios…",
+      "toast_more": "{count, plural, one {y # más} other {y # más}}",
+      "failed": "No se pudo cambiar el recordatorio."
+    },
     "menu_title": "Seguimiento",
     "reader_button": "Seguimiento",
     "flag_set": "Hacer seguimiento hoy (clic derecho: más)",

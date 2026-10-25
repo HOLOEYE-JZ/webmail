@@ -4507,6 +4507,28 @@
     "level_warning": "Advarsel"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# påminnelse} other {# påminnelser}}",
+      "list_label": "Påminnelser som har forfalt",
+      "mail": "Oppfølging av en e-post",
+      "open": "Åpne",
+      "dismiss": "Avvis",
+      "dismiss_all": "Avvis alle",
+      "snooze_label": "Påminn meg igjen:",
+      "snooze": "Slumre",
+      "snooze_choices": {
+        "5m": "Om 5 minutter",
+        "15m": "Om 15 minutter",
+        "1h": "Om 1 time",
+        "4h": "Om 4 timer",
+        "tomorrow": "I morgen tidlig ({when})",
+        "next_week": "Neste {weekday} morgen ({when})",
+        "due_day": "På forfallsdagen ({when})"
+      },
+      "toast_open": "Alle påminnelser…",
+      "toast_more": "{count, plural, one {og # til} other {og # til}}",
+      "failed": "Påminnelsen kunne ikke endres."
+    },
     "menu_title": "Oppfølging",
     "reader_button": "Oppfølging",
     "flag_set": "Følg opp i dag (høyreklikk: mer)",

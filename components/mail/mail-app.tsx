@@ -56,12 +56,13 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneSize } from "@/hooks/use-pane-size";
-import { usePaneId } from "@/hooks/use-pane-context";
+import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
 import { findNextUnreadIndex } from "@/lib/next-unread-email";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import { useFollowUpTasks, useFollowUpsEnabled } from "@/hooks/use-follow-ups";
 import { UpcomingPane } from "@/components/email/upcoming-pane";
+import { ownsReminderMails, useReminderMailOpener } from "@/hooks/use-task-reminders";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { usePromptDialog } from "@/hooks/use-prompt-dialog";
 import { useBrowserNavigation, type NavSnapshot } from "@/hooks/use-browser-navigation";
@@ -1836,6 +1837,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // first-render ones by the time the session is up and the link is applied.
   const applyMailDeepLinkRef = useRef(applyMailDeepLink);
   applyMailDeepLinkRef.current = applyMailDeepLink;
+
+  // The reminders window opens a reminder's mail here, as the pane
+  // "Upcoming" does: only from the mail view on screen, so a hidden Pro tab
+  // never opens it out of sight.
+  const isFocusedProTab = useIsFocusedProTab();
+  const ownsReminderMail = ownsReminderMails({ embedded: isEmbedded, focusedProTab: isFocusedProTab, proInterface: proInterfaceActive });
+  useReminderMailOpener(ownsReminderMail, (emailId, mailAccountId) => {
+    void applyMailDeepLinkRef.current({ kind: 'message', id: emailId, ...(mailAccountId ? { mailAccountId } : {}) });
+  });
 
   // Pro shell only: this MailApp stays mounted for the whole session, so the
   // mount-time consume below never sees a link that arrives later (an in-app

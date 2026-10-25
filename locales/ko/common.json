@@ -4507,6 +4507,28 @@
     "level_warning": "경고"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, other {알림 #개}}",
+      "list_label": "기한이 된 알림",
+      "mail": "메일 후속 조치",
+      "open": "열기",
+      "dismiss": "해제",
+      "dismiss_all": "모두 해제",
+      "snooze_label": "다시 알림:",
+      "snooze": "다시 알림",
+      "snooze_choices": {
+        "5m": "5분 후",
+        "15m": "15분 후",
+        "1h": "1시간 후",
+        "4h": "4시간 후",
+        "tomorrow": "내일 아침 ({when})",
+        "next_week": "다음 {weekday} 아침 ({when})",
+        "due_day": "기한일 ({when})"
+      },
+      "toast_open": "모든 알림…",
+      "toast_more": "{count, plural, other {외 #개}}",
+      "failed": "알림을 변경할 수 없습니다."
+    },
     "menu_title": "후속 조치",
     "reader_button": "후속 조치",
     "flag_set": "오늘 후속 조치 (오른쪽 클릭: 더 보기)",

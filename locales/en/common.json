@@ -4507,6 +4507,28 @@
     "level_warning": "Warning"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# reminder} other {# reminders}}",
+      "list_label": "Reminders that are due",
+      "mail": "Follow-up on a mail",
+      "open": "Open",
+      "dismiss": "Dismiss",
+      "dismiss_all": "Dismiss all",
+      "snooze_label": "Remind me again:",
+      "snooze": "Snooze",
+      "snooze_choices": {
+        "5m": "In 5 minutes",
+        "15m": "In 15 minutes",
+        "1h": "In 1 hour",
+        "4h": "In 4 hours",
+        "tomorrow": "Tomorrow morning ({when})",
+        "next_week": "Next {weekday} morning ({when})",
+        "due_day": "On the due day ({when})"
+      },
+      "toast_open": "All reminders…",
+      "toast_more": "{count, plural, one {and # more} other {and # more}}",
+      "failed": "The reminder could not be changed."
+    },
     "menu_title": "Follow up",
     "reader_button": "Follow up",
     "flag_set": "Follow up today (right-click: more)",

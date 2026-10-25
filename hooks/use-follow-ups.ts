@@ -14,6 +14,7 @@ import { displayNow, fromDisplayDate } from "@/lib/timezone";
 import { emailKeyFor } from "@/lib/thread-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { debug } from "@/lib/debug";
+import { completedTaskPatch } from "@/lib/task-reminders";
 import {
   DEFAULT_WORKING_TIME,
   buildFollowUpTask,
@@ -267,7 +268,8 @@ export async function completeTask(
   task: CalendarTask,
   messages: { failed: string; flagFailed: string },
 ): Promise<boolean> {
-  const complete = () => useTaskStore.getState().updateTask(client, task.id, { progress: "completed" });
+  // Its reminders that fired are dismissed with it, so reopened it does not remind of them again.
+  const complete = () => useTaskStore.getState().updateTask(client, task.id, completedTaskPatch(task, new Date()));
   const ref = task.isShared ? null : followUpMailRef(task);
   if (!ref || (ref.accountId && ref.accountId !== client.getAccountId())) {
     try {
@@ -432,7 +434,7 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
 
   const markDone = useCallback(async () => {
     await run(async (client) => (
-      !!task && useTaskStore.getState().updateTask(client, task.id, { progress: "completed" })
+      !!task && useTaskStore.getState().updateTask(client, task.id, completedTaskPatch(task, new Date()))
     ), false);
   }, [run, task]);
 

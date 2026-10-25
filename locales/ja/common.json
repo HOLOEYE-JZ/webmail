@@ -4507,6 +4507,28 @@
     "level_warning": "警告"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, other {# 件のアラーム}}",
+      "list_label": "期限が来たアラーム",
+      "mail": "メールのフォローアップ",
+      "open": "開く",
+      "dismiss": "閉じる",
+      "dismiss_all": "すべて閉じる",
+      "snooze_label": "再通知:",
+      "snooze": "再通知",
+      "snooze_choices": {
+        "5m": "5 分後",
+        "15m": "15 分後",
+        "1h": "1 時間後",
+        "4h": "4 時間後",
+        "tomorrow": "明日の朝 ({when})",
+        "next_week": "次の{weekday}の朝 ({when})",
+        "due_day": "期限日 ({when})"
+      },
+      "toast_open": "すべてのアラーム…",
+      "toast_more": "{count, plural, other {ほか # 件}}",
+      "failed": "アラームを変更できませんでした。"
+    },
     "menu_title": "フォローアップ",
     "reader_button": "フォローアップ",
     "flag_set": "今日フォローアップ (右クリック: その他)",

@@ -4507,6 +4507,28 @@
     "level_warning": "Aviso"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# lembrete} other {# lembretes}}",
+      "list_label": "Lembretes pendentes",
+      "mail": "Acompanhamento de um e-mail",
+      "open": "Abrir",
+      "dismiss": "Ignorar",
+      "dismiss_all": "Ignorar tudo",
+      "snooze_label": "Lembrar-me novamente:",
+      "snooze": "Adiar",
+      "snooze_choices": {
+        "5m": "Daqui a 5 minutos",
+        "15m": "Daqui a 15 minutos",
+        "1h": "Daqui a 1 hora",
+        "4h": "Daqui a 4 horas",
+        "tomorrow": "Amanhã de manhã ({when})",
+        "next_week": "Próxima {weekday} de manhã ({when})",
+        "due_day": "No dia do prazo ({when})"
+      },
+      "toast_open": "Todos os lembretes…",
+      "toast_more": "{count, plural, one {e mais #} other {e mais #}}",
+      "failed": "Não foi possível alterar o lembrete."
+    },
     "menu_title": "Acompanhamento",
     "reader_button": "Acompanhamento",
     "flag_set": "Acompanhar hoje (clique direito: mais)",

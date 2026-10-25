@@ -4507,6 +4507,28 @@
     "level_warning": "Анхааруулга"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, other {# сануулга}}",
+      "list_label": "Хугацаа болсон сануулгууд",
+      "mail": "Захидлын дагалт",
+      "open": "Нээх",
+      "dismiss": "Хаах",
+      "dismiss_all": "Бүгдийг хаах",
+      "snooze_label": "Дахин сануулах:",
+      "snooze": "Хойшлуулах",
+      "snooze_choices": {
+        "5m": "5 минутын дараа",
+        "15m": "15 минутын дараа",
+        "1h": "1 цагийн дараа",
+        "4h": "4 цагийн дараа",
+        "tomorrow": "Маргааш өглөө ({when})",
+        "next_week": "Дараагийн {weekday} өглөө ({when})",
+        "due_day": "Дуусах өдөр ({when})"
+      },
+      "toast_open": "Бүх сануулга…",
+      "toast_more": "{count, plural, other {болон өөр #}}",
+      "failed": "Сануулгыг өөрчилж чадсангүй."
+    },
     "menu_title": "Дагаж мөрдөх",
     "reader_button": "Дагаж мөрдөх",
     "flag_set": "Өнөөдөр дагах (баруун товш: бусад)",

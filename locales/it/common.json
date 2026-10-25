@@ -4507,6 +4507,28 @@
     "level_warning": "Avviso"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# promemoria} other {# promemoria}}",
+      "list_label": "Promemoria scaduti",
+      "mail": "Completamento di un messaggio",
+      "open": "Apri",
+      "dismiss": "Ignora",
+      "dismiss_all": "Ignora tutti",
+      "snooze_label": "Ricordamelo di nuovo:",
+      "snooze": "Posticipa",
+      "snooze_choices": {
+        "5m": "Tra 5 minuti",
+        "15m": "Tra 15 minuti",
+        "1h": "Tra 1 ora",
+        "4h": "Tra 4 ore",
+        "tomorrow": "Domani mattina ({when})",
+        "next_week": "{weekday} prossimo mattina ({when})",
+        "due_day": "Il giorno di scadenza ({when})"
+      },
+      "toast_open": "Tutti i promemoria…",
+      "toast_more": "{count, plural, one {e altro #} other {e altri #}}",
+      "failed": "Impossibile modificare il promemoria."
+    },
     "menu_title": "Completamento",
     "reader_button": "Completamento",
     "flag_set": "Contrassegna per oggi (clic destro: altro)",

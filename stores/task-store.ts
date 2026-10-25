@@ -4,6 +4,8 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { debug } from '@/lib/debug';
 import { taskHooks } from '@/lib/plugin-hooks';
 import { taskToView } from '@/lib/plugin-projection';
+import { applyPatchObject } from '@/lib/jmap/patch-object';
+import { completedTaskPatch } from '@/lib/task-reminders';
 
 export type TaskViewFilter = 'all' | 'pending' | 'completed' | 'overdue';
 
@@ -110,11 +112,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       set({ selectedTaskId: get().selectedTaskId === id ? newId : get().selectedTaskId });
       await get().fetchTasks(client, get().scope);
       const moved = get().tasks.find(t => t.id === newId)
-        ?? ({ ...before, ...updates, id: newId } as CalendarTask);
+        ?? ({ ...applyPatchObject(before ?? {}, updates), id: newId } as CalendarTask);
       void taskHooks.onTaskUpdate.emit(taskToView(moved));
       return true;
     }
-    const updated = { ...(before ?? { id }), ...updates, updated: new Date().toISOString() } as CalendarTask;
+    // `updates` may name members by path (`alerts/<id>/acknowledged`).
+    const updated = { ...applyPatchObject(before ?? { id }, updates), updated: new Date().toISOString() } as CalendarTask;
     set({
       tasks: get().tasks.map(t => t.id === id ? updated : t),
     });
@@ -136,12 +139,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   toggleTaskComplete: async (client, task) => {
     const newProgress = task.progress === 'completed' ? 'needs-action' : 'completed';
-    const updates: Partial<CalendarTask> = {
-      progress: newProgress,
-    };
+    // Completing dismisses the reminders that have fired, as Outlook's Mark
+    // Complete: reopened, the task does not remind of them again.
+    const updates: Partial<CalendarTask> = newProgress === 'completed'
+      ? completedTaskPatch(task, new Date())
+      : { progress: newProgress };
     await client.updateCalendarTask(task.id, updates);
     set({
-      tasks: get().tasks.map(t => t.id === task.id ? { ...t, ...updates, updated: new Date().toISOString() } : t),
+      tasks: get().tasks.map(t => t.id === task.id ? { ...applyPatchObject(t, updates), updated: new Date().toISOString() } : t),
     });
     // A toggle is reported as onTaskToggleComplete only, not also as
     // onTaskUpdate, so a plugin that listens to both sees each change once.

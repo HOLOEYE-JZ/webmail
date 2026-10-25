@@ -4507,6 +4507,28 @@
     "level_warning": "Avertisment"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# memento} few {# mementouri} other {# de mementouri}}",
+      "list_label": "Mementouri scadente",
+      "mail": "Urmărirea unui mesaj",
+      "open": "Deschide",
+      "dismiss": "Închide mementoul",
+      "dismiss_all": "Închide toate",
+      "snooze_label": "Amintește-mi din nou:",
+      "snooze": "Amână",
+      "snooze_choices": {
+        "5m": "Peste 5 minute",
+        "15m": "Peste 15 minute",
+        "1h": "Peste 1 oră",
+        "4h": "Peste 4 ore",
+        "tomorrow": "Mâine dimineață ({when})",
+        "next_week": "{weekday} viitoare dimineața ({when})",
+        "due_day": "În ziua scadenței ({when})"
+      },
+      "toast_open": "Toate mementourile…",
+      "toast_more": "{count, plural, one {și încă #} few {și încă #} other {și încă #}}",
+      "failed": "Mementoul nu a putut fi modificat."
+    },
     "menu_title": "Urmărire",
     "reader_button": "Urmărire",
     "flag_set": "Urmărește azi (clic dreapta: mai mult)",

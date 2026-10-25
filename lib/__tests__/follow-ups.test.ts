@@ -1,3 +1,4 @@
+import { applyPatchObject } from '../jmap/patch-object';
 import { describe, it, expect } from 'vitest';
 import {
   DEFAULT_WORKING_TIME,
@@ -412,19 +413,24 @@ describe('the dialog: action, note and reminder read back from the task', () => 
     const moved = editFollowUpTask({ ...base, alerts }, {
       title: null, due: at(29), reminderAt: new Date('2026-10-29T10:00:00Z'), note: '',
     });
-    expect(moved.alerts).toEqual({ 'follow-up': own('2026-10-29T10:00:00Z'), phone: relative });
+    // By its path only, so an alert another device changed meanwhile is not written back.
+    expect(moved).not.toHaveProperty('alerts');
+    expect(moved).toHaveProperty(['alerts/follow-up'], own('2026-10-29T10:00:00Z'));
+    expect(applyPatchObject({ ...base, alerts }, moved).alerts).toEqual({ 'follow-up': own('2026-10-29T10:00:00Z'), phone: relative });
     const off = editFollowUpTask({ ...base, alerts }, { title: null, due: at(29), reminderAt: null, note: '' });
-    expect(off.alerts).toEqual({ phone: relative });
-    expect(editFollowUpTask({ ...base, alerts: { 'follow-up': own('2026-10-28T09:00:00Z') } }, {
-      title: null, due: at(29), reminderAt: null, note: '',
-    }).alerts).toBeNull();
+    expect(off).toHaveProperty(['alerts/follow-up'], null);
+    expect(applyPatchObject({ ...base, alerts }, off).alerts).toEqual({ phone: relative });
+    // A task without alerts gets its map whole.
+    expect(editFollowUpTask({ ...base, alerts: null }, {
+      title: null, due: at(29), reminderAt: new Date('2026-10-29T10:00:00Z'), note: '',
+    }).alerts).toEqual({ 'follow-up': own('2026-10-29T10:00:00Z') });
   });
 
   it('shows and changes a fixed-time alert set elsewhere under its own key', () => {
     const task = { ...base, alerts: { phone: relative, 'ios-1': own('2026-10-28T09:00:00Z') } };
     expect(followUpReminderAlert(task)).toEqual({ id: 'ios-1', when: new Date('2026-10-28T09:00:00Z') });
     expect(otherFollowUpAlerts(task)).toBe(1);
-    expect(editFollowUpTask(task, { title: null, due: at(29), reminderAt: new Date('2026-10-29T10:00:00Z'), note: '' }).alerts)
+    expect(applyPatchObject(task, editFollowUpTask(task, { title: null, due: at(29), reminderAt: new Date('2026-10-29T10:00:00Z'), note: '' })).alerts)
       .toEqual({ phone: relative, 'ios-1': own('2026-10-29T10:00:00Z') });
     // Only a relative one: no reminder shown, but it is counted.
     expect(followUpReminderAlert({ alerts: { phone: relative } })).toBeNull();

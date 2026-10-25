@@ -4507,6 +4507,28 @@
     "level_warning": "Upozornění"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# připomenutí} few {# připomenutí} many {# připomenutí} other {# připomenutí}}",
+      "list_label": "Splatná připomenutí",
+      "mail": "Sledování zprávy",
+      "open": "Otevřít",
+      "dismiss": "Zavřít připomenutí",
+      "dismiss_all": "Zavřít vše",
+      "snooze_label": "Připomenout znovu:",
+      "snooze": "Odložit",
+      "snooze_choices": {
+        "5m": "Za 5 minut",
+        "15m": "Za 15 minut",
+        "1h": "Za 1 hodinu",
+        "4h": "Za 4 hodiny",
+        "tomorrow": "Zítra ráno ({when})",
+        "next_week": "Příští {weekday} ráno ({when})",
+        "due_day": "V den splatnosti ({when})"
+      },
+      "toast_open": "Všechna připomenutí…",
+      "toast_more": "{count, plural, one {a # další} few {a # další} many {a # dalších} other {a # dalších}}",
+      "failed": "Připomenutí se nepodařilo změnit."
+    },
     "menu_title": "Zpracovat",
     "reader_button": "Zpracovat",
     "flag_set": "Zpracovat dnes (pravé tlačítko: další)",

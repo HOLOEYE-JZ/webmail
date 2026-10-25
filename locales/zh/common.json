@@ -4507,6 +4507,28 @@
     "level_warning": "警告"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, other {# 个提醒}}",
+      "list_label": "到期的提醒",
+      "mail": "邮件待办",
+      "open": "打开",
+      "dismiss": "关闭",
+      "dismiss_all": "全部关闭",
+      "snooze_label": "再次提醒：",
+      "snooze": "稍后提醒",
+      "snooze_choices": {
+        "5m": "5 分钟后",
+        "15m": "15 分钟后",
+        "1h": "1 小时后",
+        "4h": "4 小时后",
+        "tomorrow": "明天早上 ({when})",
+        "next_week": "下{weekday}早上 ({when})",
+        "due_day": "到期日当天 ({when})"
+      },
+      "toast_open": "所有提醒…",
+      "toast_more": "{count, plural, other {及其他 # 个}}",
+      "failed": "无法更改提醒。"
+    },
     "menu_title": "后续处理",
     "reader_button": "后续处理",
     "flag_set": "今天跟进 (右键: 更多)",

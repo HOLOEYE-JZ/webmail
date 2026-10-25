@@ -4507,6 +4507,28 @@
     "level_warning": "Ostrzeżenie"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# przypomnienie} few {# przypomnienia} many {# przypomnień} other {# przypomnienia}}",
+      "list_label": "Wymagalne przypomnienia",
+      "mail": "Monit dotyczący wiadomości",
+      "open": "Otwórz",
+      "dismiss": "Odrzuć",
+      "dismiss_all": "Odrzuć wszystkie",
+      "snooze_label": "Przypomnij ponownie:",
+      "snooze": "Drzemka",
+      "snooze_choices": {
+        "5m": "Za 5 minut",
+        "15m": "Za 15 minut",
+        "1h": "Za 1 godzinę",
+        "4h": "Za 4 godziny",
+        "tomorrow": "Jutro rano ({when})",
+        "next_week": "W następny {weekday} rano ({when})",
+        "due_day": "W dniu terminu ({when})"
+      },
+      "toast_open": "Wszystkie przypomnienia…",
+      "toast_more": "{count, plural, one {i # inne} few {i # inne} many {i # innych} other {i # innych}}",
+      "failed": "Nie udało się zmienić przypomnienia."
+    },
     "menu_title": "Monituj",
     "reader_button": "Monituj",
     "flag_set": "Monituj dzisiaj (prawy przycisk: więcej)",

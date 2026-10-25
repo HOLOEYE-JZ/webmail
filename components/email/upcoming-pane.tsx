@@ -9,10 +9,8 @@ import { Link } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { completeTask, useFollowUpDialog } from "@/hooks/use-follow-ups";
-import { addReminderToday, useDisplayNow, useUpcomingTasks } from "@/hooks/use-upcoming";
-import { locateFollowUpMail } from "@/hooks/use-follow-up-sync";
+import { addReminderToday, openTaskItem, useDisplayNow, useUpcomingTasks } from "@/hooks/use-upcoming";
 import { useFollowUpFormat } from "@/components/email/follow-up";
-import { toast } from "@/stores/toast-store";
 import { toDisplayDate } from "@/lib/timezone";
 import { followUpDueDay, followUpMailRef, followUpMailSummary, followUpNote, followUpReminder, isRecurringTask } from "@/lib/follow-ups";
 import type { UpcomingGroup } from "@/lib/upcoming-tasks";
@@ -187,17 +185,7 @@ function UpcomingItem({ task, group, onOpenMail }: {
       useFollowUpDialog.getState().openReminder({ taskId: task.id });
       return;
     }
-    if (!client) return;
-    // A moved mail is found again (and the task pointed at it); a mail gone is said.
-    const found = mail.accountId && mail.accountId !== client.getAccountId()
-      ? { kind: "unknown" as const, emailId: mail.emailId }
-      : await locateFollowUpMail(client, task);
-    if (found.kind === "present" || found.kind === "unknown") {
-      onOpenMail(found.emailId, mail.accountId);
-      return;
-    }
-    toast.error(t("mail_gone"));
-    useFollowUpDialog.getState().openReminder({ taskId: task.id });
+    if (client) await openTaskItem(client, task, onOpenMail, t("mail_gone"));
   };
 
   return (

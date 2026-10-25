@@ -72,6 +72,23 @@ describe('task-store', () => {
       expect(updatedTask?.progress).toBe('completed');
     });
 
+    it('completing dismisses the reminders that fired, by path, and keeps those to come', async () => {
+      const alert = (when: string) => ({ '@type': 'Alert' as const, trigger: { '@type': 'AbsoluteTrigger' as const, when }, action: 'display' as const, acknowledged: null, relatedTo: null });
+      const fired = new Date(Date.now() - 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+      const later = new Date(Date.now() + 3_600_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+      const task = makeTask({ id: 't3', progress: 'needs-action', alerts: { a: alert(fired), b: alert(later) } });
+      useTaskStore.setState({ tasks: [task] });
+
+      await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+
+      const [, calledUpdates] = (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(Object.keys(calledUpdates).sort()).toEqual(['alerts/a/acknowledged', 'progress']);
+      const updatedTask = useTaskStore.getState().tasks.find((t) => t.id === 't3');
+      expect(updatedTask?.alerts?.a.acknowledged).toBe(calledUpdates['alerts/a/acknowledged']);
+      expect(updatedTask?.alerts?.b).toEqual(alert(later));
+      expect(updatedTask).not.toHaveProperty(['alerts/a/acknowledged']);
+    });
+
     it('toggles completed back to needs-action without sending progressUpdated in payload', async () => {
       const task = makeTask({ id: 't2', progress: 'completed' });
       useTaskStore.setState({ tasks: [task] });

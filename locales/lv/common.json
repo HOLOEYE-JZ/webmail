@@ -4507,6 +4507,28 @@
     "level_warning": "Brīdinājums"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, zero {# atgādinājumu} one {# atgādinājums} other {# atgādinājumi}}",
+      "list_label": "Termiņā esošie atgādinājumi",
+      "mail": "Vēstules pārraudzība",
+      "open": "Atvērt",
+      "dismiss": "Noraidīt",
+      "dismiss_all": "Noraidīt visus",
+      "snooze_label": "Atgādināt vēlreiz:",
+      "snooze": "Atlikt",
+      "snooze_choices": {
+        "5m": "Pēc 5 minūtēm",
+        "15m": "Pēc 15 minūtēm",
+        "1h": "Pēc 1 stundas",
+        "4h": "Pēc 4 stundām",
+        "tomorrow": "Rīt no rīta ({when})",
+        "next_week": "Nākamajā {weekday} no rīta ({when})",
+        "due_day": "Termiņa dienā ({when})"
+      },
+      "toast_open": "Visi atgādinājumi…",
+      "toast_more": "{count, plural, zero {un vēl #} one {un vēl #} other {un vēl #}}",
+      "failed": "Atgādinājumu neizdevās mainīt."
+    },
     "menu_title": "Turpmākā darbība",
     "reader_button": "Turpmākā darbība",
     "flag_set": "Turpināt šodien (labais klikšķis: vairāk)",

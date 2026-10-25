@@ -1,6 +1,7 @@
 import { addDays, differenceInCalendarDays, format, parseISO, startOfDay } from "date-fns";
 import type { CalendarEventAlert, CalendarLink, CalendarTask } from "@/lib/jmap/types";
 import { MAIL_ACCOUNT_PARAM } from "@/lib/deep-links";
+import { patchPath } from "@/lib/jmap/patch-object";
 import { FOLLOW_UP_ACTIONS, type FollowUpActionKey } from "@/lib/follow-up-actions";
 import { FOLLOW_UP_ACTION_NAMES, FOLLOW_UP_NO_SUBJECT } from "@/lib/follow-up-action-names";
 import { htmlToPlainText } from "@/lib/html-to-text";
@@ -449,7 +450,8 @@ export interface FollowUpEdit {
  * a completed or cancelled one opened again.
  *
  * Of the alerts it touches only the reminder it shows
- * (`followUpReminderAlert`) and only when its time changed: an unchanged one
+ * (`followUpReminderAlert`), by its path (`alerts/<id>`), and only when its
+ * time changed: an unchanged one
  * keeps its `acknowledged`, so it does not fire again; any other alert (a
  * relative one, a second one set on a phone) stays as it is.
  */
@@ -466,11 +468,15 @@ export function editFollowUpTask(
     : { due: dueOf(edit.due), showWithoutTime: true };
   const shown = followUpReminderAlert(task);
   if ((shown?.when.getTime() ?? null) !== (edit.reminderAt?.getTime() ?? null)) {
-    const alerts = { ...(task.alerts ?? {}) };
-    delete alerts[shown?.id ?? FOLLOW_UP_ALERT_ID];
-    const own = alertsOf(edit.reminderAt);
-    if (own) alerts[shown?.id ?? FOLLOW_UP_ALERT_ID] = own[FOLLOW_UP_ALERT_ID];
-    patch.alerts = Object.keys(alerts).length > 0 ? alerts : null;
+    const id = shown?.id ?? FOLLOW_UP_ALERT_ID;
+    const own = alertsOf(edit.reminderAt)?.[FOLLOW_UP_ALERT_ID] ?? null;
+    if (task.alerts && Object.keys(task.alerts).length > 0) {
+      // That one alert by its path: the others (a phone's, one changed
+      // meanwhile on another device) stay as the server holds them.
+      (patch as Record<string, unknown>)[`alerts/${patchPath(id)}`] = own;
+    } else {
+      patch.alerts = own ? { [id]: own } : null;
+    }
   }
   if (edit.title !== null && edit.title !== task.title) patch.title = edit.title;
   // An HTML note is only shown here, never written back as text.

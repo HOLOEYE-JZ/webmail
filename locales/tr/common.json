@@ -4507,6 +4507,28 @@
     "level_warning": "Uyarı"
   },
   "follow_up": {
+    "reminders": {
+      "title": "{count, plural, one {# anımsatıcı} other {# anımsatıcı}}",
+      "list_label": "Zamanı gelen anımsatıcılar",
+      "mail": "Bir e-postanın takibi",
+      "open": "Aç",
+      "dismiss": "Kapat",
+      "dismiss_all": "Tümünü kapat",
+      "snooze_label": "Yeniden anımsat:",
+      "snooze": "Ertele",
+      "snooze_choices": {
+        "5m": "5 dakika sonra",
+        "15m": "15 dakika sonra",
+        "1h": "1 saat sonra",
+        "4h": "4 saat sonra",
+        "tomorrow": "Yarın sabah ({when})",
+        "next_week": "Gelecek {weekday} sabahı ({when})",
+        "due_day": "Son gün ({when})"
+      },
+      "toast_open": "Tüm anımsatıcılar…",
+      "toast_more": "{count, plural, one {ve # tane daha} other {ve # tane daha}}",
+      "failed": "Anımsatıcı değiştirilemedi."
+    },
     "menu_title": "Takip et",
     "reader_button": "Takip et",
     "flag_set": "Bugün takip et (sağ tık: daha fazla)",

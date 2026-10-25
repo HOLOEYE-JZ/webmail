@@ -10,6 +10,7 @@ import { useTaskStore } from '@/stores/task-store';
 import { useCalendarNotificationStore } from '@/stores/calendar-notification-store';
 import { useToastStore } from '@/stores/toast-store';
 import { getPendingAlerts, getPendingTaskAlerts, buildAlertKey } from '@/lib/calendar-alerts';
+import { isReminderWindowTask } from '@/lib/task-reminders';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { getPathPrefix } from '@/lib/browser-navigation';
 import type { CalendarEvent } from '@/lib/jmap/types';
@@ -85,9 +86,10 @@ export function useCalendarAlerts() {
         });
       }
 
-      // Task alerts
+      // Task alerts. The user's own tasks go to the reminders window
+      // (useTaskReminders); a shared or repeating one is toasted here.
       if (enableCalendarTasks && storeTasks.length > 0) {
-        const pendingTaskAlerts = getPendingTaskAlerts(storeTasks, calendars, acknowledgedKeys, now);
+        const pendingTaskAlerts = getPendingTaskAlerts(storeTasks, calendars, acknowledgedKeys, now, isReminderWindowTask);
         for (const taskAlert of pendingTaskAlerts) {
           const key = buildAlertKey(taskAlert.taskId, taskAlert.alertId, taskAlert.fireTimeMs);
           if (shownKeysRef.current.has(key)) continue;

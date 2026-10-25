@@ -10,12 +10,14 @@ import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
 import { displayNow } from "@/lib/timezone";
 import { debug } from "@/lib/debug";
-import { buildReminderTask, editReminderTask, type WorkingTime } from "@/lib/follow-ups";
+import { buildReminderTask, editReminderTask, followUpMailRef, type WorkingTime } from "@/lib/follow-ups";
 import { dueTaskCount, upcomingTasks, type UpcomingList } from "@/lib/upcoming-tasks";
 import type { CalendarTask } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
+import { locateFollowUpMail } from "./use-follow-up-sync";
 import {
   followUpCalendars,
+  useFollowUpDialog,
   useFollowUpsEnabled,
   useWorkingTime,
   type FollowUpDetails,
@@ -68,6 +70,35 @@ export function useDueTaskCount(): number {
   const now = useDisplayNow();
   const day = startOfDay(now).getTime();
   return useMemo(() => (enabled ? dueTaskCount(tasks, ids, new Date(day)) : 0), [enabled, tasks, ids, day]);
+}
+
+/**
+ * Opens a task from a list that holds only the task (the pane "Upcoming",
+ * the reminders window): a mail's follow-up opens its mail through
+ * `openMail` (a moved mail found again first, the task pointed at it), any
+ * other task the follow-up dialog. A mail that is gone is said, and the
+ * dialog opens instead.
+ */
+export async function openTaskItem(
+  client: IJMAPClient,
+  task: CalendarTask,
+  openMail: (emailId: string, mailAccountId: string | null) => void,
+  mailGone: string,
+): Promise<void> {
+  const mail = followUpMailRef(task);
+  if (!mail) {
+    useFollowUpDialog.getState().openReminder({ taskId: task.id });
+    return;
+  }
+  const found = mail.accountId && mail.accountId !== client.getAccountId()
+    ? { kind: "unknown" as const, emailId: mail.emailId }
+    : await locateFollowUpMail(client, task);
+  if (found.kind === "present" || found.kind === "unknown") {
+    openMail(found.emailId, mail.accountId);
+    return;
+  }
+  toast.error(mailGone);
+  useFollowUpDialog.getState().openReminder({ taskId: task.id });
 }
 
 /** The calendar a new reminder goes into: the one follow-ups go into. */

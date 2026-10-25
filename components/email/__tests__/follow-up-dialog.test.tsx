@@ -187,7 +187,7 @@ describe('FollowUpDialog', () => {
     fireEvent.click(field('follow-up-reminder-on'));
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
-    expect(client.updateCalendarTask.mock.calls[0][1]).toEqual({ due: '2026-10-29T00:00:00', showWithoutTime: true, alerts: null });
+    expect(client.updateCalendarTask.mock.calls[0][1]).toEqual({ due: '2026-10-29T00:00:00', showWithoutTime: true, 'alerts/follow-up': null });
     first.unmount();
 
     render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
