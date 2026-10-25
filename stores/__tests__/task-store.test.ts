@@ -118,6 +118,24 @@ describe('task-store', () => {
       expect(useTaskStore.getState().error).toBeNull();
     });
 
+    it('drops the answer of a fetch that a later one overtook', async () => {
+      const answers: ((list: { tasks: CalendarTask[]; complete: boolean }) => void)[] = [];
+      const client = {
+        ...mockClient,
+        getCalendarTaskList: vi.fn().mockImplementation(() => new Promise((resolve) => { answers.push(resolve); })),
+      } as IJMAPClient;
+      const first = useTaskStore.getState().fetchTasks(client);
+      const second = useTaskStore.getState().fetchTasks(client);
+      answers[1]({ tasks: [makeTask({ id: 'new' })], complete: true });
+      await second;
+      answers[0]({ tasks: [makeTask({ id: 'old' })], complete: true });
+      await first;
+
+      expect(useTaskStore.getState().tasks.map((t) => t.id)).toEqual(['new']);
+      expect(useTaskStore.getState().loadedBy).toBe(client);
+      expect(useTaskStore.getState().isLoading).toBe(false);
+    });
+
     it('creates a task and appends to store', async () => {
       const created = await useTaskStore.getState().createTask(mockClient as IJMAPClient, { title: 'New Task' });
 
