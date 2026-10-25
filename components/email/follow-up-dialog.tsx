@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { format, startOfDay } from "date-fns";
+import { dayOfIso, isoDay } from "@/lib/task-dates";
 import { cn } from "@/lib/utils";
 import { Bell, Flag, Lock, Mail, Pencil, Plus, Users, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -67,16 +68,8 @@ import {
 import { FOLLOW_UP_ACTIONS, sanitizeFollowUpActions } from "@/lib/follow-up-actions";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
 
-const isoDay = (day: Date | null) => (day ? format(day, "yyyy-MM-dd") : "");
-
-/** A display date from the date input's "yyyy-MM-dd" and, optionally, the time input's "HH:mm". */
-function displayDateOf(day: string, time = "00:00"): Date | null {
-  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
-  const t = /^(\d{2}):(\d{2})/.exec(time);
-  if (!d || !t) return null;
-  const date = new Date(Number(d[1]), Number(d[2]) - 1, Number(d[3]), Number(t[1]), Number(t[2]));
-  return Number.isNaN(date.getTime()) ? null : date;
-}
+/** A day as the date input holds it; "" for none. */
+const dayInput = (day: Date | null) => (day ? isoDay(day) : "");
 
 /**
  * The dialog of the mail view, for the mail or the reminder without a mail
@@ -362,7 +355,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       ? (task ? task.title ?? "" : newTitle)
       : task ? shownAction(followUpAction(task)) : start ? shownAction(start.action) : t("actions.follow_up");
     // The due select shows the quick choice whose day it is, else the date itself.
-    const choice = FOLLOW_UP_CHOICES.find((c) => isoDay(scheduleFollowUp(c, now, workingTime).due) === isoDay(due)) ?? PICK;
+    const choice = FOLLOW_UP_CHOICES.find((c) => dayInput(scheduleFollowUp(c, now, workingTime).due) === dayInput(due)) ?? PICK;
     return {
       action,
       due,
@@ -384,11 +377,11 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
 
   const [action, setAction] = useState(initial.action);
   const [other, setOther] = useState(() => !isReminder && !actions.includes(initial.action));
-  const [due, setDue] = useState(isoDay(initial.due));
+  const [due, setDue] = useState(dayInput(initial.due));
   const [dueChoice, setDueChoice] = useState<DueChoice>(initial.choice);
   const [reminderOn, setReminderOn] = useState(!!initial.reminder);
   // Empty without a reminder, so turning one on proposes a time to come.
-  const [reminderDay, setReminderDay] = useState(isoDay(initial.reminder));
+  const [reminderDay, setReminderDay] = useState(dayInput(initial.reminder));
   const [reminderTime, setReminderTime] = useState(initial.reminder ? format(initial.reminder, "HH:mm") : "");
   const [reminderPast, setReminderPast] = useState(false);
   const [note, setNote] = useState(initial.note);
@@ -468,10 +461,10 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
 
   const pickChoice = (choice: (typeof choices)[number]) => {
     setDueChoice(choice.choice);
-    setDue(isoDay(choice.due));
+    setDue(dayInput(choice.due));
     if (choice.reminder) {
       setReminderOn(true);
-      setReminderDay(isoDay(choice.reminder));
+      setReminderDay(dayInput(choice.reminder));
       setReminderTime(format(choice.reminder, "HH:mm"));
     } else {
       setReminderOn(false);
@@ -501,14 +494,14 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
     setReminderOn(on);
     setReminderPast(false);
     if (on && (!reminderDay || !reminderTime)) {
-      const proposed = (isReminder ? proposedReminder : proposedFollowUpReminder)(displayDateOf(due), displayNow(), workingTime);
-      setReminderDay(isoDay(proposed));
+      const proposed = (isReminder ? proposedReminder : proposedFollowUpReminder)(dayOfIso(due), displayNow(), workingTime);
+      setReminderDay(dayInput(proposed));
       setReminderTime(format(proposed, "HH:mm"));
     }
   };
 
-  const reminder = reminderOn ? displayDateOf(reminderDay, reminderTime) : null;
-  const canSave = !busy && (!reminderOn || !!reminder) && (!due || !!displayDateOf(due)) && (!isReminder || !!action.trim());
+  const reminder = reminderOn ? dayOfIso(reminderDay, reminderTime) : null;
+  const canSave = !busy && (!reminderOn || !!reminder) && (!due || !!dayOfIso(due)) && (!isReminder || !!action.trim());
 
   // Where it is kept: the task's own list, else where a new one goes.
   const taskCalendarId = task ? Object.keys(task.calendarIds ?? {})[0] : undefined;
@@ -534,7 +527,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
     setBusy(true);
     const written = await controls.save({
       action,
-      due: displayDateOf(due),
+      due: dayOfIso(due),
       reminderAt: reminder ? fromDisplayDate(reminder) : null,
       note,
       // Not offered: the task's alarm mail stays as it is (settling on an answer takes it off).

@@ -1,4 +1,6 @@
 import type { CalendarTask } from "@/lib/jmap/types";
+import { stripMessageIdBrackets } from "@/lib/email-threading";
+import { parseDate } from "@/lib/task-dates";
 import { completedTaskPatch, type TaskPatch } from "@/lib/task-reminders";
 import {
   isHtmlNote,
@@ -48,13 +50,9 @@ export interface ThreadMail {
 /** The properties `findReply` reads, for an `Email/get`. */
 export const THREAD_MAIL_PROPERTIES = ["messageId", "inReplyTo", "references", "receivedAt", "mailboxIds", "keywords", "from"] as const;
 
-const bare = (id: unknown) => (typeof id === "string" ? id.trim().replace(/^<|>$/g, "") : "");
+const bare = (id: unknown) => (typeof id === "string" ? stripMessageIdBrackets(id) : "");
 
-function time(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const at = new Date(value).getTime();
-  return Number.isNaN(at) ? null : at;
-}
+const time = (value: string | null | undefined): number | null => parseDate(value)?.getTime() ?? null;
 
 export interface FindReplyInput {
   /** The flagged mail's Message-ID, without angle brackets. */

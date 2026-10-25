@@ -1,4 +1,4 @@
-import { addDays, differenceInCalendarDays, format, parseISO, startOfDay } from "date-fns";
+import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
 import type { CalendarEventAlert, CalendarLink, CalendarRelation, CalendarTask } from "@/lib/jmap/types";
 import { MAIL_ACCOUNT_PARAM } from "@/lib/deep-links";
 import { patchPath } from "@/lib/jmap/patch-object";
@@ -6,6 +6,8 @@ import { FOLLOW_UP_ACTIONS, type FollowUpActionKey } from "@/lib/follow-up-actio
 import { FOLLOW_UP_ACTION_NAMES, FOLLOW_UP_NO_SUBJECT } from "@/lib/follow-up-action-names";
 import { htmlToPlainText } from "@/lib/html-to-text";
 import { sanitizeEmailHtml } from "@/lib/email-sanitization";
+import { stripMessageIdBrackets } from "@/lib/email-threading";
+import { isoDay, parseDate, utcDateTime } from "@/lib/task-dates";
 
 /**
  * Follow-ups on a mail, as Outlook's "Flag for follow up" does them.
@@ -252,12 +254,7 @@ const SENDER_LINK_REL = "author";
 
 /** The task's JSCalendar `due`: a LocalDateTime at the start of the day. */
 function dueOf(due: Date | null): string | null {
-  return due ? `${format(due, "yyyy-MM-dd")}T00:00:00` : null;
-}
-
-/** A UTCDateTime without fractional seconds (RFC 8620 §1.4). */
-function utcDateTime(instant: Date): string {
-  return instant.toISOString().replace(/\.\d{3}Z$/, "Z");
+  return due ? `${isoDay(due)}T00:00:00` : null;
 }
 
 function alertAt(
@@ -287,8 +284,7 @@ function alertsOf(reminderAt: Date | null, mail = false): Record<string, Calenda
 function bareMessageId(messageId: string | readonly string[] | null | undefined): string | null {
   const first = Array.isArray(messageId) ? messageId[0] : messageId;
   if (typeof first !== "string") return null;
-  const bare = first.trim().replace(/^<|>$/g, "");
-  return bare || null;
+  return stripMessageIdBrackets(first) || null;
 }
 
 export interface FollowUpTaskInput {
@@ -381,12 +377,6 @@ function storedWatchValue(task: Partial<Pick<CalendarTask, "relatedTo">>, key: s
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
-function readTime(value: unknown): Date | null {
-  if (typeof value !== "string") return null;
-  const at = new Date(value);
-  return Number.isNaN(at.getTime()) ? null : at;
-}
-
 /**
  * The task's reply watch (`REPLY_WATCH_PROPERTY`), or null when it does not
  * settle itself on an answer. Only an object counts: Stalwart keeps a member
@@ -404,7 +394,7 @@ export function replyWatch(task: Partial<Pick<CalendarTask, "relatedTo">>): Repl
     return {
       key,
       messageId,
-      reminder: readTime(v.reminder),
+      reminder: parseDate(v.reminder),
       acknowledged: typeof v.acknowledged === "string" ? v.acknowledged : null,
       answeredAt: typeof v.answeredAt === "string" ? v.answeredAt : null,
     };
@@ -789,7 +779,7 @@ export function editFollowUpTask(
   // another day, so alerts relative to it still come at the right time.
   const time = dueTimeOf({ due: task.due ?? null, showWithoutTime: task.showWithoutTime ?? true });
   const patch: Partial<CalendarTask> = time
-    ? { due: edit.due ? `${format(edit.due, "yyyy-MM-dd")}T${time}` : null }
+    ? { due: edit.due ? `${isoDay(edit.due)}T${time}` : null }
     : { due: dueOf(edit.due), showWithoutTime: true };
   const settles = edit.settlesOnReply === undefined ? undefined : { on: edit.settlesOnReply, messageId: edit.messageId };
   Object.assign(patch, reminderPatch(task, edit.reminderAt, edit.mailReminder, settles));
@@ -961,9 +951,8 @@ export type FollowUpState = "open" | "overdue" | "done";
 
 /** The task's due day at midnight, or null when it has none. */
 export function followUpDueDay(task: Pick<CalendarTask, "due">): Date | null {
-  if (!task.due) return null;
-  const due = parseISO(task.due);
-  return Number.isNaN(due.getTime()) ? null : startOfDay(due);
+  const due = parseDate(task.due);
+  return due ? startOfDay(due) : null;
 }
 
 export function followUpState(task: Pick<CalendarTask, "due" | "progress">, now: Date): FollowUpState {

@@ -2,6 +2,7 @@ import { startOfDay } from "date-fns";
 import type { CalendarEventAlert, CalendarTask } from "@/lib/jmap/types";
 import { buildAlertKey, computeTaskFireTime } from "@/lib/calendar-alerts";
 import { applyPatchObject, patchPath } from "@/lib/jmap/patch-object";
+import { utcDateTime } from "@/lib/task-dates";
 import {
   DEFAULT_WORKING_TIME,
   followUpDueDay,
@@ -173,11 +174,6 @@ export function dueTaskReminders(
     reminders.push({ task, alertIds, fireTimeMs, key: buildAlertKey(task.id, alertIds.join("+"), fireTimeMs) });
   }
   return reminders.sort((a, b) => a.fireTimeMs - b.fireTimeMs || (a.task.title ?? "").localeCompare(b.task.title ?? ""));
-}
-
-/** A UTCDateTime without fractional seconds (RFC 8620 §1.4). */
-function utcDateTime(instant: Date): string {
-  return instant.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
 /**

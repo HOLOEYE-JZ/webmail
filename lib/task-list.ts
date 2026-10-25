@@ -1,4 +1,5 @@
-import { addYears, format, parseISO, startOfDay } from "date-fns";
+import { addYears, format, startOfDay } from "date-fns";
+import { parseDate } from "@/lib/task-dates";
 import type { CalendarEvent, CalendarRecurrenceRule, CalendarTask } from "@/lib/jmap/types";
 import { expandRecurringEvents } from "@/lib/recurrence-expansion";
 import { followUpDueDay, followUpMailRef, followUpReminder, isOpenFollowUp, isRecurringTask } from "@/lib/follow-ups";
@@ -71,12 +72,6 @@ function rulesOf(task: TaskTimes): CalendarRecurrenceRule[] {
   return task.recurrenceRules?.length ? task.recurrenceRules : raw.recurrenceRule ? [raw.recurrenceRule] : [];
 }
 
-function parsed(text: string | null | undefined): Date | null {
-  if (!text) return null;
-  const date = parseISO(text);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
 /**
  * A repeating task's next occurrence. The series runs from the task's start,
  * else its due date (RFC 8984 §5.2.4); each occurrence is due as far after
@@ -101,8 +96,8 @@ function computeNextOccurrence(task: TaskTimes, now: Date): NextOccurrence {
     excludedRecurrenceRules?: CalendarRecurrenceRule[] | null;
   };
   const rules = rulesOf(task);
-  const start = parsed(task.start);
-  const due = parsed(task.due);
+  const start = parseDate(task.start);
+  const due = parseDate(task.due);
   const anchor = start ?? due;
   if (rules.length === 0 || !anchor) return { kind: "ended" };
   const offset = start && due ? due.getTime() - start.getTime() : 0;
@@ -132,8 +127,8 @@ function computeNextOccurrence(task: TaskTimes, now: Date): NextOccurrence {
   );
   for (const occurrence of occurrences) {
     const override = occurrence.recurrenceId ? overrides?.[occurrence.recurrenceId] : undefined;
-    const occurrenceStart = parsed(occurrence.start);
-    const occurrenceDue = parsed(override?.due) ?? (occurrenceStart ? new Date(occurrenceStart.getTime() + offset) : null);
+    const occurrenceStart = parseDate(occurrence.start);
+    const occurrenceDue = parseDate(override?.due) ?? (occurrenceStart ? new Date(occurrenceStart.getTime() + offset) : null);
     if (!occurrenceDue || occurrenceDue.getTime() < from.getTime()) continue;
     if (!next || occurrenceDue.getTime() < next.getTime()) next = occurrenceDue;
   }
@@ -141,7 +136,7 @@ function computeNextOccurrence(task: TaskTimes, now: Date): NextOccurrence {
 
   // None to come: ended only when every rule is known to have run out.
   for (const rule of rules) {
-    const until = parsed(rule.until);
+    const until = parseDate(rule.until);
     if (until && until.getTime() < from.getTime()) continue;
     if (rule.count) {
       // Every date the rule made before today, exclusions included (they count, RFC 5545).
@@ -161,7 +156,7 @@ export function nextOccurrenceDay(task: TaskTimes, now: Date): Date | null {
 
 /** When a task is due as the list shows it: its due date-time, a repeating one's next occurrence's. */
 export function taskListDue(task: TaskTimes, now: Date): Date | null {
-  if (!isRecurringTask(task)) return parsed(task.due);
+  if (!isRecurringTask(task)) return parseDate(task.due);
   const next = nextOccurrence(task, now);
   return next.kind === "next" ? next.due : null;
 }

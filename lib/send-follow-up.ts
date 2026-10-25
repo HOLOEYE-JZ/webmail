@@ -1,6 +1,7 @@
 import type { FollowUpDetails } from "@/hooks/use-follow-ups";
 import type { TaskPerson } from "@/lib/group-follow-ups";
 import { perStoreEpoch } from "@/lib/store-epoch";
+import { dayOfIso, isoDay, parseDate } from "@/lib/task-dates";
 import { NO_ANSWER_CHOICES, scheduleNoAnswer, type NoAnswerChoice, type WorkingTime } from "@/lib/follow-ups";
 
 /**
@@ -41,27 +42,6 @@ export interface SendFollowUpDetails {
   person?: TaskPerson | null;
 }
 
-const pad = (n: number) => String(n).padStart(2, "0");
-
-/** A display date's day as "yyyy-MM-dd". */
-function isoDay(day: Date): string {
-  return `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`;
-}
-
-/** Midnight of a "yyyy-MM-dd" day (a display date), or null. */
-function dayOf(value: string | null | undefined): Date | null {
-  const m = typeof value === "string" ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(value) : null;
-  if (!m) return null;
-  const day = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  return Number.isNaN(day.getTime()) ? null : day;
-}
-
-function instantOf(value: string | null | undefined): Date | null {
-  if (typeof value !== "string") return null;
-  const at = new Date(value);
-  return Number.isNaN(at.getTime()) ? null : at;
-}
-
 /** The dialog's choices as plain data. */
 export function storedDetails(details: FollowUpDetails): SendFollowUpDetails {
   return {
@@ -80,8 +60,8 @@ export function storedDetails(details: FollowUpDetails): SendFollowUpDetails {
 export function detailsOf(stored: SendFollowUpDetails): FollowUpDetails {
   return {
     action: stored.action,
-    due: dayOf(stored.due),
-    reminderAt: instantOf(stored.reminderAt),
+    due: dayOfIso(stored.due),
+    reminderAt: parseDate(stored.reminderAt),
     note: stored.note,
     ...(stored.mailReminder !== undefined ? { mailReminder: stored.mailReminder } : {}),
     ...(stored.settlesOnReply !== undefined ? { settlesOnReply: stored.settlesOnReply } : {}),
@@ -124,8 +104,8 @@ export function readSendFollowUp(value: unknown): SendFollowUp | null {
   if (v.choice !== "custom" || !v.details || typeof v.details !== "object") return null;
   const d = v.details as Record<string, unknown>;
   if (typeof d.action !== "string" || typeof d.note !== "string") return null;
-  if (d.due !== null && dayOf(d.due as string) === null) return null;
-  if (d.reminderAt !== null && instantOf(d.reminderAt as string) === null) return null;
+  if (d.due !== null && dayOfIso(d.due) === null) return null;
+  if (d.reminderAt !== null && parseDate(d.reminderAt) === null) return null;
   const person = d.person;
   const validPerson = person === undefined || person === null
     || (typeof person === "object" && typeof (person as TaskPerson).email === "string" && typeof (person as TaskPerson).name === "string");

@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { onStarToggled, useEmailStore } from "@/stores/email-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
+import { stripMessageIdBrackets } from "@/lib/email-threading";
 import { perStoreEpoch } from "@/lib/store-epoch";
 import { completedTaskPatch } from "@/lib/task-reminders";
 import {
@@ -83,10 +84,6 @@ function refusalKey(action: FollowUpSyncAction, task: FollowUpSyncTask | undefin
   return `${what}:${action.taskId}:${task?.updated ?? ""}:${action.emailId}`;
 }
 
-function bare(messageId: unknown): string {
-  return typeof messageId === "string" ? messageId.trim().replace(/^<|>$/g, "") : "";
-}
-
 /**
  * The id of the mail with this Message-ID in the user's own account, or null.
  * Works where the server searches the header (Stalwart only with `headers`
@@ -97,7 +94,7 @@ async function findByMessageId(client: IJMAPClient, messageId: string | null): P
   if (!messageId) return null;
   try {
     const hits = await client.queryEmailFields({ header: ["Message-ID", `<${messageId}>`] }, ["messageId"], undefined, 10);
-    const hit = hits.find((h) => Array.isArray(h.messageId) && h.messageId.some((id) => bare(id) === messageId));
+    const hit = hits.find((h) => Array.isArray(h.messageId) && h.messageId.some((id) => typeof id === "string" && stripMessageIdBrackets(id) === messageId));
     return hit && typeof hit.id === "string" ? hit.id : null;
   } catch {
     return null;

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
+import { stripMessageIdBrackets } from "@/lib/email-threading";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import { rememberDraftFollowUp, sendFollowUpDetails, type SendFollowUp } from "@/lib/send-follow-up";
 import type { WorkingTime } from "@/lib/follow-ups";
@@ -44,12 +45,10 @@ export const SENT_COPY_WAITS_MS = [0, 2_000, 5_000, 15_000, 45_000] as const;
 
 const COPY_PROPERTIES = ["messageId", "mailboxIds", "keywords", "subject", "from", "receivedAt"];
 
-const bare = (id: string) => id.trim().replace(/^<|>$/g, "");
-
 function carries(fields: Record<string, unknown>, messageId: string | null): boolean {
   if (!messageId) return true;
   const ids = fields.messageId;
-  return Array.isArray(ids) && ids.some((id) => typeof id === "string" && bare(id) === messageId);
+  return Array.isArray(ids) && ids.some((id) => typeof id === "string" && stripMessageIdBrackets(id) === messageId);
 }
 
 function isFiled(fields: Record<string, unknown>): boolean {
