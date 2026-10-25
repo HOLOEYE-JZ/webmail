@@ -81,6 +81,8 @@ function makeClient() {
     queryEmailFields: vi.fn(async () => []),
     updateCalendarTask: vi.fn(async (id: string, _updates: Partial<CalendarTask>) => id),
     toggleStar: vi.fn(async (_id: string, _flagged: boolean) => {}),
+    // The login reaches its own account and the group mailbox `grp`.
+    hasAccountCapability: vi.fn((_capability: string, accountId?: string) => accountId === 'acc' || accountId === 'grp'),
   };
 }
 
@@ -266,6 +268,21 @@ describe('the reminders window', () => {
       { accountId: 'acc', emailId: 'M1', mailboxId: null, title: 'Offer 4711' }, { reuseReader: true },
     ));
     expect(push).not.toHaveBeenCalled();
+    openEmailTab.mockRestore();
+  });
+
+  it('in the Pro shell, opens a group mailbox\'s mail as a mail tab in its account', async () => {
+    proShell = true;
+    const openEmailTab = vi.spyOn(useProTabStore.getState(), 'openEmailTab').mockReturnValue('tab');
+    const task = followUp('f1', new Date(2026, 9, 28), ago(5));
+    task.links = { ...task.links, mail: { ...task.links!.mail, href: 'https://host/mail/message/M1?mailAccount=grp' } };
+    useTaskStore.setState({ tasks: [task] });
+    renderWindow();
+    await waitFor(() => expect(rows()).toHaveLength(1));
+    fireEvent.click(screen.getByTestId('reminders-open'));
+    await waitFor(() => expect(openEmailTab).toHaveBeenCalledWith(
+      { accountId: 'grp', mailAccountId: 'grp', emailId: 'M1', mailboxId: null, title: 'Offer 4711' }, { reuseReader: true },
+    ));
     openEmailTab.mockRestore();
   });
 

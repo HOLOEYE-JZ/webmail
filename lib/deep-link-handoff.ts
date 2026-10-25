@@ -1,4 +1,4 @@
-import type { AppSurface } from '@/lib/deep-links';
+import { buildMailMessageLink, type AppSurface } from '@/lib/deep-links';
 
 /**
  * Handoff for a deep link that has to survive a route change (#733).
@@ -89,4 +89,27 @@ export function subscribePendingDeepLink(
 
 export function clearPendingDeepLinks(): void {
   pending.clear();
+}
+
+// The JMAP accounts of message links the app follows itself, by Email id.
+const followedMessageAccounts = new Map<string, string>();
+
+/**
+ * The path of a message link the app is about to follow with its router (a
+ * follow-up task's "Open mail" from the calendar), its JMAP account kept
+ * here as well. On a client-side navigation the mail view renders before the
+ * router writes the new address and rewrites it before it opens the link, so
+ * it never reads `?mailAccount=` itself; it takes the account from here.
+ */
+export function followMessageLink(emailId: string, mailAccountId?: string | null): string {
+  if (mailAccountId) followedMessageAccounts.set(emailId, mailAccountId);
+  else followedMessageAccounts.delete(emailId);
+  return buildMailMessageLink(emailId, mailAccountId);
+}
+
+/** The account a followed message link named, once, then forgotten. */
+export function takeFollowedMessageAccount(emailId: string): string | undefined {
+  const accountId = followedMessageAccounts.get(emailId);
+  followedMessageAccounts.delete(emailId);
+  return accountId;
 }

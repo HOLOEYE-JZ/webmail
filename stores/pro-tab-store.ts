@@ -74,6 +74,12 @@ export interface ProEmailTabData {
    * search) - bare email ids are ambiguous across logins (#847).
    */
   clientAccountId?: string;
+  /**
+   * Owner JMAP account of a message opened by a permalink that names one
+   * (`?mailAccount=`, a group mailbox's mail) and no folder; fetched through
+   * the active login.
+   */
+  mailAccountId?: string;
 }
 
 export interface ProFolderTabData {

@@ -82,6 +82,10 @@ export function FollowUpDialogHost() {
 /** What the form needs of a mail's follow-up or of a reminder. */
 interface FormControls {
   available: boolean;
+  /** A group mailbox's mail: kept only in the user's own list, nothing set on the mail. */
+  onlyMe?: boolean;
+  /** The group mailbox's name, when known. */
+  mailboxName?: string | null;
   task: CalendarTask | null;
   workingTime: WorkingTime;
   save: (details: FollowUpDetails) => Promise<boolean>;
@@ -279,9 +283,12 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   };
 
   const sender = email?.from?.[0]?.name || email?.from?.[0]?.email;
+  // On a group mailbox's mail the follow-up is the user's alone ("only me"): the list says so.
   const kept = isReminder
     ? (list?.name ? t("reminder.kept_in", { list: list.name }) : t("reminder.kept_in_tasks"))
-    : (list?.name ? t("kept_in", { list: list.name }) : t("kept_in_tasks"));
+    : controls.onlyMe
+      ? (list?.name ? t("kept_only_me", { list: list.name }) : t("kept_only_me_tasks"))
+      : (list?.name ? t("kept_in", { list: list.name }) : t("kept_in_tasks"));
   const heading = isReminder
     ? (task ? t("reminder.dialog_title_edit") : t("reminder.dialog_title"))
     : (task ? t("dialog_title_edit") : t("dialog_title"));
@@ -336,7 +343,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
             <p className="flex items-center gap-1.5 truncate text-muted-foreground">
               <Mail className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">
-                {[sender, email?.subject || t("no_subject")].filter(Boolean).join(" · ")}
+                {[controls.mailboxName, sender, email?.subject || t("no_subject")].filter(Boolean).join(" · ")}
               </span>
             </p>
 

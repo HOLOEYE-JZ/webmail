@@ -572,6 +572,34 @@ function decoded(value: string): string {
   }
 }
 
+/**
+ * Whether a follow-up's mail lies in another JMAP account than the user's own
+ * (a group mailbox's): such a follow-up is the user's alone ("only me"), and
+ * nothing is ever set on the mail.
+ */
+export function isOtherAccountMail(ref: FollowUpMailRef | null, primaryAccountId: string): boolean {
+  return !!ref?.accountId && ref.accountId !== primaryAccountId;
+}
+
+/**
+ * The JMAP account a mail lies in by its own `mailboxIds`: a mail of another
+ * account than the login's own (a group mailbox's) has them namespaced
+ * `<account>:<mailbox>` (`getEmail`, the folder and search fetches do so;
+ * JMAP ids hold no ":"), one of the own account bare. Undefined when it names
+ * no folder, null when its folders name several accounts.
+ */
+export function mailAccountOfMailboxIds(
+  mailboxIds: Record<string, boolean> | null | undefined,
+  primaryAccountId: string,
+): string | null | undefined {
+  const accounts = new Set(Object.keys(mailboxIds ?? {}).map((id) => {
+    const at = id.indexOf(":");
+    return at === -1 ? primaryAccountId : id.slice(0, at);
+  }));
+  if (accounts.size === 0) return undefined;
+  return accounts.size === 1 ? [...accounts][0] : null;
+}
+
 /** The mail a follow-up task links to, or null when it links none. */
 export function followUpMailRef(task: Pick<CalendarTask, "links">): FollowUpMailRef | null {
   for (const link of Object.values(task.links ?? {})) {
@@ -632,17 +660,23 @@ export function relinkFollowUpTask(task: Pick<CalendarTask, "links">, emailId: s
 
 /**
  * The follow-ups of the user's own task list by the id of their mail, for the
- * mails of `mailAccountId` (a link naming no account counts as it). Tasks of
- * shared calendars are left out. Of several on one mail the open one wins,
- * then the latest.
+ * mails of `mailAccountId`. A link naming no account names the user's own
+ * mail account, `primaryAccountId`; without it, such a link counts for any.
+ * Tasks of shared calendars are left out. Of several on one mail the open one
+ * wins, then the latest.
  */
-export function followUpsByEmailId(tasks: readonly CalendarTask[], mailAccountId?: string | null): Map<string, CalendarTask> {
+export function followUpsByEmailId(
+  tasks: readonly CalendarTask[],
+  mailAccountId?: string | null,
+  primaryAccountId?: string | null,
+): Map<string, CalendarTask> {
   const byEmail = new Map<string, CalendarTask>();
   for (const task of tasks) {
     if (task.isShared || task.progress === "cancelled") continue;
     const ref = followUpMailRef(task);
     if (!ref) continue;
-    if (ref.accountId && mailAccountId && ref.accountId !== mailAccountId) continue;
+    const account = ref.accountId ?? primaryAccountId ?? null;
+    if (account && mailAccountId && account !== mailAccountId) continue;
     const other = byEmail.get(ref.emailId);
     if (!other || ranksAbove(task, other)) byEmail.set(ref.emailId, task);
   }

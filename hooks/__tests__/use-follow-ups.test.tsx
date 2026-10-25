@@ -41,6 +41,8 @@ function makeClient() {
     deleteCalendarTask: vi.fn(async () => {}),
     toggleStar: vi.fn(async () => {}),
     getCalendarTasks: vi.fn(async () => [] as CalendarTask[]),
+    // The login reaches its own account and the group mailbox `grp`.
+    hasAccountCapability: vi.fn((_capability: string, accountId?: string) => accountId === 'acc' || accountId === 'grp'),
   };
 }
 
@@ -54,7 +56,7 @@ beforeEach(() => {
   useSettingsStore.setState({ enableCalendarTasks: true });
   useCalendarStore.setState({ supportsCalendar: true, calendars });
   useTaskStore.setState({ tasks: [] });
-  useEmailStore.setState({ emails: [mail], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null });
+  useEmailStore.setState({ emails: [mail], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null, searchQuery: '', searchMailboxId: '' });
 });
 
 const flagged = () => !!useEmailStore.getState().emails[0].keywords.$flagged;
@@ -107,9 +109,9 @@ describe('useFollowUp', () => {
     expect(flagged()).toBe(true);
   });
 
-  it('offers nothing for a mail of a shared folder or with tasks off', () => {
-    useEmailStore.setState({ mailboxes: [{ id: 'shared', isShared: true } as never], selectedMailbox: 'shared' });
-    const shared = renderHook(() => useFollowUp(mail));
+  it('offers nothing for a mail of a shared account the login does not reach, or with tasks off', () => {
+    useEmailStore.setState({ mailboxes: [{ id: 'shared:x', isShared: true, accountId: 'shared' } as never], selectedMailbox: 'shared:x' });
+    const shared = renderHook(() => useFollowUp({ ...mail, mailboxIds: { 'shared:x': true } }));
     expect(shared.result.current.available).toBe(false);
     shared.unmount();
 
@@ -143,7 +145,19 @@ describe('useFollowUp', () => {
     useEmailStore.setState({ emails: [] });
     const { result } = renderHook(() => useFollowUp(mail));
     await act(() => result.current.apply('today'));
-    expect(client.toggleStar).toHaveBeenCalledWith('M1', true);
+    // The account named, so no mail of the same id elsewhere is touched.
+    expect(client.toggleStar).toHaveBeenCalledWith('M1', true, 'acc');
+  });
+
+  it('flags the listed row of the own account only, never a group mail with the same id', async () => {
+    const groupRow = { ...mail, mailboxIds: { 'grp:inbox': true }, keywords: {} } as Email;
+    useEmailStore.setState({ emails: [groupRow, { ...mail, keywords: {} }] });
+    const { result } = renderHook(() => useFollowUp(useEmailStore.getState().emails[1]));
+    await act(() => result.current.apply('today'));
+    expect(client.toggleStar).toHaveBeenCalledWith('M1', true, 'acc');
+    const [group, own] = useEmailStore.getState().emails;
+    expect(group.keywords.$flagged).toBeUndefined();
+    expect(own.keywords.$flagged).toBe(true);
   });
 
   it('says the follow-up stands when only the flag failed', async () => {
@@ -161,6 +175,76 @@ describe('useFollowUp', () => {
     await act(() => result.current.apply('today'));
     expect(useToastStore.getState().toasts.map((t) => t.title)).toEqual(['failed']);
     expect(client.toggleStar).not.toHaveBeenCalled();
+  });
+});
+
+describe('useFollowUp on a group mailbox\'s mail ("only me")', () => {
+  const groupFolder = { id: 'grp:inbox', originalId: 'inbox', accountId: 'grp', accountName: 'sales@', isShared: true } as never;
+  // As the folder and search fetches give it: its folders namespaced by the account.
+  const groupMail = { ...mail, mailboxIds: { 'grp:inbox': true } } as Email;
+
+  beforeEach(() => {
+    useEmailStore.setState({ emails: [groupMail], mailboxes: [groupFolder], selectedMailbox: 'grp:inbox' });
+  });
+
+  it('keeps the follow-up in the own task list, links the group\'s mail and never flags it', async () => {
+    const { result } = renderHook(() => useFollowUp(useEmailStore.getState().emails[0]));
+    expect(result.current.available).toBe(true);
+    expect(result.current.onlyMe).toBe(true);
+    expect(result.current.mailboxName).toBe('sales@');
+
+    await act(() => result.current.quickClick());
+    const written = client.createCalendarTask.mock.calls[0][0];
+    expect(written.calendarIds).toEqual({ tasks: true });
+    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?mailAccount=grp$/);
+    // Its Message-ID read in the group's account.
+    expect(client.getEmailFields).toHaveBeenCalledWith(['M1'], ['messageId'], 'grp');
+    expect(result.current.task?.id).toBe('task-1');
+
+    await act(() => result.current.quickClick());
+    expect(result.current.task?.progress).toBe('completed');
+    await act(() => result.current.quickClick());
+    expect(result.current.task).toBeNull();
+    expect(client.toggleStar).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().emails[0].keywords.$flagged).toBeUndefined();
+  });
+
+  it('finds the group\'s follow-up at its mail, never the own one of a mail with the same id', () => {
+    const link = (account: string) => ({ mail: { '@type': 'Link', href: `https://h/mail/message/M1?mailAccount=${account}`, rel: 'describedby', title: 'Offer 4711' } });
+    const task = (id: string, account: string) => ({ id, calendarIds: { tasks: true }, progress: 'needs-action', links: link(account) }) as unknown as CalendarTask;
+    useTaskStore.setState({ tasks: [task('own', 'acc'), task('group', 'grp')] });
+    const inGroup = renderHook(() => useFollowUp(groupMail));
+    expect(inGroup.result.current.task?.id).toBe('group');
+    inGroup.unmount();
+
+    // The own mail of the same id, even while the group's folder is open.
+    const own = renderHook(() => useFollowUp(mail));
+    expect(own.result.current.task?.id).toBe('own');
+    expect(own.result.current.onlyMe).toBe(false);
+  });
+
+  it('takes the account from the mail before the folder on screen', () => {
+    // A group mail while the own inbox is open: a narrowed search on the group's folder.
+    useEmailStore.setState({ mailboxes: [groupFolder, { id: 'inbox' } as never], selectedMailbox: 'inbox', searchQuery: 'offer', searchMailboxId: 'grp:inbox' });
+    expect(renderHook(() => useFollowUp(groupMail)).result.current.onlyMe).toBe(true);
+    // Stamped (an aggregate view, a Pro tab): the stamp decides.
+    expect(renderHook(() => useFollowUp({ ...mail, sourceClientAccountId: 'login', sourceAccountId: 'grp' })).result.current.onlyMe).toBe(true);
+  });
+
+  it('falls back to the folder searched for a mail naming no folder, and offers nothing when that is not certain', () => {
+    const bare = { ...mail, mailboxIds: {} } as Email;
+    useEmailStore.setState({ mailboxes: [groupFolder, { id: 'inbox' } as never], selectedMailbox: 'inbox', searchQuery: 'offer', searchMailboxId: 'grp:inbox' });
+    expect(renderHook(() => useFollowUp(bare)).result.current.onlyMe).toBe(true);
+    // Across all folders the account is not certain.
+    useEmailStore.setState({ searchMailboxId: '' });
+    expect(renderHook(() => useFollowUp(bare)).result.current.available).toBe(false);
+    // Folders of two accounts: neither.
+    expect(renderHook(() => useFollowUp({ ...mail, mailboxIds: { inbox: true, 'grp:inbox': true } })).result.current.available).toBe(false);
+  });
+
+  it('offers nothing for an account the login does not reach, or a mail of another login', () => {
+    expect(renderHook(() => useFollowUp({ ...mail, mailboxIds: { 'elsewhere:inbox': true } })).result.current.available).toBe(false);
+    expect(renderHook(() => useFollowUp({ ...mail, sourceClientAccountId: 'other-login', sourceAccountId: 'grp' })).result.current.available).toBe(false);
   });
 });
 

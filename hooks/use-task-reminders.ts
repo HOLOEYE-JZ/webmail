@@ -11,7 +11,8 @@ import { useTaskStore } from "@/stores/task-store";
 import { useProTabStore } from "@/stores/pro-tab-store";
 import { useToastStore } from "@/stores/toast-store";
 import { playNotificationSound } from "@/lib/notification-sound";
-import { buildMailMessageLink } from "@/lib/deep-links";
+import { groupMailAccountOf } from "@/lib/deep-links";
+import { followMessageLink } from "@/lib/deep-link-handoff";
 import { dueTaskReminders, type TaskReminder } from "@/lib/task-reminders";
 import { followUpMailRef, followUpMailSummary, followUpNote } from "@/lib/follow-ups";
 import { followUpCalendars } from "./use-follow-ups";
@@ -86,13 +87,22 @@ export function openReminderMail(
     return;
   }
   if (fallback.proShell) {
+    // A group mailbox's mail is fetched in its account through the active login.
+    const client = useAuthStore.getState().client;
+    const groupAccountId = client ? groupMailAccountOf(mailAccountId, client) : undefined;
     useProTabStore.getState().openEmailTab(
-      { accountId: mailAccountId ?? "", emailId, mailboxId: null, title: fallback.title },
+      {
+        accountId: mailAccountId ?? "",
+        ...(groupAccountId ? { mailAccountId: groupAccountId } : {}),
+        emailId,
+        mailboxId: null,
+        title: fallback.title,
+      },
       { reuseReader: true },
     );
     return;
   }
-  fallback.navigate(buildMailMessageLink(emailId, mailAccountId));
+  fallback.navigate(followMessageLink(emailId, mailAccountId));
 }
 
 /** Whether reminders are shown at all: calendar notifications and tasks on, signed in. */

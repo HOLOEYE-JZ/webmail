@@ -10,9 +10,10 @@ import { format, parseISO } from "date-fns";
 import type { CalendarTask, Calendar, CalendarEventAlert } from "@/lib/jmap/types";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { taskToView } from "@/lib/plugin-projection";
-import { followUpMailSummary } from "@/lib/follow-ups";
+import { followUpMailRef, followUpMailSummary, isOtherAccountMail } from "@/lib/follow-ups";
 import { useFollowUpMail } from "@/hooks/use-follow-up-sync";
-import { buildMailPath } from "@/lib/deep-links";
+import { followMessageLink } from "@/lib/deep-link-handoff";
+import { useAuthStore } from "@/stores/auth-store";
 import { useRouter } from "@/i18n/navigation";
 
 interface TaskModalProps {
@@ -58,11 +59,15 @@ export function TaskModal({
   const isEdit = !!task;
   // A follow-up on a mail links to it: the mail found by its id (a moved one
   // keeps it) or its Message-ID, or named as gone with what the task kept of
-  // it. Only for a mail of the primary account (or a link naming none).
+  // it. For a mail of the user's own account or of a group mailbox the login
+  // reaches; the link names the group's account, so its mail opens there.
   const followUpMail = useFollowUpMail(task);
   const followUpMailId = followUpMail && (followUpMail.kind === "present" || followUpMail.kind === "unknown")
     ? followUpMail.emailId
     : null;
+  const primaryAccountId = useAuthStore((s) => s.client?.getAccountId() ?? "");
+  const followUpRef = task ? followUpMailRef(task) : null;
+  const followUpMailAccount = isOtherAccountMail(followUpRef, primaryAccountId) ? followUpRef?.accountId ?? null : null;
   const followUpMailSummaryOf = task && followUpMail ? followUpMailSummary(task) : null;
   const followUpMailText = [followUpMailSummaryOf?.sender, followUpMailSummaryOf?.subject].filter(Boolean).join(" · ");
   const titleRef = useRef<HTMLInputElement>(null);
@@ -215,7 +220,7 @@ export function TaskModal({
                 data-testid="task-open-mail"
                 onClick={() => {
                   onClose();
-                  router.push(buildMailPath({ mailboxId: null, emailId: followUpMailId, threadId: null }) as never);
+                  router.push(followMessageLink(followUpMailId, followUpMailAccount) as never);
                 }}
                 className="text-primary hover:underline"
               >

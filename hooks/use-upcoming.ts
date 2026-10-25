@@ -17,6 +17,7 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { locateFollowUpMail } from "./use-follow-up-sync";
 import {
   followUpCalendars,
+  reachesMailAccount,
   useFollowUpDialog,
   useFollowUpsEnabled,
   useWorkingTime,
@@ -90,9 +91,11 @@ export async function openTaskItem(
     useFollowUpDialog.getState().openReminder({ taskId: task.id });
     return;
   }
-  const found = mail.accountId && mail.accountId !== client.getAccountId()
-    ? { kind: "unknown" as const, emailId: mail.emailId }
-    : await locateFollowUpMail(client, task);
+  // A group mailbox's mail is looked for in its account; one of an account
+  // the login does not reach is not found, never the own mail of the same id.
+  const found = reachesMailAccount(client, mail.accountId)
+    ? await locateFollowUpMail(client, task)
+    : { kind: "gone" as const };
   if (found.kind === "present" || found.kind === "unknown") {
     openMail(found.emailId, mail.accountId);
     return;

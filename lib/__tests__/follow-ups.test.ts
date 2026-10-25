@@ -20,6 +20,8 @@ import {
   followUpReminder,
   followUpState,
   followUpsByEmailId,
+  isOtherAccountMail,
+  mailAccountOfMailboxIds,
   rescheduleFollowUpTask,
   scheduleFollowUp,
   threadFollowUpEmail,
@@ -284,6 +286,26 @@ describe('followUpsByEmailId', () => {
     const group = makeTask('group', { links: mailLink('/mail/message/M2?mailAccount=group') });
     const unnamed = makeTask('unnamed', { links: mailLink('/mail/message/M3') });
     expect([...followUpsByEmailId([own, group, unnamed], 'me').keys()]).toEqual(['M1', 'M3']);
+  });
+
+  it('counts a link naming no account as the own account\'s, never a group mailbox\'s', () => {
+    const own = makeTask('own', { links: mailLink('/mail/message/M1?mailAccount=me') });
+    const group = makeTask('group', { links: mailLink('/mail/message/M1?mailAccount=group') });
+    const unnamed = makeTask('unnamed', { links: mailLink('/mail/message/M3') });
+    // The same Email id in two accounts: each account's follow-up at its own mail.
+    expect(followUpsByEmailId([own, group, unnamed], 'group', 'me').get('M1')?.id).toBe('group');
+    expect([...followUpsByEmailId([own, group, unnamed], 'group', 'me').keys()]).toEqual(['M1']);
+    expect(followUpsByEmailId([own, group, unnamed], 'me', 'me').get('M1')?.id).toBe('own');
+    expect([...followUpsByEmailId([own, group, unnamed], 'me', 'me').keys()]).toEqual(['M1', 'M3']);
+  });
+});
+
+describe('isOtherAccountMail', () => {
+  it('is a mail of a group mailbox: a link naming another account than the own', () => {
+    expect(isOtherAccountMail({ emailId: 'M1', accountId: 'group' }, 'me')).toBe(true);
+    expect(isOtherAccountMail({ emailId: 'M1', accountId: 'me' }, 'me')).toBe(false);
+    expect(isOtherAccountMail({ emailId: 'M1', accountId: null }, 'me')).toBe(false);
+    expect(isOtherAccountMail(null, 'me')).toBe(false);
   });
 });
 
@@ -566,5 +588,18 @@ describe('the reminder also as a mail (its own alert action: email, a second ahe
     expect(mailReminderOffered({ isShared: true })).toBe(false);
     expect(mailReminderOffered(null)).toBe(false);
     expect(mailReminderOffered({ isShared: false }, true)).toBe(false);
+  });
+});
+
+describe('mailAccountOfMailboxIds', () => {
+  it('reads the account from namespaced folder ids, bare ones being the own account', () => {
+    expect(mailAccountOfMailboxIds({ 'grp:inbox': true, 'grp:done': true }, 'me')).toBe('grp');
+    expect(mailAccountOfMailboxIds({ inbox: true }, 'me')).toBe('me');
+  });
+
+  it('is undefined without folders and null for folders of several accounts', () => {
+    expect(mailAccountOfMailboxIds({}, 'me')).toBeUndefined();
+    expect(mailAccountOfMailboxIds(undefined, 'me')).toBeUndefined();
+    expect(mailAccountOfMailboxIds({ inbox: true, 'grp:inbox': true }, 'me')).toBeNull();
   });
 });

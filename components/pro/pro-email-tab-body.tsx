@@ -159,10 +159,19 @@ export function ProEmailView({ emailId, client: clientOverride, accountId, onLoa
       const source = accountId || clientOverride
         ? { client, accountId: accountId ?? client.getAccountId() }
         : resolveEmailBlobContext(ref ?? null, client);
+      // Fetched in a named account (or through another login's client), the
+      // mail is stamped with both, so what reads its account later (the
+      // follow-up, the flag) never takes it for the active login's own mail.
+      const auth = useAuthStore.getState();
+      const loginId = client === auth.client
+        ? auth.activeAccountId ?? undefined
+        : Array.from(auth.getAllConnectedClients?.() ?? []).find(([, c]) => c === client)?.[0];
       load = {
         emailId, clientOverride, accountId, blobSource: source, applied: false,
         promise: accountId || clientOverride
-          ? client.getEmail(emailId, source.accountId)
+          ? client.getEmail(emailId, source.accountId).then((loaded) => (loaded
+            ? { ...loaded, sourceAccountId: source.accountId, ...(loginId ? { sourceClientAccountId: loginId } : {}) }
+            : loaded))
           : fetchEmailContent(client, emailId),
       };
       loadRef.current = load;
@@ -474,11 +483,13 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
   // Messages opened out of a shared/group folder must be fetched with the
   // owner's accountId - fetchEmailContent's fallback derives it from the
   // globally selected mailbox, which is unrelated to this tab.
+  // A permalink naming a group mailbox's account (a follow-up's link) has no
+  // folder: it names the owner itself.
   const ownerAccountId = useMemo(() => {
-    if (!data.mailboxId) return undefined;
+    if (!data.mailboxId) return data.mailAccountId;
     const mb = mailboxes.find((m) => m.id === data.mailboxId);
     return mb?.isShared ? mb.accountId : undefined;
-  }, [mailboxes, data.mailboxId]);
+  }, [mailboxes, data.mailboxId, data.mailAccountId]);
 
   // A hit opened from another login (global search) is fetched through that
   // login's client, targeting the owner accountId stamped on the hit (#847).

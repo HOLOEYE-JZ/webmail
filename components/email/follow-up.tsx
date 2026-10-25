@@ -113,7 +113,7 @@ export function FollowUpMenuItems({ controls, onClose, heading = true }: {
 
   return (
     <>
-      {heading && <ContextMenuHeader>{t("menu_title")}</ContextMenuHeader>}
+      {heading && <ContextMenuHeader>{controls.onlyMe ? t("menu_title_only_me") : t("menu_title")}</ContextMenuHeader>}
       {FOLLOW_UP_CHOICES.map((choice) => {
         const { due, reminder } = scheduleFollowUp(choice, now, workingTime);
         // The reminder's time, with its weekday when it comes before the due day.
@@ -230,12 +230,13 @@ export function FollowUpFlagButton({ email, className, onlyWhenSet = false, reve
 
 /**
  * The row's chip: "⚑ due tomorrow", "⚑ Call · due Thu · 🔔 Wed 10:00", red
- * "overdue for 3 days", "✓ completed".
+ * "overdue for 3 days", "✓ completed"; on a group mailbox's mail "⚑ only me ·
+ * due Thu", since no colleague sees it.
  */
 export function FollowUpChip({ email, className }: { email: Email; className?: string }) {
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
-  const { available, task } = useFollowUp(email);
+  const { available, onlyMe, task } = useFollowUp(email);
   if (!available || !task) return null;
   const now = displayNow();
   const state = followUpState(task, now);
@@ -243,12 +244,15 @@ export function FollowUpChip({ email, className }: { email: Email; className?: s
   const action = state === "done" ? null : fmt.action(task);
   const reminderAt = state === "done" ? null : followUpReminder(task);
   const reminder = reminderAt ? fmt.reminder(reminderAt, now) : null;
-  const text = state === "done" ? t("done") : [action, fmt.due(task, now)].filter(Boolean).join(" · ");
+  const text = [onlyMe && t("only_me"), ...(state === "done" ? [t("done")] : [action, fmt.due(task, now)])]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <span
       data-testid="follow-up-chip"
       data-follow-up={state}
-      title={[text, reminder && t("bar_reminder", { when: reminder })].filter(Boolean).join(" · ")}
+      data-only-me={onlyMe || undefined}
+      title={[text, reminder && t("bar_reminder", { when: reminder }), onlyMe && t("kept_only_me_tasks")].filter(Boolean).join(" · ")}
       className={cn("inline-flex max-w-[16rem] shrink-0 items-center gap-1 truncate rounded-full px-2 py-0.5 text-xs", STATE_CLASSES[state], className)}
     >
       <Icon className="h-3 w-3 shrink-0" />
@@ -298,7 +302,8 @@ export function FollowUpReaderButton({ email }: { email: Email }) {
 
 /**
  * The reader's bar while the mail has a follow-up: what, due, reminder, note;
- * Complete, Change …, Remove.
+ * Complete, Change …, Remove. On a group mailbox's mail it starts with "only
+ * me": the user's own task, which no colleague sees.
  */
 export function FollowUpInfoBar({ email }: { email: Email }) {
   const t = useTranslations("follow_up");
@@ -319,11 +324,18 @@ export function FollowUpInfoBar({ email }: { email: Email }) {
     <div
       data-testid="follow-up-bar"
       data-follow-up={state}
+      data-only-me={controls.onlyMe || undefined}
       role="status"
       className={cn("border-b border-border px-6 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", STATE_CLASSES[state])}
     >
       <Icon className="w-4 h-4 shrink-0" />
       <span className="flex-1 min-w-[12rem]">
+        {controls.onlyMe && (
+          <>
+            <span data-testid="follow-up-bar-only-me" title={t("kept_only_me_tasks")}>{t("only_me")}</span>
+            {sep}
+          </>
+        )}
         {state === "done" ? t("bar_done") : (
           <>
             <b data-testid="follow-up-bar-action">{fmt.action(task) ?? t("bar_action")}</b>

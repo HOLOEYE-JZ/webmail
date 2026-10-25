@@ -81,6 +81,8 @@ function makeClient() {
     updateCalendarTask: vi.fn(async (id: string, _updates: Partial<CalendarTask>) => id),
     deleteCalendarTask: vi.fn(async () => {}),
     toggleStar: vi.fn(async (_id: string, _flagged: boolean, _accountId?: string) => {}),
+    // The login reaches its own account and the group mailbox `grp`.
+    hasAccountCapability: vi.fn((_capability: string, accountId?: string) => accountId === 'acc' || accountId === 'grp'),
   };
 }
 
@@ -219,6 +221,34 @@ describe('UpcomingPane', () => {
 
     fireEvent.click(within(screen.getByTestId('upcoming-group-tomorrow')).getByTestId('upcoming-open'));
     expect(useFollowUpDialog.getState().reminder).toEqual({ taskId: 'r1' });
+  });
+
+  it('opens a group mailbox\'s mail in its account, and completes its follow-up without a flag', async () => {
+    const onOpenMail = vi.fn();
+    const groupFollowUp = { ...mailFollowUp('g1', day(28)) };
+    groupFollowUp.links = { ...groupFollowUp.links, mail: { ...groupFollowUp.links!.mail, href: 'https://host/mail/message/M1?mailAccount=grp' } };
+    useTaskStore.setState({ tasks: [groupFollowUp] });
+    render(<UpcomingPane onOpenMail={onOpenMail} />);
+    await act(async () => { fireEvent.click(screen.getByTestId('upcoming-open')); });
+    // Looked for in the group's account, then opened there.
+    await waitFor(() => expect(onOpenMail).toHaveBeenCalledWith('M1', 'grp'));
+    expect(client.getEmailFields).toHaveBeenCalledWith(['M1'], ['id'], 'grp');
+
+    await act(async () => { fireEvent.click(screen.getByTestId('upcoming-done')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
+    expect(client.toggleStar).not.toHaveBeenCalled();
+  });
+
+  it('opens no mail of an account the login does not reach, never the own one of the same id', async () => {
+    const onOpenMail = vi.fn();
+    const elsewhere = { ...mailFollowUp('e1', day(28)) };
+    elsewhere.links = { ...elsewhere.links, mail: { ...elsewhere.links!.mail, href: 'https://host/mail/message/M1?mailAccount=elsewhere' } };
+    useTaskStore.setState({ tasks: [elsewhere] });
+    render(<UpcomingPane onOpenMail={onOpenMail} />);
+    await act(async () => { fireEvent.click(screen.getByTestId('upcoming-open')); });
+    await waitFor(() => expect(useFollowUpDialog.getState().reminder).toEqual({ taskId: 'e1' }));
+    expect(onOpenMail).not.toHaveBeenCalled();
+    expect(client.getEmailFields).not.toHaveBeenCalled();
   });
 
   it('hides itself, kept in the settings', () => {

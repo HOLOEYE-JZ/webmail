@@ -30,6 +30,7 @@ import {
   markUnstarredHere,
   mirrorFlag,
   onFollowUpChanged,
+  reachesMailAccount,
   unstarredHereMails,
   useFollowUpsEnabled,
 } from "./use-follow-ups";
@@ -142,11 +143,15 @@ export async function locateFollowUpMail(client: IJMAPClient, task: CalendarTask
   return { kind: "present", emailId: again };
 }
 
-/** Where the mail of a task shown in the task dialog is; null for a task without one. */
+/**
+ * Where the mail of a task shown in the task dialog is; null for a task
+ * without one, or whose mail lies in an account the login does not reach.
+ */
 export function useFollowUpMail(task: CalendarTask | null | undefined): FollowUpMailState | null {
   const client = useAuthStore((s) => s.client);
   const ref = task && !task.isShared ? followUpMailRef(task) : null;
-  const ownMail = !!ref && !!client && (!ref.accountId || ref.accountId === client.getAccountId());
+  // The user's own mail, or a group mailbox's the login reaches.
+  const ownMail = !!ref && reachesMailAccount(client, ref.accountId);
   const [state, setState] = useState<{ taskId: string; mail: FollowUpMailState } | null>(null);
   const taskId = task?.id;
   useEffect(() => {
@@ -178,7 +183,8 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
   const mailAccountId = client.getAccountId();
   const key = mirrorKey(loginId, mailAccountId);
   const mirror = readMirror(key);
-  const index = followUpsByEmailId(taskState.tasks, mailAccountId);
+  // A group mailbox's mail never carries the flag: its follow-ups are left out.
+  const index = followUpsByEmailId(taskState.tasks, mailAccountId, mailAccountId);
 
   const tasks: FollowUpSyncTask[] = [];
   const taskByEmail = new Map<string, CalendarTask>();
@@ -266,7 +272,7 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
         continue;
       }
       const serverFlagged = flags.get(action.emailId) ?? undefined;
-      const written = await mirrorFlag(client, { id: action.emailId, keywords: {} }, action.flagged, serverFlagged);
+      const written = await mirrorFlag(client, { id: action.emailId, keywords: {} }, action.flagged, mailAccountId, serverFlagged);
       if (!written) {
         refused.add(refusal);
         keep(action.taskId);
@@ -322,7 +328,7 @@ async function completeUnstarred(client: IJMAPClient, taskId: string, emailId: s
     debug.error("follow-up: not completed after the star was taken off", error);
   }
   try {
-    if (await mirrorFlag(client, { id: emailId, keywords: {} }, true, false)) {
+    if (await mirrorFlag(client, { id: emailId, keywords: {} }, true, client.getAccountId(), false)) {
       forgetUnstarredHere(emailId);
       return true;
     }

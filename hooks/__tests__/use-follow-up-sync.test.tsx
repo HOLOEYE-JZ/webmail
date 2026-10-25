@@ -53,7 +53,10 @@ function makeServer() {
     queryEmailFields: vi.fn(async (filter: { header?: string[] }) => [...server.mails.entries()]
       .filter(([, m]) => m.messageId?.some((mid) => `<${mid}>` === filter.header?.[1]))
       .map(([id, m]) => ({ id, messageId: m.messageId }))),
-    toggleStar: vi.fn(async (id: string, flagged: boolean) => {
+    // The login reaches its own account and the group mailbox `group`.
+    hasAccountCapability: vi.fn((_capability: string, accountId?: string) => accountId === 'acc' || accountId === 'group'),
+    toggleStar: vi.fn(async (id: string, flagged: boolean, accountId?: string) => {
+      if (accountId && accountId !== 'acc') return;
       const mail = server.mails.get(id);
       if (mail) mail.keywords = { ...mail.keywords, $flagged: flagged };
     }),
@@ -242,6 +245,24 @@ describe('useFollowUpSync', () => {
     await load();
     expect(client.getEmailFields).not.toHaveBeenCalled();
     expect(client.toggleStar).not.toHaveBeenCalled();
+  });
+
+  it('never flags a group mailbox\'s mail nor deletes its follow-up beside the own one of a mail with the same id', async () => {
+    await inStep();
+    server.tasks = [...server.tasks, followUp('T2', 'M1', {}, 'group')];
+    await load();
+    // The flag cleared elsewhere: the own follow-up goes (Clear Flag), the group's stays.
+    server.mails.set('M1', { keywords: {}, messageId: ['M1@example.com'] });
+    await push();
+    expect(client.deleteCalendarTask).toHaveBeenCalledWith('T1');
+    expect(client.deleteCalendarTask).not.toHaveBeenCalledWith('T2');
+    expect(server.tasks.map((t) => t.id)).toEqual(['T2']);
+    // Completed, the group's follow-up asks for no flag either.
+    server.tasks = [{ ...server.tasks[0], progress: 'completed', updated: '2026-10-26T10:00:00Z' }];
+    await load();
+    expect(client.toggleStar).not.toHaveBeenCalled();
+    for (const [ids] of client.getEmailFields.mock.calls) expect(ids).toEqual(['M1']);
+    expect(client.getEmailFields.mock.calls.every((call) => (call as unknown[])[2] === undefined)).toBe(true);
   });
 
   it('judges no task deleted from a list not loaded (another login, a fetch under way)', async () => {
@@ -433,6 +454,23 @@ describe('the star taken off in the app', () => {
       await useEmailStore.getState().toggleStar(asClient(), 'M1', 'group:M1');
       await vi.advanceTimersByTimeAsync(5000);
     });
+    expect(client.updateCalendarTask).not.toHaveBeenCalled();
+    expect(server.tasks[0].progress).toBe('needs-action');
+  });
+});
+
+describe('the star taken off a group mailbox\'s mail', () => {
+  it('completes no own follow-up of a mail with the same id, also while the own inbox is open', async () => {
+    // As a narrowed search lists it: unstamped, its folders namespaced by the group's account.
+    const groupRow = { id: 'M1', threadId: 'X', mailboxIds: { 'group:inbox': true }, keywords: { $flagged: true }, size: 1, receivedAt: '2026-10-26T07:00:00Z', subject: 'Offer' } as unknown as Email;
+    useEmailStore.setState({ emails: [groupRow], selectedMailbox: 'inbox' });
+    await inStep();
+    client.toggleStar.mockImplementation(async () => {});
+    await act(async () => {
+      await useEmailStore.getState().toggleStar(asClient(), 'M1', 'M1');
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    await push();
     expect(client.updateCalendarTask).not.toHaveBeenCalled();
     expect(server.tasks[0].progress).toBe('needs-action');
   });

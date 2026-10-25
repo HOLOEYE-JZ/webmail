@@ -11,7 +11,8 @@ import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
 import { appUrl, buildMailMessageLink } from "@/lib/deep-links";
 import { displayNow, fromDisplayDate } from "@/lib/timezone";
-import { emailKeyFor } from "@/lib/thread-utils";
+import { isFilterEmpty } from "@/lib/jmap/search-utils";
+import { isAllFoldersSearchScope } from "@/lib/search-scope-folders";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { debug } from "@/lib/debug";
 import { completedTaskPatch } from "@/lib/task-reminders";
@@ -24,6 +25,8 @@ import {
   followUpMailSummary,
   sameFollowUpAction,
   followUpsByEmailId,
+  isOtherAccountMail,
+  mailAccountOfMailboxIds,
   rescheduleFollowUpTask,
   scheduleFollowUp,
   threadFollowUpEmail,
@@ -87,44 +90,79 @@ export function useWorkingTime(): WorkingTime {
 
 // One index per task list and mail account, shared by every row that asks.
 const indexCache = new WeakMap<CalendarTask[], Map<string, Map<string, CalendarTask>>>();
-function followUpIndex(tasks: CalendarTask[], mailAccountId: string): Map<string, CalendarTask> {
+function followUpIndex(tasks: CalendarTask[], mailAccountId: string, primaryAccountId: string): Map<string, CalendarTask> {
   let byAccount = indexCache.get(tasks);
   if (!byAccount) {
     byAccount = new Map();
     indexCache.set(tasks, byAccount);
   }
-  let index = byAccount.get(mailAccountId);
+  const key = `${primaryAccountId}\u0000${mailAccountId}`;
+  let index = byAccount.get(key);
   if (!index) {
-    index = followUpsByEmailId(tasks, mailAccountId);
-    byAccount.set(mailAccountId, index);
+    index = followUpsByEmailId(tasks, mailAccountId, primaryAccountId);
+    byAccount.set(key, index);
   }
   return index;
 }
 
 const NO_FOLLOW_UPS = new Map<string, CalendarTask>();
 
-/** The follow-ups of the user's own mails by mail id; none while follow-ups are off. */
-function useFollowUpIndex(): Map<string, CalendarTask> {
+/**
+ * The follow-ups on the mails of one JMAP account by mail id (the user's own
+ * account, or a group mailbox's); none while follow-ups are off.
+ */
+function useFollowUpIndex(mailAccountId: string | null): Map<string, CalendarTask> {
   const enabled = useFollowUpsEnabled();
   const client = useAuthStore((s) => s.client);
   const tasks = useTaskStore((s) => s.tasks);
-  return enabled && client ? followUpIndex(tasks, client.getAccountId()) : NO_FOLLOW_UPS;
+  return enabled && client && mailAccountId ? followUpIndex(tasks, mailAccountId, client.getAccountId()) : NO_FOLLOW_UPS;
+}
+
+const MAIL_CAPABILITY = "urn:ietf:params:jmap:mail";
+
+/**
+ * Whether the signed-in login reaches a mail account: its own, or a shared
+ * one (a group mailbox's) it is a member of. Null names the own one.
+ */
+export function reachesMailAccount(client: IJMAPClient | null, accountId: string | null): boolean {
+  if (!client) return false;
+  if (!accountId || accountId === client.getAccountId()) return true;
+  return client.hasAccountCapability(MAIL_CAPABILITY, accountId);
 }
 
 /**
- * Whether a mail lies in the user's own mailbox. A follow-up lands in the
- * user's own task list and links the mail in the primary account; group
- * mailboxes and other logins come later.
+ * The JMAP account a mail lies in, when a follow-up can be kept on it: the
+ * user's own, or a shared one (a group mailbox's) reached through the
+ * signed-in login. Read from the mail itself first: its `sourceAccountId`,
+ * else its folders' ids (namespaced for another account); only a mail
+ * naming neither falls back to the folder shown or searched. Null for a mail
+ * of another login (which comes later) and whenever the account is not
+ * certain: then nothing is offered, and no flag written, rather than the
+ * wrong mail of the same id touched.
  */
-export function isOwnMail(email: Email, client: IJMAPClient | null): boolean {
-  if (!client) return false;
+export function followUpMailAccount(email: Email, client: IJMAPClient | null): string | null {
+  if (!client) return null;
   const activeAccountId = useAuthStore.getState().activeAccountId;
-  if (email.sourceClientAccountId && activeAccountId && email.sourceClientAccountId !== activeAccountId) return false;
-  if (email.sourceAccountId) return email.sourceAccountId === client.getAccountId();
+  if (email.sourceClientAccountId && activeAccountId && email.sourceClientAccountId !== activeAccountId) return null;
+  const reached = (accountId: string | null) => (accountId && reachesMailAccount(client, accountId) ? accountId : null);
+  if (email.sourceAccountId) return reached(email.sourceAccountId);
   const state = useEmailStore.getState();
-  if (state.viewingAccountId && activeAccountId && state.viewingAccountId !== activeAccountId) return false;
+  if (state.viewingAccountId && activeAccountId && state.viewingAccountId !== activeAccountId) return null;
+  const byFolders = mailAccountOfMailboxIds(email.mailboxIds, client.getAccountId());
+  if (byFolders !== undefined) return reached(byFolders);
+  // No folder named: the one searched in, else the one shown; across folders nothing is certain.
+  const searching = !!state.searchQuery || !isFilterEmpty(state.searchFilters);
+  const folderId = searching ? state.searchMailboxId : state.selectedMailbox;
+  if (searching && isAllFoldersSearchScope(folderId)) return null;
   const mailboxes = state.viewingAccountId ? state.accountMailboxes[state.viewingAccountId] ?? state.mailboxes : state.mailboxes;
-  return !mailboxes.find((m) => m.id === state.selectedMailbox)?.isShared;
+  const mailbox = mailboxes.find((m) => m.id === folderId);
+  if (!mailbox) return null;
+  return mailbox.isShared ? reached(mailbox.accountId ?? null) : client.getAccountId();
+}
+
+/** Whether a mail lies in the user's own mailbox, whose $flagged mirrors its follow-up. */
+export function isOwnMail(email: Email, client: IJMAPClient | null): boolean {
+  return !!client && followUpMailAccount(email, client) === client.getAccountId();
 }
 
 /**
@@ -132,7 +170,9 @@ export function isOwnMail(email: Email, client: IJMAPClient | null): boolean {
  * else the newest of all.
  */
 export function useThreadFollowUpEmail(emails: readonly Email[], latest: Email): Email {
-  const index = useFollowUpIndex();
+  const enabled = useFollowUpsEnabled();
+  const client = useAuthStore((s) => s.client);
+  const index = useFollowUpIndex(enabled ? followUpMailAccount(latest, client) : null);
   return threadFollowUpEmail(emails, index) ?? latest;
 }
 
@@ -168,10 +208,10 @@ export function onFollowUpChanged(listener: (() => void) | null): void {
   afterChange = listener;
 }
 
-async function messageIdOf(client: IJMAPClient, email: Email): Promise<string | readonly string[] | null> {
+async function messageIdOf(client: IJMAPClient, email: Email, accountId: string): Promise<string | readonly string[] | null> {
   if (email.messageId) return email.messageId;
   try {
-    const [fields] = await client.getEmailFields([email.id], ["messageId"]);
+    const [fields] = await client.getEmailFields([email.id], ["messageId"], accountId === client.getAccountId() ? undefined : accountId);
     return (fields?.messageId as string[] | undefined) ?? null;
   } catch {
     return null;
@@ -179,44 +219,39 @@ async function messageIdOf(client: IJMAPClient, email: Email): Promise<string | 
 }
 
 /**
- * Sets or clears the mail's $flagged, which mirrors an open follow-up.
- * Resolves false when a plugin vetoed it (the plugin tells the user why).
+ * Sets or clears the mail's $flagged, which mirrors an open follow-up, in the
+ * JMAP account `accountId` named explicitly, so a mail of the same id in
+ * another account is never touched. Resolves false when a plugin vetoed it
+ * (the plugin tells the user why). Rows of the list and the open mail
+ * follow only when they are that account's mail.
  *
- * `serverFlagged`, the flag as just read from the server, marks a write for
- * a mail of the user's own account found by id alone (the check that keeps
- * flag and task in step): it is written there directly and the list and
- * reader follow with the push, so a row of another account that happens to
- * share the id is never touched.
+ * `serverFlagged`, the flag as just read from the server, is taken instead
+ * of what the list shows (the check that keeps flag and task in step).
  */
 export async function mirrorFlag(
   client: IJMAPClient,
-  email: Pick<Email, "id" | "keywords" | "sourceClientAccountId" | "sourceAccountId">,
+  email: Pick<Email, "id" | "keywords">,
   flagged: boolean,
+  accountId: string,
   serverFlagged?: boolean,
 ): Promise<boolean> {
+  const sameMail = (e: Email | null | undefined): e is Email =>
+    !!e && e.id === email.id && followUpMailAccount(e, client) === accountId;
   const store = useEmailStore.getState();
-  const byId = serverFlagged !== undefined;
-  const listed = byId ? undefined : store.emails.find((e) => e.id === email.id && emailKeyFor(e) === emailKeyFor(email));
-  if (listed) {
-    if (!!listed.keywords?.$flagged === flagged) return true;
-    // The list's own toggle asks plugins and updates the row.
-    return store.toggleStar(client, email.id, emailKeyFor(email));
-  }
-  // Not in the list (opened by a link, or an unfolded conversation's older
-  // mail): ask plugins as the list's toggle does, then write the keyword.
-  const current = byId ? serverFlagged : !!(store.selectedEmail?.id === email.id ? store.selectedEmail : email).keywords?.$flagged;
+  const shown = store.emails.find(sameMail) ?? (sameMail(store.selectedEmail) ? store.selectedEmail : null);
+  const current = serverFlagged ?? !!(shown ?? email).keywords?.$flagged;
   if (current === flagged) return true;
   if (emailHooks.onBeforeEmailStarToggle.size > 0
     && !(await emailHooks.onBeforeEmailStarToggle.intercept({ emailIds: [email.id], starred: flagged }))) {
     return false;
   }
-  await client.toggleStar(email.id, flagged);
+  await client.toggleStar(email.id, flagged, accountId);
   void emailHooks.onEmailStarToggle.emit({ emailIds: [email.id], starred: flagged });
-  if (!byId && store.selectedEmail?.id === email.id) {
-    useEmailStore.setState((s) => ({
-      selectedEmail: s.selectedEmail && { ...s.selectedEmail, keywords: { ...s.selectedEmail.keywords, $flagged: flagged } },
-    }));
-  }
+  const withFlag = (e: Email) => ({ ...e, keywords: { ...e.keywords, $flagged: flagged } });
+  useEmailStore.setState((s) => ({
+    emails: s.emails.some(sameMail) ? s.emails.map((e) => (sameMail(e) ? withFlag(e) : e)) : s.emails,
+    selectedEmail: sameMail(s.selectedEmail) ? withFlag(s.selectedEmail) : s.selectedEmail,
+  }));
   return true;
 }
 
@@ -271,7 +306,8 @@ export async function completeTask(
   // Its reminders that fired are dismissed with it, so reopened it does not remind of them again.
   const complete = () => useTaskStore.getState().updateTask(client, task.id, completedTaskPatch(task, new Date()));
   const ref = task.isShared ? null : followUpMailRef(task);
-  if (!ref || (ref.accountId && ref.accountId !== client.getAccountId())) {
+  // A group mailbox's mail carries no flag: its follow-up is only completed.
+  if (!ref || isOtherAccountMail(ref, client.getAccountId())) {
     try {
       return await complete();
     } catch (error) {
@@ -283,11 +319,11 @@ export async function completeTask(
   return changeFollowUp(ref.emailId, complete, async () => {
     // The row in the list, when it is there, so it follows at once; else the flag as the server has it.
     const listed = useEmailStore.getState().emails.find((e) => e.id === ref.emailId && isOwnMail(e, client));
-    if (listed) return mirrorFlag(client, listed, false);
+    if (listed) return mirrorFlag(client, listed, false, client.getAccountId());
     const [fields] = await client.getEmailFields([ref.emailId], ["keywords"]);
     if (!fields) return true; // The mail is gone: nothing to mirror.
     const keywords = fields.keywords as Record<string, boolean> | undefined;
-    return mirrorFlag(client, { id: ref.emailId, keywords: {} }, false, !!keywords?.$flagged);
+    return mirrorFlag(client, { id: ref.emailId, keywords: {} }, false, client.getAccountId(), !!keywords?.$flagged);
   }, messages);
 }
 
@@ -342,6 +378,14 @@ export interface FollowUpDetails {
 export interface FollowUpControls {
   /** Whether this mail can get a follow-up here. */
   available: boolean;
+  /**
+   * The mail lies in a group mailbox (another JMAP account): its follow-up is
+   * kept in the user's own task list alone ("only me"), no colleague sees it,
+   * and nothing is set on the mail, never $flagged (plan 037 decisions 2, 5).
+   */
+  onlyMe: boolean;
+  /** The group mailbox's name, when the mail lies in one and its name is known. */
+  mailboxName: string | null;
   /** The mail's follow-up, open or done. */
   task: CalendarTask | null;
   workingTime: WorkingTime;
@@ -361,15 +405,21 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
   const t = useTranslations("follow_up");
   const enabled = useFollowUpsEnabled();
   const client = useAuthStore((s) => s.client);
-  const index = useFollowUpIndex();
+  const mailAccountId = enabled && email ? followUpMailAccount(email, client) : null;
+  const index = useFollowUpIndex(mailAccountId);
   const workingTime = useWorkingTime();
+  const onlyMe = !!client && !!mailAccountId && mailAccountId !== client.getAccountId();
+  const mailboxName = useEmailStore((s) => (onlyMe
+    ? s.mailboxes.find((m) => m.isShared && m.accountId === mailAccountId && m.accountName)?.accountName ?? null
+    : null));
 
-  const available = enabled && !!email && !email.isScheduled && !email.keywords?.$draft && isOwnMail(email, client);
+  const available = enabled && !!email && !email.isScheduled && !email.keywords?.$draft && !!mailAccountId;
   const task = available && email ? index.get(email.id) ?? null : null;
 
   /**
-   * Writes the task, then mirrors it as $flagged. A failure after the task
-   * was written says so: the follow-up stands, only the mail's flag does not.
+   * Writes the task, then mirrors it as $flagged; a group mailbox's mail is
+   * never flagged. A failure after the task was written says so: the
+   * follow-up stands, only the mail's flag does not.
    */
   const run = useCallback(async (
     writeTask: (client: IJMAPClient, email: Email) => Promise<boolean>,
@@ -379,13 +429,17 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     return changeFollowUp(
       email.id,
       () => writeTask(client, email),
-      () => mirrorFlag(client, email, flagged),
+      async () => (onlyMe || !mailAccountId ? true : mirrorFlag(client, email, flagged, mailAccountId)),
       { failed: t("failed"), flagFailed: t("flag_failed") },
     );
-  }, [client, email, t]);
+  }, [client, email, t, onlyMe, mailAccountId]);
 
-  /** Writes a new follow-up into the user's task list. */
+  /**
+   * Writes a new follow-up into the user's own task list, also for a group
+   * mailbox's mail: its link names the group's account.
+   */
   const create = useCallback(async (client: IJMAPClient, email: Email, details: FollowUpDetails) => {
+    if (!mailAccountId) return false;
     const calendarStore = useCalendarStore.getState();
     if (calendarStore.calendars.length === 0) await calendarStore.fetchCalendars(client);
     const [calendar] = followUpCalendars(useCalendarStore.getState().calendars);
@@ -396,9 +450,9 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     const subject = email.subject || t("no_subject");
     const created = await useTaskStore.getState().createTask(client, buildFollowUpTask({
       title: t("task_title", { action: details.action, subject }),
-      mailUrl: appUrl(buildMailMessageLink(email.id, client.getAccountId())),
+      mailUrl: appUrl(buildMailMessageLink(email.id, mailAccountId)),
       subject: email.subject,
-      messageId: await messageIdOf(client, email),
+      messageId: await messageIdOf(client, email, mailAccountId),
       from: email.from?.[0] ?? null,
       calendarId: calendar.id,
       due: details.due,
@@ -407,7 +461,7 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
       mailReminder: details.mailReminder,
     }));
     return !!created;
-  }, [t]);
+  }, [t, mailAccountId]);
 
   const apply = useCallback(async (choice: FollowUpChoice) => {
     await run(async (client, email) => {
@@ -454,5 +508,5 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     return markDone();
   }, [task, apply, remove, markDone]);
 
-  return { available, task, workingTime, apply, save, openDialog, markDone, remove, quickClick };
+  return { available, onlyMe, mailboxName, task, workingTime, apply, save, openDialog, markDone, remove, quickClick };
 }

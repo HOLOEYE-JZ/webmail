@@ -100,6 +100,8 @@ function makeClient() {
     updateCalendarTask: vi.fn(async (id: string, _updates: Partial<CalendarTask>) => id),
     deleteCalendarTask: vi.fn(async () => {}),
     toggleStar: vi.fn(async () => {}),
+    // The login reaches its own account and the group mailbox `grp`.
+    hasAccountCapability: vi.fn((_capability: string, accountId?: string) => accountId === 'acc' || accountId === 'grp'),
   };
 }
 
@@ -401,5 +403,68 @@ describe('what the row and the reader show', () => {
     render(<FollowUpChip email={mail} />);
     expect(screen.getByTestId('follow-up-chip').textContent).toMatch(/^due_on/);
     expect(screen.queryByTestId('follow-up-chip-reminder')).toBeNull();
+  });
+});
+
+describe('a group mailbox\'s mail ("only me")', () => {
+  const groupFolder = { id: 'grp:inbox', originalId: 'inbox', accountId: 'grp', accountName: 'sales@', isShared: true } as never;
+  const groupFollowUp = (over: Partial<CalendarTask> = {}) => followUp({
+    links: {
+      mail: { '@type': 'Link', href: 'https://host/mail/message/M1?mailAccount=grp', cid: null, contentType: null, size: null, rel: 'describedby', display: null, title: 'Offer 4711' },
+    },
+    ...over,
+  });
+
+  const groupMail = { ...mail, mailboxIds: { 'grp:inbox': true } } as Email;
+
+  beforeEach(() => {
+    useEmailStore.setState({ emails: [{ ...groupMail, keywords: { ...mail.keywords } }], mailboxes: [groupFolder], selectedMailbox: 'grp:inbox' });
+  });
+
+  it('the dialog says only the user sees it, keeps it in the own list with the alarm mail offered, and sets no flag', async () => {
+    const onClose = vi.fn();
+    render(<FollowUpDialog email={groupMail} focus="reminder" onClose={onClose} />);
+    expect(screen.getByTestId('follow-up-kept').textContent).toBe('kept_only_me{"list":"My tasks"}');
+    expect(screen.getByTestId('follow-up-dialog').textContent).toContain('sales@ · Lena Brandt · Offer 4711');
+    // The user's own list: its alarm mail reaches the user's inbox.
+    fireEvent.click(field('follow-up-reminder-mail'));
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    const written = client.createCalendarTask.mock.calls[0][0];
+    expect(written.calendarIds).toEqual({ tasks: true });
+    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?mailAccount=grp$/);
+    expect(written.alerts?.['follow-up-mail']?.action).toBe('email');
+    expect(client.toggleStar).not.toHaveBeenCalled();
+    expect(useEmailStore.getState().emails[0].keywords.$flagged).toBeUndefined();
+  });
+
+  it('the chip and the info bar say "only me", from the user\'s own task alone', () => {
+    useTaskStore.setState({ tasks: [groupFollowUp()] });
+    render(<><FollowUpChip email={groupMail} /><FollowUpInfoBar email={groupMail} /></>);
+    expect(screen.getByTestId('follow-up-chip').textContent).toMatch(/^only_me · Write a quote · due_on/);
+    expect(screen.getByTestId('follow-up-chip').getAttribute('title')).toContain('kept_only_me_tasks');
+    expect(screen.getByTestId('follow-up-bar-only-me').textContent).toBe('only_me');
+  });
+
+  it('shows no follow-up of the own mail with the same id, nor "only me" on the own mail', () => {
+    useTaskStore.setState({ tasks: [followUp()] });
+    const group = render(<FollowUpChip email={groupMail} />);
+    expect(screen.queryByTestId('follow-up-chip')).toBeNull();
+    group.unmount();
+
+    // The own mail of the same id, while the group's folder is open.
+    render(<FollowUpChip email={mail} />);
+    expect(screen.getByTestId('follow-up-chip').textContent).toMatch(/^Write a quote/);
+  });
+
+  it('the menu is headed "only me" and a quick click completes the follow-up without touching the mail', async () => {
+    useTaskStore.setState({ tasks: [groupFollowUp()] });
+    render(<FollowUpFlagButton email={groupMail} />);
+    fireEvent.contextMenu(screen.getByTestId('follow-up-flag'));
+    expect(screen.getByText('menu_title_only_me')).toBeTruthy();
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-flag')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
+    expect(client.updateCalendarTask.mock.calls[0][1]).toMatchObject({ progress: 'completed' });
+    expect(client.toggleStar).not.toHaveBeenCalled();
   });
 });

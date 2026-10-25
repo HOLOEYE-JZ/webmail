@@ -5,6 +5,8 @@ import {
   consumePendingDeepLinkEntry,
   subscribePendingDeepLink,
   clearPendingDeepLinks,
+  followMessageLink,
+  takeFollowedMessageAccount,
 } from '@/lib/deep-link-handoff';
 
 describe('deep-link handoff', () => {
@@ -81,5 +83,19 @@ describe('deep-link handoff', () => {
     expect(listener).toHaveBeenCalledWith(['Documents'], '?preview=notes.txt');
     expect(consumePendingDeepLinkEntry('files')).toBeNull();
     unsubscribe();
+  });
+});
+
+describe('message links the app follows itself', () => {
+  it('keeps the account a link names for the mail view, once', () => {
+    expect(followMessageLink('M1', 'grp')).toBe('/mail/message/M1?mailAccount=grp');
+    expect(takeFollowedMessageAccount('M1')).toBe('grp');
+    expect(takeFollowedMessageAccount('M1')).toBeUndefined();
+  });
+
+  it('forgets an earlier account when the same mail is followed without one', () => {
+    followMessageLink('M2', 'grp');
+    expect(followMessageLink('M2', null)).toBe('/mail/message/M2');
+    expect(takeFollowedMessageAccount('M2')).toBeUndefined();
   });
 });

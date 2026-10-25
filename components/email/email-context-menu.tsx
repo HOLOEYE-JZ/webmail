@@ -483,7 +483,7 @@ export function EmailContextMenu({
     <>
         {/* Follow up: a task with a due day and a reminder, mirrored as the star */}
         {!showBatchActions && followUp.available && (
-          <ContextMenuSubMenu icon={Flag} label={tFollowUp("menu_title")} testId="ctx-follow-up">
+          <ContextMenuSubMenu icon={Flag} label={followUp.onlyMe ? tFollowUp("menu_title_only_me") : tFollowUp("menu_title")} testId="ctx-follow-up">
             <FollowUpMenuItems controls={followUp} onClose={onClose} heading={false} />
           </ContextMenuSubMenu>
         )}

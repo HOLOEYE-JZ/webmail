@@ -53,7 +53,10 @@ export function ProInterfaceRedirect() {
     // tab (a message permalink opens an email tab) that must keep focus.
     useProTabStore.getState().openTab(SURFACE_TO_TAB[match.surface]);
     if (match.segments.length > 0) {
-      setPendingDeepLink(match.surface, match.segments);
+      // A message link's query names the mail's JMAP account (`?mailAccount=`,
+      // a group mailbox's mail): it goes along, as `/pro` has none.
+      const search = match.surface === 'mail' && window.location.search ? window.location.search : undefined;
+      setPendingDeepLink(match.surface, match.segments, search);
     }
     router.replace('/pro');
   }, [proInterface, isDesktop, pathname, router]);
