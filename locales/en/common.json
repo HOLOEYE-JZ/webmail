@@ -1060,7 +1060,7 @@
         "cancel": "Cancel",
         "show_off": "Show {count} more switched off",
         "new_field": "New action",
-        "new_placeholder": "New action, e.g. \"Send samples\"",
+        "new_placeholder": "New action",
         "add": "Add"
       },
       "problems": {
@@ -4683,7 +4683,7 @@
       },
       "more": "+{count} later or without a date",
       "empty": "Nothing due",
-      "quick_placeholder": "＋ Reminder, e.g. “Check the dunning run”",
+      "quick_placeholder": "＋ Reminder",
       "quick_label": "New reminder, due today (Enter)",
       "quick_more": "Reminder with day, time and note…",
       "done_label": "Mark done: {title}",
@@ -4696,7 +4696,7 @@
       "dialog_title": "New reminder",
       "dialog_title_edit": "Edit reminder",
       "what_label": "What",
-      "what_placeholder": "e.g. Check the dunning run",
+      "what_placeholder": "What to be reminded of",
       "delete": "Delete",
       "kept_in": "Kept in the task list “{list}”, without a mail; only you see it. On a phone, it is in the tasks app.",
       "kept_in_tasks": "Kept in your task list, without a mail; only you see it. On a phone, it is in the tasks app.",
