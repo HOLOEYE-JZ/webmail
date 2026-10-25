@@ -42,3 +42,19 @@ function setIn(object: Record<string, unknown>, [head, ...rest]: string[], value
   copy[head] = setIn(child && typeof child === "object" ? (child as Record<string, unknown>) : {}, rest, value);
   return copy;
 }
+
+/**
+ * The top-level properties `patch` changes, each whole as it is after the
+ * patch: a path key ("alerts/a1/acknowledged") becomes its property
+ * ("alerts") with every member as the patch leaves it. For whoever reads a
+ * patch as plain properties (plugins), while the server still gets the paths.
+ */
+export function patchedProperties<T extends object>(target: T, patch: object): Partial<T> {
+  const after = applyPatchObject(target, patch) as Record<string, unknown>;
+  const changed: Record<string, unknown> = {};
+  for (const key of Object.keys(patch)) {
+    const property = unescapeSegment(key.split("/")[0]);
+    changed[property] = property in after ? after[property] : null;
+  }
+  return changed as Partial<T>;
+}

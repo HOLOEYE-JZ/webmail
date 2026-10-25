@@ -4,7 +4,7 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { debug } from '@/lib/debug';
 import { taskHooks } from '@/lib/plugin-hooks';
 import { taskToView } from '@/lib/plugin-projection';
-import { applyPatchObject } from '@/lib/jmap/patch-object';
+import { applyPatchObject, patchedProperties } from '@/lib/jmap/patch-object';
 import { completedTaskPatch, withCompletion } from '@/lib/task-reminders';
 import type { TaskListScope } from '@/lib/task-list';
 
@@ -135,7 +135,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     // Completed from any form (the task modal too): its fired reminders
     // dismissed and its alarm mail taken off, as Mark Complete does.
     const updates = withCompletion(before, patch, new Date());
-    if (!(await taskHooks.onBeforeTaskUpdate.intercept({ taskId: id, patch: updates }))) return false;
+    // Plugins read the patch as whole properties, as before paths were
+    // written: a member changed by path shows as its property after the change.
+    const pluginPatch = patchedProperties(before ?? { id }, updates);
+    if (!(await taskHooks.onBeforeTaskUpdate.intercept({ taskId: id, patch: pluginPatch }))) return false;
     const newId = await client.updateCalendarTask(id, updates);
     if (newId && newId !== id) {
       // Moved into a calendar of another account: the server recreated it
