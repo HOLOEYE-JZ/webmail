@@ -60,6 +60,7 @@ import { usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
 import { findNextUnreadIndex } from "@/lib/next-unread-email";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
+import { useFollowUpTasks } from "@/hooks/use-follow-ups";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { usePromptDialog } from "@/hooks/use-prompt-dialog";
 import { useBrowserNavigation, type NavSnapshot } from "@/hooks/use-browser-navigation";
@@ -200,6 +201,8 @@ const TOP_BAR_CONTEXT: Record<string, unknown> = {};
 export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
+  // The task list, so rows and reader know which mails have a follow-up.
+  useFollowUpTasks();
   const t = useTranslations();
   const tCommon = useTranslations('common');
   const appName = productName(useConfig().appName);

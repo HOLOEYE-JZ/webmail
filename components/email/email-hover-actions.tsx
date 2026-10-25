@@ -13,6 +13,8 @@ import { useIsMobile } from "@/hooks/use-media-query";
 import { TagPicker } from "@/components/email/tag-picker";
 import { getEmailTagIds } from "@/lib/thread-utils";
 import { PluginActions, usePluginActions } from "@/components/plugins/plugin-actions";
+import { FollowUpFlagButton } from "@/components/email/follow-up";
+import { useFollowUp } from "@/hooks/use-follow-ups";
 
 interface EmailHoverActionsProps {
   email: Email;
@@ -31,6 +33,8 @@ interface EmailHoverActionsProps {
   spamApplicable?: boolean;
   /** Role of the folder the row is listed in; plugin buttons can be limited to some. */
   mailboxRole?: string | null;
+  /** The mail the follow-up flag acts on, when not `email` (a conversation's row). */
+  followUpEmail?: Email;
 }
 
 const ACTION_CONFIG: Record<HoverAction, {
@@ -110,6 +114,7 @@ export function EmailHoverActions({
   onUndoSpam,
   spamApplicable = true,
   mailboxRole = null,
+  followUpEmail = email,
 }: EmailHoverActionsProps) {
   const configuredHoverActions = useSettingsStore((state) => state.hoverActions);
   const mountainView = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
@@ -125,6 +130,8 @@ export function EmailHoverActions({
   // Buttons plugins add to the row (message-row-actions), after the app's own.
   const pluginActionCount = usePluginActions("message-row-actions", { mailboxRole }).length;
   const pluginContext = useMemo(() => ({ emailId: email.id }), [email.id]);
+  // The follow-up flag ends the row's actions wherever follow-ups are possible.
+  const followUpAvailable = useFollowUp(followUpEmail).available;
 
   // The tag quick-action opens the same picker the context menu and the reading
   // pane use. It is portalled to the body because every row sits inside a
@@ -171,7 +178,7 @@ export function EmailHoverActions({
   const hoverBackgroundClassName = backgroundClassName;
 
   if (isMobile) return null;
-  if (hoverActions.length === 0 && pluginActionCount === 0) return null;
+  if (hoverActions.length === 0 && pluginActionCount === 0 && !followUpAvailable) return null;
 
   const handleAction = (e: React.MouseEvent, action: HoverAction) => {
     e.stopPropagation();
@@ -272,6 +279,15 @@ export function EmailHoverActions({
         mailboxRole={mailboxRole}
         compact
         className="flex-nowrap gap-0.5"
+      />,
+    );
+  }
+  if (followUpAvailable) {
+    actionButtons.push(
+      <FollowUpFlagButton
+        key="follow-up"
+        email={followUpEmail}
+        className={mountainView ? "p-2 rounded-full [&_svg]:w-5 [&_svg]:h-5" : "p-1.5 rounded-md"}
       />,
     );
   }

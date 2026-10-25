@@ -5532,8 +5532,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           // Refresh tasks when calendar events change (e.g. task created via CalDAV)
           const { useTaskStore } = await import('./task-store');
           const taskStore = useTaskStore.getState();
-          if (taskStore.tasks.length > 0 || calendarStore.viewMode === 'tasks') {
+          if (calendarStore.viewMode === 'tasks') {
             taskStore.fetchTasks(client);
+          } else if (taskStore.tasks.length > 0) {
+            // The scope the tasks were loaded with: all, or the mail view's
+            // follow-up calendars.
+            taskStore.fetchTasks(client, taskStore.scope);
           }
         }
       }

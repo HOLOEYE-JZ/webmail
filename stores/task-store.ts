@@ -14,6 +14,12 @@ interface TaskStore {
   showCompleted: boolean;
   isLoading: boolean;
   error: string | null;
+  /**
+   * The calendars the last fetch read, or undefined for all of them. A push
+   * refetches the same scope, so the mail view's few calendars (follow-ups)
+   * do not turn into a reload of every account's calendars.
+   */
+  scope: string[] | undefined;
   setTasks: (tasks: CalendarTask[]) => void;
   setSelectedTaskId: (id: string | null) => void;
   setFilter: (filter: TaskViewFilter) => void;
@@ -35,6 +41,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   showCompleted: false,
   isLoading: false,
   error: null,
+  scope: undefined,
   setTasks: (tasks) => set({ tasks }),
   setSelectedTaskId: (id) => set({ selectedTaskId: id }),
   setFilter: (filter) => {
@@ -50,7 +57,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   fetchTasks: async (client, calendarIds) => {
     debug.log('tasks', 'TaskStore/fetchTasks start', { calendarIds: calendarIds || 'all' });
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, scope: calendarIds?.length ? [...calendarIds] : undefined });
     try {
       const tasks = await client.getCalendarTasks(calendarIds);
       debug.log('tasks', 'TaskStore/fetchTasks received', tasks.length, 'tasks');
@@ -87,7 +94,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Moved into a calendar of another account: the server recreated it
       // under a new id, so reload rather than patch the old entry. (#1204)
       set({ selectedTaskId: get().selectedTaskId === id ? newId : get().selectedTaskId });
-      await get().fetchTasks(client);
+      await get().fetchTasks(client, get().scope);
       const moved = get().tasks.find(t => t.id === newId)
         ?? ({ ...before, ...updates, id: newId } as CalendarTask);
       void taskHooks.onTaskUpdate.emit(taskToView(moved));
@@ -127,5 +134,5 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     void taskHooks.onTaskToggleComplete.emit({ taskId: task.id, complete: newProgress === 'completed' });
   },
 
-  clearTasks: () => set({ tasks: [], selectedTaskId: null, error: null }),
+  clearTasks: () => set({ tasks: [], selectedTaskId: null, error: null, scope: undefined }),
 }));

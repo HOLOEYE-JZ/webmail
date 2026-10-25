@@ -115,6 +115,7 @@ import { EmailIdentityBadge } from "./email-identity-badge";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
 import { CalendarInvitationBanner } from "./calendar-invitation-banner";
 import { ReadReceiptBanner } from "./read-receipt-banner";
+import { FollowUpInfoBar, FollowUpReaderButton } from "./follow-up";
 import { stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
@@ -4847,6 +4848,7 @@ export function EmailViewer({
                     )} />
                   </button>
                 )}
+                <FollowUpReaderButton email={email} />
                 {isImportant && (
                   <span className="px-1.5 lg:px-2 py-0.5 bg-warning/15 text-warning rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 self-center">
                     {t('important')}
@@ -5899,6 +5901,8 @@ export function EmailViewer({
             </div>
           </div>
         )}
+
+        <FollowUpInfoBar email={email} />
 
         <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
 

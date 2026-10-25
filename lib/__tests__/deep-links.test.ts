@@ -6,6 +6,7 @@ import {
   pathNamesMailFolder,
   buildMailPath,
   parseMailPath,
+  buildMailMessageLink,
   buildCalendarPath,
   parseCalendarPath,
   formatLinkDate,
@@ -195,6 +196,14 @@ describe('mail paths', () => {
       kind: 'message',
       id: 'm1',
       accountId: undefined,
+    });
+  });
+
+  it('names the JMAP account of a message link apart from the login', () => {
+    expect(buildMailMessageLink('m/1')).toBe('/mail/message/m%2F1');
+    expect(buildMailMessageLink('m1', 'acc:1')).toBe('/mail/message/m1?mailAccount=acc%3A1');
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('account=login&mailAccount=acc'))).toEqual({
+      kind: 'message', id: 'm1', accountId: 'login', mailAccountId: 'acc',
     });
   });
 

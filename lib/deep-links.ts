@@ -137,7 +137,7 @@ const ALIASED_ROLES = new Set(['inbox', 'sent', 'drafts', 'trash', 'archive', 'j
  */
 export type MailDeepLink =
   | { kind: 'folder'; ref: string; accountId?: string; slot?: number }
-  | { kind: 'message'; id: string; accountId?: string; slot?: number; fullscreen?: boolean }
+  | { kind: 'message'; id: string; accountId?: string; slot?: number; fullscreen?: boolean; mailAccountId?: string }
   | { kind: 'thread'; id: string; accountId?: string; slot?: number };
 
 export interface MailLinkState {
@@ -234,6 +234,22 @@ export function buildMailPath(state: MailLinkState, mailboxes: Mailbox[] = []): 
 }
 
 /**
+ * The query parameter naming the JMAP account a message link's mail lives in.
+ * `account` already names the login (AccountEntry.id), and one login reaches
+ * several JMAP accounts (shared and group mailboxes).
+ */
+export const MAIL_ACCOUNT_PARAM = 'mailAccount';
+
+/**
+ * A link to one message that keeps working outside the app's state, as a
+ * task's link to the mail it follows up: the message and its JMAP account.
+ */
+export function buildMailMessageLink(emailId: string, mailAccountId?: string | null): string {
+  const path = `/mail/message/${encodeSegment(emailId)}`;
+  return mailAccountId ? `${path}?${MAIL_ACCOUNT_PARAM}=${encodeURIComponent(mailAccountId)}` : path;
+}
+
+/**
  * Whether a real browser path (any mount or locale prefix) opens a folder
  * link, `/mail/folder/<ref>`. Read before the shell renders, when only the
  * address bar can tell a reload of a folder from a plain visit to the app.
@@ -264,7 +280,10 @@ export function parseMailPath(
   if (kind && value) {
     const id = decodeSegment(value);
     if (id) {
-      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen };
+      if (kind === 'message') {
+        const mailAccountId = search?.get(MAIL_ACCOUNT_PARAM) || undefined;
+        return { kind: 'message', id, accountId, slot, fullscreen, ...(mailAccountId ? { mailAccountId } : {}) };
+      }
       if (kind === 'thread') return { kind: 'thread', id, accountId, slot };
       if (kind === 'folder') return { kind: 'folder', ref: id, accountId, slot };
     }

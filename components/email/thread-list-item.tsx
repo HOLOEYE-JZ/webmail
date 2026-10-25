@@ -31,6 +31,8 @@ import { useSwipeActions } from "@/hooks/use-swipe-actions";
 import type { SwipeAction } from "@/stores/settings-store";
 import { ThreadEmailItem } from "./thread-email-item";
 import { EmailHoverActions } from "./email-hover-actions";
+import { FollowUpChip, FollowUpFlagButton } from "./follow-up";
+import { useThreadFollowUpEmail } from "@/hooks/use-follow-ups";
 import { SearchSnippetText } from "./search-snippet-text";
 import { PluginRowBadges } from "./plugin-row-badges";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
@@ -719,6 +721,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   )}
                   {showPaperclip && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
                   {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} />}
+                  <FollowUpChip email={email} className={columns ? "max-w-28" : undefined} />
                   {scheduledSendLabel ? (
                     <span
                       className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -737,6 +740,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </span>
                   )}
                   {columns && <SizeCell bytes={email.size} />}
+                  <FollowUpFlagButton email={email} onlyWhenSet className="-my-1" />
                 </div>
               </div>
               {mvRow && (
@@ -815,6 +819,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         {formatDate(emailDisplayDate(email))}
                       </span>
                     )}
+                    <FollowUpFlagButton email={email} onlyWhenSet className="-my-1" />
                     {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
                       <MvMobileStar
                         starred={!!isStarred}
@@ -841,6 +846,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   )}>
                     {subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (email.subject || "(no subject)")}
                   </span>
+                  <FollowUpChip email={email} />
                   <PluginRowBadges email={email} />
                 </div>
 
@@ -1016,6 +1022,9 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       thread.emails.some(e => e.id === selectedEmailId);
 
     const isChecked = thread.emails.some(e => selectedEmailKeys.has(emailKeyFor(e)));
+    // The conversation's follow-up: on the newest mail that has one, else
+    // set on the newest mail, so a reply coming in gets no second one.
+    const followUpEmail = useThreadFollowUpEmail(thread.emails, latestEmail);
 
     if (emailCount === 1) {
       return (
@@ -1369,6 +1378,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     )}
                     {hasAttachment && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
                     {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} />}
+                    <FollowUpChip email={followUpEmail} className={columns ? "max-w-28" : undefined} />
                     {scheduledSendLabel ? (
                       <span
                         className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -1387,6 +1397,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </span>
                     )}
                     {columns && <SizeCell bytes={thread.emails.reduce((sum, e) => sum + (e.size ?? 0), 0)} />}
+                    <FollowUpFlagButton email={followUpEmail} onlyWhenSet className="-my-1" />
                   </div>
                 </div>
                 {mvRow && (
@@ -1472,6 +1483,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           {formatDate(emailDisplayDate(latestEmail))}
                         </span>
                       )}
+                      <FollowUpFlagButton email={followUpEmail} onlyWhenSet className="-my-1" />
                       {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
                         <MvMobileStar
                           starred={!!hasStarred}
@@ -1498,6 +1510,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     )}>
                       {subjectSnippet ? <SearchSnippetText snippet={subjectSnippet} /> : (latestEmail.subject || "(no subject)")}
                     </span>
+                    <FollowUpChip email={followUpEmail} />
                     <PluginRowBadges email={latestEmail} />
                   </div>
 
@@ -1546,6 +1559,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               isInJunk={currentMailboxRole === 'junk'}
               spamApplicable={!['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '')}
               mailboxRole={currentMailboxRole ?? null}
+              followUpEmail={followUpEmail}
             />
           )}
         </div>

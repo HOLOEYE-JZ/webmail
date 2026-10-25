@@ -4,12 +4,16 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Trash2, CalendarDays, Bell, Flag } from "@/components/icons";
+import { X, Trash2, CalendarDays, Bell, Flag, Mail } from "@/components/icons";
 import { format, parseISO } from "date-fns";
 
 import type { CalendarTask, Calendar, CalendarEventAlert } from "@/lib/jmap/types";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { taskToView } from "@/lib/plugin-projection";
+import { followUpMailRef } from "@/lib/follow-ups";
+import { useAuthStore } from "@/stores/auth-store";
+import { buildMailPath } from "@/lib/deep-links";
+import { useRouter } from "@/i18n/navigation";
 
 interface TaskModalProps {
   task?: CalendarTask | null;
@@ -49,7 +53,14 @@ export function TaskModal({
   isMobile: _isMobile,
 }: TaskModalProps) {
   const t = useTranslations("calendar");
+  const tFollowUp = useTranslations("follow_up");
+  const router = useRouter();
   const isEdit = !!task;
+  // A follow-up on a mail links to it. The link names the mail's JMAP
+  // account; it opens here when that is the primary one (or none is named).
+  const mailAccountId = useAuthStore((s) => s.client?.getAccountId() ?? null);
+  const mailRef = task && !task.isShared ? followUpMailRef(task) : null;
+  const followUpMailId = mailRef && (!mailRef.accountId || mailRef.accountId === mailAccountId) ? mailRef.emailId : null;
   const titleRef = useRef<HTMLInputElement>(null);
   // task-detail-section: the saved task, for an existing task only.
   const pluginTaskProps = useMemo(() => (task ? { task: taskToView(task) } : null), [task]);
@@ -186,6 +197,21 @@ export function TaskModal({
           placeholder={t("tasks.title_placeholder")}
           className="text-base font-medium"
         />
+
+        {followUpMailId && (
+          <button
+            type="button"
+            data-testid="task-open-mail"
+            onClick={() => {
+              onClose();
+              router.push(buildMailPath({ mailboxId: null, emailId: followUpMailId, threadId: null }) as never);
+            }}
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+          >
+            <Mail className="h-4 w-4" />
+            {tFollowUp("open_mail")}
+          </button>
+        )}
 
         {/* Description */}
         <textarea
