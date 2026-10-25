@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { differenceInCalendarDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { Bell, Check, ChevronDown, Flag, Reply, Users } from "@/components/icons";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import {
@@ -258,8 +259,50 @@ function FollowUpChipView({ task, testId, palette, data, lead, reminderAt, settl
   );
 }
 
-/** "⚑ Follow up ▾" in the reader, opening the popover "Follow up" under it. */
-export function FollowUpReaderButton({ email }: { email: Email }) {
+type ToolbarButtonProps = Omit<ButtonProps, "onClick" | "children"> & DataAttributes;
+
+/**
+ * "⚑ Follow up ▾" in the reader's toolbar, opening the popover "Follow up"
+ * under it; coloured by the mail's follow-up, plain without one.
+ */
+export function FollowUpToolbarButton({ email, showLabel, className, ...props }: ToolbarButtonProps & {
+  email: Email;
+  showLabel: boolean;
+}) {
+  const t = useTranslations("follow_up");
+  const controls = useFollowUp(email);
+  if (!controls.available) return null;
+  const state = controls.task ? followUpState(controls.task, displayNow()) : null;
+  return (
+    <Button
+      {...props}
+      variant="ghost"
+      size="sm"
+      data-testid="follow-up-toolbar-button"
+      data-follow-up={state ?? undefined}
+      aria-haspopup="menu"
+      title={t("menu_entry")}
+      className={cn(className, state && FLAG_CLASSES[state])}
+      onClick={(e) => useFollowUpPopover.getState().openBelow(email, e.currentTarget)}
+    >
+      <Flag className={cn("w-4 h-4", state && state !== "done" && "fill-current")} />
+      {showLabel && <span className="text-[10px] leading-tight sm:text-sm">{t("reader_button")}</span>}
+      <ChevronDown className="hidden sm:block w-3.5 h-3.5 -ms-1" />
+    </Button>
+  );
+}
+
+/**
+ * "Follow up…" in a menu the toolbar's actions overflow into: `onOpen`
+ * closes that menu, the popover opens under `anchor()`, its button.
+ */
+export function FollowUpMenuEntry({ email, anchor, onOpen, className, iconClassName }: {
+  email: Email;
+  anchor: () => HTMLElement | null;
+  onOpen: () => void;
+  className?: string;
+  iconClassName?: string;
+}) {
   const t = useTranslations("follow_up");
   const controls = useFollowUp(email);
   if (!controls.available) return null;
@@ -267,17 +310,18 @@ export function FollowUpReaderButton({ email }: { email: Email }) {
   return (
     <button
       type="button"
-      data-testid="follow-up-reader-button"
+      role="menuitem"
       aria-haspopup="menu"
-      className={cn(
-        "flex-shrink-0 self-center inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs hover:bg-muted transition-colors",
-        state ? FLAG_CLASSES[state] : "text-muted-foreground",
-      )}
-      onClick={(e) => useFollowUpPopover.getState().openBelow(email, e.currentTarget)}
+      data-testid="follow-up-menu-entry"
+      className={className}
+      onClick={() => {
+        const element = anchor();
+        onOpen();
+        if (element) useFollowUpPopover.getState().openBelow(email, element);
+      }}
     >
-      <Flag className={cn("w-4 h-4", state && state !== "done" && "fill-current")} />
-      <span>{t("reader_button")}</span>
-      <ChevronDown className="w-3.5 h-3.5" />
+      <Flag className={cn(iconClassName, state && FLAG_CLASSES[state], state && state !== "done" && "fill-current")} />
+      {t("menu_entry")}
     </button>
   );
 }

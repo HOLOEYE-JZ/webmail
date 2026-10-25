@@ -24,7 +24,7 @@ vi.mock('@/hooks/use-follow-ups', async (importOriginal) => ({
 }));
 
 const { FollowUpPopoverHost } = await import('../follow-up-popover');
-const { FollowUpFlagButton, FollowUpReaderButton } = await import('../follow-up');
+const { FollowUpFlagButton, FollowUpMenuEntry, FollowUpToolbarButton } = await import('../follow-up');
 const { EmailContextMenu } = await import('../email-context-menu');
 
 // Monday 26.10.2026, 09:00 on the wall clock; working hours 08:00–17:00.
@@ -183,11 +183,53 @@ describe('the popover "Follow up"', () => {
     expect(popover()).toBeNull();
   });
 
-  it('opens under the reader\'s button', () => {
-    render(<><FollowUpReaderButton email={mail} /><FollowUpPopoverHost /></>);
-    fireEvent.click(screen.getByTestId('follow-up-reader-button'));
+  it('opens under the toolbar\'s button', () => {
+    render(<><FollowUpToolbarButton email={mail} showLabel /><FollowUpPopoverHost /></>);
+    const button = screen.getByTestId('follow-up-toolbar-button');
+    expect(button.textContent).toBe('reader_button');
+    fireEvent.click(button);
     expect(popover()).not.toBeNull();
-    expect(useFollowUpPopover.getState().trigger).toBe(screen.getByTestId('follow-up-reader-button'));
+    expect(useFollowUpPopover.getState().trigger).toBe(button);
+  });
+
+  it('colours the toolbar\'s button by the follow-up, plain without one', () => {
+    const { rerender } = render(<FollowUpToolbarButton email={mail} showLabel={false} />);
+    const button = screen.getByTestId('follow-up-toolbar-button');
+    expect(button.dataset.followUp).toBeUndefined();
+    expect(button.className).not.toMatch(/text-(orange|destructive|emerald)/);
+    expect(button.textContent).toBe('');
+
+    controls = makeControls({ task });
+    rerender(<FollowUpToolbarButton email={mail} showLabel={false} />);
+    expect(button.dataset.followUp).toBe('open');
+    expect(button.className).toMatch(/text-orange-600/);
+
+    controls = makeControls({ task: { ...task, due: '2026-10-20T00:00:00' } });
+    rerender(<FollowUpToolbarButton email={mail} showLabel={false} />);
+    expect(button.dataset.followUp).toBe('overdue');
+    expect(button.className).toMatch(/text-destructive/);
+  });
+
+  it('has no toolbar button or menu entry where follow-ups are not available', () => {
+    controls = makeControls({ available: false });
+    render(<><FollowUpToolbarButton email={mail} showLabel /><FollowUpMenuEntry email={mail} anchor={() => null} onOpen={vi.fn()} /></>);
+    expect(screen.queryByTestId('follow-up-toolbar-button')).toBeNull();
+    expect(screen.queryByTestId('follow-up-menu-entry')).toBeNull();
+  });
+
+  it('opens from a menu entry under the anchor, after the menu closed', () => {
+    const onOpen = vi.fn();
+    render(
+      <>
+        <button type="button" data-testid="more">more</button>
+        <FollowUpMenuEntry email={mail} anchor={() => screen.getByTestId('more')} onOpen={onOpen} />
+        <FollowUpPopoverHost />
+      </>,
+    );
+    fireEvent.click(screen.getByTestId('follow-up-menu-entry'));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(popover()).not.toBeNull();
+    expect(useFollowUpPopover.getState().trigger).toBe(screen.getByTestId('more'));
   });
 });
 
