@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Urmărire",
     "menu_title_only_me": "Urmărire (doar eu)",
+    "menu_entry": "Urmărire…",
     "reader_button": "Urmărire",
     "flag_set": "Urmărește azi (clic dreapta: mai mult)",
     "flag_done": "Marchează ca finalizat (clic dreapta: mai mult)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Nu redirecționa"
     },
     "custom": "Personalizat…",
-    "add_reminder": "Adaugă memento…",
     "change_button": "Modifică…",
     "dialog_title": "De urmărit",
     "dialog_title_edit": "Modifică urmărirea",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Pentru un coleg din {group} …",
       "menu_colleague_short": "Pentru un coleg …",
+      "group_mailbox": "Căsuță de grup",
       "only_in_group": "doar într-o căsuță de grup",
       "no_list": "căsuța de grup nu are o listă de activități în care să puteți scrie",
       "for_label": "Pentru",

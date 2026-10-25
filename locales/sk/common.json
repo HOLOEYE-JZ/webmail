@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Spracovať",
     "menu_title_only_me": "Spracovať (len ja)",
+    "menu_entry": "Spracovať…",
     "reader_button": "Spracovať",
     "flag_set": "Spracovať dnes (pravé tlačidlo: ďalšie)",
     "flag_done": "Označiť ako dokončené (pravé tlačidlo: ďalšie)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Nepreposielať"
     },
     "custom": "Vlastné…",
-    "add_reminder": "Pridať pripomenutie…",
     "change_button": "Zmeniť…",
     "dialog_title": "Spracovať",
     "dialog_title_edit": "Zmeniť príznak",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Pre kolegu v {group} …",
       "menu_colleague_short": "Pre kolegu …",
+      "group_mailbox": "Skupinová schránka",
       "only_in_group": "len v skupinovej schránke",
       "no_list": "skupinová schránka nemá zoznam úloh, do ktorého môžete zapisovať",
       "for_label": "Pre",

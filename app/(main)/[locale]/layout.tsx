@@ -13,6 +13,7 @@ import { CommandPaletteHost } from "@/components/command-palette/command-palette
 import { PluginConnectDialog } from "@/components/plugins/plugin-connect-dialog";
 import { QuickRuleHost } from "@/components/filters/quick-rule-host";
 import { FollowUpDialogHost } from "@/components/email/follow-up-dialog";
+import { FollowUpPopoverHost } from "@/components/email/follow-up-popover";
 import { PluginConsentDialog } from "@/components/plugins/plugin-consent-dialog";
 import { PluginAppEvents } from "@/components/providers/plugin-app-events";
 import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth-callback-listener";
@@ -63,6 +64,7 @@ export default async function LocaleLayout({
                   <CommandPaletteHost />
                   <PluginConnectDialog />
                   <QuickRuleHost />
+                  <FollowUpPopoverHost />
                   <FollowUpDialogHost />
                   <PluginConsentDialog />
                   <PluginOAuthCallbackListener />

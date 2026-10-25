@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Takip et",
     "menu_title_only_me": "Takip et (yalnızca ben)",
+    "menu_entry": "Takip et…",
     "reader_button": "Takip et",
     "flag_set": "Bugün takip et (sağ tık: daha fazla)",
     "flag_done": "Tamamlandı olarak işaretle (sağ tık: daha fazla)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "İletme"
     },
     "custom": "Özel…",
-    "add_reminder": "Anımsatıcı ekle…",
     "change_button": "Değiştir…",
     "dialog_title": "Takip et",
     "dialog_title_edit": "Takibi değiştir",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "{group} içindeki bir iş arkadaşı için …",
       "menu_colleague_short": "Bir iş arkadaşı için …",
+      "group_mailbox": "Grup posta kutusu",
       "only_in_group": "yalnızca grup posta kutusunda",
       "no_list": "grup posta kutusunda yazabileceğiniz bir görev listesi yok",
       "for_label": "Kimin için",

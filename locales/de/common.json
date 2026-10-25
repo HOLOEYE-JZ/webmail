@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Zur Nachverfolgung",
     "menu_title_only_me": "Zur Nachverfolgung (nur ich)",
+    "menu_entry": "Zur Nachverfolgung …",
     "reader_button": "Nachverfolgung",
     "flag_set": "Heute nachverfolgen (Rechtsklick: Menü)",
     "flag_done": "Als erledigt markieren (Rechtsklick: Menü)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Nicht weiterleiten"
     },
     "custom": "Benutzerdefiniert …",
-    "add_reminder": "Erinnerung hinzufügen …",
     "change_button": "Ändern …",
     "dialog_title": "Nachverfolgung",
     "dialog_title_edit": "Nachverfolgung ändern",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Für Kollegen in {group} …",
       "menu_colleague_short": "Für Kollegen …",
+      "group_mailbox": "Gruppenpostfach",
       "only_in_group": "nur im Gruppenpostfach",
       "no_list": "das Gruppenpostfach hat keine Aufgabenliste, in die Sie schreiben können",
       "for_label": "Für",

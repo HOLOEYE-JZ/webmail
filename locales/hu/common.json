@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Nyomon követés",
     "menu_title_only_me": "Nyomon követés (csak én)",
+    "menu_entry": "Nyomon követés…",
     "reader_button": "Nyomon követés",
     "flag_set": "Nyomon követés ma (jobb klikk: továbbiak)",
     "flag_done": "Megjelölés készként (jobb klikk: továbbiak)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Ne továbbítsa"
     },
     "custom": "Egyéni…",
-    "add_reminder": "Emlékeztető hozzáadása…",
     "change_button": "Módosítás…",
     "dialog_title": "Nyomon követés",
     "dialog_title_edit": "Nyomon követés módosítása",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Kollégának itt: {group} …",
       "menu_colleague_short": "Kollégának …",
+      "group_mailbox": "Csoportos postafiók",
       "only_in_group": "csak csoportos postafiókban",
       "no_list": "a csoportos postafióknak nincs írható feladatlistája",
       "for_label": "Kinek",

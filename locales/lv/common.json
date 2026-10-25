@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Turpmākā darbība",
     "menu_title_only_me": "Turpmākā darbība (tikai es)",
+    "menu_entry": "Turpmākā darbība…",
     "reader_button": "Turpmākā darbība",
     "flag_set": "Turpināt šodien (labais klikšķis: vairāk)",
     "flag_done": "Atzīmēt kā pabeigtu (labais klikšķis: vairāk)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Nepārsūtīt"
     },
     "custom": "Pielāgots…",
-    "add_reminder": "Pievienot atgādinājumu…",
     "change_button": "Mainīt…",
     "dialog_title": "Turpināt",
     "dialog_title_edit": "Mainīt turpināšanu",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Kolēģim grupā {group} …",
       "menu_colleague_short": "Kolēģim …",
+      "group_mailbox": "Grupas pastkaste",
       "only_in_group": "tikai grupas pastkastē",
       "no_list": "grupas pastkastei nav uzdevumu saraksta, kurā varat rakstīt",
       "for_label": "Kam",

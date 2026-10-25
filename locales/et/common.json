@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Järelkontroll",
     "menu_title_only_me": "Järelkontroll (ainult mina)",
+    "menu_entry": "Järelkontroll…",
     "reader_button": "Järelkontroll",
     "flag_set": "Kontrolli täna (paremklõps: veel)",
     "flag_done": "Märgi tehtuks (paremklõps: veel)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Ära edasta"
     },
     "custom": "Kohandatud…",
-    "add_reminder": "Lisa meeldetuletus…",
     "change_button": "Muuda…",
     "dialog_title": "Järelkontroll",
     "dialog_title_edit": "Muuda järelkontrolli",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Kolleegile kaustas {group} …",
       "menu_colleague_short": "Kolleegile …",
+      "group_mailbox": "Rühmapostkast",
       "only_in_group": "ainult rühmapostkastis",
       "no_list": "rühmapostkastil pole ülesandeloendit, kuhu saaksid kirjutada",
       "for_label": "Kellele",

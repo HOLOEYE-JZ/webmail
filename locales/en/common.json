@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Follow up",
     "menu_title_only_me": "Follow up (only me)",
+    "menu_entry": "Follow up…",
     "reader_button": "Follow up",
     "flag_set": "Follow up today (right-click: more)",
     "flag_done": "Mark complete (right-click: more)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Do not Forward"
     },
     "custom": "Custom…",
-    "add_reminder": "Add reminder…",
     "change_button": "Change…",
     "dialog_title": "Follow up",
     "dialog_title_edit": "Change follow-up",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "For a colleague in {group} …",
       "menu_colleague_short": "For a colleague …",
+      "group_mailbox": "Group mailbox",
       "only_in_group": "only in a group mailbox",
       "no_list": "the group mailbox has no task list you can write to",
       "for_label": "For",

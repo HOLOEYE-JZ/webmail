@@ -53,7 +53,7 @@ import { TagPicker } from "./tag-picker";
 import { RulesContextSubMenu } from "./rules-menu";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { useFollowUp } from "@/hooks/use-follow-ups";
-import { FollowUpMenuItems } from "./follow-up";
+import { useFollowUpPopover } from "@/stores/follow-up-popover-store";
 
 interface Position {
   x: number;
@@ -481,11 +481,14 @@ export function EmailContextMenu({
   );
   const followUpItem = (
     <>
-        {/* Follow up: a task with a due day and a reminder, mirrored as the star */}
+        {/* Follow up: a task with a due day and a reminder, mirrored as the star; set in its popover, opened where the menu was */}
         {!showBatchActions && followUp.available && (
-          <ContextMenuSubMenu icon={Flag} label={followUp.onlyMe ? tFollowUp("menu_title_only_me") : tFollowUp("menu_title")} testId="ctx-follow-up">
-            <FollowUpMenuItems controls={followUp} onClose={onClose} heading={false} />
-          </ContextMenuSubMenu>
+          <ContextMenuItem
+            icon={Flag}
+            label={tFollowUp("menu_entry")}
+            testId="ctx-follow-up"
+            onClick={() => handleAction(() => useFollowUpPopover.getState().openAt(email, position))}
+          />
         )}
     </>
   );

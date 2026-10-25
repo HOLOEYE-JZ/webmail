@@ -4584,6 +4584,7 @@
     },
     "menu_title": "后续处理",
     "menu_title_only_me": "后续处理 (仅限我)",
+    "menu_entry": "后续处理…",
     "reader_button": "后续处理",
     "flag_set": "今天跟进 (右键: 更多)",
     "flag_done": "标记为完成 (右键: 更多)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "不得转发"
     },
     "custom": "自定义…",
-    "add_reminder": "添加提醒…",
     "change_button": "更改…",
     "dialog_title": "跟进",
     "dialog_title_edit": "更改跟进",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "为 {group} 中的同事 …",
       "menu_colleague_short": "为同事 …",
+      "group_mailbox": "群组邮箱",
       "only_in_group": "仅限群组邮箱",
       "no_list": "群组邮箱没有您可写入的任务列表",
       "for_label": "负责人",

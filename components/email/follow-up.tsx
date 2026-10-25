@@ -2,25 +2,18 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { differenceInCalendarDays, isSameDay } from "date-fns";
+import { differenceInCalendarDays } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Bell, Check, ChevronDown, Flag, Pencil, Reply, Users } from "@/components/icons";
-import {
-  ContextMenu,
-  ContextMenuHeader,
-  ContextMenuItem,
-  ContextMenuSeparator,
-} from "@/components/ui/context-menu";
-import { useContextMenu } from "@/hooks/use-context-menu";
+import { Bell, Check, ChevronDown, Flag, Reply, Users } from "@/components/icons";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import {
   completeTask,
   followUpMailAccount,
   useFollowUp,
   useFollowUpsEnabled,
-  type FollowUpControls,
 } from "@/hooks/use-follow-ups";
 import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
+import { useFollowUpPopover } from "@/stores/follow-up-popover-store";
 import {
   deleteGroupTask,
   groupListOfTask,
@@ -35,7 +28,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { groupTaskPeople, isTaskForMe } from "@/lib/group-follow-ups";
 import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
-import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
+import { displayNow, toDisplayDate } from "@/lib/timezone";
 import {
   followUpAction,
   followUpActionKey,
@@ -46,7 +39,7 @@ import {
   type FollowUpState,
 } from "@/lib/follow-ups";
 import { settlesOnReply } from "@/lib/follow-up-replies";
-import { dueDistance, FOLLOW_UP_CHOICES, scheduleFollowUp } from "@/lib/follow-up-schedule";
+import { dueDistance } from "@/lib/follow-up-schedule";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
 
 const DAY_FORMAT = { weekday: "short", day: "2-digit", month: "2-digit" } as const;
@@ -115,105 +108,9 @@ const FLAG_CLASSES: Record<FollowUpState, string> = {
 };
 
 /**
- * The menu's entries: the quick choices, each with its due day and reminder
- * time, then done and remove.
- */
-export function FollowUpMenuItems({ controls, onClose, heading = true }: {
-  controls: FollowUpControls;
-  onClose: () => void;
-  /** Off inside a submenu, whose entry already names it. */
-  heading?: boolean;
-}) {
-  const t = useTranslations("follow_up");
-  const fmt = useFollowUpFormat();
-  const now = displayNow();
-  const { task, workingTime } = controls;
-  const open = !!task && task.progress !== "completed";
-
-  return (
-    <>
-      {heading && <ContextMenuHeader>{controls.onlyMe ? t("menu_title_only_me") : t("menu_title")}</ContextMenuHeader>}
-      {FOLLOW_UP_CHOICES.map((choice) => {
-        const { due, reminder } = scheduleFollowUp(choice, now, workingTime);
-        // The reminder's time, with its weekday when it comes before the due day.
-        const remind = reminder && (due && isSameDay(reminder, due)
-          ? fmt.time(fromDisplayDate(reminder))
-          : fmt.weekdayTime(fromDisplayDate(reminder)));
-        const parts = [due && fmt.day(due), remind].filter(Boolean);
-        return (
-          <ContextMenuItem
-            key={choice}
-            icon={Flag}
-            label={t(`choices.${choice}`)}
-            shortcut={parts.join(" · ") || undefined}
-            testId={`follow-up-${choice}`}
-            onClick={() => { onClose(); void controls.apply(choice); }}
-          />
-        );
-      })}
-      <ContextMenuItem
-        icon={Pencil}
-        label={t("custom")}
-        testId="follow-up-custom"
-        onClick={() => { onClose(); controls.openDialog("action"); }}
-      />
-      <ContextMenuItem
-        icon={Bell}
-        label={t("add_reminder")}
-        testId="follow-up-add-reminder"
-        onClick={() => { onClose(); controls.openDialog("reminder"); }}
-      />
-      {/* A colleague only in a group mailbox's list: they could not read a mail of the user's own. */}
-      {controls.group ? (
-        <ContextMenuItem
-          icon={Users}
-          label={t("group.menu_colleague", { group: controls.group.name })}
-          testId="follow-up-colleague"
-          onClick={() => { onClose(); controls.openGroupDialog(); }}
-        />
-      ) : (
-        <ContextMenuItem
-          icon={Users}
-          label={t("group.menu_colleague_short")}
-          hint={controls.onlyMe ? t("group.no_list") : t("group.only_in_group")}
-          testId="follow-up-colleague"
-          disabled
-          onClick={() => {}}
-        />
-      )}
-      <ContextMenuSeparator />
-      <ContextMenuItem
-        icon={Check}
-        label={t("mark_done")}
-        testId="follow-up-done"
-        disabled={!open}
-        onClick={() => { onClose(); void controls.markDone(); }}
-      />
-      <ContextMenuItem
-        icon={Flag}
-        label={t("remove")}
-        testId="follow-up-remove"
-        disabled={!task}
-        onClick={() => { onClose(); void controls.remove(); }}
-      />
-    </>
-  );
-}
-
-/** The menu on its own, at the pointer or under a button. */
-function useFollowUpMenu(controls: FollowUpControls) {
-  const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<true>();
-  const menu = (
-    <ContextMenu ref={menuRef} isOpen={contextMenu.isOpen} position={contextMenu.position} onClose={closeContextMenu}>
-      <FollowUpMenuItems controls={controls} onClose={closeContextMenu} />
-    </ContextMenu>
-  );
-  return { menu, openContextMenu };
-}
-
-/**
  * The ⚑ at a list row's end: a click sets "Today", the next marks it done,
- * the next removes it (Outlook's Quick Click); a right click opens the menu.
+ * the next removes it (Outlook's Quick Click); a right click opens the
+ * popover "Follow up" there.
  */
 export function FollowUpFlagButton({ email, className, onlyWhenSet = false, revealOnHover = false }: {
   email: Email;
@@ -226,7 +123,6 @@ export function FollowUpFlagButton({ email, className, onlyWhenSet = false, reve
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
   const controls = useFollowUp(email);
-  const { menu, openContextMenu } = useFollowUpMenu(controls);
   const { task } = controls;
   if (!controls.available || (onlyWhenSet && !task)) return null;
 
@@ -241,27 +137,28 @@ export function FollowUpFlagButton({ email, className, onlyWhenSet = false, reve
   const Icon = state === "done" ? Check : Flag;
 
   return (
-    <>
-      <button
-        type="button"
-        data-testid="follow-up-flag"
-        data-follow-up={state ?? "none"}
-        aria-label={label}
-        title={title}
-        className={cn(
-          "rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/10",
-          state ? FLAG_CLASSES[state] : "text-muted-foreground hover:text-orange-600 dark:hover:text-orange-400",
-          !state && revealOnHover && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
-          className,
-        )}
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); void controls.quickClick(); }}
-        onDoubleClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-        onContextMenu={(e) => openContextMenu(e, true)}
-      >
-        <Icon className={cn("w-4 h-4", state && state !== "done" && "fill-current")} />
-      </button>
-      {menu}
-    </>
+    <button
+      type="button"
+      data-testid="follow-up-flag"
+      data-follow-up={state ?? "none"}
+      aria-label={label}
+      title={title}
+      className={cn(
+        "rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/10",
+        state ? FLAG_CLASSES[state] : "text-muted-foreground hover:text-orange-600 dark:hover:text-orange-400",
+        !state && revealOnHover && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+        className,
+      )}
+      onClick={(e) => { e.stopPropagation(); e.preventDefault(); void controls.quickClick(); }}
+      onDoubleClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        useFollowUpPopover.getState().openAt(email, { x: e.clientX, y: e.clientY }, e.currentTarget);
+      }}
+    >
+      <Icon className={cn("w-4 h-4", state && state !== "done" && "fill-current")} />
+    </button>
   );
 }
 
@@ -361,35 +258,27 @@ function FollowUpChipView({ task, testId, palette, data, lead, reminderAt, settl
   );
 }
 
-/** "⚑ Follow up ▾" in the reader. */
+/** "⚑ Follow up ▾" in the reader, opening the popover "Follow up" under it. */
 export function FollowUpReaderButton({ email }: { email: Email }) {
   const t = useTranslations("follow_up");
   const controls = useFollowUp(email);
-  const { menu, openContextMenu } = useFollowUpMenu(controls);
-  const openBelow = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    openContextMenu({ ...e, clientX: rect.left, clientY: rect.bottom + 4, preventDefault: () => e.preventDefault(), stopPropagation: () => e.stopPropagation() }, true);
-  }, [openContextMenu]);
   if (!controls.available) return null;
   const state = controls.task ? followUpState(controls.task, displayNow()) : null;
   return (
-    <>
-      <button
-        type="button"
-        data-testid="follow-up-reader-button"
-        aria-haspopup="menu"
-        className={cn(
-          "flex-shrink-0 self-center inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs hover:bg-muted transition-colors",
-          state ? FLAG_CLASSES[state] : "text-muted-foreground",
-        )}
-        onClick={openBelow}
-      >
-        <Flag className={cn("w-4 h-4", state && state !== "done" && "fill-current")} />
-        <span>{t("reader_button")}</span>
-        <ChevronDown className="w-3.5 h-3.5" />
-      </button>
-      {menu}
-    </>
+    <button
+      type="button"
+      data-testid="follow-up-reader-button"
+      aria-haspopup="menu"
+      className={cn(
+        "flex-shrink-0 self-center inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs hover:bg-muted transition-colors",
+        state ? FLAG_CLASSES[state] : "text-muted-foreground",
+      )}
+      onClick={(e) => useFollowUpPopover.getState().openBelow(email, e.currentTarget)}
+    >
+      <Flag className={cn("w-4 h-4", state && state !== "done" && "fill-current")} />
+      <span>{t("reader_button")}</span>
+      <ChevronDown className="w-3.5 h-3.5" />
+    </button>
   );
 }
 

@@ -4584,6 +4584,7 @@
     },
     "menu_title": "متابعة",
     "menu_title_only_me": "متابعة (أنا فقط)",
+    "menu_entry": "متابعة…",
     "reader_button": "متابعة",
     "flag_set": "متابعة اليوم (نقر بزر الفأرة الأيمن: المزيد)",
     "flag_done": "وضع علامة مكتمل (نقر بزر الفأرة الأيمن: المزيد)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "عدم إعادة التوجيه"
     },
     "custom": "مخصص…",
-    "add_reminder": "إضافة تذكير…",
     "change_button": "تغيير…",
     "dialog_title": "متابعة",
     "dialog_title_edit": "تغيير المتابعة",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "لزميل في {group} …",
       "menu_colleague_short": "لزميل …",
+      "group_mailbox": "صندوق بريد جماعي",
       "only_in_group": "فقط في صندوق بريد جماعي",
       "no_list": "لا توجد في صندوق البريد الجماعي قائمة مهام يمكنك الكتابة فيها",
       "for_label": "لـ",

@@ -4585,6 +4585,7 @@
     },
     "menu_title": "מעקב",
     "menu_title_only_me": "מעקב (רק אני)",
+    "menu_entry": "מעקב…",
     "reader_button": "מעקב",
     "flag_set": "מעקב היום (לחיצה ימנית: עוד)",
     "flag_done": "סימון כהושלם (לחיצה ימנית: עוד)",
@@ -4638,7 +4639,6 @@
       "do_not_forward": "אל תעביר"
     },
     "custom": "מותאם אישית…",
-    "add_reminder": "הוסף תזכורת…",
     "change_button": "שנה…",
     "dialog_title": "מעקב",
     "dialog_title_edit": "שינוי מעקב",
@@ -4726,6 +4726,7 @@
     "group": {
       "menu_colleague": "לעמית ב-{group} …",
       "menu_colleague_short": "לעמית …",
+      "group_mailbox": "תיבת דואר קבוצתית",
       "only_in_group": "רק בתיבת דואר קבוצתית",
       "no_list": "לתיבת הדואר הקבוצתית אין רשימת משימות שאפשר לכתוב בה",
       "for_label": "עבור",

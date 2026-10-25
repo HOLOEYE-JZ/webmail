@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Seguiment",
     "menu_title_only_me": "Seguiment (només jo)",
+    "menu_entry": "Seguiment…",
     "reader_button": "Seguiment",
     "flag_set": "Fer seguiment avui (clic dret: més)",
     "flag_done": "Marca com a completat (clic dret: més)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "No reenviïs"
     },
     "custom": "Personalitzat…",
-    "add_reminder": "Afegeix un recordatori…",
     "change_button": "Canvia…",
     "dialog_title": "Seguiment",
     "dialog_title_edit": "Canvia el seguiment",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Per a un company a {group} …",
       "menu_colleague_short": "Per a un company …",
+      "group_mailbox": "Bústia de grup",
       "only_in_group": "només en una bústia de grup",
       "no_list": "la bústia de grup no té cap llista de tasques on pugueu escriure",
       "for_label": "Per a",

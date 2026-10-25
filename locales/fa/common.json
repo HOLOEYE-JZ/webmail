@@ -4584,6 +4584,7 @@
     },
     "menu_title": "پیگیری",
     "menu_title_only_me": "پیگیری (فقط من)",
+    "menu_entry": "پیگیری…",
     "reader_button": "پیگیری",
     "flag_set": "پیگیری امروز (کلیک راست: بیشتر)",
     "flag_done": "علامت‌گذاری به‌عنوان انجام‌شده (کلیک راست: بیشتر)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "هدایت نشود"
     },
     "custom": "سفارشی…",
-    "add_reminder": "افزودن یادآور…",
     "change_button": "تغییر…",
     "dialog_title": "پیگیری",
     "dialog_title_edit": "تغییر پیگیری",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "برای همکار در {group} …",
       "menu_colleague_short": "برای همکار …",
+      "group_mailbox": "صندوق پستی گروهی",
       "only_in_group": "فقط در صندوق پستی گروهی",
       "no_list": "صندوق پستی گروهی فهرست کاری ندارد که بتوانید در آن بنویسید",
       "for_label": "برای",

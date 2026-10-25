@@ -4584,6 +4584,7 @@
     },
     "menu_title": "후속 조치",
     "menu_title_only_me": "후속 조치 (나만)",
+    "menu_entry": "후속 조치…",
     "reader_button": "후속 조치",
     "flag_set": "오늘 후속 조치 (오른쪽 클릭: 더 보기)",
     "flag_done": "완료로 표시 (오른쪽 클릭: 더 보기)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "전달 금지"
     },
     "custom": "사용자 지정…",
-    "add_reminder": "미리 알림 추가…",
     "change_button": "변경…",
     "dialog_title": "후속 조치",
     "dialog_title_edit": "후속 조치 변경",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "{group}의 동료를 위해 …",
       "menu_colleague_short": "동료를 위해 …",
+      "group_mailbox": "그룹 사서함",
       "only_in_group": "그룹 사서함에서만",
       "no_list": "그룹 사서함에 쓸 수 있는 작업 목록이 없습니다",
       "for_label": "대상",

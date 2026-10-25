@@ -2,7 +2,9 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FollowUpDialog, ReminderDialog } from '../follow-up-dialog';
 import { FollowUpChip, FollowUpFlagButton, FollowUpInfoBar } from '../follow-up';
+import { FollowUpPopoverHost } from '../follow-up-popover';
 import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
+import { useFollowUpPopover } from '@/stores/follow-up-popover-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -140,6 +142,7 @@ beforeEach(() => {
   useTaskStore.setState({ tasks: [] });
   useEmailStore.setState({ emails: [{ ...mail, keywords: { ...mail.keywords } }], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null });
   useFollowUpDialog.setState({ email: null });
+  useFollowUpPopover.setState({ email: null });
 });
 
 afterEach(() => {
@@ -599,16 +602,25 @@ describe('a follow-up written in another language', () => {
   });
 });
 
-describe('the follow-up menu', () => {
-  it('"Custom…" and "Add reminder…" open the dialog for the mail', () => {
-    render(<FollowUpFlagButton email={mail} />);
+describe('the follow-up popover', () => {
+  it('"Custom…" opens the dialog for the mail', () => {
+    render(<><FollowUpFlagButton email={mail} /><FollowUpPopoverHost /></>);
     fireEvent.contextMenu(screen.getByTestId('follow-up-flag'));
+    expect(screen.queryByTestId('follow-up-add-reminder')).toBeNull();
     fireEvent.click(screen.getByTestId('follow-up-custom'));
     expect(useFollowUpDialog.getState()).toMatchObject({ email: mail, focus: 'action' });
+  });
 
+  it('"Today" writes the follow-up due today, reminding an hour before the working day ends, and flags the mail', async () => {
+    render(<><FollowUpFlagButton email={mail} /><FollowUpPopoverHost /></>);
     fireEvent.contextMenu(screen.getByTestId('follow-up-flag'));
-    fireEvent.click(screen.getByTestId('follow-up-add-reminder'));
-    expect(useFollowUpDialog.getState()).toMatchObject({ email: mail, focus: 'reminder' });
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-today')); });
+    await waitFor(() => expect(client.createCalendarTask).toHaveBeenCalledTimes(1));
+    const written = client.createCalendarTask.mock.calls[0][0];
+    expect(written).toMatchObject({ due: '2026-10-26T00:00:00', calendarIds: { tasks: true } });
+    const trigger = written.alerts!['follow-up'].trigger;
+    expect(new Date(trigger['@type'] === 'AbsoluteTrigger' ? trigger.when : '')).toEqual(new Date(2026, 9, 26, 16, 0));
+    expect(flagged()).toBe(true);
   });
 });
 
@@ -690,9 +702,10 @@ describe('a group mailbox\'s mail ("only me")', () => {
 
   it('the menu is headed "only me" and a quick click completes the follow-up without touching the mail', async () => {
     useTaskStore.setState({ tasks: [groupFollowUp()] });
-    render(<FollowUpFlagButton email={groupMail} />);
+    render(<><FollowUpFlagButton email={groupMail} /><FollowUpPopoverHost /></>);
     fireEvent.contextMenu(screen.getByTestId('follow-up-flag'));
     expect(screen.getByText('menu_title_only_me')).toBeTruthy();
+    act(() => useFollowUpPopover.getState().close());
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-flag')); });
     await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
     expect(client.updateCalendarTask.mock.calls[0][1]).toMatchObject({ progress: 'completed' });

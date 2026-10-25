@@ -2,7 +2,9 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FollowUpDialog, ReminderDialog } from '../follow-up-dialog';
 import { FollowUpChip, FollowUpFlagButton, FollowUpInfoBar } from '../follow-up';
+import { FollowUpPopoverHost } from '../follow-up-popover';
 import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
+import { useFollowUpPopover } from '@/stores/follow-up-popover-store';
 import { useGroupTasks } from '@/stores/group-task-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
@@ -165,6 +167,7 @@ beforeEach(() => {
   useTaskStore.setState({ tasks: [] });
   useEmailStore.setState({ emails: [{ ...groupMail }], selectedEmail: null, mailboxes: [groupFolder], selectedMailbox: 'grp:inbox', viewingAccountId: null });
   useFollowUpDialog.setState({ email: null, group: null });
+  useFollowUpPopover.setState({ email: null });
   setGroupList(groupList());
 });
 
@@ -173,9 +176,9 @@ afterEach(() => {
   act(() => useGroupTasks.getState().clear());
 });
 
-describe('the follow-up menu', () => {
+describe('the follow-up popover', () => {
   it('offers "for a colleague" on a group mailbox\'s mail and opens the dialog for the group\'s list', () => {
-    render(<FollowUpFlagButton email={groupMail} />);
+    render(<><FollowUpFlagButton email={groupMail} /><FollowUpPopoverHost /></>);
     fireEvent.contextMenu(screen.getByTestId('follow-up-flag'));
     const entry = screen.getByTestId('follow-up-colleague');
     expect(entry.textContent).toContain('group.menu_colleague{"group":"sales@example.com"}');
@@ -185,13 +188,14 @@ describe('the follow-up menu', () => {
     expect(useFollowUpDialog.getState().email?.id).toBe('M1');
   });
 
-  it('greys it on a mail of the user\'s own mailbox: "only in a group mailbox"', () => {
+  it('greys it on a mail of the user\'s own mailbox: "Group mailbox"', () => {
     useEmailStore.setState({ emails: [{ ...mail }], mailboxes: [], selectedMailbox: 'inbox' });
-    render(<FollowUpFlagButton email={mail} />);
+    render(<><FollowUpFlagButton email={mail} /><FollowUpPopoverHost /></>);
     fireEvent.contextMenu(screen.getByTestId('follow-up-flag'));
     const entry = screen.getByTestId('follow-up-colleague') as HTMLButtonElement;
     expect(entry.disabled).toBe(true);
-    expect(entry.textContent).toContain('group.only_in_group');
+    expect(entry.textContent).toContain('group.group_mailbox');
+    expect(entry.title).toBe('group.only_in_group');
   });
 });
 

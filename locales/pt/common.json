@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Acompanhamento",
     "menu_title_only_me": "Acompanhamento (só eu)",
+    "menu_entry": "Acompanhamento…",
     "reader_button": "Acompanhamento",
     "flag_set": "Acompanhar hoje (clique direito: mais)",
     "flag_done": "Marcar como concluído (clique direito: mais)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Não reencaminhar"
     },
     "custom": "Personalizado…",
-    "add_reminder": "Adicionar lembrete…",
     "change_button": "Alterar…",
     "dialog_title": "Acompanhar",
     "dialog_title_edit": "Alterar acompanhamento",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Para um colega em {group} …",
       "menu_colleague_short": "Para um colega …",
+      "group_mailbox": "Caixa de grupo",
       "only_in_group": "só numa caixa de grupo",
       "no_list": "a caixa de grupo não tem uma lista de tarefas em que possa escrever",
       "for_label": "Para",

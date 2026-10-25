@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Opvolgen",
     "menu_title_only_me": "Opvolgen (alleen ik)",
+    "menu_entry": "Opvolgen…",
     "reader_button": "Opvolgen",
     "flag_set": "Vandaag opvolgen (rechtsklik: meer)",
     "flag_done": "Als voltooid markeren (rechtsklik: meer)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Niet doorsturen"
     },
     "custom": "Aangepast…",
-    "add_reminder": "Herinnering toevoegen…",
     "change_button": "Wijzigen…",
     "dialog_title": "Opvolgen",
     "dialog_title_edit": "Opvolging wijzigen",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Voor een collega in {group} …",
       "menu_colleague_short": "Voor een collega …",
+      "group_mailbox": "Groepspostvak",
       "only_in_group": "alleen in een groepspostvak",
       "no_list": "het groepspostvak heeft geen takenlijst waarin u kunt schrijven",
       "for_label": "Voor",

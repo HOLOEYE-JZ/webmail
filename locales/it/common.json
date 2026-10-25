@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Completamento",
     "menu_title_only_me": "Completamento (solo io)",
+    "menu_entry": "Completamento…",
     "reader_button": "Completamento",
     "flag_set": "Contrassegna per oggi (clic destro: altro)",
     "flag_done": "Segna come completato (clic destro: altro)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Non inoltrare"
     },
     "custom": "Personalizzato…",
-    "add_reminder": "Aggiungi promemoria…",
     "change_button": "Modifica…",
     "dialog_title": "Completamento",
     "dialog_title_edit": "Modifica contrassegno",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Per un collega in {group} …",
       "menu_colleague_short": "Per un collega …",
+      "group_mailbox": "Casella di gruppo",
       "only_in_group": "solo in una casella di gruppo",
       "no_list": "la casella di gruppo non ha un elenco attività in cui puoi scrivere",
       "for_label": "Per",

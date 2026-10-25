@@ -4584,6 +4584,7 @@
     },
     "menu_title": "フォローアップ",
     "menu_title_only_me": "フォローアップ (自分のみ)",
+    "menu_entry": "フォローアップ…",
     "reader_button": "フォローアップ",
     "flag_set": "今日フォローアップ (右クリック: その他)",
     "flag_done": "完了にする (右クリック: その他)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "転送不可"
     },
     "custom": "ユーザー設定…",
-    "add_reminder": "アラームの追加…",
     "change_button": "変更…",
     "dialog_title": "フォローアップ",
     "dialog_title_edit": "フォローアップの変更",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "{group} の同僚向け …",
       "menu_colleague_short": "同僚向け …",
+      "group_mailbox": "グループメールボックス",
       "only_in_group": "グループメールボックスのみ",
       "no_list": "グループメールボックスに書き込めるタスクリストがありません",
       "for_label": "担当",

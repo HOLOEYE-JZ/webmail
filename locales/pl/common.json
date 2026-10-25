@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Monituj",
     "menu_title_only_me": "Monituj (tylko ja)",
+    "menu_entry": "Monituj…",
     "reader_button": "Monituj",
     "flag_set": "Monituj dzisiaj (prawy przycisk: więcej)",
     "flag_done": "Oznacz jako ukończone (prawy przycisk: więcej)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Nie przesyłaj dalej"
     },
     "custom": "Niestandardowo…",
-    "add_reminder": "Dodaj przypomnienie…",
     "change_button": "Zmień…",
     "dialog_title": "Monit",
     "dialog_title_edit": "Zmień monit",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Dla współpracownika w {group} …",
       "menu_colleague_short": "Dla współpracownika …",
+      "group_mailbox": "Skrzynka grupowa",
       "only_in_group": "tylko w skrzynce grupowej",
       "no_list": "skrzynka grupowa nie ma listy zadań, do której możesz pisać",
       "for_label": "Dla",

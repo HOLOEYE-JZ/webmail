@@ -4584,6 +4584,7 @@
     },
     "menu_title": "Opfølgning",
     "menu_title_only_me": "Opfølgning (kun mig)",
+    "menu_entry": "Opfølgning…",
     "reader_button": "Opfølgning",
     "flag_set": "Følg op i dag (højreklik: mere)",
     "flag_done": "Markér som fuldført (højreklik: mere)",
@@ -4637,7 +4638,6 @@
       "do_not_forward": "Videresend ikke"
     },
     "custom": "Brugerdefineret…",
-    "add_reminder": "Tilføj påmindelse…",
     "change_button": "Rediger…",
     "dialog_title": "Følg op",
     "dialog_title_edit": "Rediger opfølgning",
@@ -4725,6 +4725,7 @@
     "group": {
       "menu_colleague": "Til en kollega i {group} …",
       "menu_colleague_short": "Til en kollega …",
+      "group_mailbox": "Gruppepostkasse",
       "only_in_group": "kun i en gruppepostkasse",
       "no_list": "gruppepostkassen har ingen opgaveliste, du kan skrive i",
       "for_label": "Til",
