@@ -61,7 +61,8 @@ export function followUpCalendars(calendars: Calendar[]): Calendar[] {
  * Loads the tasks of the calendars follow-ups live in once the mail view
  * opens, so the list rows and the reader know which mails have one. Only
  * those calendars: the task store remembers the scope, so a push refetches
- * the same few, not every calendar of every account.
+ * the same few, not every calendar of every account. A list already loaded
+ * in full (the calendar was open) stays full: the store never narrows it.
  */
 export function useFollowUpTasks(): void {
   const enabled = useFollowUpsEnabled();

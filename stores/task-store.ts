@@ -22,13 +22,14 @@ interface TaskStore {
   /**
    * The calendars the last fetch read, or undefined for all of them. A push
    * refetches the same scope, so the mail view's few calendars (follow-ups)
-   * do not turn into a reload of every account's calendars.
+   * do not turn into a reload of every account's calendars. A fetch never
+   * narrows it for the same client: asked for fewer, it reads these too.
    */
   scope: string[] | undefined;
   /**
    * The client whose fetch the list holds, null while none has finished, the
-   * last one could not read every task, or a fetch of another scope is under
-   * way. Only then does a task missing from the list mean that it was deleted.
+   * last one could not read every task, or another fetch is under way. Only
+   * then does a task missing from the list mean that it was deleted.
    */
   loadedBy: IJMAPClient | null;
   setTasks: (tasks: CalendarTask[]) => void;
@@ -49,6 +50,19 @@ interface TaskStore {
 // Each fetch gets a number: only the latest one's answer is kept, so an
 // answer that comes late never puts an older list back.
 let latestFetch = 0;
+// The client the store's scope was fetched for, null before any fetch.
+let scopeClient: IJMAPClient | null = null;
+
+/**
+ * The calendars a fetch reads: never fewer than the list holds already for
+ * the same client, so a view that needs a few (the mail view's follow-ups)
+ * does not drop the tasks of the others, whose reminders would then stop.
+ * Undefined is every calendar.
+ */
+function widenedScope(held: string[] | undefined, asked: string[] | undefined): string[] | undefined {
+  if (!asked?.length || !held) return undefined;
+  return [...new Set([...held, ...asked])];
+}
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
@@ -76,7 +90,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   fetchTasks: async (client, calendarIds) => {
     debug.log('tasks', 'TaskStore/fetchTasks start', { calendarIds: calendarIds || 'all' });
-    const scope = calendarIds?.length ? [...calendarIds] : undefined;
+    const asked = calendarIds?.length ? [...calendarIds] : undefined;
+    const scope = scopeClient === client ? widenedScope(get().scope, asked) : asked;
+    scopeClient = client;
     const fetch = ++latestFetch;
     const stillCurrent = () => fetch === latestFetch;
     set({ isLoading: true, error: null, scope, loadedBy: null });
@@ -84,8 +100,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Only a list read in full counts as loaded: follow-ups take a task
       // missing from it for deleted.
       const { tasks, complete } = client.getCalendarTaskList
-        ? await client.getCalendarTaskList(calendarIds)
-        : { tasks: await client.getCalendarTasks(calendarIds), complete: false };
+        ? await client.getCalendarTaskList(scope)
+        : { tasks: await client.getCalendarTasks(scope), complete: false };
       // A fetch started later decides the list.
       if (!stillCurrent()) return;
       debug.log('tasks', 'TaskStore/fetchTasks received', tasks.length, 'tasks');
@@ -170,6 +186,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   clearTasks: () => {
     latestFetch += 1;
+    scopeClient = null;
     set({ tasks: [], selectedTaskId: null, error: null, isLoading: false, scope: undefined, loadedBy: null });
   },
 }));

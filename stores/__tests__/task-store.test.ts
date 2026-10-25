@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useTaskStore } from '../task-store';
 import type { CalendarTask } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { dueTaskReminders } from '@/lib/task-reminders';
 
 function makeTask(overrides: Partial<CalendarTask> = {}): CalendarTask {
   return {
@@ -134,6 +135,41 @@ describe('task-store', () => {
       expect(useTaskStore.getState().tasks.map((t) => t.id)).toEqual(['new']);
       expect(useTaskStore.getState().loadedBy).toBe(client);
       expect(useTaskStore.getState().isLoading).toBe(false);
+    });
+
+    it('never narrows a list loaded in full: other calendars keep their reminders when the mail view asks for its few', async () => {
+      const fired = new Date(Date.now() - 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+      const reminder = { '@type': 'Alert' as const, trigger: { '@type': 'AbsoluteTrigger' as const, when: fired }, action: 'display' as const, acknowledged: null, relatedTo: null };
+      const all = [
+        makeTask({ id: 'mine', calendarIds: { 'cal-1': true } }),
+        makeTask({ id: 'elsewhere', calendarIds: { 'cal-2': true }, alerts: { a: reminder } }),
+      ];
+      const getCalendarTaskList = vi.fn().mockImplementation(async (ids?: string[]) => ({
+        tasks: ids ? all.filter((t) => Object.keys(t.calendarIds).some((id) => ids.includes(id))) : all,
+        complete: true,
+      }));
+      const client = { ...mockClient, getCalendarTaskList } as IJMAPClient;
+
+      await useTaskStore.getState().fetchTasks(client);
+      // The mail view's follow-up calendars, then a push refetching the scope.
+      await useTaskStore.getState().fetchTasks(client, ['cal-1']);
+      await useTaskStore.getState().fetchTasks(client, useTaskStore.getState().scope);
+
+      expect(getCalendarTaskList).toHaveBeenLastCalledWith(undefined);
+      expect(useTaskStore.getState().scope).toBeUndefined();
+      expect(dueTaskReminders(useTaskStore.getState().tasks, Date.now()).map((r) => r.task.id)).toEqual(['elsewhere']);
+    });
+
+    it('widens a scope by the calendars asked for, and starts afresh for another client', async () => {
+      const getCalendarTaskList = vi.fn().mockResolvedValue({ tasks: [], complete: true });
+      const client = { ...mockClient, getCalendarTaskList } as IJMAPClient;
+      await useTaskStore.getState().fetchTasks(client, ['cal-1']);
+      await useTaskStore.getState().fetchTasks(client, ['cal-2']);
+      expect(getCalendarTaskList).toHaveBeenLastCalledWith(['cal-1', 'cal-2']);
+
+      const other = { ...mockClient, getCalendarTaskList } as IJMAPClient;
+      await useTaskStore.getState().fetchTasks(other, ['cal-9']);
+      expect(getCalendarTaskList).toHaveBeenLastCalledWith(['cal-9']);
     });
 
     it('creates a task and appends to store', async () => {
