@@ -23,6 +23,7 @@ import {
   isOtherAccountMail,
   mailAccountOfMailboxIds,
   rescheduleFollowUpTask,
+  retitle,
   scheduleFollowUp,
   threadFollowUpEmail,
   type FollowUpChoice,
@@ -601,5 +602,22 @@ describe('mailAccountOfMailboxIds', () => {
     expect(mailAccountOfMailboxIds({}, 'me')).toBeUndefined();
     expect(mailAccountOfMailboxIds(undefined, 'me')).toBeUndefined();
     expect(mailAccountOfMailboxIds({ inbox: true, 'grp:inbox': true }, 'me')).toBeNull();
+  });
+});
+
+describe('retitle', () => {
+  const text = { title: (action: string, subject: string) => `${action}: ${subject}`, noSubject: '(no subject)' };
+  const task = buildFollowUpTask({ title: 'Anrufen: Offer', mailUrl: '/mail/message/M1', subject: 'Offer', calendarId: 'c', due: null, reminderAt: null }) as CalendarTask;
+
+  it('keeps the title for the same action, also in another language', () => {
+    expect(retitle(task, 'Anrufen', 'Offer', text)).toBeNull();
+    expect(retitle(task, 'Call', 'Offer', text)).toBeNull();
+  });
+
+  it('names the subject the task keeps, else the mail\'s, else none', () => {
+    expect(retitle(task, 'Reply', 'Re: Offer', text)).toBe('Reply: Offer');
+    const bare = { ...task, links: null };
+    expect(retitle(bare, 'Reply', 'Re: Offer', text)).toBe('Reply: Re: Offer');
+    expect(retitle(bare, 'Reply', '', text)).toBe('Reply: (no subject)');
   });
 });

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
+import { normalizeAction } from "@/lib/follow-up-actions";
 import { stripMessageIdBrackets } from "@/lib/email-threading";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import { rememberDraftFollowUp, sendFollowUpDetails, type SendFollowUp } from "@/lib/send-follow-up";
@@ -186,7 +187,7 @@ async function writeSentFollowUp(
   // Found under another id (a copy the server filed itself): known by that one too.
   if (copy.id !== sent.emailId) written.set(writtenKey(sent.accountId, copy.id), entry);
   let details = sendFollowUpDetails(followUp, sentAt, work, text.followUp, fromDisplayDate);
-  const action = details.action.replace(/\s+/g, " ").trim() || text.followUp;
+  const action = normalizeAction(details.action, text.followUp);
   details = { ...details, action };
   if (details.groupAccountId) {
     const list = details.groupAccountId === sent.accountId

@@ -2,8 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_EXTRA_FOLLOW_UP_ACTIONS,
   MAX_FOLLOW_UP_ACTION_LENGTH,
+  normalizeAction,
   sanitizeFollowUpActions,
 } from '../follow-up-actions';
+
+describe('normalizeAction', () => {
+  it('collapses whitespace and falls back on the default for nothing', () => {
+    expect(normalizeAction('  Call\t back ')).toBe('Call back');
+    expect(normalizeAction('   ', 'Follow up')).toBe('Follow up');
+    expect(normalizeAction('')).toBe('');
+  });
+});
 
 describe('sanitizeFollowUpActions', () => {
   it('keeps the operator\'s actions trimmed, each once, in their order', () => {

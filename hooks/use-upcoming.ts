@@ -10,6 +10,7 @@ import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
 import { displayNow } from "@/lib/timezone";
 import { debug } from "@/lib/debug";
+import { normalizeAction } from "@/lib/follow-up-actions";
 import { buildReminderTask, editReminderTask, followUpMailRef, type WorkingTime } from "@/lib/follow-ups";
 import { dueTaskCount, upcomingTasks, type UpcomingList } from "@/lib/upcoming-tasks";
 import type { CalendarTask } from "@/lib/jmap/types";
@@ -182,7 +183,7 @@ export function useReminder(taskId: string | null): ReminderControls {
 
   const save = useCallback(async (details: FollowUpDetails) => {
     if (!client) return false;
-    const title = details.action.replace(/\s+/g, " ").trim();
+    const title = normalizeAction(details.action);
     if (!title) return false;
     try {
       // A group's list, as the task lies in one or the dialog's "Visible" chose one.

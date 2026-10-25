@@ -15,24 +15,24 @@ import { isFilterEmpty } from "@/lib/jmap/search-utils";
 import { isAllFoldersSearchScope } from "@/lib/search-scope-folders";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { debug } from "@/lib/debug";
+import { normalizeAction } from "@/lib/follow-up-actions";
 import { perStoreEpoch } from "@/lib/store-epoch";
 import { completedTaskPatch, type TaskPatch } from "@/lib/task-reminders";
 import {
   DEFAULT_WORKING_TIME,
   buildFollowUpTask,
   editFollowUpTask,
-  followUpAction,
   followUpMailRef,
-  followUpMailSummary,
   followUpMessageId,
-  sameFollowUpAction,
   followUpsByEmailId,
   isOtherAccountMail,
   mailAccountOfMailboxIds,
   rescheduleFollowUpTask,
+  retitle,
   scheduleFollowUp,
   threadFollowUpEmail,
   type FollowUpChoice,
+  type FollowUpTaskInput,
   type WorkingTime,
 } from "@/lib/follow-ups";
 import type { Calendar, CalendarTask, Email } from "@/lib/jmap/types";
@@ -348,21 +348,37 @@ export async function createOwnFollowUp(
     else debug.warn("follow-up", "no task list to put the follow-up in");
     return null;
   }
-  const subject = email.subject || text.noSubject;
-  const created = await useTaskStore.getState().createTask(client, buildFollowUpTask({
-    title: text.title(details.action, subject),
-    mailUrl: appUrl(buildMailMessageLink(email.id, mailAccountId)),
-    subject: email.subject,
-    messageId: await messageIdOf(client, email, mailAccountId),
-    from: email.from?.[0] ?? null,
-    calendarId: calendar.id,
-    due: details.due,
-    reminderAt: details.reminderAt,
-    note: details.note,
+  return useTaskStore.getState().createTask(client, buildFollowUpTask({
+    ...(await followUpTaskInput(client, { email, accountId: mailAccountId }, details, calendar.id, text)),
     mailReminder: details.mailReminder,
     settlesOnReply: details.settlesOnReply,
   }));
-  return created;
+}
+
+/**
+ * What every new follow-up on a mail says of it, in whichever task list:
+ * the title, the mail's permalink (naming its JMAP account), subject,
+ * Message-ID and sender, and the dialog's day, reminder and note.
+ */
+export async function followUpTaskInput(
+  client: IJMAPClient,
+  mail: { email: Pick<Email, "id" | "subject" | "from" | "messageId">; accountId: string },
+  details: Pick<FollowUpDetails, "action" | "due" | "reminderAt" | "note">,
+  calendarId: string,
+  text: Pick<FollowUpText, "title" | "noSubject">,
+): Promise<FollowUpTaskInput> {
+  const { email, accountId } = mail;
+  return {
+    title: text.title(details.action, email.subject || text.noSubject),
+    mailUrl: appUrl(buildMailMessageLink(email.id, accountId)),
+    subject: email.subject,
+    messageId: await messageIdOf(client, email, accountId),
+    from: email.from?.[0] ?? null,
+    calendarId,
+    due: details.due,
+    reminderAt: details.reminderAt,
+    note: details.note,
+  };
 }
 
 /**
@@ -614,13 +630,12 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
 
   const save = useCallback((details: FollowUpDetails) => run(async (client, email) => {
     if (mailAccountId) forgetUnstarredHere(mailAccountId, email.id);
-    const action = details.action.replace(/\s+/g, " ").trim() || t("actions.follow_up");
+    const action = normalizeAction(details.action, t("actions.follow_up"));
     if (!task) return create(client, email, { ...details, action });
-    // The title changes only with the action, so one set elsewhere stays.
-    // The same action in another language (written in German, kept in English) is no change either.
-    const title = sameFollowUpAction(action, followUpAction(task))
-      ? null
-      : t("task_title", { action, subject: followUpMailSummary(task).subject || email.subject || t("no_subject") });
+    const title = retitle(task, action, email.subject, {
+      title: (action, subject) => t("task_title", { action, subject }),
+      noSubject: t("no_subject"),
+    });
     // Settling on an answer needs the Message-ID; a task written without its relation gets it now.
     const messageId = details.settlesOnReply && !followUpMessageId(task) && mailAccountId
       ? await messageIdOf(client, email, mailAccountId)

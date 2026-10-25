@@ -22,6 +22,14 @@ export const FOLLOW_UP_ACTIONS = [
 ] as const;
 export type FollowUpActionKey = (typeof FOLLOW_UP_ACTIONS)[number];
 
+/**
+ * An action as typed, its whitespace collapsed and trimmed; `fallback` (the
+ * default action, "Follow up") when nothing is left.
+ */
+export function normalizeAction(text: string, fallback = ""): string {
+  return text.replace(/\s+/g, " ").trim() || fallback;
+}
+
 /** At most this many extra actions, each at most this long. */
 export const MAX_EXTRA_FOLLOW_UP_ACTIONS = 20;
 export const MAX_FOLLOW_UP_ACTION_LENGTH = 80;
@@ -38,7 +46,7 @@ export function sanitizeFollowUpActions(raw: unknown): string[] {
   const actions: string[] = [];
   for (const entry of raw) {
     if (typeof entry !== "string") continue;
-    const action = entry.replace(/\s+/g, " ").trim();
+    const action = normalizeAction(entry);
     if (!action || action.length > MAX_FOLLOW_UP_ACTION_LENGTH) continue;
     const key = action.toLocaleLowerCase();
     if (seen.has(key)) continue;

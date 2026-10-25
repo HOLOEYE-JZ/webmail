@@ -6,18 +6,16 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
+import { normalizeAction } from "@/lib/follow-up-actions";
 import { cachedPrincipals } from "@/lib/jmap/principal-cache";
 import { applyPatchObject } from "@/lib/jmap/patch-object";
-import { appUrl, buildMailMessageLink } from "@/lib/deep-links";
 import {
   isOpenFollowUp,
   buildFollowUpTask,
   buildReminderTask,
   editFollowUpTask,
   editReminderTask,
-  followUpAction,
-  followUpMailSummary,
-  sameFollowUpAction,
+  retitle,
 } from "@/lib/follow-ups";
 import {
   addressOf,
@@ -34,7 +32,7 @@ import {
 import type { Calendar, CalendarTask, Email, Principal } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { GroupReminderScope } from "@/lib/task-reminders";
-import { messageIdOf, reachesMailAccount, useFollowUpsEnabled, type FollowUpDetails } from "./use-follow-ups";
+import { followUpTaskInput, reachesMailAccount, useFollowUpsEnabled, type FollowUpDetails } from "./use-follow-ups";
 
 /**
  * The task lists of the group mailboxes the user reaches, and their tasks
@@ -461,23 +459,15 @@ export async function writeGroupTask(client: IJMAPClient, write: GroupTaskWrite)
   const shared = { ...details, mailReminder: undefined, settlesOnReply: undefined };
   if (!task) {
     if (mail) {
-      const action = details.action.replace(/\s+/g, " ").trim() || write.text.followUp;
+      const action = normalizeAction(details.action, write.text.followUp);
       const created = await createGroupTask(client, buildFollowUpTask({
-        title: write.text.title(action, mail.email.subject || write.text.noSubject),
-        mailUrl: appUrl(buildMailMessageLink(mail.email.id, mail.accountId)),
-        subject: mail.email.subject,
-        messageId: await messageIdOf(client, mail.email, mail.accountId),
-        from: mail.email.from?.[0] ?? null,
-        calendarId: list.list.id,
-        due: details.due,
-        reminderAt: details.reminderAt,
-        note: details.note,
+        ...(await followUpTaskInput(client, mail, { ...details, action }, list.list.id, write.text)),
         participants: groupTaskParticipants(owner, me),
       }));
       if (created) write.created?.(created);
       return !!created;
     }
-    const title = details.action.replace(/\s+/g, " ").trim();
+    const title = normalizeAction(details.action);
     if (!title) return false;
     const created = await createGroupTask(client, buildReminderTask({
       title,
@@ -491,13 +481,10 @@ export async function writeGroupTask(client: IJMAPClient, write: GroupTaskWrite)
   }
   let patch: Record<string, unknown>;
   if (mail) {
-    const action = details.action.replace(/\s+/g, " ").trim() || write.text.followUp;
-    const title = sameFollowUpAction(action, followUpAction(task))
-      ? null
-      : write.text.title(action, followUpMailSummary(task).subject || mail.email.subject || write.text.noSubject);
+    const title = retitle(task, normalizeAction(details.action, write.text.followUp), mail.email.subject, write.text);
     patch = { ...editFollowUpTask(task, { ...shared, title }) };
   } else {
-    const title = details.action.replace(/\s+/g, " ").trim();
+    const title = normalizeAction(details.action);
     if (!title) return false;
     patch = { ...editReminderTask(task, { ...shared, title: title === task.title ? null : title }) };
   }

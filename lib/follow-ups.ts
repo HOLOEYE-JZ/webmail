@@ -2,7 +2,7 @@ import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
 import type { CalendarEventAlert, CalendarLink, CalendarRelation, CalendarTask } from "@/lib/jmap/types";
 import { MAIL_ACCOUNT_PARAM } from "@/lib/deep-links";
 import { patchPath } from "@/lib/jmap/patch-object";
-import { FOLLOW_UP_ACTIONS, type FollowUpActionKey } from "@/lib/follow-up-actions";
+import { FOLLOW_UP_ACTIONS, normalizeAction, type FollowUpActionKey } from "@/lib/follow-up-actions";
 import { FOLLOW_UP_ACTION_NAMES, FOLLOW_UP_NO_SUBJECT } from "@/lib/follow-up-action-names";
 import { htmlToPlainText } from "@/lib/html-to-text";
 import { sanitizeEmailHtml } from "@/lib/email-sanitization";
@@ -565,7 +565,7 @@ export function followUpAction(task: Pick<CalendarTask, "title" | "links">): str
   return title;
 }
 
-const actionText = (text: string) => text.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+const actionText = (text: string) => normalizeAction(text).toLocaleLowerCase();
 
 /**
  * The built-in action a text names in any language ("Anrufen", "Call"), or
@@ -575,6 +575,22 @@ export function followUpActionKey(text: string): FollowUpActionKey | null {
   const wanted = actionText(text);
   if (!wanted) return null;
   return FOLLOW_UP_ACTIONS.find((key) => FOLLOW_UP_ACTION_NAMES[key].some((name) => actionText(name) === wanted)) ?? null;
+}
+
+/**
+ * The new title of a mail's follow-up whose action became `action`, or null
+ * to keep the task's: the title changes only with the action, so one set
+ * elsewhere stays, and the same action in another language (written in
+ * German, kept in English) is no change either.
+ */
+export function retitle(
+  task: Pick<CalendarTask, "title" | "links">,
+  action: string,
+  mailSubject: string | null | undefined,
+  text: { title: (action: string, subject: string) => string; noSubject: string },
+): string | null {
+  if (sameFollowUpAction(action, followUpAction(task))) return null;
+  return text.title(action, followUpMailSummary(task).subject || mailSubject || text.noSubject);
 }
 
 /** Whether two action texts mean the same: equal, or the same built-in action in two languages. */
