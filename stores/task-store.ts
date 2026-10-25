@@ -5,7 +5,7 @@ import { debug } from '@/lib/debug';
 import { taskHooks } from '@/lib/plugin-hooks';
 import { taskToView } from '@/lib/plugin-projection';
 import { applyPatchObject } from '@/lib/jmap/patch-object';
-import { completedTaskPatch } from '@/lib/task-reminders';
+import { completedTaskPatch, withCompletion } from '@/lib/task-reminders';
 
 export type TaskViewFilter = 'all' | 'pending' | 'completed' | 'overdue';
 
@@ -102,9 +102,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     return created;
   },
 
-  updateTask: async (client, id, updates) => {
-    if (!(await taskHooks.onBeforeTaskUpdate.intercept({ taskId: id, patch: updates }))) return false;
+  updateTask: async (client, id, patch) => {
     const before = get().tasks.find(t => t.id === id);
+    // Completed from any form (the task modal too): its fired reminders
+    // dismissed and its alarm mail taken off, as Mark Complete does.
+    const updates = withCompletion(before, patch, new Date());
+    if (!(await taskHooks.onBeforeTaskUpdate.intercept({ taskId: id, patch: updates }))) return false;
     const newId = await client.updateCalendarTask(id, updates);
     if (newId && newId !== id) {
       // Moved into a calendar of another account: the server recreated it

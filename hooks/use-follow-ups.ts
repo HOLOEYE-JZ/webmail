@@ -335,6 +335,8 @@ export interface FollowUpDetails {
   /** The reminder as a real instant, or null for none. */
   reminderAt: Date | null;
   note: string;
+  /** Whether the reminder also comes as a mail into the inbox; left out where the dialog did not offer it. */
+  mailReminder?: boolean;
 }
 
 export interface FollowUpControls {
@@ -402,6 +404,7 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
       due: details.due,
       reminderAt: details.reminderAt,
       note: details.note,
+      mailReminder: details.mailReminder,
     }));
     return !!created;
   }, [t]);
@@ -411,7 +414,8 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
       forgetUnstarredHere(email.id);
       const { due, reminder } = scheduleFollowUp(choice, displayNow(), workingTime);
       const reminderAt = reminder ? fromDisplayDate(reminder) : null;
-      if (task) return useTaskStore.getState().updateTask(client, task.id, rescheduleFollowUpTask(due, reminderAt));
+      // Its alarm mail, when it has one, moves with the reminder.
+      if (task) return useTaskStore.getState().updateTask(client, task.id, rescheduleFollowUpTask(task, due, reminderAt));
       return create(client, email, { action: t("actions.follow_up"), due, reminderAt, note: "" });
     }, true);
   }, [run, task, t, workingTime, create]);

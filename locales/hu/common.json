@@ -4601,6 +4601,8 @@
     "kept_in": "A(z) „{list}” feladatlistában tárolva, hivatkozással a levélre; csak Ön látja. A levél megjelölést kap, a telefonon is.",
     "kept_in_tasks": "Az Ön feladatlistájában tárolva, hivatkozással a levélre; csak Ön látja. A levél megjelölést kap, a telefonon is.",
     "reminder_past": "Ez az időpont elmúlt. Válasszon egy jövőbelit.",
+    "reminder_mail": "E-mailben is a beérkezett üzenetek közé",
+    "reminder_mail_hint": "(akkor is megérkezik, ha a Bulwark be van zárva, a levelezőkiszolgáló naptárértesítéseként)",
     "other_reminders": "{count, plural, one {Van még egy emlékeztető (telefonon vagy a feladatlistában); megmarad.} other {Van még # emlékeztető (telefonon vagy a feladatlistában); megmaradnak.}}",
     "recurring": "Ismétlődő: a határidőt a feladatlistában módosítsa.",
     "note_html": "Formázott megjegyzés: a feladatlistában módosítsa.",

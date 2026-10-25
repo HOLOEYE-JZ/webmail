@@ -4601,6 +4601,8 @@
     "kept_in": "Opgeslagen in de takenlijst ‘{list}’ met een link naar de e-mail; alleen jij ziet het. De e-mail wordt gemarkeerd, ook op je telefoon.",
     "kept_in_tasks": "Opgeslagen in je takenlijst met een link naar de e-mail; alleen jij ziet het. De e-mail wordt gemarkeerd, ook op je telefoon.",
     "reminder_past": "Dit tijdstip is voorbij. Kies een tijdstip in de toekomst.",
+    "reminder_mail": "Ook als e-mail in mijn inbox",
+    "reminder_mail_hint": "(komt ook als Bulwark gesloten is, als agendamelding van de mailserver)",
     "other_reminders": "{count, plural, one {Er is nog een herinnering ingesteld (op een telefoon of in de takenlijst); die blijft.} other {Er zijn nog # herinneringen ingesteld (op een telefoon of in de takenlijst); die blijven.}}",
     "recurring": "Terugkerend: bewerk de vervaldatum in de takenlijst.",
     "note_html": "Opgemaakte notitie: bewerk die in de takenlijst.",

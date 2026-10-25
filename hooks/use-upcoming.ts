@@ -179,6 +179,7 @@ export function useReminder(taskId: string | null): ReminderControls {
         due: details.due,
         reminderAt: details.reminderAt,
         note: details.note,
+        mailReminder: details.mailReminder,
       }));
       return !!created;
     } catch (error) {

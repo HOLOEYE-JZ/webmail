@@ -8,10 +8,11 @@ import {
   isReminderWindowTask,
   snoozeTaskReminder,
   snoozeTimes,
+  withCompletion,
 } from '../task-reminders';
 import { getPendingAlerts, getPendingTaskAlerts } from '../calendar-alerts';
 import { applyPatchObject, patchPath } from '../jmap/patch-object';
-import { buildFollowUpTask, buildReminderTask, followUpReminder, type WorkingTime } from '../follow-ups';
+import { buildFollowUpTask, buildReminderTask, followUpReminder, hasFollowUpMailAlert, type WorkingTime } from '../follow-ups';
 import type { CalendarEvent, CalendarEventAlert, CalendarTask } from '../jmap/types';
 
 const NOW = new Date('2026-10-28T09:30:00Z');
@@ -143,6 +144,74 @@ describe('completedTaskPatch', () => {
     const moved = { ...reopened, alerts: { 'follow-up': { ...reopened.alerts!['follow-up'], trigger: { '@type': 'AbsoluteTrigger' as const, when: utc(minutes(10)) } } } };
     expect(dueTaskReminders([moved], minutes(10).getTime())).toHaveLength(1);
   });
+});
+
+describe('the dialog\'s alarm mail (its alert follow-up-mail, action: email)', () => {
+  const withMail = (reminderAt: Date, over: Partial<CalendarTask> = {}) =>
+    reminderTask('m', null, { alerts: buildReminderTask({ title: 'm', calendarId: 'tasks', due: null, reminderAt, mailReminder: true }).alerts, ...over });
+  const foreign = (when: Date) => absolute(when, { action: 'email' });
+
+  it('is no row of the window; dismissing and snoozing the reminder leave it', () => {
+    const task = withMail(minutes(-5));
+    const [row] = dueTaskReminders([task], NOW.getTime());
+    expect(row.alertIds).toEqual(['follow-up']);
+    expect(dueTaskReminders([withMail(minutes(5))], NOW.getTime())).toEqual([]);
+    expect(dismissTaskReminder(task, row.alertIds, NOW)).toEqual({ 'alerts/follow-up/acknowledged': '2026-10-28T09:30:00Z' });
+    const snoozed = snoozeTaskReminder(task, ['follow-up'], minutes(60), NOW);
+    expect(Object.keys(snoozed)).toEqual(['alerts/follow-up/trigger', 'alerts/follow-up/acknowledged']);
+    // The dialog still reads "also as a mail".
+    expect(hasFollowUpMailAlert(applied(task, snoozed))).toBe(true);
+  });
+
+  it('is taken off when the task is completed, fired or still to come: the server would mail a done task too', () => {
+    const coming = withMail(minutes(60));
+    expect(completedTaskPatch(coming, NOW)).toEqual({ progress: 'completed', 'alerts/follow-up-mail': null });
+    const fired = withMail(minutes(-5));
+    const patch = completedTaskPatch(fired, NOW);
+    expect(patch).toEqual({ progress: 'completed', 'alerts/follow-up/acknowledged': '2026-10-28T09:30:00Z', 'alerts/follow-up-mail': null });
+    expect(Object.keys(applied(fired, patch).alerts!)).toEqual(['follow-up']);
+  });
+
+  it('completing leaves an alarm mail set elsewhere, fired or not, and a repeating task\'s own', () => {
+    const task = reminderTask('t', null, { alerts: { phone: foreign(minutes(-5)), later: foreign(minutes(60)) } });
+    expect(completedTaskPatch(task, NOW)).toEqual({ progress: 'completed' });
+    const series = withMail(minutes(60), { recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' }] as unknown as CalendarTask['recurrenceRules'] });
+    expect(completedTaskPatch(series, NOW)).toEqual({ progress: 'completed' });
+  });
+});
+
+describe('withCompletion: completed from any form', () => {
+  it('completes as Mark Complete does when a patch only sets the progress', () => {
+    const task = withMailTask();
+    expect(withCompletion(task, { progress: 'completed', title: 'x' }, NOW)).toEqual({
+      progress: 'completed', title: 'x', 'alerts/follow-up/acknowledged': '2026-10-28T09:30:00Z', 'alerts/follow-up-mail': null,
+    });
+  });
+
+  it('writes a patch made by completedTaskPatch as it is, and leaves other changes alone', () => {
+    const task = withMailTask();
+    const patch = completedTaskPatch(task, NOW);
+    expect(withCompletion(task, patch, new Date(NOW.getTime() + 5000))).toEqual(patch);
+    expect(withCompletion(task, { title: 'x' }, NOW)).toEqual({ title: 'x' });
+    expect(withCompletion({ ...task, progress: 'completed' }, { progress: 'completed' }, NOW)).toEqual({ progress: 'completed' });
+    expect(withCompletion(undefined, { progress: 'completed' }, NOW)).toEqual({ progress: 'completed' });
+  });
+
+  it('changes a whole alerts map in place, never paths beside it (the task modal)', () => {
+    const task = withMailTask();
+    const out = withCompletion(task, { progress: 'completed', alerts: { ...task.alerts, phone: relative('-PT1H') } }, NOW);
+    expect(Object.keys(out).sort()).toEqual(['alerts', 'progress']);
+    expect(out.alerts).toEqual({
+      'follow-up': { ...task.alerts!['follow-up'], acknowledged: '2026-10-28T09:30:00Z' },
+      // Due the day before at midnight: it fired too.
+      phone: relative('-PT1H', { acknowledged: '2026-10-28T09:30:00Z' }),
+    });
+    expect(withCompletion(task, { progress: 'completed', alerts: null }, NOW)).toEqual({ progress: 'completed', alerts: null });
+  });
+
+  function withMailTask(): CalendarTask {
+    return reminderTask('m', null, { alerts: buildReminderTask({ title: 'm', calendarId: 'tasks', due: null, reminderAt: minutes(-5), mailReminder: true }).alerts });
+  }
 });
 
 describe('snoozeTaskReminder', () => {

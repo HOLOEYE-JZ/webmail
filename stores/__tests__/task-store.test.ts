@@ -138,6 +138,24 @@ describe('task-store', () => {
       expect(updated?.progress).toBe('needs-action');
     });
 
+    it('a save that completes the task (the task modal) dismisses what fired and takes its own alarm mail off', async () => {
+      const alert = (when: string, action: 'display' | 'email' = 'display') => ({ '@type': 'Alert' as const, trigger: { '@type': 'AbsoluteTrigger' as const, when }, action, acknowledged: null, relatedTo: null });
+      const fired = new Date(Date.now() - 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+      const task = makeTask({ id: 't5', alerts: { 'follow-up': alert(fired), 'follow-up-mail': alert(fired, 'email'), phone: alert(fired, 'email') } });
+      useTaskStore.setState({ tasks: [task] });
+
+      await useTaskStore.getState().updateTask(mockClient as IJMAPClient, 't5', { title: 'Done now', progress: 'completed' });
+
+      const [, sent] = (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(Object.keys(sent).sort()).toEqual(['alerts/follow-up-mail', 'alerts/follow-up/acknowledged', 'progress', 'title']);
+      const updated = useTaskStore.getState().tasks.find((t) => t.id === 't5');
+      expect(Object.keys(updated?.alerts ?? {}).sort()).toEqual(['follow-up', 'phone']);
+
+      // Written once: a second save of a completed task changes no alert.
+      await useTaskStore.getState().updateTask(mockClient as IJMAPClient, 't5', { progress: 'completed' });
+      expect((mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[1][1]).toEqual({ progress: 'completed' });
+    });
+
     it('reloads the list when a move to a shared calendar gives the task a new id (#1204)', async () => {
       useTaskStore.setState({ tasks: [makeTask({ id: 't5' })], selectedTaskId: 't5' });
       (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mockResolvedValue('acct-2:new');

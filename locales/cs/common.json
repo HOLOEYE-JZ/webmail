@@ -4601,6 +4601,8 @@
     "kept_in": "Uloženo v seznamu úkolů „{list}“ s odkazem na zprávu; vidíte to jen vy. Zpráva dostane příznak, i v telefonu.",
     "kept_in_tasks": "Uloženo ve vašem seznamu úkolů s odkazem na zprávu; vidíte to jen vy. Zpráva dostane příznak, i v telefonu.",
     "reminder_past": "Tento čas už uplynul. Zvolte budoucí.",
+    "reminder_mail": "Také jako e-mail do doručené pošty",
+    "reminder_mail_hint": "(přijde, i když je Bulwark zavřený, jako upozornění kalendáře od poštovního serveru)",
     "other_reminders": "{count, plural, one {Je nastaveno ještě jedno připomenutí (v telefonu nebo v seznamu úkolů); zůstane.} few {Jsou nastavena ještě # připomenutí (v telefonu nebo v seznamu úkolů); zůstanou.} other {Je nastaveno ještě # připomenutí (v telefonu nebo v seznamu úkolů); zůstanou.}}",
     "recurring": "Opakuje se: termín upravte v seznamu úkolů.",
     "note_html": "Formátovaná poznámka: upravte ji v seznamu úkolů.",

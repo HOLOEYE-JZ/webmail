@@ -4601,6 +4601,8 @@
     "kept_in": "Es desa a la llista de tasques «{list}» amb un enllaç al correu; només el veieu vós. El correu queda marcat, també al mòbil.",
     "kept_in_tasks": "Es desa a la vostra llista de tasques amb un enllaç al correu; només el veieu vós. El correu queda marcat, també al mòbil.",
     "reminder_past": "Aquest moment ja ha passat. Trieu-ne un de futur.",
+    "reminder_mail": "També com a correu a la safata d'entrada",
+    "reminder_mail_hint": "(arriba encara que Bulwark estigui tancat, com a avís de calendari del servidor de correu)",
     "other_reminders": "{count, plural, one {Hi ha un altre recordatori (al mòbil o a la llista de tasques); es manté.} other {Hi ha # recordatoris més (al mòbil o a la llista de tasques); es mantenen.}}",
     "recurring": "Es repeteix: editeu la data de venciment a la llista de tasques.",
     "note_html": "Nota amb format: editeu-la a la llista de tasques.",

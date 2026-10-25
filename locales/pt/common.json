@@ -4601,6 +4601,8 @@
     "kept_in": "Guardado na lista de tarefas «{list}» com uma ligação para o e-mail; só você o vê. O e-mail fica sinalizado, também no telemóvel.",
     "kept_in_tasks": "Guardado na sua lista de tarefas com uma ligação para o e-mail; só você o vê. O e-mail fica sinalizado, também no telemóvel.",
     "reminder_past": "Este momento já passou. Escolha um futuro.",
+    "reminder_mail": "Também como e-mail na minha caixa de entrada",
+    "reminder_mail_hint": "(chega mesmo com o Bulwark fechado, como aviso de calendário do servidor de e-mail)",
     "other_reminders": "{count, plural, one {Existe outro lembrete (no telemóvel ou na lista de tarefas); mantém-se.} other {Existem mais # lembretes (no telemóvel ou na lista de tarefas); mantêm-se.}}",
     "recurring": "Repete-se: edite a data de vencimento na lista de tarefas.",
     "note_html": "Nota formatada: edite-a na lista de tarefas.",

@@ -137,6 +137,26 @@ export const FOLLOW_UP_LINK_ID = "mail";
 /** The key of the link naming the mail's sender, kept for when the mail is gone. */
 export const FOLLOW_UP_SENDER_LINK_ID = "from";
 export const FOLLOW_UP_ALERT_ID = "follow-up";
+/**
+ * The key of the reminder's alarm mail: an alert `action: email` with the
+ * reminder, which the server sends into the user's inbox even when no client
+ * runs (Stalwart does so for tasks too, plan 037 M1).
+ */
+export const FOLLOW_UP_MAIL_ALERT_ID = "follow-up-mail";
+
+/**
+ * How much earlier than the reminder its alarm mail is written. Stalwart
+ * (0.16) queues only a task's next alarm, and of two at the same time the
+ * first in the task; a mail alert added beside the reminder by its path comes
+ * after it, so at the same time the mail never went. A second earlier, it is
+ * the next alarm. Only for writing: the mail is known by its key.
+ */
+export const MAIL_ALERT_LEAD_MS = 1000;
+
+/** When the alarm mail of a reminder at `reminderAt` is written for. */
+export function mailAlertTime(reminderAt: Date): Date {
+  return new Date(reminderAt.getTime() - MAIL_ALERT_LEAD_MS);
+}
 /** RFC 8288: the mail describes what the task is about. */
 const MAIL_LINK_REL = "describedby";
 /** RFC 8288: the mail's sender wrote what the task is about. */
@@ -152,16 +172,22 @@ function utcDateTime(instant: Date): string {
   return instant.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
-function alertsOf(reminderAt: Date | null): Record<string, CalendarEventAlert> | null {
+function alertAt(reminderAt: Date, action: CalendarEventAlert["action"]): CalendarEventAlert {
+  return {
+    "@type": "Alert",
+    trigger: { "@type": "AbsoluteTrigger", when: utcDateTime(reminderAt) },
+    action,
+    acknowledged: null,
+    relatedTo: null,
+  };
+}
+
+/** The reminder's alerts: the one Bulwark shows and, with `mail`, its alarm mail at the same time. */
+function alertsOf(reminderAt: Date | null, mail = false): Record<string, CalendarEventAlert> | null {
   if (!reminderAt) return null;
   return {
-    [FOLLOW_UP_ALERT_ID]: {
-      "@type": "Alert",
-      trigger: { "@type": "AbsoluteTrigger", when: utcDateTime(reminderAt) },
-      action: "display",
-      acknowledged: null,
-      relatedTo: null,
-    },
+    [FOLLOW_UP_ALERT_ID]: alertAt(reminderAt, "display"),
+    ...(mail ? { [FOLLOW_UP_MAIL_ALERT_ID]: alertAt(mailAlertTime(reminderAt), "email") } : {}),
   };
 }
 
@@ -189,6 +215,8 @@ export interface FollowUpTaskInput {
   reminderAt: Date | null;
   /** The user's note, kept as the task's description. */
   note?: string;
+  /** Whether the reminder also comes as a mail into the inbox (`mailReminderOffered`). */
+  mailReminder?: boolean;
 }
 
 /**
@@ -219,7 +247,7 @@ export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTas
     due: dueOf(input.due),
     showWithoutTime: true,
     progress: "needs-action",
-    alerts: alertsOf(input.reminderAt),
+    alerts: alertsOf(input.reminderAt, input.mailReminder),
     ...(input.note?.trim() ? { description: input.note.trim() } : {}),
     links,
     relatedTo: messageId ? { [`<${messageId}>`]: { "@type": "Relation", relation: { parent: true } } } : null,
@@ -255,13 +283,22 @@ export function addFollowUpSender(
   return sender ? { links: { ...(task.links ?? {}), [FOLLOW_UP_SENDER_LINK_ID]: sender } } : null;
 }
 
-/** The patch that gives an existing follow-up a new quick choice and opens it again. */
-export function rescheduleFollowUpTask(due: Date | null, reminderAt: Date | null): Partial<CalendarTask> {
+/**
+ * The patch that gives an existing follow-up a new quick choice and opens it
+ * again. Its reminder is changed as the dialog changes it (`reminderPatch`):
+ * the reminder it shows moved, its own alarm mail moved along while it has
+ * one, every other alert left as it is.
+ */
+export function rescheduleFollowUpTask(
+  task: Pick<CalendarTask, "alerts">,
+  due: Date | null,
+  reminderAt: Date | null,
+): Partial<CalendarTask> {
   return {
     due: dueOf(due),
     showWithoutTime: true,
     progress: "needs-action",
-    alerts: alertsOf(reminderAt),
+    ...reminderPatch(task, reminderAt),
   };
 }
 
@@ -278,6 +315,8 @@ export interface ReminderTaskInput {
   /** The reminder as a real instant (not a display date), or null for none. */
   reminderAt: Date | null;
   note?: string;
+  /** Whether the reminder also comes as a mail into the inbox (`mailReminderOffered`). */
+  mailReminder?: boolean;
 }
 
 /**
@@ -293,7 +332,7 @@ export function buildReminderTask(input: ReminderTaskInput): Partial<CalendarTas
     due: dueOf(input.due),
     showWithoutTime: true,
     progress: "needs-action",
-    alerts: alertsOf(input.reminderAt),
+    alerts: alertsOf(input.reminderAt, input.mailReminder),
     ...(input.note?.trim() ? { description: input.note.trim() } : {}),
   };
 }
@@ -442,6 +481,45 @@ export interface FollowUpEdit {
   /** The reminder as a real instant, or null for none. */
   reminderAt: Date | null;
   note: string;
+  /**
+   * Whether the reminder also comes as a mail into the inbox; left out, as
+   * the task has it (the dialog did not offer it).
+   */
+  mailReminder?: boolean;
+}
+
+/**
+ * The alerts' part of a patch that sets the reminder to `reminderAt` (null:
+ * none): the reminder shown (`followUpReminderAlert`) replaced when its time
+ * changed, the own alarm mail (`FOLLOW_UP_MAIL_ALERT_ID`, a second ahead)
+ * moved with it, added or taken off as `mail` says (left out: as the task
+ * has it). Each alert by its path, so the others (a phone's, an alarm mail
+ * set elsewhere, one changed meanwhile on another device) stay as the server
+ * holds them; a task without alerts gets its map whole. Empty when nothing
+ * changes, so an unchanged reminder keeps its `acknowledged`.
+ */
+function reminderPatch(
+  task: Pick<CalendarTask, "alerts">,
+  reminderAt: Date | null,
+  mail?: boolean,
+): Record<string, unknown> {
+  const shown = followUpReminderAlert(task);
+  const hadMail = hasFollowUpMailAlert(task);
+  const wantMail = !!reminderAt && (mail ?? hadMail);
+  const moved = (shown?.when.getTime() ?? null) !== (reminderAt?.getTime() ?? null);
+  const changes: Record<string, CalendarEventAlert | null> = {};
+  if (moved) changes[shown?.id ?? FOLLOW_UP_ALERT_ID] = reminderAt ? alertAt(reminderAt, "display") : null;
+  if (wantMail && reminderAt && (moved || !hadMail)) {
+    changes[FOLLOW_UP_MAIL_ALERT_ID] = alertAt(mailAlertTime(reminderAt), "email");
+  } else if (!wantMail && hadMail) {
+    changes[FOLLOW_UP_MAIL_ALERT_ID] = null;
+  }
+  if (Object.keys(changes).length === 0) return {};
+  if (task.alerts && Object.keys(task.alerts).length > 0) {
+    return Object.fromEntries(Object.entries(changes).map(([id, alert]) => [`alerts/${patchPath(id)}`, alert]));
+  }
+  const added = Object.entries(changes).filter((entry): entry is [string, CalendarEventAlert] => !!entry[1]);
+  return { alerts: added.length > 0 ? Object.fromEntries(added) : null };
 }
 
 /**
@@ -453,7 +531,9 @@ export interface FollowUpEdit {
  * (`followUpReminderAlert`), by its path (`alerts/<id>`), and only when its
  * time changed: an unchanged one
  * keeps its `acknowledged`, so it does not fire again; any other alert (a
- * relative one, a second one set on a phone) stays as it is.
+ * relative one, a second one set on a phone) stays as it is. The own alarm
+ * mail (`followUpMailAlertIds`) goes with it: moved with its time, added or
+ * taken off as `mailReminder` says, gone with the reminder (`reminderPatch`).
  */
 export function editFollowUpTask(
   task: Pick<CalendarTask, "title" | "description" | "progress" | "alerts">
@@ -466,18 +546,7 @@ export function editFollowUpTask(
   const patch: Partial<CalendarTask> = time
     ? { due: edit.due ? `${format(edit.due, "yyyy-MM-dd")}T${time}` : null }
     : { due: dueOf(edit.due), showWithoutTime: true };
-  const shown = followUpReminderAlert(task);
-  if ((shown?.when.getTime() ?? null) !== (edit.reminderAt?.getTime() ?? null)) {
-    const id = shown?.id ?? FOLLOW_UP_ALERT_ID;
-    const own = alertsOf(edit.reminderAt)?.[FOLLOW_UP_ALERT_ID] ?? null;
-    if (task.alerts && Object.keys(task.alerts).length > 0) {
-      // That one alert by its path: the others (a phone's, one changed
-      // meanwhile on another device) stay as the server holds them.
-      (patch as Record<string, unknown>)[`alerts/${patchPath(id)}`] = own;
-    } else {
-      patch.alerts = own ? { [id]: own } : null;
-    }
-  }
+  Object.assign(patch, reminderPatch(task, edit.reminderAt, edit.mailReminder));
   if (edit.title !== null && edit.title !== task.title) patch.title = edit.title;
   // An HTML note is only shown here, never written back as text.
   const note = edit.note.trim();
@@ -636,13 +705,44 @@ function absoluteTime(alert: CalendarEventAlert | null | undefined): Date | null
  * time.
  */
 export function followUpReminderAlert(task: Pick<CalendarTask, "alerts">): { id: string; when: Date } | null {
-  const own = absoluteTime(task.alerts?.[FOLLOW_UP_ALERT_ID]);
+  // An alarm mail is no reminder Bulwark shows: the server sends it.
+  const shown = (alert: CalendarEventAlert | null | undefined) => (alert?.action === "email" ? null : absoluteTime(alert));
+  const own = shown(task.alerts?.[FOLLOW_UP_ALERT_ID]);
   if (own) return { id: FOLLOW_UP_ALERT_ID, when: own };
   for (const [id, alert] of Object.entries(task.alerts ?? {})) {
-    const when = absoluteTime(alert);
+    const when = shown(alert);
     if (when) return { id, when };
   }
   return null;
+}
+
+/**
+ * The reminder's own alarm mail (the dialog's "also as a mail"), known by its
+ * key alone: `FOLLOW_UP_MAIL_ALERT_ID`, an alert `action: email`. An alarm
+ * mail set elsewhere is not the dialog's and is never changed here.
+ */
+export function followUpMailAlertIds(task: Pick<CalendarTask, "alerts">): string[] {
+  return task.alerts?.[FOLLOW_UP_MAIL_ALERT_ID]?.action === "email" ? [FOLLOW_UP_MAIL_ALERT_ID] : [];
+}
+
+/** Whether the reminder also comes as a mail into the inbox. */
+export function hasFollowUpMailAlert(task: Pick<CalendarTask, "alerts">): boolean {
+  return followUpMailAlertIds(task).length > 0;
+}
+
+/**
+ * Whether the dialog offers the reminder also as a mail into the inbox. The
+ * server sends it into the inbox of the account whose task list holds the
+ * task, so only for the user's own list: in a group mailbox's list it would
+ * reach the group's inbox, not the member. Not for a follow-up that settles
+ * itself when an answer comes (`settlesOnReply`, plan 037 decision 9): the
+ * server would send it all the same.
+ */
+export function mailReminderOffered(
+  list: { isShared?: boolean } | null | undefined,
+  settlesOnReply = false,
+): boolean {
+  return !!list && !list.isShared && !settlesOnReply;
 }
 
 /** When a follow-up's reminder fires, or null when it has none. */
@@ -650,10 +750,14 @@ export function followUpReminder(task: Pick<CalendarTask, "alerts">): Date | nul
   return followUpReminderAlert(task)?.when ?? null;
 }
 
-/** How many of the follow-up's alerts the reminder it shows leaves out (relative ones, a second one). */
+/**
+ * How many of the follow-up's alerts the reminder it shows and its own alarm
+ * mail leave out (relative ones, a second one, an alarm mail set elsewhere).
+ */
 export function otherFollowUpAlerts(task: Pick<CalendarTask, "alerts">): number {
   const shown = followUpReminderAlert(task);
-  return Object.entries(task.alerts ?? {}).filter(([id, alert]) => alert && id !== shown?.id).length;
+  const mail = new Set(followUpMailAlertIds(task));
+  return Object.entries(task.alerts ?? {}).filter(([id, alert]) => alert && id !== shown?.id && !mail.has(id)).length;
 }
 
 /**

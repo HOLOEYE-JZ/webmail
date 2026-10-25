@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FollowUpDialog } from '../follow-up-dialog';
+import { FollowUpDialog, ReminderDialog } from '../follow-up-dialog';
 import { FollowUpChip, FollowUpFlagButton, FollowUpInfoBar } from '../follow-up';
 import { useFollowUpDialog } from '@/hooks/use-follow-ups';
 import { useAuthStore } from '@/stores/auth-store';
@@ -263,6 +263,84 @@ describe('FollowUpDialog: the reminder', () => {
     const patch = client.updateCalendarTask.mock.calls[0][1];
     expect(patch).toMatchObject({ description: 'Three units' });
     expect(patch).not.toHaveProperty('alerts');
+  });
+});
+
+describe('FollowUpDialog: the reminder also as a mail', () => {
+  // A second before the reminder (MAIL_ALERT_LEAD_MS).
+  const mailAlert = (reminder: Date) => ({
+    '@type': 'Alert' as const,
+    trigger: { '@type': 'AbsoluteTrigger' as const, when: new Date(reminder.getTime() - 1000).toISOString().replace(/\.\d{3}Z$/, 'Z') },
+    action: 'email' as const,
+    acknowledged: null,
+    relatedTo: null,
+  });
+
+  it('writes an alarm mail beside the reminder, a second ahead of it', async () => {
+    const onClose = vi.fn();
+    render(<FollowUpDialog email={mail} focus="reminder" onClose={onClose} />);
+    expect(field('follow-up-reminder-mail').checked).toBe(false);
+    fireEvent.click(field('follow-up-reminder-mail'));
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    const written = client.createCalendarTask.mock.calls[0][0];
+    expect(written.alerts!['follow-up-mail']).toEqual(mailAlert(new Date(2026, 9, 27, 8, 0)));
+    expect(written.alerts!['follow-up'].action).toBe('display');
+  });
+
+  it('reads it back, moves it with the reminder and takes it off with the box', async () => {
+    const task = followUp();
+    task.alerts = { ...task.alerts, 'follow-up-mail': mailAlert(new Date(2026, 9, 28, 10, 0)) };
+    useTaskStore.setState({ tasks: [task] });
+    const first = render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    expect(field('follow-up-reminder-mail').checked).toBe(true);
+    // Not counted as another reminder.
+    expect(screen.queryByTestId('follow-up-other-reminders')).toBeNull();
+    fireEvent.change(field('follow-up-reminder-time'), { target: { value: '11:00' } });
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
+    expect(client.updateCalendarTask.mock.calls[0][1]).toMatchObject({
+      'alerts/follow-up-mail': mailAlert(new Date(2026, 9, 28, 11, 0)),
+    });
+    first.unmount();
+
+    useTaskStore.setState({ tasks: [task] });
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    fireEvent.click(field('follow-up-reminder-mail'));
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(2));
+    expect(client.updateCalendarTask.mock.calls[1][1]).toEqual({
+      due: '2026-10-29T00:00:00', showWithoutTime: true, 'alerts/follow-up-mail': null,
+    });
+  });
+
+  it('is greyed out without a reminder, and turning the reminder off takes the mail off too', async () => {
+    const task = followUp();
+    task.alerts = { ...task.alerts, 'follow-up-mail': mailAlert(new Date(2026, 9, 28, 10, 0)) };
+    useTaskStore.setState({ tasks: [task] });
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    fireEvent.click(field('follow-up-reminder-on'));
+    expect(field('follow-up-reminder-mail').disabled).toBe(true);
+    expect(field('follow-up-reminder-mail').checked).toBe(false);
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
+    expect(client.updateCalendarTask.mock.calls[0][1]).toMatchObject({ 'alerts/follow-up': null, 'alerts/follow-up-mail': null });
+  });
+
+  it('is not offered for a task in a shared list (a group mailbox\'s), whose alarm mail stays as it is', async () => {
+    useCalendarStore.setState({ calendars: [...calendars, { id: 'group', name: 'vertrieb@', isShared: true } as Calendar] });
+    const task = followUp({ id: 'group-task', calendarIds: { group: true }, isShared: true, links: null, title: 'Call back' });
+    task.alerts = { ...task.alerts, 'follow-up-mail': mailAlert(new Date(2026, 9, 28, 10, 0)) };
+    useTaskStore.setState({ tasks: [task] });
+    const onClose = vi.fn();
+    render(<ReminderDialog taskId="group-task" title="" focus="action" onClose={onClose} />);
+    expect(field('follow-up-reminder-on').checked).toBe(true);
+    expect(screen.queryByTestId('follow-up-reminder-mail')).toBeNull();
+    fireEvent.change(field('follow-up-reminder-time'), { target: { value: '11:00' } });
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // Moved along with the reminder, never added or taken off from here.
+    expect(client.updateCalendarTask.mock.calls[0][1]).toMatchObject({ 'alerts/follow-up-mail': mailAlert(new Date(2026, 9, 28, 11, 0)) });
   });
 });
 

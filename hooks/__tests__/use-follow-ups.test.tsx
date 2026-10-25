@@ -98,9 +98,12 @@ describe('useFollowUp', () => {
     await act(() => result.current.markDone());
     await act(() => result.current.apply('no-date'));
     expect(client.createCalendarTask).toHaveBeenCalledTimes(1);
-    expect(client.updateCalendarTask).toHaveBeenLastCalledWith('task-1', {
-      due: null, showWithoutTime: true, progress: 'needs-action', alerts: null,
-    });
+    expect(client.updateCalendarTask).toHaveBeenLastCalledWith('task-1', expect.objectContaining({
+      due: null, showWithoutTime: true, progress: 'needs-action',
+    }));
+    // The reminder taken off by its path, so no other alert is touched.
+    const task = useTaskStore.getState().tasks.find((t) => t.id === 'task-1');
+    expect(Object.keys(task?.alerts ?? {})).toEqual([]);
     expect(flagged()).toBe(true);
   });
 

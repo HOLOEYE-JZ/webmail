@@ -4601,6 +4601,8 @@
     "kept_in": "“{list}” görev listesinde e-postaya bağlantıyla saklanır; yalnızca siz görürsünüz. E-posta bayraklanır, telefonda da.",
     "kept_in_tasks": "Görev listenizde e-postaya bağlantıyla saklanır; yalnızca siz görürsünüz. E-posta bayraklanır, telefonda da.",
     "reminder_past": "Bu zaman geçti. Gelecekte bir zaman seçin.",
+    "reminder_mail": "Ayrıca gelen kutuma e-posta olarak",
+    "reminder_mail_hint": "(Bulwark kapalıyken de gelir, posta sunucusunun takvim bildirimi olarak)",
     "other_reminders": "{count, plural, one {Bir anımsatıcı daha ayarlı (telefonda veya görev listesinde); korunur.} other {# anımsatıcı daha ayarlı (telefonda veya görev listesinde); korunur.}}",
     "recurring": "Yinelenen: vadeyi görev listesinde düzenleyin.",
     "note_html": "Biçimli not: görev listesinde düzenleyin.",

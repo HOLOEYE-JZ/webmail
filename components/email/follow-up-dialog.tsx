@@ -30,6 +30,8 @@ import {
   isHtmlNote,
   isRecurringTask,
   followUpReminder,
+  hasFollowUpMailAlert,
+  mailReminderOffered,
   otherFollowUpAlerts,
   proposedFollowUpReminder,
   proposedReminder,
@@ -162,6 +164,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       due,
       reminder,
       note: task ? followUpNote(task) : "",
+      mail: task ? hasFollowUpMailAlert(task) : false,
       // Alerts the reminder shown leaves out (relative ones, a second one set on a phone): kept as they are.
       otherAlerts: task ? otherFollowUpAlerts(task) : 0,
     };
@@ -182,6 +185,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   const [reminderTime, setReminderTime] = useState(initial.reminder ? format(initial.reminder, "HH:mm") : "");
   const [reminderPast, setReminderPast] = useState(false);
   const [note, setNote] = useState(initial.note);
+  const [mailOn, setMailOn] = useState(initial.mail);
 
   const actionRef = useRef<HTMLSelectElement>(null);
   const whatRef = useRef<HTMLInputElement>(null);
@@ -229,6 +233,14 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   const reminder = reminderOn ? displayDateOf(reminderDay, reminderTime) : null;
   const canSave = !busy && (!reminderOn || !!reminder) && (!due || !!displayDateOf(due)) && (!isReminder || !!action.trim());
 
+  // Where it is kept: the task's own list, else where a new one goes.
+  const taskCalendarId = task ? Object.keys(task.calendarIds ?? {})[0] : undefined;
+  const list = (taskCalendarId && calendars.find((c) => c.id === taskCalendarId)) || followUpCalendars(calendars)[0];
+  // "Settles itself when an answer comes" (plan 037 decision 9) is not built
+  // yet; once it is, its box passes true here and the mail is not offered.
+  const settlesOnReply = false;
+  const mailOffered = mailReminderOffered(list, settlesOnReply);
+
   const save = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!canSave) return;
@@ -245,6 +257,8 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       due: displayDateOf(due),
       reminderAt: reminder ? fromDisplayDate(reminder) : null,
       note,
+      // Not offered: the task's alarm mail stays as it is.
+      mailReminder: mailOffered ? reminderOn && mailOn : undefined,
     });
     setBusy(false);
     if (written) onClose();
@@ -264,9 +278,6 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
     onClose();
   };
 
-  // Where it is kept: the task's own list, else where a new one goes.
-  const taskCalendarId = task ? Object.keys(task.calendarIds ?? {})[0] : undefined;
-  const list = (taskCalendarId && calendars.find((c) => c.id === taskCalendarId)) || followUpCalendars(calendars)[0];
   const sender = email?.from?.[0]?.name || email?.from?.[0]?.email;
   const kept = isReminder
     ? (list?.name ? t("reminder.kept_in", { list: list.name }) : t("reminder.kept_in_tasks"))
@@ -443,6 +454,23 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
                   className="w-auto"
                 />
               </div>
+              {mailOffered && (
+                <label className="flex w-fit items-start gap-2 text-foreground">
+                  <input
+                    type="checkbox"
+                    data-testid="follow-up-reminder-mail"
+                    checked={reminderOn && mailOn}
+                    disabled={!reminderOn}
+                    onChange={(e) => setMailOn(e.target.checked)}
+                    aria-describedby={`${id}-reminder-mail-hint`}
+                    className="mt-0.5 rounded border-input disabled:cursor-not-allowed"
+                  />
+                  <span className={cn(!reminderOn && "text-muted-foreground")}>
+                    {t("reminder_mail")}{" "}
+                    <span id={`${id}-reminder-mail-hint`} className="text-xs text-muted-foreground">{t("reminder_mail_hint")}</span>
+                  </span>
+                </label>
+              )}
               {reminderPast && (
                 <p id={`${id}-reminder-past`} role="alert" data-testid="follow-up-reminder-past" className="text-xs text-destructive">
                   {t("reminder_past")}

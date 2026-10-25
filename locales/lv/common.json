@@ -4601,6 +4601,8 @@
     "kept_in": "Saglabāts uzdevumu sarakstā “{list}” ar saiti uz vēstuli; to redzat tikai jūs. Vēstule tiek atzīmēta, arī tālrunī.",
     "kept_in_tasks": "Saglabāts jūsu uzdevumu sarakstā ar saiti uz vēstuli; to redzat tikai jūs. Vēstule tiek atzīmēta, arī tālrunī.",
     "reminder_past": "Šis laiks ir pagājis. Izvēlieties nākotnes laiku.",
+    "reminder_mail": "Arī kā e-pastu manā iesūtnē",
+    "reminder_mail_hint": "(pienāk arī tad, ja Bulwark ir aizvērts, kā pasta servera kalendāra paziņojums)",
     "other_reminders": "{count, plural, one {Iestatīts vēl # atgādinājums (tālrunī vai uzdevumu sarakstā); tas paliek.} other {Iestatīti vēl # atgādinājumi (tālrunī vai uzdevumu sarakstā); tie paliek.}}",
     "recurring": "Atkārtojas: termiņu labojiet uzdevumu sarakstā.",
     "note_html": "Formatēta piezīme: labojiet to uzdevumu sarakstā.",

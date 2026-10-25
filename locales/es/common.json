@@ -4601,6 +4601,8 @@
     "kept_in": "Se guarda en la lista de tareas «{list}» con un enlace al correo; solo lo ves tú. El correo queda marcado, también en el móvil.",
     "kept_in_tasks": "Se guarda en tu lista de tareas con un enlace al correo; solo lo ves tú. El correo queda marcado, también en el móvil.",
     "reminder_past": "Ese momento ya pasó. Elige uno futuro.",
+    "reminder_mail": "También como correo en mi bandeja de entrada",
+    "reminder_mail_hint": "(llega aunque Bulwark esté cerrado, como aviso de calendario del servidor de correo)",
     "other_reminders": "{count, plural, one {Hay otro recordatorio (en el móvil o en la lista de tareas); se mantiene.} other {Hay # recordatorios más (en el móvil o en la lista de tareas); se mantienen.}}",
     "recurring": "Se repite: edita la fecha de vencimiento en la lista de tareas.",
     "note_html": "Nota con formato: edítala en la lista de tareas.",

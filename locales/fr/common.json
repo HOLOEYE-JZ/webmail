@@ -4601,6 +4601,8 @@
     "kept_in": "Enregistré dans la liste de tâches « {list} » avec un lien vers le message ; vous seul le voyez. Le message est marqué d’un indicateur, sur votre téléphone aussi.",
     "kept_in_tasks": "Enregistré dans votre liste de tâches avec un lien vers le message ; vous seul le voyez. Le message est marqué d’un indicateur, sur votre téléphone aussi.",
     "reminder_past": "Ce moment est passé. Choisissez-en un à venir.",
+    "reminder_mail": "Aussi par e-mail dans ma boîte de réception",
+    "reminder_mail_hint": "(arrive même quand Bulwark est fermé, sous forme d'avis de calendrier du serveur de messagerie)",
     "other_reminders": "{count, plural, one {Un autre rappel est défini (sur un téléphone ou dans la liste de tâches) ; il est conservé.} other {# autres rappels sont définis (sur un téléphone ou dans la liste de tâches) ; ils sont conservés.}}",
     "recurring": "Récurrente : modifiez l’échéance dans la liste de tâches.",
     "note_html": "Note mise en forme : modifiez-la dans la liste de tâches.",

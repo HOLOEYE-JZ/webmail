@@ -4601,6 +4601,8 @@
     "kept_in": "Zapisano na liście zadań „{list}” z linkiem do wiadomości; widzisz to tylko Ty. Wiadomość zostaje oflagowana, także w telefonie.",
     "kept_in_tasks": "Zapisano na Twojej liście zadań z linkiem do wiadomości; widzisz to tylko Ty. Wiadomość zostaje oflagowana, także w telefonie.",
     "reminder_past": "Ten termin minął. Wybierz przyszły.",
+    "reminder_mail": "Także jako wiadomość do skrzynki odbiorczej",
+    "reminder_mail_hint": "(przychodzi nawet przy zamkniętym Bulwark, jako powiadomienie kalendarza z serwera poczty)",
     "other_reminders": "{count, plural, one {Ustawiono jeszcze jedno przypomnienie (w telefonie lub na liście zadań); zostaje.} few {Ustawiono jeszcze # przypomnienia (w telefonie lub na liście zadań); zostają.} other {Ustawiono jeszcze # przypomnień (w telefonie lub na liście zadań); zostają.}}",
     "recurring": "Powtarzające się: termin zmień na liście zadań.",
     "note_html": "Sformatowana notatka: edytuj ją na liście zadań.",

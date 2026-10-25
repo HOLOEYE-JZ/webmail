@@ -4601,6 +4601,8 @@
     "kept_in": "Păstrat în lista de sarcini „{list}” cu un link către e-mail; doar dvs. îl vedeți. E-mailul primește un semnalizator, și pe telefon.",
     "kept_in_tasks": "Păstrat în lista dvs. de sarcini cu un link către e-mail; doar dvs. îl vedeți. E-mailul primește un semnalizator, și pe telefon.",
     "reminder_past": "Acest moment a trecut. Alegeți unul viitor.",
+    "reminder_mail": "Și ca e-mail în căsuța de intrare",
+    "reminder_mail_hint": "(sosește chiar și când Bulwark este închis, ca notificare de calendar a serverului de e-mail)",
     "other_reminders": "{count, plural, one {Mai este setat un memento (pe telefon sau în lista de sarcini); rămâne.} few {Mai sunt setate # mementouri (pe telefon sau în lista de sarcini); rămân.} other {Mai sunt setate # de mementouri (pe telefon sau în lista de sarcini); rămân.}}",
     "recurring": "Recurentă: modificați scadența în lista de sarcini.",
     "note_html": "Notă formatată: modificați-o în lista de sarcini.",

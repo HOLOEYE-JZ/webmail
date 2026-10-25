@@ -1,13 +1,15 @@
 import { startOfDay } from "date-fns";
 import type { CalendarEventAlert, CalendarTask } from "@/lib/jmap/types";
 import { buildAlertKey, computeTaskFireTime } from "@/lib/calendar-alerts";
-import { patchPath } from "@/lib/jmap/patch-object";
+import { applyPatchObject, patchPath } from "@/lib/jmap/patch-object";
 import {
   DEFAULT_WORKING_TIME,
   followUpDueDay,
   followUpReminderAlert,
   isOpenFollowUp,
   isRecurringTask,
+  FOLLOW_UP_MAIL_ALERT_ID,
+  hasFollowUpMailAlert,
   scheduleFollowUp,
   type WorkingTime,
 } from "@/lib/follow-ups";
@@ -32,6 +34,14 @@ import {
  * - "Mark complete" completes the task and acknowledges its reminders that
  *   have fired (`completedTaskPatch`), as Outlook's: reopened, it does not
  *   remind of them again.
+ * - The dialog's alarm mail (`FOLLOW_UP_MAIL_ALERT_ID`, an alert `action:
+ *   email`) is never a row of its own: the server sends it, the window shows
+ *   the reminder. Dismissing and snoozing leave it (the server sent it when
+ *   it fired; a snooze is this app's matter), so the dialog still reads
+ *   "also as a mail"; only a new time set in the dialog or by a quick choice
+ *   writes it anew. Completing the task takes it off (`completedTaskPatch`):
+ *   Stalwart sends it for a completed task too (plan 037 M1). An alarm mail
+ *   set elsewhere is never touched.
  * - Each write names the alerts it changes by path
  *   (`alerts/<id>/acknowledged`), never the whole map, so a change another
  *   device made meanwhile stays.
@@ -123,7 +133,11 @@ function acknowledging(alertIds: readonly string[], now: Date, skip?: string): T
   return patch;
 }
 
-/** The patch that dismisses a reminder: its alerts acknowledged now, nothing else changed. */
+/**
+ * The patch that dismisses a reminder: its alerts acknowledged now, nothing
+ * else changed. An alarm mail beside one is left as it is: the server sent
+ * it when it fired, so there is nothing left to dismiss.
+ */
 export function dismissTaskReminder(
   _task: Pick<CalendarTask, "alerts">,
   alertIds: readonly string[],
@@ -135,19 +149,44 @@ export function dismissTaskReminder(
 /**
  * The patch that completes a task, as Outlook's Mark Complete: done, and its
  * reminders that have fired dismissed, so reopened (in the dialog, on a
- * phone) it does not remind of them again. Alerts still to come stay.
+ * phone) it does not remind of them again. Alerts still to come stay, but
+ * the dialog's own alarm mail is taken off: the server would send it for the
+ * done task all the same. A repeating task keeps it (its alerts are the
+ * series'), and an alarm mail set elsewhere is left as it is.
  */
 export function completedTaskPatch(
-  task: Pick<CalendarTask, "alerts" | "start" | "due">,
+  task: Pick<CalendarTask, "alerts" | "start" | "due"> & Partial<Pick<CalendarTask, "recurrenceRules">>,
   now: Date,
 ): TaskPatch {
   const fired: string[] = [];
   for (const [id, alert] of Object.entries(task.alerts ?? {})) {
-    if (!alert?.trigger) continue;
+    if (!alert?.trigger || alert.action === "email") continue;
     const fires = computeTaskFireTime(task as CalendarTask, alert.trigger);
     if (fires !== null && fires <= now.getTime() && !isAlertAcknowledged(alert, fires)) fired.push(id);
   }
-  return { progress: "completed", ...acknowledging(fired, now) };
+  const patch: TaskPatch = { progress: "completed", ...acknowledging(fired, now) };
+  if (hasFollowUpMailAlert(task) && !isRecurringTask(task as Pick<CalendarTask, "recurrenceRules">)) patch[`alerts/${patchPath(FOLLOW_UP_MAIL_ALERT_ID)}`] = null;
+  return patch;
+}
+
+/**
+ * A task's patch as it is written: one that completes an open task
+ * (`progress: "completed"`, from any form) does what `completedTaskPatch`
+ * does too, unless it says otherwise itself (its own keys win, so a patch
+ * made by `completedTaskPatch` is written as it is). A patch that writes the
+ * alerts whole gets the same changes in that map, never paths beside it.
+ */
+export function withCompletion(
+  before: Pick<CalendarTask, "alerts" | "start" | "due" | "progress"> & Partial<Pick<CalendarTask, "recurrenceRules">> | undefined,
+  updates: TaskPatch,
+  now: Date,
+): TaskPatch {
+  if (!before || updates.progress !== "completed" || before.progress === "completed") return updates;
+  if (!("alerts" in updates)) return { ...completedTaskPatch(before, now), ...updates };
+  const alerts = updates.alerts ?? null;
+  const { progress: _progress, ...completion } = completedTaskPatch({ ...before, alerts }, now);
+  const done = applyPatchObject({ alerts: alerts ?? {} }, completion).alerts;
+  return { ...updates, alerts: alerts && Object.keys(done).length > 0 ? done : null };
 }
 
 /** The key of a snooze alert, unused in `alerts`. */
@@ -161,8 +200,9 @@ function freeKey(alerts: Record<string, CalendarEventAlert>, base: string): stri
 /**
  * The patch that has a reminder come again at `at`. Its fired alerts are
  * acknowledged; one at a fixed time (the follow-up's own first) is moved to
- * `at` and opened again; without one, a snooze alert at `at` is added (or the
- * one added before is moved), related to the first fired alert.
+ * `at` and opened again (its alarm mail stays: it went when it fired);
+ * without one, a snooze alert at `at` is added (or the one added before is
+ * moved), related to the first fired alert.
  */
 export function snoozeTaskReminder(
   task: Pick<CalendarTask, "alerts">,

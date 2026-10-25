@@ -4601,6 +4601,8 @@
     "kept_in": "Salvato nell’elenco attività «{list}» con un link al messaggio; lo vedi solo tu. Il messaggio viene contrassegnato, anche sul telefono.",
     "kept_in_tasks": "Salvato nel tuo elenco attività con un link al messaggio; lo vedi solo tu. Il messaggio viene contrassegnato, anche sul telefono.",
     "reminder_past": "Questo momento è passato. Scegline uno futuro.",
+    "reminder_mail": "Anche come e-mail nella posta in arrivo",
+    "reminder_mail_hint": "(arriva anche quando Bulwark è chiuso, come avviso di calendario del server di posta)",
     "other_reminders": "{count, plural, one {È impostato un altro promemoria (sul telefono o nell’elenco attività); resta.} other {Sono impostati altri # promemoria (sul telefono o nell’elenco attività); restano.}}",
     "recurring": "Ricorrente: modifica la scadenza nell’elenco attività.",
     "note_html": "Nota formattata: modificala nell’elenco attività.",

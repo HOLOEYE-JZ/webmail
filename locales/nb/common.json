@@ -4601,6 +4601,8 @@
     "kept_in": "Lagret i oppgavelisten «{list}» med en lenke til e-posten; bare du ser den. E-posten blir flagget, også på telefonen.",
     "kept_in_tasks": "Lagret i oppgavelisten din med en lenke til e-posten; bare du ser den. E-posten blir flagget, også på telefonen.",
     "reminder_past": "Tidspunktet er passert. Velg et fremtidig.",
+    "reminder_mail": "Også som e-post i innboksen min",
+    "reminder_mail_hint": "(kommer også når Bulwark er lukket, som kalendervarsel fra e-postserveren)",
     "other_reminders": "{count, plural, one {Det finnes en påminnelse til (på en telefon eller i oppgavelisten); den beholdes.} other {Det finnes # påminnelser til (på en telefon eller i oppgavelisten); de beholdes.}}",
     "recurring": "Gjentas: endre forfallsdatoen i oppgavelisten.",
     "note_html": "Formatert notat: endre det i oppgavelisten.",

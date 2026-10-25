@@ -4601,6 +4601,8 @@
     "kept_in": "Gemt i opgavelisten “{list}” med et link til mailen; kun du kan se den. Mailen bliver markeret, også på telefonen.",
     "kept_in_tasks": "Gemt i din opgaveliste med et link til mailen; kun du kan se den. Mailen bliver markeret, også på telefonen.",
     "reminder_past": "Tidspunktet er passeret. Vælg et fremtidigt.",
+    "reminder_mail": "Også som mail i min indbakke",
+    "reminder_mail_hint": "(kommer også, når Bulwark er lukket, som kalenderbesked fra mailserveren)",
     "other_reminders": "{count, plural, one {Der er en påmindelse mere (på en telefon eller i opgavelisten); den bevares.} other {Der er # påmindelser mere (på en telefon eller i opgavelisten); de bevares.}}",
     "recurring": "Gentages: ret forfaldsdagen i opgavelisten.",
     "note_html": "Formateret note: ret den i opgavelisten.",

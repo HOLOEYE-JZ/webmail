@@ -4601,6 +4601,8 @@
     "kept_in": "In der Aufgabenliste „{list}“ mit Link auf die Mail; nur Sie sehen sie. Die Mail wird markiert, auch auf dem Handy.",
     "kept_in_tasks": "In Ihrer Aufgabenliste mit Link auf die Mail; nur Sie sehen sie. Die Mail wird markiert, auch auf dem Handy.",
     "reminder_past": "Dieser Zeitpunkt ist vorbei. Bitte einen künftigen wählen.",
+    "reminder_mail": "Auch als Mail in den Posteingang",
+    "reminder_mail_hint": "(kommt auch, wenn Bulwark zu ist, als Kalenderhinweis des Mailservers)",
     "other_reminders": "{count, plural, one {Eine weitere Erinnerung ist gesetzt (am Handy oder in der Aufgabenliste); sie bleibt.} other {# weitere Erinnerungen sind gesetzt (am Handy oder in der Aufgabenliste); sie bleiben.}}",
     "recurring": "Wiederkehrend – Fälligkeit in der Aufgabenliste bearbeiten.",
     "note_html": "Formatierte Notiz – in der Aufgabenliste bearbeiten.",

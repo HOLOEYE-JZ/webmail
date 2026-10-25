@@ -4601,6 +4601,8 @@
     "kept_in": "Kept in the task list “{list}” with a link to the mail; only you see it. The mail is flagged, on your phone too.",
     "kept_in_tasks": "Kept in your task list with a link to the mail; only you see it. The mail is flagged, on your phone too.",
     "reminder_past": "This time has passed. Choose a time to come.",
+    "reminder_mail": "Also as a mail to my inbox",
+    "reminder_mail_hint": "(comes even when Bulwark is closed, as the mail server's calendar notice)",
     "other_reminders": "{count, plural, one {Another reminder is set (on a phone or in the task list); it stays.} other {# more reminders are set (on a phone or in the task list); they stay.}}",
     "recurring": "Repeats: edit the due day in the task list.",
     "note_html": "Formatted note: edit it in the task list.",

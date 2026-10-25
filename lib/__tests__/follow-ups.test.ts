@@ -8,6 +8,10 @@ import {
   followUpAction,
   followUpActionKey,
   followUpReminderAlert,
+  followUpMailAlertIds,
+  hasFollowUpMailAlert,
+  mailReminderOffered,
+  buildReminderTask,
   otherFollowUpAlerts,
   sameFollowUpAction,
   followUpNote,
@@ -195,11 +199,25 @@ describe('buildFollowUpTask', () => {
 
 describe('rescheduleFollowUpTask', () => {
   it('sets the new day and reminder and opens the task again', () => {
-    expect(rescheduleFollowUpTask(at(27), null)).toEqual({
+    expect(rescheduleFollowUpTask({ alerts: null }, at(27), null)).toEqual({
       due: '2026-10-27T00:00:00',
       showWithoutTime: true,
       progress: 'needs-action',
-      alerts: null,
+    });
+    expect(rescheduleFollowUpTask({ alerts: null }, at(27), new Date('2026-10-27T07:00:00Z')).alerts).toEqual({
+      'follow-up': { '@type': 'Alert', trigger: { '@type': 'AbsoluteTrigger', when: '2026-10-27T07:00:00Z' }, action: 'display', acknowledged: null, relatedTo: null },
+    });
+  });
+
+  it('moves the reminder it shows by its path, leaving every other alert', () => {
+    const phone: CalendarEventAlert = { '@type': 'Alert', trigger: { '@type': 'OffsetTrigger', offset: '-PT15M', relativeTo: 'start' }, action: 'display', acknowledged: null, relatedTo: null };
+    const own: CalendarEventAlert = { '@type': 'Alert', trigger: { '@type': 'AbsoluteTrigger', when: '2026-10-26T15:00:00Z' }, action: 'display', acknowledged: '2026-10-26T15:01:00Z', relatedTo: null };
+    const task = { alerts: { 'follow-up': own, phone } };
+    const patch = rescheduleFollowUpTask(task, at(27), new Date('2026-10-27T07:00:00Z'));
+    expect(patch).not.toHaveProperty('alerts');
+    expect(applyPatchObject(task, patch).alerts).toEqual({
+      'follow-up': { ...own, trigger: { '@type': 'AbsoluteTrigger', when: '2026-10-27T07:00:00Z' }, acknowledged: null },
+      phone,
     });
   });
 });
@@ -453,5 +471,100 @@ describe('actions across languages', () => {
     expect(sameFollowUpAction('Write a quote', ' write a  quote')).toBe(true);
     expect(sameFollowUpAction('Call', 'Reply')).toBe(false);
     expect(sameFollowUpAction('Angebot schreiben', 'Write a quote')).toBe(false);
+  });
+});
+
+describe('the reminder also as a mail (its own alert action: email, a second ahead)', () => {
+  const alert = (when: string, action: CalendarEventAlert['action'] = 'display', acknowledged: string | null = null): CalendarEventAlert => ({
+    '@type': 'Alert', trigger: { '@type': 'AbsoluteTrigger', when }, action, acknowledged, relatedTo: null,
+  });
+  const relative: CalendarEventAlert = {
+    '@type': 'Alert', trigger: { '@type': 'OffsetTrigger', offset: '-PT15M', relativeTo: 'start' }, action: 'display', acknowledged: null, relatedTo: null,
+  };
+  const base = { title: 'Call: Offer', description: '', progress: 'needs-action' as const };
+  const nine = '2026-10-28T09:00:00Z';
+  const ten = '2026-10-29T10:00:00Z';
+  // A second ahead: Stalwart queues only a task's next alarm, the first of two at one time.
+  const nineMail = '2026-10-28T08:59:59Z';
+  const tenMail = '2026-10-29T09:59:59Z';
+
+  it('writes the alarm mail a second before the reminder, for a follow-up and a reminder without a mail', () => {
+    const task = buildFollowUpTask({
+      title: 't', mailUrl: '/mail/message/M1', calendarId: 'c', due: at(30), reminderAt: new Date(nine), mailReminder: true,
+    });
+    expect(task.alerts).toEqual({ 'follow-up': alert(nine), 'follow-up-mail': alert(nineMail, 'email') });
+    const reminder = buildReminderTask({ title: 'Dunning run', calendarId: 'c', due: at(30), reminderAt: new Date(nine), mailReminder: true });
+    expect(reminder.alerts).toEqual({ 'follow-up': alert(nine), 'follow-up-mail': alert(nineMail, 'email') });
+    // Without a reminder there is no mail either.
+    expect(buildReminderTask({ title: 'x', calendarId: 'c', due: null, reminderAt: null, mailReminder: true }).alerts).toBeNull();
+  });
+
+  it('knows its own by the key alone, whatever its time; one set elsewhere is another reminder', () => {
+    const task = { alerts: { 'follow-up': alert(nine), 'follow-up-mail': alert(nineMail, 'email') } };
+    expect(followUpReminderAlert(task)).toEqual({ id: 'follow-up', when: new Date(nine) });
+    expect(followUpMailAlertIds(task)).toEqual(['follow-up-mail']);
+    expect(otherFollowUpAlerts(task)).toBe(0);
+    // Its own, at another time (moved elsewhere): still the box's.
+    expect(hasFollowUpMailAlert({ alerts: { 'follow-up': alert(nine), 'follow-up-mail': alert(ten, 'email') } })).toBe(true);
+    // Another key, even at the same time: not the box's, counted as another reminder.
+    const foreign = { alerts: { 'follow-up': alert(nine), phone: alert(nineMail, 'email') } };
+    expect(hasFollowUpMailAlert(foreign)).toBe(false);
+    expect(otherFollowUpAlerts(foreign)).toBe(1);
+    // An alarm mail alone is no reminder Bulwark shows.
+    expect(followUpReminderAlert({ alerts: { 'follow-up-mail': alert(nine, 'email') } })).toBeNull();
+  });
+
+  it('adds it, moves it with the reminder, and takes it off with the box or the reminder', () => {
+    const plain = { ...base, alerts: { 'follow-up': alert(nine), phone: relative } };
+    const added = editFollowUpTask(plain, { title: null, due: at(29), reminderAt: new Date(nine), note: '', mailReminder: true });
+    // The reminder itself is not touched: its acknowledged stays.
+    expect(added).not.toHaveProperty(['alerts/follow-up']);
+    expect(applyPatchObject(plain, added).alerts).toEqual({ 'follow-up': alert(nine), phone: relative, 'follow-up-mail': alert(nineMail, 'email') });
+
+    const both = { ...base, alerts: { 'follow-up': alert(nine, 'display', '2026-10-28T09:01:00Z'), 'follow-up-mail': alert(nineMail, 'email'), phone: relative } };
+    const unchanged = editFollowUpTask(both, { title: null, due: at(29), reminderAt: new Date(nine), note: 'n', mailReminder: true });
+    expect(Object.keys(unchanged).filter((k) => k.startsWith('alerts'))).toEqual([]);
+    // Left out (the dialog did not offer it): kept as the task has it, moved along.
+    const moved = editFollowUpTask(both, { title: null, due: at(29), reminderAt: new Date(ten), note: '' });
+    expect(applyPatchObject(both, moved).alerts).toEqual({ 'follow-up': alert(ten), 'follow-up-mail': alert(tenMail, 'email'), phone: relative });
+    const boxOff = editFollowUpTask(both, { title: null, due: at(29), reminderAt: new Date(nine), note: '', mailReminder: false });
+    expect(boxOff).toEqual(expect.objectContaining({ 'alerts/follow-up-mail': null }));
+    expect(boxOff).not.toHaveProperty(['alerts/follow-up']);
+    const reminderOff = editFollowUpTask(both, { title: null, due: at(29), reminderAt: null, note: '', mailReminder: true });
+    expect(applyPatchObject(both, reminderOff).alerts).toEqual({ phone: relative });
+
+    // A task without alerts gets its map whole.
+    expect(editFollowUpTask({ ...base, alerts: null }, { title: null, due: at(29), reminderAt: new Date(ten), note: '', mailReminder: true }).alerts)
+      .toEqual({ 'follow-up': alert(ten), 'follow-up-mail': alert(tenMail, 'email') });
+  });
+
+  it('never touches an alarm mail set elsewhere: not by the box, a new time or no reminder', () => {
+    const foreign = alert(nine, 'email');
+    const task = { ...base, alerts: { 'follow-up': alert(nine), phone: foreign } };
+    for (const edit of [
+      { reminderAt: new Date(ten), mailReminder: false },
+      { reminderAt: new Date(ten), mailReminder: true },
+      { reminderAt: null, mailReminder: false },
+    ]) {
+      const after = applyPatchObject(task, editFollowUpTask(task, { title: null, due: at(29), note: '', ...edit }));
+      expect(after.alerts?.phone).toEqual(foreign);
+    }
+    expect(applyPatchObject(task, rescheduleFollowUpTask(task, at(29), new Date(ten))).alerts?.phone).toEqual(foreign);
+  });
+
+  it('moves along with a quick choice, and is taken off with its reminder there', () => {
+    const both = { alerts: { 'follow-up': alert(nine), 'follow-up-mail': alert(nineMail, 'email') } };
+    expect(applyPatchObject(both, rescheduleFollowUpTask(both, at(29), new Date(ten))).alerts)
+      .toEqual({ 'follow-up': alert(ten), 'follow-up-mail': alert(tenMail, 'email') });
+    expect(applyPatchObject(both, rescheduleFollowUpTask(both, at(29), null)).alerts).toEqual({});
+  });
+
+  it('is offered only in the user\'s own list, and not for a follow-up that settles itself on an answer', () => {
+    expect(mailReminderOffered({ isShared: false })).toBe(true);
+    expect(mailReminderOffered({})).toBe(true);
+    // A group mailbox's list: the server would mail the group's inbox.
+    expect(mailReminderOffered({ isShared: true })).toBe(false);
+    expect(mailReminderOffered(null)).toBe(false);
+    expect(mailReminderOffered({ isShared: false }, true)).toBe(false);
   });
 });
