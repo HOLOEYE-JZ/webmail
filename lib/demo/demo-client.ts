@@ -12,6 +12,7 @@ import { compareEmails, type SortLevel } from '@/lib/message-list-order';
 import { withBasePath } from '@/lib/browser-navigation';
 import { toInertBlob } from '@/lib/file-preview';
 import type { StorageQuota } from "@/lib/quota";
+import { applyPatchObject } from '@/lib/jmap/patch-object';
 
 // Fixture blobs with real bytes behind them, served from public/demo/ (see
 // fixtures/assets.ts for the list and the licences). Any other blob id falls
@@ -1212,8 +1213,15 @@ export class DemoJMAPClient implements IJMAPClient {
     return [...tasks];
   }
 
+  /** The demo holds every task in memory: its list is always read in full. */
+  async getCalendarTaskList(calendarIds?: string[]): Promise<{ tasks: CalendarTask[]; complete: boolean }> {
+    return { tasks: await this.getCalendarTasks(calendarIds), complete: true };
+  }
+
   async createCalendarTask(task: Partial<CalendarTask>): Promise<CalendarTask> {
     const full: CalendarTask = {
+      // What the fields below leave out (links, participants) is kept as given.
+      ...task,
       id: generateDemoId('task'),
       uid: generateDemoId('task-uid'),
       '@type': 'Task',
@@ -1243,8 +1251,10 @@ export class DemoJMAPClient implements IJMAPClient {
   }
 
   async updateCalendarTask(taskId: string, updates: Partial<CalendarTask>): Promise<string> {
-    const task = this.data.calendarTasks.find(t => t.id === taskId);
-    if (task) Object.assign(task, updates, { updated: new Date().toISOString() });
+    // A patch may name members by path ("alerts/<id>/acknowledged"), as JMAP's.
+    this.data.calendarTasks = this.data.calendarTasks.map(t => (
+      t.id === taskId ? { ...applyPatchObject(t, updates), updated: new Date().toISOString() } : t
+    ));
     return taskId;
   }
 
