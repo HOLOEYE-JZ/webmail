@@ -111,7 +111,6 @@ describe('ComposeFollowUp', () => {
     expect(field('follow-up-settles-on-reply').checked).toBe(true);
     fireEvent.click(screen.getByTestId('follow-up-action'));
     fireEvent.click(screen.getByRole('option', { name: 'actions.call' }));
-    fireEvent.click(screen.getByTestId('follow-up-note-add'));
     fireEvent.change(field('follow-up-note'), { target: { value: 'ask for the order' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -127,30 +126,35 @@ describe('ComposeFollowUp', () => {
     expect(screen.queryByTestId('follow-up-dialog')).toBeNull();
   });
 
-  it('from a group mailbox: only mine by default, the group\'s list when the dialog chooses it', async () => {
-    const list = { id: 'grp:tasks', name: 'Tasks', isShared: true, accountId: 'grp' } as Calendar;
+  it('from a group mailbox: only mine by default, the group\'s list for a colleague the dialog chooses', async () => {
+    const read = { mayReadItems: true } as NonNullable<Calendar['shareWith']>[string];
+    const list = { id: 'grp:tasks', name: 'Tasks', isShared: true, accountId: 'grp', shareWith: { anna: read } } as unknown as Calendar;
     useGroupTasks.setState({ lists: [{ accountId: 'grp', name: 'sales@example.com', list }] });
     const onChange = vi.fn();
     const client = makeClient('grp');
+    // The directory names the people the list is shared with.
+    const directory = { getAccountId: () => 'acc', getPrincipals: vi.fn(async () => [{ id: 'anna', name: 'Anna', email: 'anna@example.com', type: 'individual' }]) };
+    useAuthStore.setState({ client: directory as unknown as IJMAPClient });
     const { rerender } = render(<Row client={client} initial={{ choice: 'week' }} onChange={onChange} />);
     await waitFor(() => expect(screen.getByTestId('composer-follow-up-hint').textContent).toContain('send.where_group'));
 
     fireEvent.change(field('composer-follow-up-choice'), { target: { value: 'custom' } });
     expect(screen.getByTestId('follow-up-kept').textContent).toContain('kept_only_me');
-    fireEvent.click(screen.getByTestId('follow-up-visible'));
-    fireEvent.click(screen.getByTestId('follow-up-visible-group'));
+    expect(screen.getByTestId('follow-up-for-me').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByTestId('follow-up-for'));
+    await waitFor(() => expect(screen.getAllByTestId('follow-up-for-person')).toHaveLength(1));
+    fireEvent.click(screen.getByTestId('follow-up-for-person'));
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     const value = onChange.mock.calls[0][0] as Extract<SendFollowUp, { choice: 'custom' }>;
     expect(value.details.groupAccountId).toBe('grp');
-    expect(value.details.person).toBeNull();
+    expect(value.details.person).toMatchObject({ email: 'anna@example.com' });
 
     // Opened again, it shows what was chosen.
     rerender(<Row client={client} initial={value} onChange={onChange} />);
     expect(screen.getByTestId('composer-follow-up-hint').textContent).toContain('group.list_of');
     fireEvent.click(screen.getByTestId('composer-follow-up-change'));
-    expect(screen.getByTestId('follow-up-visible').textContent).toBe('sales@example.com');
-    fireEvent.click(screen.getByTestId('follow-up-visible'));
-    expect(screen.getByTestId('follow-up-visible-group').getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByTestId('follow-up-for').textContent).toBe('Anna');
+    expect(screen.getByTestId('follow-up-kept').textContent).toContain('group.kept_colleague');
   });
 
   it('shows nothing while follow-ups are off', () => {

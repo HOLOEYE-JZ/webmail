@@ -120,12 +120,7 @@ const choose = (button: string, option: string | RegExp) => {
   fireEvent.click(screen.getByTestId(button));
   fireEvent.click(screen.getByRole('option', { name: option }));
 };
-/** The note, opened first where it is folded ("＋ Note"). */
-const note = () => {
-  const add = screen.queryByTestId('follow-up-note-add');
-  if (add) fireEvent.click(add);
-  return screen.getByTestId('follow-up-note');
-};
+const note = () => field('follow-up-note');
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -155,23 +150,24 @@ describe('FollowUpDialog', () => {
     render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
 
     // A new one starts as Outlook's Custom does: due tomorrow, no reminder.
+    expect(screen.getByText('dialog_title')).toBeTruthy();
+    expect(screen.getByTestId('follow-up-mail').textContent).toBe('Lena Brandt · Offer 4711');
     expect(screen.getByTestId('follow-up-action').textContent).toBe('Follow up');
-    expect(field('follow-up-due-choice').value).toBe('tomorrow');
-    // The date itself only once "Pick a date…" is chosen.
-    expect(screen.queryByTestId('follow-up-due')).toBeNull();
-    // The note is folded until there is one.
-    expect(screen.queryByTestId('follow-up-note')).toBeNull();
+    expect(field('follow-up-due').value).toBe('2026-10-27');
+    // The note is always there; no "For" and no line about it outside a group mailbox.
+    expect(note().value).toBe('');
     expect(field('follow-up-reminder-on').checked).toBe(false);
-    expect(screen.getByTestId('follow-up-kept').textContent).toBe('kept_in{"list":"My tasks"}');
+    expect(field('follow-up-reminder-on').getAttribute('role')).toBeNull();
+    expect(screen.queryByTestId('follow-up-for')).toBeNull();
+    expect(screen.queryByTestId('follow-up-for-me')).toBeNull();
+    expect(screen.queryByTestId('follow-up-kept')).toBeNull();
 
     choose('follow-up-action', 'Call');
     expect(screen.getByTestId('follow-up-action').textContent).toBe('Call');
     expect(screen.queryByTestId('follow-up-action-list')).toBeNull();
-    fireEvent.change(field('follow-up-due-choice'), { target: { value: 'this-week' } });
-    // The quick choice sets the reminder too: two working days on, at 08:00.
-    expect(field('follow-up-due-choice').value).toBe('this-week');
-    expect(field('follow-up-reminder-on').checked).toBe(true);
-    expect(field('follow-up-reminder-day').value).toBe('2026-10-28');
+    fireEvent.change(field('follow-up-due'), { target: { value: '2026-10-30' } });
+    fireEvent.click(field('follow-up-reminder-on'));
+    fireEvent.change(field('follow-up-reminder-day'), { target: { value: '2026-10-28' } });
     fireEvent.change(field('follow-up-reminder-time'), { target: { value: '10:30' } });
     fireEvent.change(note(), { target: { value: 'Ask for the drawing' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
@@ -197,8 +193,7 @@ describe('FollowUpDialog', () => {
     // An operator's action is one of the list.
     expect(screen.getByTestId('follow-up-action').textContent).toBe('Write a quote');
     expect(screen.queryByTestId('follow-up-action-text')).toBeNull();
-    // A day none of the quick choices gives: shown as the date.
-    expect(field('follow-up-due-choice').value).toBe('pick');
+    expect(screen.getByText('dialog_title')).toBeTruthy();
     expect(field('follow-up-due').value).toBe('2026-10-29');
     expect(field('follow-up-reminder-on').checked).toBe(true);
     expect(field('follow-up-reminder-day').value).toBe('2026-10-28');
@@ -252,15 +247,31 @@ describe('FollowUpDialog', () => {
 });
 
 describe('FollowUpDialog: the controls', () => {
-  it('"Pick a date…" shows the date input, and the day picked is written', async () => {
+  it('the due day is a date, written as picked; cleared, there is none', async () => {
     const onClose = vi.fn();
-    render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
-    fireEvent.change(field('follow-up-due-choice'), { target: { value: 'pick' } });
-    expect(field('follow-up-due').value).toBe('2026-10-27');
+    const first = render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
     fireEvent.change(field('follow-up-due'), { target: { value: '2026-11-12' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(client.createCalendarTask.mock.calls[0][0]).toMatchObject({ due: '2026-11-12T00:00:00' });
+    first.unmount();
+
+    useTaskStore.setState({ tasks: [] });
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    fireEvent.change(field('follow-up-due'), { target: { value: '' } });
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(client.createCalendarTask).toHaveBeenCalledTimes(2));
+    expect(client.createCalendarTask.mock.calls[1][0].due ?? null).toBeNull();
+  });
+
+  it('the two extras are check boxes with their text, the reminder a check box too', () => {
+    render(<FollowUpDialog email={mail} focus="reminder" onClose={vi.fn()} />);
+    expect(screen.getByLabelText('reminder_label')).toBe(field('follow-up-reminder-on'));
+    expect(screen.getByLabelText('reminder_mail')).toBe(field('follow-up-reminder-mail'));
+    expect(screen.getByLabelText('reply.settles')).toBe(field('follow-up-settles-on-reply'));
+    expect(screen.getByLabelText('note_label')).toBe(field('follow-up-note'));
+    // Remove only once there is something to remove.
+    expect(screen.queryByTestId('follow-up-dialog-remove')).toBeNull();
   });
 
   it('the action\'s popover: Escape closes it and not the dialog, "Other…" asks for the text', () => {
@@ -285,6 +296,8 @@ describe('FollowUpDialog: the controls', () => {
     render(<FollowUpDialog email={mail} focus="reminder" onClose={vi.fn()} />);
     const tips = screen.getAllByRole('tooltip', { hidden: true });
     expect(tips.map((tip) => tip.textContent)).toEqual(['reminder_mail_hint', 'reply.settles_hint']);
+    // No sentence about where it is kept outside a group mailbox.
+    expect(screen.getByTestId('follow-up-dialog').textContent).not.toContain('kept_');
     expect(tips.every((tip) => tip.hidden)).toBe(true);
     const help = screen.getAllByRole('button', { name: 'help' })[0];
     fireEvent.focus(help);
@@ -695,11 +708,12 @@ describe('a group mailbox\'s mail ("only me")', () => {
     useEmailStore.setState({ emails: [{ ...groupMail, keywords: { ...mail.keywords } }], mailboxes: [groupFolder], selectedMailbox: 'grp:inbox' });
   });
 
-  it('the dialog says only the user sees it, keeps it in the own list with the alarm mail offered, and sets no flag', async () => {
+  it('the dialog keeps it in the own list with the alarm mail offered, and sets no flag', async () => {
     const onClose = vi.fn();
     render(<FollowUpDialog email={groupMail} focus="reminder" onClose={onClose} />);
-    expect(screen.getByTestId('follow-up-kept').textContent).toBe('kept_only_me{"list":"My tasks"}');
-    expect(screen.getByTestId('follow-up-dialog').textContent).toContain('sales@ · Lena Brandt · Offer 4711');
+    expect(screen.getByTestId('follow-up-mail').textContent).toBe('sales@ · Lena Brandt · Offer 4711');
+    // No task list of the group's to write to: no "For", it is the user's alone.
+    expect(screen.queryByTestId('follow-up-for')).toBeNull();
     // The user's own list: its alarm mail reaches the user's inbox.
     fireEvent.click(field('follow-up-reminder-mail'));
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });

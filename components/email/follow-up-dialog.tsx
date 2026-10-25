@@ -5,10 +5,9 @@ import { useTranslations } from "next-intl";
 import { format, startOfDay } from "date-fns";
 import { dayOfIso, isoDay } from "@/lib/task-dates";
 import { cn } from "@/lib/utils";
-import { Bell, Flag, Lock, Mail, Pencil, Plus, Settings, Users, X } from "@/components/icons";
+import { Bell, ChevronDown, Flag, Mail, Pencil, Plus, Settings, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useFollowUpFormat } from "@/components/email/follow-up";
 import { HelpTip, PopoverHeading, PopoverOption, PopoverSeparator, PropertyButton, PropertyPopover } from "@/components/email/follow-up-controls";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import {
@@ -59,11 +58,9 @@ import {
 } from "@/lib/follow-ups";
 import { settlesOnReply } from "@/lib/follow-up-replies";
 import {
-  FOLLOW_UP_CHOICES,
   proposedFollowUpReminder,
   proposedReminder,
   scheduleFollowUp,
-  type FollowUpChoice,
   type WorkingTime,
 } from "@/lib/follow-up-schedule";
 import { normalizeAction } from "@/lib/follow-up-actions";
@@ -114,9 +111,8 @@ export function FollowUpDialogHost() {
 }
 
 /**
- * Where a new task can go besides the user's own list, and for whom:
- * "Visible" (only me / everyone in a group mailbox) and
- * "For" (me / the people the group's task list is shared with).
+ * "For": me (the user's own list, which no one else sees) or a colleague,
+ * one of the people a group mailbox's task list is shared with, in that list.
  */
 interface PlaceChoice {
   /** The group lists offered; for an existing group task its own alone. */
@@ -218,19 +214,19 @@ export function FollowUpDialog({ email, focus, group, onClose }: {
       mailboxName: own.mailboxName,
       task: groupTask,
       workingTime: own.workingTime,
-      // "Visible: only me" keeps it in the user's own list, as on any group mailbox's mail.
+      // "For: me" keeps it in the user's own list, as on any group mailbox's mail.
       save: (details) => (details.groupAccountId && list ? writeGroup(list, groupTask, details) : own.save(details)),
       remove: async () => {
         if (client && groupTask) await guarded(() => deleteGroupTask(client, groupTask), t("failed"));
       },
       place: list
-        ? { groups: [list], fixed: !!groupTask, initialGroup: list.accountId, initialPerson, colleague: !groupTask }
+        ? { groups: [list], fixed: !!groupTask, initialGroup: groupTask ? list.accountId : null, initialPerson, colleague: !groupTask }
         : undefined,
     };
   } else {
     controls = {
       ...own,
-      // "Visible: everyone in sales@" turns a new follow-up into one of the group's list.
+      // "For: a colleague" turns a new follow-up into one of the group's list.
       save: (details) => (details.groupAccountId && list ? writeGroup(list, null, details) : own.save(details)),
       place: !own.task && list
         ? { groups: [list], fixed: false, initialGroup: null, initialPerson: null, colleague: false }
@@ -246,7 +242,7 @@ export function FollowUpDialog({ email, focus, group, onClose }: {
  * to the composer (`onChoose`), which keeps them with the draft and has them
  * written on the sent copy once the mail has left. `accountId` is the mail
  * account the mail goes out from: from a group mailbox the follow-up is the
- * user's own ("only me") unless "Visible" puts it into the group's list.
+ * user's own ("only me") unless "For" names a colleague, in the group's list.
  */
 export function SendFollowUpDialog({ email, accountId, onlyMe, start, onChoose, onClose }: {
   /** What the dialog names of the mail: its subject and From. */
@@ -310,14 +306,15 @@ export function ReminderDialog({ taskId, title, focus, onClose }: {
   return <FollowUpForm controls={{ ...reminder, place }} title={title} focus={focus} onClose={onClose} />;
 }
 
-/** The due select's entry that shows the date input. */
-const PICK = "pick";
-type DueChoice = FollowUpChoice | typeof PICK;
-/** From this many group lists on, "Visible" offers a search field above them. */
+/** From this many group lists on, "For: a colleague" offers a search field above them. */
 const GROUP_SEARCH_FROM = 6;
 
-const SELECT = "h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 const SMALL_INPUT = "h-8 w-auto px-2 py-1";
+const CHECK = "h-4 w-4 shrink-0 rounded border-input accent-primary disabled:cursor-not-allowed";
+/** A half of the switch "For: me / a colleague …". */
+const SEGMENT = "inline-flex h-7 items-center rounded px-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const SEGMENT_ON = "bg-background font-medium text-foreground shadow-sm";
+const SEGMENT_OFF = "text-muted-foreground hover:text-foreground";
 
 function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, listLink = true }: {
   controls: FormControls;
@@ -330,7 +327,6 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
   listLink?: boolean;
 }) {
   const t = useTranslations("follow_up");
-  const fmt = useFollowUpFormat();
   const id = useId();
   const { task, workingTime } = controls;
   const isReminder = !email;
@@ -366,12 +362,9 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
     const action = isReminder
       ? (task ? task.title ?? "" : newTitle)
       : task ? shownAction(followUpAction(task)) : start ? shownAction(start.action) : defaultFollowUpAction(entries, defaultRef).text;
-    // The due select shows the quick choice whose day it is, else the date itself.
-    const choice = FOLLOW_UP_CHOICES.find((c) => dayInput(scheduleFollowUp(c, now, workingTime).due) === dayInput(due)) ?? PICK;
     return {
       action,
       due,
-      choice: choice as DueChoice,
       reminder,
       note: task ? followUpNote(task) : start?.note ?? "",
       mail: task ? hasFollowUpMailAlert(task) : start?.mailReminder ?? mailDefault,
@@ -395,24 +388,21 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
   // "Add to my actions" beside a typed one, when it could be one.
   const canKeep = ownAllowed && other && !!action.trim() && !ownActionProblem(action, entries, menu);
   const [due, setDue] = useState(dayInput(initial.due));
-  const [dueChoice, setDueChoice] = useState<DueChoice>(initial.choice);
   const [reminderOn, setReminderOn] = useState(!!initial.reminder);
   // Empty without a reminder, so turning one on proposes a time to come.
   const [reminderDay, setReminderDay] = useState(dayInput(initial.reminder));
   const [reminderTime, setReminderTime] = useState(initial.reminder ? format(initial.reminder, "HH:mm") : "");
   const [reminderPast, setReminderPast] = useState(false);
   const [note, setNote] = useState(initial.note);
-  // "＋ Note" until there is one.
-  const [noteOpen, setNoteOpen] = useState(!!initial.note);
   const [mailOn, setMailOn] = useState(initial.mail);
   const [settlesOn, setSettlesOn] = useState(initial.settles);
   // The property popover that is open, if any.
-  const [popover, setPopover] = useState<"action" | "where" | "for" | null>(null);
+  const [popover, setPopover] = useState<"action" | "for" | null>(null);
   const closePopover = useCallback(() => setPopover(null), []);
   const [groupQuery, setGroupQuery] = useState("");
 
-  // "Visible" and "For": the group list chosen (null: the user's own) and
-  // whom it is for (null: the user). A colleague only in a group's list.
+  // "For": the group list chosen (null: the user's own) and whom it is for
+  // (null: the user). A colleague only in a group's list.
   const place = controls.place;
   const [groupId, setGroupId] = useState<string | null>(place?.initialGroup ?? null);
   const [person, setPerson] = useState<PersonChoice>(place?.initialPerson ?? null);
@@ -421,12 +411,6 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
   // The group whose people "For" offers: the one chosen, else the first offered.
   const target = place ? place.groups.find((g) => g.accountId === groupId) ?? place.groups[0] ?? null : null;
   const sharees = useTaskListSharees(target?.list ?? null);
-  const people = useMemo(() => {
-    const listed = [...sharees];
-    // Whom an existing task is for stays offered, also once the list is no longer shared with them.
-    if (isPerson(person) && !listed.some((p) => p.email === person.email)) listed.unshift(person);
-    return listed;
-  }, [sharees, person]);
   const chosen = useRef(false);
   useEffect(() => {
     // "For a colleague …": the first one, once known, unless the user chose already.
@@ -435,27 +419,32 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
     setPerson(sharees[0]);
     setGroupId(target.accountId);
   }, [place?.colleague, sharees, target]);
-  const pickPerson = (p: TaskPerson | null) => {
+  /** A colleague, in the group's list they are offered from: only there can it be theirs. */
+  const pickColleague = (p: TaskPerson, accountId: string) => {
     chosen.current = true;
     setPersonPicked(true);
     setPerson(p);
-    // A colleague is only possible in the group's list.
-    if (p && !groupId && target) setGroupId(target.accountId);
-  };
-  const pickGroup = (accountId: string | null) => {
-    chosen.current = true;
-    if (accountId === groupId) return;
     setGroupId(accountId);
-    // Another group's people are others; "only me" is the user's own list, for the user.
-    if (accountId !== target?.accountId || accountId === null) setPerson(null);
+  };
+  /**
+   * "Me": a new one in the user's own list, which no colleague sees; an
+   * existing group task stays in its list, for the user.
+   */
+  const pickMe = () => {
+    chosen.current = true;
+    if (place?.fixed) {
+      if (person !== null) setPersonPicked(true);
+    } else {
+      setGroupId(null);
+    }
+    setPerson(null);
   };
   const inGroup = !!groupId && !!target;
+  const forMe = person === null && (!!place?.fixed || !inGroup);
 
   const actionRef = useRef<HTMLButtonElement>(null);
-  const whereRef = useRef<HTMLButtonElement>(null);
   const forRef = useRef<HTMLButtonElement>(null);
   const whatRef = useRef<HTMLInputElement>(null);
-  const dueDateRef = useRef<HTMLInputElement>(null);
   const reminderTimeRef = useRef<HTMLInputElement>(null);
   const dialogRef = useFocusTrap({ isActive: true, onEscape: onClose, restoreFocus: true });
 
@@ -472,40 +461,6 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
   useEffect(() => {
     if (!controls.available) onClose();
   }, [controls.available, onClose]);
-
-  const now = displayNow();
-  const choices = FOLLOW_UP_CHOICES.map((choice) => ({ choice, ...scheduleFollowUp(choice, now, workingTime) }));
-
-  const pickChoice = (choice: (typeof choices)[number]) => {
-    setDueChoice(choice.choice);
-    setDue(dayInput(choice.due));
-    if (choice.reminder) {
-      setReminderOn(true);
-      setReminderDay(dayInput(choice.reminder));
-      setReminderTime(format(choice.reminder, "HH:mm"));
-    } else {
-      setReminderOn(false);
-    }
-  };
-
-  const pickDue = (value: string) => {
-    const choice = choices.find((c) => c.choice === value);
-    if (choice) {
-      pickChoice(choice);
-      return;
-    }
-    // "Pick a date…": the date input, with the day chosen so far.
-    setDueChoice(PICK);
-    setTimeout(() => {
-      const input = dueDateRef.current;
-      input?.focus();
-      try {
-        input?.showPicker?.();
-      } catch {
-        // Not offered without a user gesture in some browsers: the field has the focus.
-      }
-    }, 0);
-  };
 
   const toggleReminder = (on: boolean) => {
     setReminderOn(on);
@@ -577,8 +532,8 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
   };
 
   const sender = email?.from?.[0]?.name || email?.from?.[0]?.email;
-  // What happens, in one sentence: where it is kept, who sees it, who is reminded.
-  // On a group mailbox's mail the follow-up is the user's alone ("only me"): the list says so.
+  // Under "For", in one sentence: where it is kept, who sees it, who is reminded.
+  // On a group mailbox's mail "me" is the user's alone ("only me"): the line says so.
   const kept = inGroup
     ? (person === NOBODY
       ? t("group.kept_nobody", { group: target.name })
@@ -587,19 +542,17 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
       : t(isReminder ? "group.kept_reminder_me" : "group.kept_me", { group: target.name }))
     : isReminder
     ? (list?.name ? t("reminder.kept_in", { list: list.name }) : t("reminder.kept_in_tasks"))
-    : controls.onlyMe
-      ? (list?.name ? t("kept_only_me", { list: list.name }) : t("kept_only_me_tasks"))
-      : (list?.name ? t("kept_in", { list: list.name }) : t("kept_in_tasks"));
+    : (list?.name ? t("kept_only_me", { list: list.name }) : t("kept_only_me_tasks"));
   const heading = isReminder
     ? (task ? t("reminder.dialog_title_edit") : t("reminder.dialog_title"))
-    : (task ? t("dialog_title_edit") : t("dialog_title"));
+    : t("dialog_title");
   const HeadIcon = isReminder ? Bell : Flag;
-  const reminderHelp = mailOffered || initial.otherAlerts > 0;
 
   const groups = place?.groups ?? [];
   const query = groupQuery.trim().toLocaleLowerCase();
   const shownGroups = query ? groups.filter((g) => g.name.toLocaleLowerCase().includes(query)) : groups;
-  const whoName = person === NOBODY ? t("group.nobody") : isPerson(person) ? person.name : t("group.me");
+  // The switch's second half names whom it is for once that is not the user.
+  const otherName = person === NOBODY ? t("group.nobody") : isPerson(person) ? person.name : t("group.colleague");
 
   return (
     <>
@@ -631,7 +584,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
             </button>
           </div>
 
-          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-3 px-4 py-4 text-sm">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2.5 px-4 py-3 text-sm">
             {isReminder ? (
               <div className="col-span-2">
                 <label htmlFor={`${id}-what`} className="sr-only">{t("reminder.what_label")}</label>
@@ -648,7 +601,18 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
               </div>
             ) : (
             <>
-            <div className="col-span-2 flex min-w-0 items-center gap-2">
+            <div data-testid="follow-up-mail" className="col-span-2 flex min-w-0 items-center gap-1.5 text-muted-foreground">
+              <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 flex-1 truncate" title={email?.subject || undefined}>
+                {[controls.mailboxName, sender, email?.subject || t("no_subject")].filter(Boolean).join(" · ")}
+              </span>
+              {controls.hint && (
+                <HelpTip label={t("help")} testId="follow-up-hint">{controls.hint}</HelpTip>
+              )}
+            </div>
+
+            <label htmlFor={`${id}-action`} className="font-medium text-muted-foreground">{t("action_label")}</label>
+            <div className="flex min-w-0 items-center">
               <PropertyButton
                 ref={actionRef}
                 id={`${id}-action`}
@@ -658,19 +622,9 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
                 aria-label={`${t("action_label")}: ${other ? t("action_other") : action}`}
                 icon={<Flag className="h-3.5 w-3.5 shrink-0 text-orange-600 dark:text-orange-400" aria-hidden="true" />}
                 onClick={() => setPopover((p) => (p === "action" ? null : "action"))}
-                className="shrink-0 max-w-[60%]"
               >
                 {other ? t("action_other") : action}
               </PropertyButton>
-              <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-muted-foreground">
-                <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate" title={email?.subject || undefined}>
-                  {[controls.mailboxName, sender, email?.subject || t("no_subject")].filter(Boolean).join(" · ")}
-                </span>
-              </span>
-              {controls.hint && (
-                <HelpTip label={t("help")} testId="follow-up-hint">{controls.hint}</HelpTip>
-              )}
               <PropertyPopover anchor={actionRef} open={popover === "action"} onClose={closePopover} label={t("action_label")} testId="follow-up-action-list">
                 {sections.map((section) => (
                   <ActionSection key={section.group} group={section.group} headed={sections.length > 1}>
@@ -699,7 +653,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
               </PropertyPopover>
             </div>
             {other && (
-              <div className="col-span-2 flex min-w-0 items-center gap-2">
+              <div className="col-start-2 flex min-w-0 items-center gap-2">
                 <Input
                   data-testid="follow-up-action-text"
                   aria-label={t("action_text")}
@@ -708,7 +662,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
                   maxLength={200}
                   autoFocus
                   onChange={(e) => setAction(e.target.value)}
-                  className="h-9 min-w-0 flex-1"
+                  className="h-8 min-w-0 flex-1"
                 />
                 {canKeep && (
                   <Button
@@ -716,7 +670,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
                     variant="outline"
                     size="sm"
                     data-testid="follow-up-action-keep"
-                    className="h-9 shrink-0 gap-1 text-xs"
+                    className="h-8 shrink-0 gap-1 text-xs"
                     onClick={() => {
                       const kept = normalizeAction(action);
                       setMenu(withOwnAction(menu, kept));
@@ -735,54 +689,31 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
             )}
 
             <label htmlFor={`${id}-due`} className="font-medium text-muted-foreground">{t("due_label")}</label>
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <select
+            <div className="flex min-w-0 items-center gap-2">
+              <Input
                 id={`${id}-due`}
-                data-testid="follow-up-due-choice"
-                value={dueChoice}
+                type="date"
+                data-testid="follow-up-due"
+                value={due}
                 disabled={recurring}
-                onChange={(e) => pickDue(e.target.value)}
-                className={cn(SELECT, "min-w-0 max-w-full")}
-              >
-                {choices.map((c) => (
-                  <option key={c.choice} value={c.choice}>
-                    {c.due ? t("choice_with_day", { choice: t(`choices.${c.choice}`), day: fmt.day(c.due) }) : t(`choices.${c.choice}`)}
-                  </option>
-                ))}
-                <option value={PICK}>{t("choices.pick")}</option>
-              </select>
-              {dueChoice === PICK && (
-                <Input
-                  ref={dueDateRef}
-                  type="date"
-                  data-testid="follow-up-due"
-                  aria-label={t("due_date")}
-                  value={due}
-                  disabled={recurring}
-                  onChange={(e) => setDue(e.target.value)}
-                  className={SMALL_INPUT}
-                />
-              )}
+                onChange={(e) => setDue(e.target.value)}
+                className={SMALL_INPUT}
+              />
               {recurring && (
                 <HelpTip label={t("help")} testId="follow-up-recurring">{t("recurring")}</HelpTip>
               )}
             </div>
 
-            <span id={`${id}-reminder`} className="font-medium text-muted-foreground">{t("reminder_label")}</span>
-            <div role="group" aria-labelledby={`${id}-reminder`} className="flex min-w-0 flex-wrap items-center gap-2">
-              <label className="relative inline-flex h-[18px] w-8 shrink-0 cursor-pointer">
-                <input
-                  type="checkbox"
-                  role="switch"
-                  data-testid="follow-up-reminder-on"
-                  aria-label={t("reminder_label")}
-                  checked={reminderOn}
-                  onChange={(e) => toggleReminder(e.target.checked)}
-                  className="peer sr-only"
-                />
-                <span aria-hidden="true" className="absolute inset-0 rounded-full bg-muted-foreground/30 transition-colors peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-1 peer-focus-visible:ring-offset-background" />
-                <span aria-hidden="true" className="absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-3.5" />
-              </label>
+            <label htmlFor={`${id}-reminder-on`} className="font-medium text-muted-foreground">{t("reminder_label")}</label>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <input
+                id={`${id}-reminder-on`}
+                type="checkbox"
+                data-testid="follow-up-reminder-on"
+                checked={reminderOn}
+                onChange={(e) => toggleReminder(e.target.checked)}
+                className={CHECK}
+              />
               <Input
                 type="date"
                 data-testid="follow-up-reminder-day"
@@ -805,37 +736,9 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
                 onChange={(e) => { setReminderTime(e.target.value); setReminderPast(false); }}
                 className={SMALL_INPUT}
               />
-              {mailOffered && (
-                <label title={t("reminder_mail")} className={cn("relative inline-flex shrink-0", reminderOn ? "cursor-pointer" : "cursor-not-allowed")}>
-                  <input
-                    type="checkbox"
-                    data-testid="follow-up-reminder-mail"
-                    aria-label={t("reminder_mail")}
-                    checked={reminderOn && mailOn}
-                    disabled={!reminderOn}
-                    onChange={(e) => setMailOn(e.target.checked)}
-                    className="peer sr-only"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "inline-grid h-8 w-8 place-items-center rounded-md border border-border bg-muted text-muted-foreground transition-colors",
-                      "hover:text-foreground peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground",
-                      "peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-disabled:opacity-50",
-                    )}
-                  >
-                    <Mail className="h-4 w-4" />
-                  </span>
-                </label>
-              )}
-              {reminderHelp && (
+              {initial.otherAlerts > 0 && (
                 <HelpTip label={t("help")}>
-                  {mailOffered && <span className="block">{t("reminder_mail_hint")}</span>}
-                  {initial.otherAlerts > 0 && (
-                    <span data-testid="follow-up-other-reminders" className="block">
-                      {t("other_reminders", { count: initial.otherAlerts })}
-                    </span>
-                  )}
+                  <span data-testid="follow-up-other-reminders">{t("other_reminders", { count: initial.otherAlerts })}</span>
                 </HelpTip>
               )}
             </div>
@@ -844,15 +747,31 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
                 {t("reminder_past")}
               </p>
             )}
+            {mailOffered && (
+              <div className="col-start-2 flex min-w-0 items-center gap-1.5">
+                <label className={cn("flex min-w-0 items-center gap-2", reminderOn ? "text-foreground" : "cursor-not-allowed text-muted-foreground")}>
+                  <input
+                    type="checkbox"
+                    data-testid="follow-up-reminder-mail"
+                    checked={reminderOn && mailOn}
+                    disabled={!reminderOn}
+                    onChange={(e) => setMailOn(e.target.checked)}
+                    className={CHECK}
+                  />
+                  <span>{t("reminder_mail")}</span>
+                </label>
+                <HelpTip label={t("help")}>{t("reminder_mail_hint")}</HelpTip>
+              </div>
+            )}
             {!isReminder && !inGroup && (
-              <div className="col-start-2 -mt-1 flex min-w-0 items-center gap-1.5">
+              <div className="col-start-2 flex min-w-0 items-center gap-1.5">
                 <label className="flex min-w-0 items-center gap-2 text-foreground">
                   <input
                     type="checkbox"
                     data-testid="follow-up-settles-on-reply"
                     checked={settlesOn}
                     onChange={(e) => setSettlesOn(e.target.checked)}
-                    className="rounded border-input"
+                    className={CHECK}
                   />
                   <span>{t("reply.settles")}</span>
                 </label>
@@ -860,50 +779,46 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
               </div>
             )}
 
-            {place && target ? (
+            {place && target && (
               <>
-                <span id={`${id}-place`} className="self-start pt-1.5 font-medium text-muted-foreground">{t("group.for_label")}</span>
-                <div role="group" aria-labelledby={`${id}-place`} className="grid min-w-0 gap-1.5">
-                  <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                    <PropertyButton
-                      ref={whereRef}
-                      data-testid="follow-up-visible"
-                      set={inGroup}
-                      expanded={popover === "where"}
-                      disabled={place.fixed}
-                      aria-label={`${t("group.visible_label")}: ${inGroup ? target.name : t("group.only_for_me")}`}
-                      icon={inGroup
-                        ? <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                        : <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
-                      onClick={() => setPopover((p) => (p === "where" ? null : "where"))}
+                <span id={`${id}-for`} className="font-medium text-muted-foreground">{t("group.for_label")}</span>
+                <div role="group" aria-labelledby={`${id}-for`} className="flex min-w-0">
+                  <div className="inline-flex min-w-0 rounded-md border border-border bg-muted p-0.5">
+                    <button
+                      type="button"
+                      data-testid="follow-up-for-me"
+                      aria-pressed={forMe}
+                      onClick={pickMe}
+                      className={cn(SEGMENT, forMe ? SEGMENT_ON : SEGMENT_OFF)}
                     >
-                      {inGroup ? target.name : t("group.only_for_me")}
-                    </PropertyButton>
-                    {inGroup && (
-                      <PropertyButton
-                        ref={forRef}
-                        data-testid="follow-up-for"
-                        expanded={popover === "for"}
-                        aria-label={`${t("group.for_label")}: ${whoName}`}
-                        icon={<Bell className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
-                        onClick={() => setPopover((p) => (p === "for" ? null : "for"))}
-                      >
-                        {t("group.to", { name: whoName })}
-                      </PropertyButton>
-                    )}
+                      {t("group.me")}
+                    </button>
+                    <button
+                      ref={forRef}
+                      type="button"
+                      data-testid="follow-up-for"
+                      aria-pressed={!forMe}
+                      aria-haspopup="listbox"
+                      aria-expanded={popover === "for"}
+                      onClick={() => setPopover((p) => (p === "for" ? null : "for"))}
+                      className={cn(SEGMENT, "min-w-0 gap-1", !forMe ? SEGMENT_ON : SEGMENT_OFF)}
+                    >
+                      <span className="min-w-0 truncate">{otherName}</span>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    </button>
                   </div>
-                  <p data-testid="follow-up-kept" className="text-xs leading-snug text-muted-foreground">{kept}</p>
                 </div>
+                <p data-testid="follow-up-kept" className="col-start-2 -mt-1 text-xs leading-snug text-muted-foreground">{kept}</p>
                 <PropertyPopover
-                  anchor={whereRef}
-                  open={popover === "where"}
+                  anchor={forRef}
+                  open={popover === "for"}
                   onClose={closePopover}
-                  label={t("group.visible_label")}
-                  testId="follow-up-visible-list"
-                  header={groups.length >= GROUP_SEARCH_FROM && (
+                  label={t("group.for_label")}
+                  testId="follow-up-for-list"
+                  header={!place.fixed && groups.length >= GROUP_SEARCH_FROM && (
                     <Input
                       type="search"
-                      data-testid="follow-up-visible-search"
+                      data-testid="follow-up-for-search"
                       aria-label={t("group.search")}
                       placeholder={t("group.search")}
                       value={groupQuery}
@@ -912,111 +827,48 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
                     />
                   )}
                 >
-                  <PopoverOption
-                    selected={!groupId}
-                    testId="follow-up-visible-me"
-                    icon={<Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
-                    onSelect={() => { pickGroup(null); setPopover(null); whereRef.current?.focus(); }}
-                  >
-                    {t("group.only_for_me")}
-                  </PopoverOption>
-                  <PopoverSeparator />
-                  <PopoverHeading>{t("group.team_heading")}</PopoverHeading>
+                  {place.initialPerson === NOBODY && (
+                    // Only as the task stands: nobody is never written from here.
+                    <>
+                      <PopoverOption selected={person === NOBODY} disabled={person !== NOBODY} testId="follow-up-for-nobody">
+                        {t("group.nobody")}
+                      </PopoverOption>
+                      <PopoverSeparator />
+                    </>
+                  )}
                   {shownGroups.map((g) => (
-                    <PopoverOption
+                    <GroupPeople
                       key={g.accountId}
-                      selected={groupId === g.accountId}
-                      testId="follow-up-visible-group"
-                      icon={<Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
-                      onSelect={() => { pickGroup(g.accountId); setPopover(null); whereRef.current?.focus(); }}
-                    >
-                      {g.name}
-                    </PopoverOption>
+                      group={g}
+                      // Whom an existing task is for stays offered, also once the list is no longer shared with them.
+                      current={g.accountId === groupId && isPerson(person) ? person : null}
+                      onPick={(p) => { pickColleague(p, g.accountId); setPopover(null); forRef.current?.focus(); }}
+                    />
                   ))}
                   {shownGroups.length === 0 && (
                     <p className="px-2 py-1.5 text-xs text-muted-foreground">{t("group.no_match")}</p>
                   )}
                 </PropertyPopover>
-                <PropertyPopover anchor={forRef} open={popover === "for" && inGroup} onClose={closePopover} label={t("group.for_label")} testId="follow-up-for-list">
-                  <PopoverOption
-                    selected={person === null}
-                    testId="follow-up-for-me"
-                    onSelect={() => { pickPerson(null); setPopover(null); forRef.current?.focus(); }}
-                  >
-                    {t("group.me")}
-                  </PopoverOption>
-                  {place.initialPerson === NOBODY && (
-                    // Only as the task stands: nobody is never written from here.
-                    <PopoverOption selected={person === NOBODY} disabled={person !== NOBODY} testId="follow-up-for-nobody">
-                      {t("group.nobody")}
-                    </PopoverOption>
-                  )}
-                  <PopoverSeparator />
-                  {people.length > 0 ? (
-                    <>
-                      <PopoverHeading>{t("group.people_hint", { group: target.name })}</PopoverHeading>
-                      {people.map((p) => (
-                        <PopoverOption
-                          key={p.email}
-                          selected={isPerson(person) && person.email === p.email}
-                          title={p.email}
-                          testId="follow-up-for-person"
-                          onSelect={() => { pickPerson(p); setPopover(null); forRef.current?.focus(); }}
-                        >
-                          {p.name}
-                        </PopoverOption>
-                      ))}
-                    </>
-                  ) : (
-                    <PopoverOption
-                      selected={false}
-                      disabled
-                      title={t("group.not_shared", { group: target.name })}
-                      testId="follow-up-for-hint"
-                    >
-                      {t("group.colleague")}
-                    </PopoverOption>
-                  )}
-                </PropertyPopover>
               </>
-            ) : (
-              <p data-testid="follow-up-kept" className="col-span-2 text-xs leading-snug text-muted-foreground">{kept}</p>
             )}
 
-            <div className="col-span-2">
-              {noteOpen ? (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <label htmlFor={`${id}-note`} className="font-medium text-muted-foreground">{t("note_label")}</label>
-                    {htmlNote && <HelpTip label={t("help")} testId="follow-up-note-html">{t("note_html")}</HelpTip>}
-                  </div>
-                  <textarea
-                    id={`${id}-note`}
-                    data-testid="follow-up-note"
-                    rows={2}
-                    value={note}
-                    placeholder={t("note_placeholder")}
-                    readOnly={htmlNote}
-                    autoFocus={!initial.note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className={cn(
-                      "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      htmlNote && "bg-muted/40 text-muted-foreground",
-                    )}
-                  />
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  data-testid="follow-up-note-add"
-                  onClick={() => setNoteOpen(true)}
-                  className="inline-flex items-center gap-1 rounded px-1 py-0.5 -ml-1 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t("note_label")}
-                </button>
-              )}
+            <div className="flex items-center gap-1.5 self-start pt-1.5">
+              <label htmlFor={`${id}-note`} className="font-medium text-muted-foreground">{t("note_label")}</label>
+              {htmlNote && <HelpTip label={t("help")} testId="follow-up-note-html">{t("note_html")}</HelpTip>}
             </div>
+            <textarea
+              id={`${id}-note`}
+              data-testid="follow-up-note"
+              rows={2}
+              value={note}
+              placeholder={t("note_placeholder")}
+              readOnly={htmlNote}
+              onChange={(e) => setNote(e.target.value)}
+              className={cn(
+                "w-full min-w-0 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                htmlNote && "bg-muted/40 text-muted-foreground",
+              )}
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3">
@@ -1034,6 +886,44 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
     </div>
     <ConfirmDialog {...confirmProps} />
     </>
+  );
+}
+
+/** "For: a colleague …": the people a group's task list is shared with, under its name. */
+function GroupPeople({ group, current, onPick }: {
+  group: GroupTaskList;
+  /** Whom the task is for now, offered even when the list is no longer shared with them. */
+  current: TaskPerson | null;
+  onPick: (person: TaskPerson) => void;
+}) {
+  const t = useTranslations("follow_up");
+  const id = useId();
+  const sharees = useTaskListSharees(group.list);
+  const people = current && !sharees.some((p) => p.email === current.email) ? [current, ...sharees] : sharees;
+  return (
+    <div role="group" aria-labelledby={id}>
+      <PopoverHeading><span id={id}>{t("group.people_hint", { group: group.name })}</span></PopoverHeading>
+      {people.length > 0 ? people.map((p) => (
+        <PopoverOption
+          key={p.email}
+          selected={current?.email === p.email}
+          title={p.email}
+          testId="follow-up-for-person"
+          onSelect={() => onPick(p)}
+        >
+          {p.name}
+        </PopoverOption>
+      )) : (
+        <PopoverOption
+          selected={false}
+          disabled
+          title={t("group.not_shared", { group: group.name })}
+          testId="follow-up-for-hint"
+        >
+          {t("group.colleague")}
+        </PopoverOption>
+      )}
+    </div>
   );
 }
 
