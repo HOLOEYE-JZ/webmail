@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "カレンダーにタスク表示を追加して、ToDoを管理します",
       "show_tasks_on_calendar": "カレンダーにタスクを表示",
       "show_tasks_on_calendar_desc": "月表示・週表示・日表示にタスクを表示します",
+      "show_upcoming_pane": "メールの横に「予定タスク」を表示",
+      "show_upcoming_pane_desc": "未完了のタスクとフォローアップを期限順にメッセージ一覧の横に表示します",
       "hover_preview": "イベントホバープレビュー",
       "hover_preview_desc": "カレンダーイベントにマウスを合わせたときに詳細ポップオーバーを表示",
       "hover_preview_instant": "即時",
@@ -4577,6 +4579,41 @@
     "kept_in": "タスク リスト「{list}」にメールへのリンク付きで保存されます。あなただけに表示されます。メールにはスマートフォンでもフラグが付きます。",
     "kept_in_tasks": "あなたのタスク リストにメールへのリンク付きで保存されます。あなただけに表示されます。メールにはスマートフォンでもフラグが付きます。",
     "reminder_past": "この時刻は過ぎています。今後の時刻を選んでください。",
-    "other_reminders": "{count, plural, other {ほかに # 件のアラームが設定されています (スマートフォンまたはタスク リスト)。そのまま残ります。}}"
+    "other_reminders": "{count, plural, other {ほかに # 件のアラームが設定されています (スマートフォンまたはタスク リスト)。そのまま残ります。}}",
+    "recurring": "繰り返しタスク: 期限はタスク リストで編集してください。",
+    "note_html": "書式付きメモ: タスク リストで編集してください。",
+    "upcoming": {
+      "title": "自分の予定タスク",
+      "all_tasks": "すべてのタスク",
+      "hide": "予定タスクを隠す",
+      "groups": {
+        "overdue": "期限切れ",
+        "today": "今日",
+        "tomorrow": "明日",
+        "this_week": "今週"
+      },
+      "more": "ほか {count} 件（後日または日付なし）",
+      "empty": "期限のあるものはありません",
+      "quick_placeholder": "＋ アラーム（例:「督促状を確認」）",
+      "quick_label": "今日が期限の新しいアラーム (Enter)",
+      "quick_more": "日付・時刻・メモ付きのアラーム…",
+      "done_label": "完了にする: {title}",
+      "edit": "編集",
+      "no_mail": "メールなしのアラーム",
+      "no_title": "(タイトルなし)",
+      "due_badge": "期限のタスク: {count}"
+    },
+    "reminder": {
+      "dialog_title": "新しいアラーム",
+      "dialog_title_edit": "アラームを編集",
+      "what_label": "内容",
+      "what_placeholder": "例: 督促状を確認",
+      "delete": "削除",
+      "kept_in": "タスク リスト「{list}」にメールなしで保存されます。あなただけに表示されます。スマートフォンではタスク アプリにあります。",
+      "kept_in_tasks": "あなたのタスク リストにメールなしで保存されます。あなただけに表示されます。スマートフォンではタスク アプリにあります。",
+      "failed": "アラームを保存できませんでした。",
+      "delete_title": "タスクを削除しますか?",
+      "delete_confirm": "「{title}」をタスク リストから削除します。スマートフォンからも削除されます。元に戻せません。"
+    }
   }
 }

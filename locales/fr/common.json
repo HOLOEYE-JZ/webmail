@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Afficher une vue des tâches dans le calendrier pour gérer les choses à faire",
       "show_tasks_on_calendar": "Afficher les tâches dans le calendrier",
       "show_tasks_on_calendar_desc": "Afficher les tâches dans les vues mois, semaine et jour du calendrier",
+      "show_upcoming_pane": "Afficher « À venir » à côté des messages",
+      "show_upcoming_pane_desc": "Vos tâches ouvertes et suivis par échéance, à côté de la liste des messages",
       "hover_preview": "Aperçu au survol",
       "hover_preview_desc": "Afficher un popover de détails au survol des événements du calendrier",
       "hover_preview_instant": "Instantané",
@@ -4577,6 +4579,41 @@
     "kept_in": "Enregistré dans la liste de tâches « {list} » avec un lien vers le message ; vous seul le voyez. Le message est marqué d’un indicateur, sur votre téléphone aussi.",
     "kept_in_tasks": "Enregistré dans votre liste de tâches avec un lien vers le message ; vous seul le voyez. Le message est marqué d’un indicateur, sur votre téléphone aussi.",
     "reminder_past": "Ce moment est passé. Choisissez-en un à venir.",
-    "other_reminders": "{count, plural, one {Un autre rappel est défini (sur un téléphone ou dans la liste de tâches) ; il est conservé.} other {# autres rappels sont définis (sur un téléphone ou dans la liste de tâches) ; ils sont conservés.}}"
+    "other_reminders": "{count, plural, one {Un autre rappel est défini (sur un téléphone ou dans la liste de tâches) ; il est conservé.} other {# autres rappels sont définis (sur un téléphone ou dans la liste de tâches) ; ils sont conservés.}}",
+    "recurring": "Récurrente : modifiez l’échéance dans la liste de tâches.",
+    "note_html": "Note mise en forme : modifiez-la dans la liste de tâches.",
+    "upcoming": {
+      "title": "À venir pour moi",
+      "all_tasks": "Toutes les tâches",
+      "hide": "Masquer « À venir »",
+      "groups": {
+        "overdue": "En retard",
+        "today": "Aujourd’hui",
+        "tomorrow": "Demain",
+        "this_week": "Cette semaine"
+      },
+      "more": "+{count} plus tard ou sans date",
+      "empty": "Rien à faire",
+      "quick_placeholder": "＋ Rappel, p. ex. « Vérifier les relances »",
+      "quick_label": "Nouveau rappel pour aujourd’hui (Entrée)",
+      "quick_more": "Rappel avec jour, heure et note…",
+      "done_label": "Marquer comme terminé : {title}",
+      "edit": "Modifier",
+      "no_mail": "Rappel sans message",
+      "no_title": "(sans titre)",
+      "due_badge": "Tâches à échéance : {count}"
+    },
+    "reminder": {
+      "dialog_title": "Nouveau rappel",
+      "dialog_title_edit": "Modifier le rappel",
+      "what_label": "Quoi",
+      "what_placeholder": "p. ex. Vérifier les relances",
+      "delete": "Supprimer",
+      "kept_in": "Enregistré dans la liste de tâches « {list} », sans message ; vous seul le voyez. Sur un téléphone, il est dans l’application de tâches.",
+      "kept_in_tasks": "Enregistré dans votre liste de tâches, sans message ; vous seul le voyez. Sur un téléphone, il est dans l’application de tâches.",
+      "failed": "Le rappel n’a pas pu être enregistré.",
+      "delete_title": "Supprimer la tâche ?",
+      "delete_confirm": "« {title} » sera supprimée de votre liste de tâches, sur votre téléphone aussi. Cette action est irréversible."
+    }
   }
 }

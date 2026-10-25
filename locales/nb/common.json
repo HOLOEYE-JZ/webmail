@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Vis en oppgavevisning i kalenderen for å administrere gjøremål",
       "show_tasks_on_calendar": "Vis oppgaver i kalenderen",
       "show_tasks_on_calendar_desc": "Vis oppgaver i måneds-, uke- og dagsvisningen",
+      "show_upcoming_pane": "Vis «Kommende» ved siden av e-posten",
+      "show_upcoming_pane_desc": "Åpne oppgaver og oppfølginger etter forfallsdato, ved siden av meldingslisten",
       "hover_preview": "Forhåndsvis hendelser når du peker",
       "hover_preview_desc": "Vis et detaljvindu når du holder markøren over kalenderhendelser",
       "hover_preview_instant": "Øyeblikkelig",
@@ -4577,6 +4579,41 @@
     "kept_in": "Lagret i oppgavelisten «{list}» med en lenke til e-posten; bare du ser den. E-posten blir flagget, også på telefonen.",
     "kept_in_tasks": "Lagret i oppgavelisten din med en lenke til e-posten; bare du ser den. E-posten blir flagget, også på telefonen.",
     "reminder_past": "Tidspunktet er passert. Velg et fremtidig.",
-    "other_reminders": "{count, plural, one {Det finnes en påminnelse til (på en telefon eller i oppgavelisten); den beholdes.} other {Det finnes # påminnelser til (på en telefon eller i oppgavelisten); de beholdes.}}"
+    "other_reminders": "{count, plural, one {Det finnes en påminnelse til (på en telefon eller i oppgavelisten); den beholdes.} other {Det finnes # påminnelser til (på en telefon eller i oppgavelisten); de beholdes.}}",
+    "recurring": "Gjentas: endre forfallsdatoen i oppgavelisten.",
+    "note_html": "Formatert notat: endre det i oppgavelisten.",
+    "upcoming": {
+      "title": "Kommende for meg",
+      "all_tasks": "Alle oppgaver",
+      "hide": "Skjul kommende",
+      "groups": {
+        "overdue": "Forfalt",
+        "today": "I dag",
+        "tomorrow": "I morgen",
+        "this_week": "Denne uken"
+      },
+      "more": "+{count} senere eller uten dato",
+      "empty": "Ingenting forfaller",
+      "quick_placeholder": "＋ Påminnelse, f.eks. «Sjekk purringene»",
+      "quick_label": "Ny påminnelse, forfaller i dag (Enter)",
+      "quick_more": "Påminnelse med dag, klokkeslett og notat …",
+      "done_label": "Merk som fullført: {title}",
+      "edit": "Rediger",
+      "no_mail": "Påminnelse uten e-post",
+      "no_title": "(ingen tittel)",
+      "due_badge": "Forfalte oppgaver: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Ny påminnelse",
+      "dialog_title_edit": "Rediger påminnelse",
+      "what_label": "Hva",
+      "what_placeholder": "f.eks. Sjekk purringene",
+      "delete": "Slett",
+      "kept_in": "Lagret i oppgavelisten «{list}», uten e-post; bare du ser den. På telefonen er den i oppgaveappen.",
+      "kept_in_tasks": "Lagret i oppgavelisten din, uten e-post; bare du ser den. På telefonen er den i oppgaveappen.",
+      "failed": "Påminnelsen kunne ikke lagres.",
+      "delete_title": "Slette oppgaven?",
+      "delete_confirm": "«{title}» slettes fra oppgavelisten din, også på telefonen. Dette kan ikke angres."
+    }
   }
 }

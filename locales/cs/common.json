@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Zobrazovat zobrazení úkolů v kalendáři pro správu úkolů",
       "show_tasks_on_calendar": "Zobrazit úkoly v kalendáři",
       "show_tasks_on_calendar_desc": "Zobrazovat úkoly v měsíčním, týdenním a denním zobrazení kalendáře",
+      "show_upcoming_pane": "Zobrazit „Nadcházející“ vedle pošty",
+      "show_upcoming_pane_desc": "Otevřené úkoly a zprávy k zpracování podle termínu, vedle seznamu zpráv",
       "hover_preview": "Náhled události po přejetí",
       "hover_preview_desc": "Zobrazovat vyskakovací okno s podrobnostmi při najetí myší na události v kalendáři",
       "hover_preview_instant": "Okamžitě",
@@ -4577,6 +4579,41 @@
     "kept_in": "Uloženo v seznamu úkolů „{list}“ s odkazem na zprávu; vidíte to jen vy. Zpráva dostane příznak, i v telefonu.",
     "kept_in_tasks": "Uloženo ve vašem seznamu úkolů s odkazem na zprávu; vidíte to jen vy. Zpráva dostane příznak, i v telefonu.",
     "reminder_past": "Tento čas už uplynul. Zvolte budoucí.",
-    "other_reminders": "{count, plural, one {Je nastaveno ještě jedno připomenutí (v telefonu nebo v seznamu úkolů); zůstane.} few {Jsou nastavena ještě # připomenutí (v telefonu nebo v seznamu úkolů); zůstanou.} other {Je nastaveno ještě # připomenutí (v telefonu nebo v seznamu úkolů); zůstanou.}}"
+    "other_reminders": "{count, plural, one {Je nastaveno ještě jedno připomenutí (v telefonu nebo v seznamu úkolů); zůstane.} few {Jsou nastavena ještě # připomenutí (v telefonu nebo v seznamu úkolů); zůstanou.} other {Je nastaveno ještě # připomenutí (v telefonu nebo v seznamu úkolů); zůstanou.}}",
+    "recurring": "Opakuje se: termín upravte v seznamu úkolů.",
+    "note_html": "Formátovaná poznámka: upravte ji v seznamu úkolů.",
+    "upcoming": {
+      "title": "Nadcházející pro mě",
+      "all_tasks": "Všechny úkoly",
+      "hide": "Skrýt nadcházející",
+      "groups": {
+        "overdue": "Po termínu",
+        "today": "Dnes",
+        "tomorrow": "Zítra",
+        "this_week": "Tento týden"
+      },
+      "more": "+{count} později nebo bez data",
+      "empty": "Nic není k vyřízení",
+      "quick_placeholder": "＋ Připomenutí, např. „Zkontrolovat upomínky“",
+      "quick_label": "Nové připomenutí s termínem dnes (Enter)",
+      "quick_more": "Připomenutí se dnem, časem a poznámkou…",
+      "done_label": "Označit jako dokončené: {title}",
+      "edit": "Upravit",
+      "no_mail": "Připomenutí bez zprávy",
+      "no_title": "(bez názvu)",
+      "due_badge": "Úkoly k vyřízení: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Nové připomenutí",
+      "dialog_title_edit": "Upravit připomenutí",
+      "what_label": "Co",
+      "what_placeholder": "např. Zkontrolovat upomínky",
+      "delete": "Smazat",
+      "kept_in": "Uloženo v seznamu úkolů „{list}“, bez zprávy; vidíte to jen vy. V telefonu je v aplikaci úkolů.",
+      "kept_in_tasks": "Uloženo ve vašem seznamu úkolů, bez zprávy; vidíte to jen vy. V telefonu je v aplikaci úkolů.",
+      "failed": "Připomenutí se nepodařilo uložit.",
+      "delete_title": "Smazat úkol?",
+      "delete_confirm": "„{title}“ bude smazán z vašeho seznamu úkolů, i v telefonu. Nelze to vrátit zpět."
+    }
   }
 }

@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Afișați o vizualizare a sarcinilor în calendar pentru gestionarea sarcinilor de îndeplinit",
       "show_tasks_on_calendar": "Afișați sarcinile în calendar",
       "show_tasks_on_calendar_desc": "Afișați sarcinile în vizualizările lunare, săptămânale și zilnice ale calendarului",
+      "show_upcoming_pane": "Afișează „Urmează” lângă e-mail",
+      "show_upcoming_pane_desc": "Sarcinile deschise și urmăririle după scadență, lângă lista de mesaje",
       "hover_preview": "Previzualizare la trecerea cursorului peste elemente",
       "hover_preview_desc": "Afișați o fereastră pop-up cu detalii atunci când treceți cu mouse-ul peste evenimentele din calendar",
       "hover_preview_instant": "Instant",
@@ -4577,6 +4579,41 @@
     "kept_in": "Păstrat în lista de sarcini „{list}” cu un link către e-mail; doar dvs. îl vedeți. E-mailul primește un semnalizator, și pe telefon.",
     "kept_in_tasks": "Păstrat în lista dvs. de sarcini cu un link către e-mail; doar dvs. îl vedeți. E-mailul primește un semnalizator, și pe telefon.",
     "reminder_past": "Acest moment a trecut. Alegeți unul viitor.",
-    "other_reminders": "{count, plural, one {Mai este setat un memento (pe telefon sau în lista de sarcini); rămâne.} few {Mai sunt setate # mementouri (pe telefon sau în lista de sarcini); rămân.} other {Mai sunt setate # de mementouri (pe telefon sau în lista de sarcini); rămân.}}"
+    "other_reminders": "{count, plural, one {Mai este setat un memento (pe telefon sau în lista de sarcini); rămâne.} few {Mai sunt setate # mementouri (pe telefon sau în lista de sarcini); rămân.} other {Mai sunt setate # de mementouri (pe telefon sau în lista de sarcini); rămân.}}",
+    "recurring": "Recurentă: modificați scadența în lista de sarcini.",
+    "note_html": "Notă formatată: modificați-o în lista de sarcini.",
+    "upcoming": {
+      "title": "Urmează pentru mine",
+      "all_tasks": "Toate sarcinile",
+      "hide": "Ascunde ce urmează",
+      "groups": {
+        "overdue": "Restante",
+        "today": "Azi",
+        "tomorrow": "Mâine",
+        "this_week": "Săptămâna aceasta"
+      },
+      "more": "+{count} mai târziu sau fără dată",
+      "empty": "Nimic scadent",
+      "quick_placeholder": "＋ Memento, de ex. „Verifică somațiile”",
+      "quick_label": "Memento nou, scadent azi (Enter)",
+      "quick_more": "Memento cu zi, oră și notă…",
+      "done_label": "Marchează ca finalizat: {title}",
+      "edit": "Editează",
+      "no_mail": "Memento fără e-mail",
+      "no_title": "(fără titlu)",
+      "due_badge": "Sarcini scadente: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Memento nou",
+      "dialog_title_edit": "Editează mementoul",
+      "what_label": "Ce",
+      "what_placeholder": "de ex. Verifică somațiile",
+      "delete": "Șterge",
+      "kept_in": "Păstrat în lista de sarcini „{list}”, fără e-mail; doar dvs. îl vedeți. Pe telefon, este în aplicația de sarcini.",
+      "kept_in_tasks": "Păstrat în lista dvs. de sarcini, fără e-mail; doar dvs. îl vedeți. Pe telefon, este în aplicația de sarcini.",
+      "failed": "Mementoul nu a putut fi salvat.",
+      "delete_title": "Ștergeți sarcina?",
+      "delete_confirm": "„{title}” va fi ștearsă din lista dvs. de sarcini, și de pe telefon. Acțiunea nu poate fi anulată."
+    }
   }
 }

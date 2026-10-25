@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "在日历中显示任务视图以管理待办事项",
       "show_tasks_on_calendar": "在日历上显示任务",
       "show_tasks_on_calendar_desc": "在日历的月/周/日视图中显示任务",
+      "show_upcoming_pane": "在邮件旁显示“待办”",
+      "show_upcoming_pane_desc": "在邮件列表旁按到期日显示未完成的任务和后续处理",
       "hover_preview": "事件悬停预览",
       "hover_preview_desc": "将鼠标悬停在日历事件上时显示详细信息弹出窗口",
       "hover_preview_instant": "立即",
@@ -4577,6 +4579,41 @@
     "kept_in": "保存在任务列表“{list}”中，并附有指向邮件的链接；仅你可见。邮件会被标记，手机上也一样。",
     "kept_in_tasks": "保存在你的任务列表中，并附有指向邮件的链接；仅你可见。邮件会被标记，手机上也一样。",
     "reminder_past": "该时间已过，请选择将来的时间。",
-    "other_reminders": "{count, plural, other {另有 # 个提醒（在手机或任务列表中设置），将保留。}}"
+    "other_reminders": "{count, plural, other {另有 # 个提醒（在手机或任务列表中设置），将保留。}}",
+    "recurring": "重复任务：请在任务列表中编辑到期日。",
+    "note_html": "带格式的备注：请在任务列表中编辑。",
+    "upcoming": {
+      "title": "我的待办",
+      "all_tasks": "所有任务",
+      "hide": "隐藏待办",
+      "groups": {
+        "overdue": "已逾期",
+        "today": "今天",
+        "tomorrow": "明天",
+        "this_week": "本周"
+      },
+      "more": "另有 {count} 项（以后或无日期）",
+      "empty": "没有到期事项",
+      "quick_placeholder": "＋ 提醒，例如“检查催款”",
+      "quick_label": "今天到期的新提醒 (Enter)",
+      "quick_more": "带日期、时间和备注的提醒…",
+      "done_label": "标记为完成：{title}",
+      "edit": "编辑",
+      "no_mail": "无邮件的提醒",
+      "no_title": "(无标题)",
+      "due_badge": "到期任务：{count}"
+    },
+    "reminder": {
+      "dialog_title": "新提醒",
+      "dialog_title_edit": "编辑提醒",
+      "what_label": "内容",
+      "what_placeholder": "例如：检查催款",
+      "delete": "删除",
+      "kept_in": "保存在任务列表“{list}”中，不附邮件；仅你可见。手机上在任务应用中。",
+      "kept_in_tasks": "保存在你的任务列表中，不附邮件；仅你可见。手机上在任务应用中。",
+      "failed": "无法保存提醒。",
+      "delete_title": "删除任务？",
+      "delete_confirm": "“{title}”将从你的任务列表中删除，手机上也一样。此操作无法撤销。"
+    }
   }
 }

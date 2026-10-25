@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Een takenweergave in de agenda tonen om to-do's te beheren",
       "show_tasks_on_calendar": "Taken in agenda tonen",
       "show_tasks_on_calendar_desc": "Taken tonen in de maand-, week- en dagweergave van de agenda",
+      "show_upcoming_pane": "‘Binnenkort’ naast de e-mail tonen",
+      "show_upcoming_pane_desc": "Je open taken en opvolgingen op vervaldatum, naast de berichtenlijst",
       "hover_preview": "Voorvertoning bij hover",
       "hover_preview_desc": "Toon een detailpopover bij het hoveren over agenda-evenementen",
       "hover_preview_instant": "Direct",
@@ -4577,6 +4579,41 @@
     "kept_in": "Opgeslagen in de takenlijst ‘{list}’ met een link naar de e-mail; alleen jij ziet het. De e-mail wordt gemarkeerd, ook op je telefoon.",
     "kept_in_tasks": "Opgeslagen in je takenlijst met een link naar de e-mail; alleen jij ziet het. De e-mail wordt gemarkeerd, ook op je telefoon.",
     "reminder_past": "Dit tijdstip is voorbij. Kies een tijdstip in de toekomst.",
-    "other_reminders": "{count, plural, one {Er is nog een herinnering ingesteld (op een telefoon of in de takenlijst); die blijft.} other {Er zijn nog # herinneringen ingesteld (op een telefoon of in de takenlijst); die blijven.}}"
+    "other_reminders": "{count, plural, one {Er is nog een herinnering ingesteld (op een telefoon of in de takenlijst); die blijft.} other {Er zijn nog # herinneringen ingesteld (op een telefoon of in de takenlijst); die blijven.}}",
+    "recurring": "Terugkerend: bewerk de vervaldatum in de takenlijst.",
+    "note_html": "Opgemaakte notitie: bewerk die in de takenlijst.",
+    "upcoming": {
+      "title": "Binnenkort voor mij",
+      "all_tasks": "Alle taken",
+      "hide": "Binnenkort verbergen",
+      "groups": {
+        "overdue": "Te laat",
+        "today": "Vandaag",
+        "tomorrow": "Morgen",
+        "this_week": "Deze week"
+      },
+      "more": "+{count} later of zonder datum",
+      "empty": "Niets te doen",
+      "quick_placeholder": "＋ Herinnering, bijv. ‘Aanmaningen controleren’",
+      "quick_label": "Nieuwe herinnering voor vandaag (Enter)",
+      "quick_more": "Herinnering met dag, tijd en notitie…",
+      "done_label": "Als voltooid markeren: {title}",
+      "edit": "Bewerken",
+      "no_mail": "Herinnering zonder e-mail",
+      "no_title": "(geen titel)",
+      "due_badge": "Taken die vervallen: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Nieuwe herinnering",
+      "dialog_title_edit": "Herinnering bewerken",
+      "what_label": "Wat",
+      "what_placeholder": "bijv. Aanmaningen controleren",
+      "delete": "Verwijderen",
+      "kept_in": "Opgeslagen in de takenlijst ‘{list}’, zonder e-mail; alleen jij ziet het. Op een telefoon staat het in de takenapp.",
+      "kept_in_tasks": "Opgeslagen in je takenlijst, zonder e-mail; alleen jij ziet het. Op een telefoon staat het in de takenapp.",
+      "failed": "De herinnering kon niet worden opgeslagen.",
+      "delete_title": "Taak verwijderen?",
+      "delete_confirm": "‘{title}’ wordt uit je takenlijst verwijderd, ook op je telefoon. Dit kan niet ongedaan worden gemaakt."
+    }
   }
 }

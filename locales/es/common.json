@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Mostrar una vista de tareas en el calendario para gestionar tareas pendientes",
       "show_tasks_on_calendar": "Mostrar tareas en el calendario",
       "show_tasks_on_calendar_desc": "Mostrar las tareas en las vistas mensual, semanal y diaria del calendario",
+      "show_upcoming_pane": "Mostrar «Pendiente» junto al correo",
+      "show_upcoming_pane_desc": "Tus tareas abiertas y seguimientos por fecha de vencimiento, junto a la lista de mensajes",
       "hover_preview": "Vista previa al pasar el ratón",
       "hover_preview_desc": "Mostrar un popover de detalles al pasar el ratón sobre eventos del calendario",
       "hover_preview_instant": "Instantáneo",
@@ -4577,6 +4579,41 @@
     "kept_in": "Se guarda en la lista de tareas «{list}» con un enlace al correo; solo lo ves tú. El correo queda marcado, también en el móvil.",
     "kept_in_tasks": "Se guarda en tu lista de tareas con un enlace al correo; solo lo ves tú. El correo queda marcado, también en el móvil.",
     "reminder_past": "Ese momento ya pasó. Elige uno futuro.",
-    "other_reminders": "{count, plural, one {Hay otro recordatorio (en el móvil o en la lista de tareas); se mantiene.} other {Hay # recordatorios más (en el móvil o en la lista de tareas); se mantienen.}}"
+    "other_reminders": "{count, plural, one {Hay otro recordatorio (en el móvil o en la lista de tareas); se mantiene.} other {Hay # recordatorios más (en el móvil o en la lista de tareas); se mantienen.}}",
+    "recurring": "Se repite: edita la fecha de vencimiento en la lista de tareas.",
+    "note_html": "Nota con formato: edítala en la lista de tareas.",
+    "upcoming": {
+      "title": "Pendiente para mí",
+      "all_tasks": "Todas las tareas",
+      "hide": "Ocultar pendientes",
+      "groups": {
+        "overdue": "Vencidas",
+        "today": "Hoy",
+        "tomorrow": "Mañana",
+        "this_week": "Esta semana"
+      },
+      "more": "+{count} más adelante o sin fecha",
+      "empty": "Nada pendiente",
+      "quick_placeholder": "＋ Recordatorio, p. ej. «Revisar las reclamaciones»",
+      "quick_label": "Nuevo recordatorio para hoy (Intro)",
+      "quick_more": "Recordatorio con día, hora y nota…",
+      "done_label": "Marcar como completado: {title}",
+      "edit": "Editar",
+      "no_mail": "Recordatorio sin correo",
+      "no_title": "(sin título)",
+      "due_badge": "Tareas vencidas o para hoy: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Nuevo recordatorio",
+      "dialog_title_edit": "Editar recordatorio",
+      "what_label": "Qué",
+      "what_placeholder": "p. ej. Revisar las reclamaciones",
+      "delete": "Eliminar",
+      "kept_in": "Se guarda en la lista de tareas «{list}», sin correo; solo lo ves tú. En el teléfono, está en la aplicación de tareas.",
+      "kept_in_tasks": "Se guarda en tu lista de tareas, sin correo; solo lo ves tú. En el teléfono, está en la aplicación de tareas.",
+      "failed": "No se pudo guardar el recordatorio.",
+      "delete_title": "¿Eliminar la tarea?",
+      "delete_confirm": "«{title}» se eliminará de tu lista de tareas, también en el teléfono. No se puede deshacer."
+    }
   }
 }

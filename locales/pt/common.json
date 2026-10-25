@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Mostrar uma visualização de tarefas no calendário para gerenciar pendências",
       "show_tasks_on_calendar": "Mostrar tarefas no calendário",
       "show_tasks_on_calendar_desc": "Exibir tarefas nas visualizações mensal, semanal e diária do calendário",
+      "show_upcoming_pane": "Mostrar «Próximo» ao lado do e-mail",
+      "show_upcoming_pane_desc": "As suas tarefas abertas e acompanhamentos por data de vencimento, ao lado da lista de mensagens",
       "hover_preview": "Pré-visualização ao passar o rato",
       "hover_preview_desc": "Mostrar um popover de detalhes ao passar o rato sobre eventos do calendário",
       "hover_preview_instant": "Instantâneo",
@@ -4577,6 +4579,41 @@
     "kept_in": "Guardado na lista de tarefas «{list}» com uma ligação para o e-mail; só você o vê. O e-mail fica sinalizado, também no telemóvel.",
     "kept_in_tasks": "Guardado na sua lista de tarefas com uma ligação para o e-mail; só você o vê. O e-mail fica sinalizado, também no telemóvel.",
     "reminder_past": "Este momento já passou. Escolha um futuro.",
-    "other_reminders": "{count, plural, one {Existe outro lembrete (no telemóvel ou na lista de tarefas); mantém-se.} other {Existem mais # lembretes (no telemóvel ou na lista de tarefas); mantêm-se.}}"
+    "other_reminders": "{count, plural, one {Existe outro lembrete (no telemóvel ou na lista de tarefas); mantém-se.} other {Existem mais # lembretes (no telemóvel ou na lista de tarefas); mantêm-se.}}",
+    "recurring": "Repete-se: edite a data de vencimento na lista de tarefas.",
+    "note_html": "Nota formatada: edite-a na lista de tarefas.",
+    "upcoming": {
+      "title": "Próximo para mim",
+      "all_tasks": "Todas as tarefas",
+      "hide": "Ocultar próximos",
+      "groups": {
+        "overdue": "Em atraso",
+        "today": "Hoje",
+        "tomorrow": "Amanhã",
+        "this_week": "Esta semana"
+      },
+      "more": "+{count} mais tarde ou sem data",
+      "empty": "Nada pendente",
+      "quick_placeholder": "＋ Lembrete, p. ex. «Verificar as cobranças»",
+      "quick_label": "Novo lembrete para hoje (Enter)",
+      "quick_more": "Lembrete com dia, hora e nota…",
+      "done_label": "Marcar como concluído: {title}",
+      "edit": "Editar",
+      "no_mail": "Lembrete sem e-mail",
+      "no_title": "(sem título)",
+      "due_badge": "Tarefas a vencer: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Novo lembrete",
+      "dialog_title_edit": "Editar lembrete",
+      "what_label": "O quê",
+      "what_placeholder": "p. ex. Verificar as cobranças",
+      "delete": "Eliminar",
+      "kept_in": "Guardado na lista de tarefas «{list}», sem e-mail; só você o vê. No telemóvel, está na aplicação de tarefas.",
+      "kept_in_tasks": "Guardado na sua lista de tarefas, sem e-mail; só você o vê. No telemóvel, está na aplicação de tarefas.",
+      "failed": "Não foi possível guardar o lembrete.",
+      "delete_title": "Eliminar a tarefa?",
+      "delete_confirm": "«{title}» será eliminada da sua lista de tarefas, também no telemóvel. Não é possível anular."
+    }
   }
 }

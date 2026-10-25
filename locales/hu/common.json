@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Feladatnézet mutatása a naptárban a teendők kezeléséhez",
       "show_tasks_on_calendar": "Feladatok mutatása a naptárban",
       "show_tasks_on_calendar_desc": "Feladatok mutatása a havi, heti és napi naptárnézetben",
+      "show_upcoming_pane": "„Teendők” megjelenítése a levelek mellett",
+      "show_upcoming_pane_desc": "Nyitott feladatai és nyomon követései határidő szerint, a levéllista mellett",
       "hover_preview": "Esemény előnézet egérrel",
       "hover_preview_desc": "Részletes felugró ablak mutatása az események fölé húzva",
       "hover_preview_instant": "Azonnali",
@@ -4577,6 +4579,41 @@
     "kept_in": "A(z) „{list}” feladatlistában tárolva, hivatkozással a levélre; csak Ön látja. A levél megjelölést kap, a telefonon is.",
     "kept_in_tasks": "Az Ön feladatlistájában tárolva, hivatkozással a levélre; csak Ön látja. A levél megjelölést kap, a telefonon is.",
     "reminder_past": "Ez az időpont elmúlt. Válasszon egy jövőbelit.",
-    "other_reminders": "{count, plural, one {Van még egy emlékeztető (telefonon vagy a feladatlistában); megmarad.} other {Van még # emlékeztető (telefonon vagy a feladatlistában); megmaradnak.}}"
+    "other_reminders": "{count, plural, one {Van még egy emlékeztető (telefonon vagy a feladatlistában); megmarad.} other {Van még # emlékeztető (telefonon vagy a feladatlistában); megmaradnak.}}",
+    "recurring": "Ismétlődő: a határidőt a feladatlistában módosítsa.",
+    "note_html": "Formázott megjegyzés: a feladatlistában módosítsa.",
+    "upcoming": {
+      "title": "Rám váró teendők",
+      "all_tasks": "Összes feladat",
+      "hide": "Teendők elrejtése",
+      "groups": {
+        "overdue": "Lejárt",
+        "today": "Ma",
+        "tomorrow": "Holnap",
+        "this_week": "Ezen a héten"
+      },
+      "more": "+{count} később vagy dátum nélkül",
+      "empty": "Nincs esedékes teendő",
+      "quick_placeholder": "＋ Emlékeztető, pl. „Felszólítások ellenőrzése”",
+      "quick_label": "Új emlékeztető mára (Enter)",
+      "quick_more": "Emlékeztető nappal, időponttal és megjegyzéssel…",
+      "done_label": "Megjelölés készként: {title}",
+      "edit": "Szerkesztés",
+      "no_mail": "Emlékeztető levél nélkül",
+      "no_title": "(cím nélkül)",
+      "due_badge": "Esedékes feladatok: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Új emlékeztető",
+      "dialog_title_edit": "Emlékeztető szerkesztése",
+      "what_label": "Mit",
+      "what_placeholder": "pl. Felszólítások ellenőrzése",
+      "delete": "Törlés",
+      "kept_in": "A(z) „{list}” feladatlistában tárolva, levél nélkül; csak Ön látja. Telefonon a feladatkezelő alkalmazásban van.",
+      "kept_in_tasks": "Az Ön feladatlistájában tárolva, levél nélkül; csak Ön látja. Telefonon a feladatkezelő alkalmazásban van.",
+      "failed": "Az emlékeztetőt nem sikerült menteni.",
+      "delete_title": "Törli a feladatot?",
+      "delete_confirm": "A(z) „{title}” törlődik a feladatlistájából, a telefonján is. Ez nem vonható vissza."
+    }
   }
 }

@@ -19,6 +19,7 @@ import {
   buildFollowUpTask,
   editFollowUpTask,
   followUpAction,
+  followUpMailRef,
   followUpMailSummary,
   sameFollowUpAction,
   followUpsByEmailId,
@@ -73,7 +74,7 @@ export function useFollowUpTasks(): void {
 }
 
 /** The user's working time for the quick choices; Bulwark keeps no working hours, so 08:00-17:00. */
-function useWorkingTime(): WorkingTime {
+export function useWorkingTime(): WorkingTime {
   const workingDays = useSettingsStore((s) => s.calendarWorkingDays);
   const firstDayOfWeek = useSettingsStore((s) => s.firstDayOfWeek);
   return useMemo(() => ({
@@ -218,23 +219,110 @@ export async function mirrorFlag(
   return true;
 }
 
+/**
+ * One change of a mail's follow-up: writes the task, then mirrors it as
+ * $flagged. While it runs, the check that keeps flag and task in step leaves
+ * the mail alone; afterwards it runs. A failure after the task was written
+ * says so: the follow-up stands, only the mail's flag does not.
+ */
+async function changeFollowUp(
+  emailId: string,
+  writeTask: () => Promise<boolean>,
+  mirror: () => Promise<unknown>,
+  messages: { failed: string; flagFailed: string },
+): Promise<boolean> {
+  if (pending.has(emailId)) return false;
+  pending.add(emailId);
+  try {
+    let written: boolean;
+    try {
+      written = await writeTask();
+    } catch (error) {
+      debug.error("follow-up: task not written", error);
+      toast.error(messages.failed);
+      return false;
+    }
+    if (!written) return false;
+    try {
+      await mirror();
+    } catch (error) {
+      debug.error("follow-up: flag not mirrored", error);
+      toast.error(messages.flagFailed);
+    }
+    return true;
+  } finally {
+    pending.delete(emailId);
+    afterChange?.();
+  }
+}
+
+/**
+ * Marks a task done from a list that holds only the task (the pane
+ * "Upcoming"), as the mail's own "Mark complete" does: a follow-up on a mail
+ * of the user's own account clears that mail's flag too. Any other task is
+ * only completed. Resolves whether the task was written.
+ */
+export async function completeTask(
+  client: IJMAPClient,
+  task: CalendarTask,
+  messages: { failed: string; flagFailed: string },
+): Promise<boolean> {
+  const complete = () => useTaskStore.getState().updateTask(client, task.id, { progress: "completed" });
+  const ref = task.isShared ? null : followUpMailRef(task);
+  if (!ref || (ref.accountId && ref.accountId !== client.getAccountId())) {
+    try {
+      return await complete();
+    } catch (error) {
+      debug.error("tasks: not completed", error);
+      toast.error(messages.failed);
+      return false;
+    }
+  }
+  return changeFollowUp(ref.emailId, complete, async () => {
+    // The row in the list, when it is there, so it follows at once; else the flag as the server has it.
+    const listed = useEmailStore.getState().emails.find((e) => e.id === ref.emailId && isOwnMail(e, client));
+    if (listed) return mirrorFlag(client, listed, false);
+    const [fields] = await client.getEmailFields([ref.emailId], ["keywords"]);
+    if (!fields) return true; // The mail is gone: nothing to mirror.
+    const keywords = fields.keywords as Record<string, boolean> | undefined;
+    return mirrorFlag(client, { id: ref.emailId, keywords: {} }, false, !!keywords?.$flagged);
+  }, messages);
+}
+
 /** Where the follow-up dialog puts the cursor first. */
 export type FollowUpDialogFocus = "action" | "reminder";
 
+/** A reminder without a mail in the dialog: an existing task, or a new one with what was typed. */
+export interface ReminderDialogTarget {
+  /** The task, or null for a new reminder. */
+  taskId: string | null;
+  /** What a new reminder is to say, as typed so far. */
+  title?: string;
+}
+
 interface FollowUpDialogState {
-  /** The mail whose follow-up the dialog edits, null while it is closed. */
+  /** The mail whose follow-up the dialog edits, null while it is closed or shows a reminder. */
   email: Email | null;
+  /** The reminder without a mail the dialog edits, null while it is closed or shows a mail's. */
+  reminder: ReminderDialogTarget | null;
   focus: FollowUpDialogFocus;
   open: (email: Email, focus?: FollowUpDialogFocus) => void;
+  openReminder: (reminder: ReminderDialogTarget, focus?: FollowUpDialogFocus) => void;
   close: () => void;
 }
 
-/** The one follow-up dialog of the mail view (`FollowUpDialogHost`), opened from any row, menu or bar. */
+/**
+ * The one follow-up dialog of the mail view (`FollowUpDialogHost`), opened
+ * from any row, menu or bar for a mail, and from the pane "Upcoming" for a
+ * reminder without one.
+ */
 export const useFollowUpDialog = create<FollowUpDialogState>((set) => ({
   email: null,
+  reminder: null,
   focus: "action",
-  open: (email, focus = "action") => set({ email, focus }),
-  close: () => set({ email: null }),
+  open: (email, focus = "action") => set({ email, reminder: null, focus }),
+  openReminder: (reminder, focus = "action") => set({ email: null, reminder, focus }),
+  close: () => set({ email: null, reminder: null }),
 }));
 
 /** What the dialog sets: the action as the user typed or picked it, days and times as for a quick choice. */
@@ -283,29 +371,13 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     writeTask: (client: IJMAPClient, email: Email) => Promise<boolean>,
     flagged: boolean,
   ): Promise<boolean> => {
-    if (!client || !email || pending.has(email.id)) return false;
-    pending.add(email.id);
-    try {
-      let written: boolean;
-      try {
-        written = await writeTask(client, email);
-      } catch (error) {
-        debug.error("follow-up: task not written", error);
-        toast.error(t("failed"));
-        return false;
-      }
-      if (!written) return false;
-      try {
-        await mirrorFlag(client, email, flagged);
-      } catch (error) {
-        debug.error("follow-up: flag not mirrored", error);
-        toast.error(t("flag_failed"));
-      }
-      return true;
-    } finally {
-      pending.delete(email.id);
-      afterChange?.();
-    }
+    if (!client || !email) return false;
+    return changeFollowUp(
+      email.id,
+      () => writeTask(client, email),
+      () => mirrorFlag(client, email, flagged),
+      { failed: t("failed"), flagFailed: t("flag_failed") },
+    );
   }, [client, email, t]);
 
   /** Writes a new follow-up into the user's task list. */

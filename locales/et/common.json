@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Kuva kalendris ülesannete vaade tegemiste haldamiseks",
       "show_tasks_on_calendar": "Kuva ülesanded kalendris",
       "show_tasks_on_calendar_desc": "Kuva ülesannete sildid päeva- ja nädalavaates",
+      "show_upcoming_pane": "Näita „Ees ootav“ kirjade kõrval",
+      "show_upcoming_pane_desc": "Avatud ülesanded ja järelkontrollid tähtaja järgi kirjade loendi kõrval",
       "hover_preview": "Sündmuse hõljutusega eelvaade",
       "hover_preview_desc": "Kuva kalendrisündmuse kohal hõljutades üksikasjade hüpikaken",
       "hover_preview_instant": "Koheselt",
@@ -4577,6 +4579,41 @@
     "kept_in": "Salvestatakse ülesannete loendisse „{list}“ koos lingiga kirjale; seda näed ainult sina. Kiri märgitakse lipuga, ka telefonis.",
     "kept_in_tasks": "Salvestatakse sinu ülesannete loendisse koos lingiga kirjale; seda näed ainult sina. Kiri märgitakse lipuga, ka telefonis.",
     "reminder_past": "See aeg on möödas. Vali tulevane aeg.",
-    "other_reminders": "{count, plural, one {Seatud on veel üks meeldetuletus (telefonis või ülesannete loendis); see jääb alles.} other {Seatud on veel # meeldetuletust (telefonis või ülesannete loendis); need jäävad alles.}}"
+    "other_reminders": "{count, plural, one {Seatud on veel üks meeldetuletus (telefonis või ülesannete loendis); see jääb alles.} other {Seatud on veel # meeldetuletust (telefonis või ülesannete loendis); need jäävad alles.}}",
+    "recurring": "Kordub: muuda tähtaega ülesannete loendis.",
+    "note_html": "Vormindatud märkus: muuda seda ülesannete loendis.",
+    "upcoming": {
+      "title": "Minu ees ootamas",
+      "all_tasks": "Kõik ülesanded",
+      "hide": "Peida ees ootav",
+      "groups": {
+        "overdue": "Tähtaeg möödas",
+        "today": "Täna",
+        "tomorrow": "Homme",
+        "this_week": "See nädal"
+      },
+      "more": "+{count} hiljem või kuupäevata",
+      "empty": "Midagi pole tähtajaga",
+      "quick_placeholder": "＋ Meeldetuletus, nt „Kontrolli meeldetuletuskirju“",
+      "quick_label": "Uus meeldetuletus tähtajaga täna (Enter)",
+      "quick_more": "Meeldetuletus päeva, kellaaja ja märkusega…",
+      "done_label": "Märgi tehtuks: {title}",
+      "edit": "Muuda",
+      "no_mail": "Meeldetuletus ilma kirjata",
+      "no_title": "(pealkirjata)",
+      "due_badge": "Tähtajaga ülesanded: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Uus meeldetuletus",
+      "dialog_title_edit": "Muuda meeldetuletust",
+      "what_label": "Mida",
+      "what_placeholder": "nt Kontrolli meeldetuletuskirju",
+      "delete": "Kustuta",
+      "kept_in": "Salvestatakse ülesannete loendisse „{list}“, ilma kirjata; seda näed ainult sina. Telefonis on see ülesannete rakenduses.",
+      "kept_in_tasks": "Salvestatakse sinu ülesannete loendisse, ilma kirjata; seda näed ainult sina. Telefonis on see ülesannete rakenduses.",
+      "failed": "Meeldetuletust ei õnnestunud salvestada.",
+      "delete_title": "Kas kustutada ülesanne?",
+      "delete_confirm": "„{title}“ kustutatakse sinu ülesannete loendist, ka telefonis. Seda ei saa tagasi võtta."
+    }
   }
 }

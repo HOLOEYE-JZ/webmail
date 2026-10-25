@@ -8,7 +8,7 @@ import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useTaskStore } from '@/stores/task-store';
 import { clearAllHooks, taskHooks } from '@/lib/plugin-hooks';
-import { buildFollowUpTask, followUpMailRef } from '@/lib/follow-ups';
+import { buildFollowUpTask, buildReminderTask, followUpMailRef } from '@/lib/follow-ups';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { CalendarTask, Email } from '@/lib/jmap/types';
 
@@ -460,5 +460,32 @@ describe('locateFollowUpMail', () => {
   it('offers the link as it is when the server cannot be asked', async () => {
     client.getEmailFields.mockRejectedValueOnce(new Error('down'));
     expect(await locateFollowUpMail(asClient(), followUp('T1', 'M1'))).toEqual({ kind: 'unknown', emailId: 'M1' });
+  });
+});
+
+describe('useFollowUpSync and reminders without a mail', () => {
+  const reminder = (over: Partial<CalendarTask> = {}) => ({
+    ...buildReminderTask({ title: 'Check the dunning run', calendarId: 'tasks', due: null, reminderAt: null }),
+    id: 'R1',
+    uid: 'R1',
+    updated: '2026-10-26T08:00:00Z',
+    ...over,
+  }) as CalendarTask;
+
+  it('never asks for a mail nor flags one for a reminder, open, done or deleted', async () => {
+    server.mails.set('M1', { keywords: { $flagged: true }, messageId: ['M1@example.com'] });
+    server.tasks = [reminder(), followUp('T1', 'M1')];
+    renderHook(() => useFollowUpSync());
+    await load();
+    server.tasks = [reminder({ progress: 'completed', updated: '2026-10-26T10:00:00Z' }), server.tasks[1]];
+    await load();
+    server.tasks = [server.tasks[1]];
+    await load();
+    await push();
+    for (const [ids] of client.getEmailFields.mock.calls) expect(ids).toEqual(['M1']);
+    expect(client.toggleStar).not.toHaveBeenCalled();
+    expect(client.deleteCalendarTask).not.toHaveBeenCalled();
+    expect(client.updateCalendarTask).not.toHaveBeenCalled();
+    expect(flagOf('M1')).toBe(true);
   });
 });

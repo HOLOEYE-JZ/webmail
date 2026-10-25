@@ -33,7 +33,7 @@ import type { CalendarTask, Email } from "@/lib/jmap/types";
 const DAY_FORMAT = { weekday: "short", day: "2-digit", month: "2-digit" } as const;
 
 /** Days and times as the follow-up's parts show them. */
-function useFollowUpFormat() {
+export function useFollowUpFormat() {
   const t = useTranslations("follow_up");
   const format = useFormatter();
   const displayFormat = useDisplayDateFormatter();

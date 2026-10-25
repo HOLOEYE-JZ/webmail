@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Mostra una vista attività nel calendario per gestire le cose da fare",
       "show_tasks_on_calendar": "Mostra attività nel calendario",
       "show_tasks_on_calendar_desc": "Mostra le attività nelle viste mensile, settimanale e giornaliera del calendario",
+      "show_upcoming_pane": "Mostra «In arrivo» accanto alla posta",
+      "show_upcoming_pane_desc": "Le tue attività aperte e i completamenti per scadenza, accanto all’elenco dei messaggi",
       "hover_preview": "Anteprima al passaggio del mouse",
       "hover_preview_desc": "Mostra un popover dettagliato al passaggio del mouse sugli eventi del calendario",
       "hover_preview_instant": "Istantaneo",
@@ -4577,6 +4579,41 @@
     "kept_in": "Salvato nell’elenco attività «{list}» con un link al messaggio; lo vedi solo tu. Il messaggio viene contrassegnato, anche sul telefono.",
     "kept_in_tasks": "Salvato nel tuo elenco attività con un link al messaggio; lo vedi solo tu. Il messaggio viene contrassegnato, anche sul telefono.",
     "reminder_past": "Questo momento è passato. Scegline uno futuro.",
-    "other_reminders": "{count, plural, one {È impostato un altro promemoria (sul telefono o nell’elenco attività); resta.} other {Sono impostati altri # promemoria (sul telefono o nell’elenco attività); restano.}}"
+    "other_reminders": "{count, plural, one {È impostato un altro promemoria (sul telefono o nell’elenco attività); resta.} other {Sono impostati altri # promemoria (sul telefono o nell’elenco attività); restano.}}",
+    "recurring": "Ricorrente: modifica la scadenza nell’elenco attività.",
+    "note_html": "Nota formattata: modificala nell’elenco attività.",
+    "upcoming": {
+      "title": "In arrivo per me",
+      "all_tasks": "Tutte le attività",
+      "hide": "Nascondi «In arrivo»",
+      "groups": {
+        "overdue": "Scadute",
+        "today": "Oggi",
+        "tomorrow": "Domani",
+        "this_week": "Questa settimana"
+      },
+      "more": "+{count} più avanti o senza data",
+      "empty": "Niente in scadenza",
+      "quick_placeholder": "＋ Promemoria, ad es. «Controllare i solleciti»",
+      "quick_label": "Nuovo promemoria per oggi (Invio)",
+      "quick_more": "Promemoria con giorno, ora e nota…",
+      "done_label": "Segna come completato: {title}",
+      "edit": "Modifica",
+      "no_mail": "Promemoria senza messaggio",
+      "no_title": "(senza titolo)",
+      "due_badge": "Attività in scadenza: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Nuovo promemoria",
+      "dialog_title_edit": "Modifica promemoria",
+      "what_label": "Cosa",
+      "what_placeholder": "ad es. Controllare i solleciti",
+      "delete": "Elimina",
+      "kept_in": "Salvato nell’elenco attività «{list}», senza messaggio; lo vedi solo tu. Sul telefono è nell’app delle attività.",
+      "kept_in_tasks": "Salvato nel tuo elenco attività, senza messaggio; lo vedi solo tu. Sul telefono è nell’app delle attività.",
+      "failed": "Impossibile salvare il promemoria.",
+      "delete_title": "Eliminare l’attività?",
+      "delete_confirm": "«{title}» verrà eliminata dal tuo elenco attività, anche sul telefono. L’operazione non può essere annullata."
+    }
   }
 }

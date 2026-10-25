@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Pokaż widok zadań w kalendarzu do zarządzania zadaniami",
       "show_tasks_on_calendar": "Pokaż zadania w kalendarzu",
       "show_tasks_on_calendar_desc": "Wyświetlaj zadania w miesięcznym, tygodniowym i dziennym widoku kalendarza",
+      "show_upcoming_pane": "Pokazuj „Nadchodzące” obok poczty",
+      "show_upcoming_pane_desc": "Otwarte zadania i monity według terminu, obok listy wiadomości",
       "hover_preview": "Podgląd wydarzenia po najechaniu",
       "hover_preview_desc": "Pokaż wyskakujące okno szczegółów po najechaniu na wydarzenia w kalendarzu",
       "hover_preview_instant": "Natychmiast",
@@ -4577,6 +4579,41 @@
     "kept_in": "Zapisano na liście zadań „{list}” z linkiem do wiadomości; widzisz to tylko Ty. Wiadomość zostaje oflagowana, także w telefonie.",
     "kept_in_tasks": "Zapisano na Twojej liście zadań z linkiem do wiadomości; widzisz to tylko Ty. Wiadomość zostaje oflagowana, także w telefonie.",
     "reminder_past": "Ten termin minął. Wybierz przyszły.",
-    "other_reminders": "{count, plural, one {Ustawiono jeszcze jedno przypomnienie (w telefonie lub na liście zadań); zostaje.} few {Ustawiono jeszcze # przypomnienia (w telefonie lub na liście zadań); zostają.} other {Ustawiono jeszcze # przypomnień (w telefonie lub na liście zadań); zostają.}}"
+    "other_reminders": "{count, plural, one {Ustawiono jeszcze jedno przypomnienie (w telefonie lub na liście zadań); zostaje.} few {Ustawiono jeszcze # przypomnienia (w telefonie lub na liście zadań); zostają.} other {Ustawiono jeszcze # przypomnień (w telefonie lub na liście zadań); zostają.}}",
+    "recurring": "Powtarzające się: termin zmień na liście zadań.",
+    "note_html": "Sformatowana notatka: edytuj ją na liście zadań.",
+    "upcoming": {
+      "title": "Nadchodzące dla mnie",
+      "all_tasks": "Wszystkie zadania",
+      "hide": "Ukryj nadchodzące",
+      "groups": {
+        "overdue": "Zaległe",
+        "today": "Dzisiaj",
+        "tomorrow": "Jutro",
+        "this_week": "W tym tygodniu"
+      },
+      "more": "+{count} później lub bez daty",
+      "empty": "Nic do zrobienia",
+      "quick_placeholder": "＋ Przypomnienie, np. „Sprawdzić monity”",
+      "quick_label": "Nowe przypomnienie na dziś (Enter)",
+      "quick_more": "Przypomnienie z dniem, godziną i notatką…",
+      "done_label": "Oznacz jako ukończone: {title}",
+      "edit": "Edytuj",
+      "no_mail": "Przypomnienie bez wiadomości",
+      "no_title": "(bez tytułu)",
+      "due_badge": "Zadania do wykonania: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Nowe przypomnienie",
+      "dialog_title_edit": "Edytuj przypomnienie",
+      "what_label": "Co",
+      "what_placeholder": "np. Sprawdzić monity",
+      "delete": "Usuń",
+      "kept_in": "Zapisano na liście zadań „{list}”, bez wiadomości; widzisz to tylko ty. Na telefonie jest w aplikacji zadań.",
+      "kept_in_tasks": "Zapisano na Twojej liście zadań, bez wiadomości; widzisz to tylko ty. Na telefonie jest w aplikacji zadań.",
+      "failed": "Nie udało się zapisać przypomnienia.",
+      "delete_title": "Usunąć zadanie?",
+      "delete_confirm": "„{title}” zostanie usunięte z Twojej listy zadań, także na telefonie. Tej operacji nie można cofnąć."
+    }
   }
 }

@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Vis en opgavevisning i kalenderen til styring af gøremål",
       "show_tasks_on_calendar": "Vis opgaver på kalender",
       "show_tasks_on_calendar_desc": "Vis opgaver i måneds-, uge- og dagsvisningen",
+      "show_upcoming_pane": "Vis »Kommende« ved siden af mailen",
+      "show_upcoming_pane_desc": "Dine åbne opgaver og opfølgninger efter forfaldsdag, ved siden af meddelelseslisten",
       "hover_preview": "Hover-forhåndsvisning",
       "hover_preview_desc": "Vis en detalje-popover når du holder musen over kalenderbegivenheder",
       "hover_preview_instant": "Øjeblikkeligt",
@@ -4577,6 +4579,41 @@
     "kept_in": "Gemt i opgavelisten “{list}” med et link til mailen; kun du kan se den. Mailen bliver markeret, også på telefonen.",
     "kept_in_tasks": "Gemt i din opgaveliste med et link til mailen; kun du kan se den. Mailen bliver markeret, også på telefonen.",
     "reminder_past": "Tidspunktet er passeret. Vælg et fremtidigt.",
-    "other_reminders": "{count, plural, one {Der er en påmindelse mere (på en telefon eller i opgavelisten); den bevares.} other {Der er # påmindelser mere (på en telefon eller i opgavelisten); de bevares.}}"
+    "other_reminders": "{count, plural, one {Der er en påmindelse mere (på en telefon eller i opgavelisten); den bevares.} other {Der er # påmindelser mere (på en telefon eller i opgavelisten); de bevares.}}",
+    "recurring": "Gentages: ret forfaldsdagen i opgavelisten.",
+    "note_html": "Formateret note: ret den i opgavelisten.",
+    "upcoming": {
+      "title": "Kommende for mig",
+      "all_tasks": "Alle opgaver",
+      "hide": "Skjul kommende",
+      "groups": {
+        "overdue": "Forfaldne",
+        "today": "I dag",
+        "tomorrow": "I morgen",
+        "this_week": "Denne uge"
+      },
+      "more": "+{count} senere eller uden dato",
+      "empty": "Intet forfalder",
+      "quick_placeholder": "＋ Påmindelse, f.eks. »Tjek rykkerkørslen«",
+      "quick_label": "Ny påmindelse, forfalder i dag (Enter)",
+      "quick_more": "Påmindelse med dag, klokkeslæt og note …",
+      "done_label": "Markér som fuldført: {title}",
+      "edit": "Rediger",
+      "no_mail": "Påmindelse uden mail",
+      "no_title": "(ingen titel)",
+      "due_badge": "Forfaldne opgaver: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Ny påmindelse",
+      "dialog_title_edit": "Rediger påmindelse",
+      "what_label": "Hvad",
+      "what_placeholder": "f.eks. Tjek rykkerkørslen",
+      "delete": "Slet",
+      "kept_in": "Gemt i opgavelisten »{list}«, uden mail; kun du kan se den. På telefonen er den i opgave-appen.",
+      "kept_in_tasks": "Gemt i din opgaveliste, uden mail; kun du kan se den. På telefonen er den i opgave-appen.",
+      "failed": "Påmindelsen kunne ikke gemmes.",
+      "delete_title": "Slet opgave?",
+      "delete_confirm": "»{title}« slettes fra din opgaveliste, også på telefonen. Det kan ikke fortrydes."
+    }
   }
 }

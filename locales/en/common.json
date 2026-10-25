@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Show a tasks view in the calendar for managing to-dos",
       "show_tasks_on_calendar": "Show tasks on calendar",
       "show_tasks_on_calendar_desc": "Display tasks on the month, week and day calendar views",
+      "show_upcoming_pane": "Show “Upcoming” beside the mail",
+      "show_upcoming_pane_desc": "Your open tasks and follow-ups by due day, next to the message list",
       "hover_preview": "Event hover preview",
       "hover_preview_desc": "Show a detail popover when hovering over calendar events",
       "hover_preview_instant": "Instant",
@@ -4577,6 +4579,41 @@
     "kept_in": "Kept in the task list “{list}” with a link to the mail; only you see it. The mail is flagged, on your phone too.",
     "kept_in_tasks": "Kept in your task list with a link to the mail; only you see it. The mail is flagged, on your phone too.",
     "reminder_past": "This time has passed. Choose a time to come.",
-    "other_reminders": "{count, plural, one {Another reminder is set (on a phone or in the task list); it stays.} other {# more reminders are set (on a phone or in the task list); they stay.}}"
+    "other_reminders": "{count, plural, one {Another reminder is set (on a phone or in the task list); it stays.} other {# more reminders are set (on a phone or in the task list); they stay.}}",
+    "recurring": "Repeats: edit the due day in the task list.",
+    "note_html": "Formatted note: edit it in the task list.",
+    "upcoming": {
+      "title": "Upcoming for me",
+      "all_tasks": "All tasks",
+      "hide": "Hide upcoming",
+      "groups": {
+        "overdue": "Overdue",
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "this_week": "This week"
+      },
+      "more": "+{count} later or without a date",
+      "empty": "Nothing due",
+      "quick_placeholder": "＋ Reminder, e.g. “Check the dunning run”",
+      "quick_label": "New reminder, due today (Enter)",
+      "quick_more": "Reminder with day, time and note…",
+      "done_label": "Mark done: {title}",
+      "edit": "Edit",
+      "no_mail": "Reminder without a mail",
+      "no_title": "(no title)",
+      "due_badge": "Tasks due: {count}"
+    },
+    "reminder": {
+      "dialog_title": "New reminder",
+      "dialog_title_edit": "Edit reminder",
+      "what_label": "What",
+      "what_placeholder": "e.g. Check the dunning run",
+      "delete": "Delete",
+      "kept_in": "Kept in the task list “{list}”, without a mail; only you see it. On a phone, it is in the tasks app.",
+      "kept_in_tasks": "Kept in your task list, without a mail; only you see it. On a phone, it is in the tasks app.",
+      "failed": "The reminder could not be saved.",
+      "delete_title": "Delete task?",
+      "delete_confirm": "“{title}” is deleted from your task list, also on your phone. This cannot be undone."
+    }
   }
 }

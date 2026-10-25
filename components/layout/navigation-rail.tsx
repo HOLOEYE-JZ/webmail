@@ -11,6 +11,7 @@ import { useShallow } from "zustand/react/shallow";
 import { usePathname, Link, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { useDueTaskCount } from "@/hooks/use-upcoming";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -39,6 +40,8 @@ interface NavItem {
   href: string;
   hidden?: boolean;
   badge?: number;
+  /** What the badge counts, for its tooltip and screen readers; the bare number without. */
+  badgeLabel?: string;
 }
 
 interface NavigationRailProps {
@@ -234,6 +237,9 @@ export function NavigationRail({
   // Pages plugins added (api.ui.setPages); listed after the built-in apps.
   const pluginPages = usePluginPages();
   const inboxUnread = mailboxes.find(m => m.role === "inbox")?.unreadEmails || 0;
+  // The tasks live in the calendar: its badge counts the user's tasks due today or earlier.
+  const dueTasks = useDueTaskCount();
+  const tFollowUp = useTranslations("follow_up");
   const isStalwartAdmin = useStalwartAdmin();
   const hasUpdate = useUpdateStore(selectHasUpdate);
   const updateSeverity = useUpdateStore((s) => s.status?.severity);
@@ -308,7 +314,7 @@ export function NavigationRail({
 
   const navItems: NavItem[] = [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
-    { id: "calendar", icon: CalendarEvent, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled },
+    { id: "calendar", icon: CalendarEvent, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled, badge: dueTasks, badgeLabel: tFollowUp("upcoming.due_badge", { count: dueTasks }) },
     { id: "contacts", icon: Users, labelKey: "contacts", href: "/contacts", hidden: !supportsContacts || !contactsEnabled },
     { id: "files", icon: Folder, labelKey: "files", href: "/files", hidden: !supportsFiles || !filesEnabled },
   ];
@@ -382,8 +388,12 @@ export function NavigationRail({
               )}>
                 <Icon className="w-5 h-5" />
                 {item.badge != null && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1">
-                    {item.badge > 99 ? "99+" : item.badge}
+                  <span
+                    className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1"
+                    title={item.badgeLabel}
+                  >
+                    <span aria-hidden={item.badgeLabel ? true : undefined}>{item.badge > 99 ? "99+" : item.badge}</span>
+                    {item.badgeLabel && <span className="sr-only">{item.badgeLabel}</span>}
                   </span>
                 )}
                 {isActive && !mountainView && (
@@ -594,11 +604,16 @@ export function NavigationRail({
               <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
               {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
               {item.badge != null && item.badge > 0 && (
-                <span className={cn(
-                  "absolute flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1",
-                  collapsed ? "-top-0.5 -right-0.5" : "right-1.5"
-                )}>
-                  {item.badge > 99 ? "99+" : item.badge}
+                <span
+                  className={cn(
+                    "absolute flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1",
+                    collapsed ? "-top-0.5 -right-0.5" : "right-1.5"
+                  )}
+                  title={item.badgeLabel}
+                  data-testid={`nav-badge-${item.id}`}
+                >
+                  <span aria-hidden={item.badgeLabel ? true : undefined}>{item.badge > 99 ? "99+" : item.badge}</span>
+                  {item.badgeLabel && <span className="sr-only">{item.badgeLabel}</span>}
                 </span>
               )}
             </Link>

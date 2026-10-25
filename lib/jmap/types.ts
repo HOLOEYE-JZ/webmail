@@ -810,6 +810,8 @@ export interface CalendarTask {
   uid: string;
   title: string;
   description: string;
+  /** "text/plain" (the default) or "text/html", as the server gives it. */
+  descriptionContentType?: string | null;
   due: string | null;
   start: string | null;
   duration: string | null;

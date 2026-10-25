@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Eine Aufgabenansicht im Kalender zum Verwalten von To-dos anzeigen",
       "show_tasks_on_calendar": "Aufgaben im Kalender anzeigen",
       "show_tasks_on_calendar_desc": "Aufgaben in der Monats-, Wochen- und Tagesansicht anzeigen",
+      "show_upcoming_pane": "„Anstehend“ neben der Mail zeigen",
+      "show_upcoming_pane_desc": "Offene Aufgaben und Wiedervorlagen nach Fälligkeit neben der Mailliste",
       "hover_preview": "Ereignis-Hover-Vorschau",
       "hover_preview_desc": "Ein Detail-Popover anzeigen, wenn über Kalender-Ereignisse gehovert wird",
       "hover_preview_instant": "Sofort",
@@ -4577,6 +4579,41 @@
     "kept_in": "In der Aufgabenliste „{list}“ mit Link auf die Mail; nur Sie sehen sie. Die Mail wird markiert, auch auf dem Handy.",
     "kept_in_tasks": "In Ihrer Aufgabenliste mit Link auf die Mail; nur Sie sehen sie. Die Mail wird markiert, auch auf dem Handy.",
     "reminder_past": "Dieser Zeitpunkt ist vorbei. Bitte einen künftigen wählen.",
-    "other_reminders": "{count, plural, one {Eine weitere Erinnerung ist gesetzt (am Handy oder in der Aufgabenliste); sie bleibt.} other {# weitere Erinnerungen sind gesetzt (am Handy oder in der Aufgabenliste); sie bleiben.}}"
+    "other_reminders": "{count, plural, one {Eine weitere Erinnerung ist gesetzt (am Handy oder in der Aufgabenliste); sie bleibt.} other {# weitere Erinnerungen sind gesetzt (am Handy oder in der Aufgabenliste); sie bleiben.}}",
+    "recurring": "Wiederkehrend – Fälligkeit in der Aufgabenliste bearbeiten.",
+    "note_html": "Formatierte Notiz – in der Aufgabenliste bearbeiten.",
+    "upcoming": {
+      "title": "Anstehend für mich",
+      "all_tasks": "Alle Aufgaben",
+      "hide": "Anstehend ausblenden",
+      "groups": {
+        "overdue": "Überfällig",
+        "today": "Heute",
+        "tomorrow": "Morgen",
+        "this_week": "Diese Woche"
+      },
+      "more": "+{count} später oder ohne Datum",
+      "empty": "Nichts fällig",
+      "quick_placeholder": "＋ Erinnerung, z. B. „Mahnlauf prüfen“",
+      "quick_label": "Neue Erinnerung, fällig heute (Eingabetaste)",
+      "quick_more": "Erinnerung mit Tag, Uhrzeit und Notiz …",
+      "done_label": "Erledigt: {title}",
+      "edit": "Bearbeiten",
+      "no_mail": "Erinnerung ohne Mail",
+      "no_title": "(ohne Titel)",
+      "due_badge": "Fällige Aufgaben: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Neue Erinnerung",
+      "dialog_title_edit": "Erinnerung bearbeiten",
+      "what_label": "Was",
+      "what_placeholder": "z. B. Mahnlauf prüfen",
+      "delete": "Löschen",
+      "kept_in": "In der Aufgabenliste „{list}“, ohne Mail; nur Sie sehen sie. Auf dem Handy in der Aufgaben-App.",
+      "kept_in_tasks": "In Ihrer Aufgabenliste, ohne Mail; nur Sie sehen sie. Auf dem Handy in der Aufgaben-App.",
+      "failed": "Die Erinnerung konnte nicht gespeichert werden.",
+      "delete_title": "Aufgabe löschen?",
+      "delete_confirm": "„{title}“ wird aus Ihrer Aufgabenliste gelöscht, auch auf dem Handy. Das lässt sich nicht rückgängig machen."
+    }
   }
 }

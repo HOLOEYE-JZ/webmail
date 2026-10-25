@@ -3,6 +3,8 @@ import type { CalendarEventAlert, CalendarLink, CalendarTask } from "@/lib/jmap/
 import { MAIL_ACCOUNT_PARAM } from "@/lib/deep-links";
 import { FOLLOW_UP_ACTIONS, type FollowUpActionKey } from "@/lib/follow-up-actions";
 import { FOLLOW_UP_ACTION_NAMES, FOLLOW_UP_NO_SUBJECT } from "@/lib/follow-up-action-names";
+import { htmlToPlainText } from "@/lib/html-to-text";
+import { sanitizeEmailHtml } from "@/lib/email-sanitization";
 
 /**
  * Follow-ups on a mail, as Outlook's "Flag for follow up" does them.
@@ -263,6 +265,76 @@ export function rescheduleFollowUpTask(due: Date | null, reminderAt: Date | null
 }
 
 // ---------------------------------------------------------------------------
+// A reminder without a mail
+// ---------------------------------------------------------------------------
+
+export interface ReminderTaskInput {
+  /** What to do, as the user typed it: the task's title. */
+  title: string;
+  calendarId: string;
+  /** Midnight of the due day (a display date), or null for none. */
+  due: Date | null;
+  /** The reminder as a real instant (not a display date), or null for none. */
+  reminderAt: Date | null;
+  note?: string;
+}
+
+/**
+ * The task of a reminder that stands on its own ("Check the dunning run"):
+ * the same as a follow-up's, but with no link to a mail and no Message-ID,
+ * so nothing keeps a mail's flag in step with it.
+ */
+export function buildReminderTask(input: ReminderTaskInput): Partial<CalendarTask> {
+  return {
+    "@type": "Task",
+    title: input.title.trim(),
+    calendarIds: { [input.calendarId]: true },
+    due: dueOf(input.due),
+    showWithoutTime: true,
+    progress: "needs-action",
+    alerts: alertsOf(input.reminderAt),
+    ...(input.note?.trim() ? { description: input.note.trim() } : {}),
+  };
+}
+
+/**
+ * The reminder the dialog proposes for a reminder without a mail: on the due
+ * day at the start of work while that is still to come; on a due day already
+ * begun, the next full hour while the workday lasts; else the next working
+ * day's start.
+ */
+export function proposedReminder(due: Date | null, now: Date, work: WorkingTime = DEFAULT_WORKING_TIME): Date {
+  if (due && differenceInCalendarDays(due, now) === 0) {
+    const start = atHour(now, work.startHour);
+    const at = start.getTime() > now.getTime() ? start : atHour(now, now.getHours() + 1);
+    if (at.getTime() > now.getTime() && at.getHours() < work.endHour) return at;
+  }
+  return proposedFollowUpReminder(due, now, work);
+}
+
+/**
+ * The patch the dialog writes to a task that is not a mail's follow-up (a
+ * reminder, or a task from the task list or a phone). As `editFollowUpTask`,
+ * but the due day is written only when it changed, so a due time set in the
+ * task list stays.
+ */
+export function editReminderTask(
+  task: Pick<CalendarTask, "title" | "description" | "progress" | "alerts" | "due">
+    & Partial<Pick<CalendarTask, "showWithoutTime" | "descriptionContentType" | "recurrenceRules">>,
+  edit: FollowUpEdit,
+): Partial<CalendarTask> {
+  const patch = editFollowUpTask(task, edit);
+  const before = followUpDueDay(task);
+  // A series' due day is never moved from here.
+  const recurring = isRecurringTask(task as Pick<CalendarTask, "recurrenceRules">);
+  if (recurring || (before?.getTime() ?? null) === (edit.due?.getTime() ?? null)) {
+    delete patch.due;
+    delete patch.showWithoutTime;
+  }
+  return patch;
+}
+
+// ---------------------------------------------------------------------------
 // What the dialog edits
 // ---------------------------------------------------------------------------
 
@@ -316,9 +388,35 @@ export function sameFollowUpAction(a: string, b: string): boolean {
   return key !== null && key === followUpActionKey(b);
 }
 
-/** The user's note on a follow-up: the task's description. */
-export function followUpNote(task: Pick<CalendarTask, "description">): string {
-  return (task.description ?? "").trim();
+/** Whether the task's description is HTML (written so elsewhere): shown as text, never rewritten here. */
+export function isHtmlNote(task: Pick<CalendarTask, "descriptionContentType">): boolean {
+  return /^\s*text\/html\b/i.test(task.descriptionContentType ?? "");
+}
+
+/**
+ * The user's note on a follow-up: the task's description, as text. An HTML
+ * one (set in another client) is read as text, its markup never shown.
+ */
+export function followUpNote(task: Pick<CalendarTask, "description" | "descriptionContentType">): string {
+  const description = task.description ?? "";
+  // Sanitized first, so a script's or style's text never shows.
+  return (isHtmlNote(task) ? htmlToPlainText(sanitizeEmailHtml(description)) : description).trim();
+}
+
+/**
+ * Whether a task repeats: its due day is the series', so it is neither
+ * grouped by it nor completed or moved from here, only in the task list.
+ * Stalwart names the rule `recurrenceRule`, RFC 8984 `recurrenceRules`.
+ */
+export function isRecurringTask(task: Pick<CalendarTask, "recurrenceRules">): boolean {
+  const raw = task as { recurrenceRules?: unknown; recurrenceRule?: unknown };
+  return (Array.isArray(raw.recurrenceRules) && raw.recurrenceRules.length > 0) || !!raw.recurrenceRule;
+}
+
+/** The time of a due date-time with one ("14:30:00"), or null for a whole day. */
+function dueTimeOf(task: Pick<CalendarTask, "due" | "showWithoutTime">): string | null {
+  if (task.showWithoutTime !== false || !task.due) return null;
+  return /T(\d{2}:\d{2}(?::\d{2})?)/.exec(task.due)?.[1] ?? null;
 }
 
 /**
@@ -356,13 +454,16 @@ export interface FollowUpEdit {
  * relative one, a second one set on a phone) stays as it is.
  */
 export function editFollowUpTask(
-  task: Pick<CalendarTask, "title" | "description" | "progress" | "alerts">,
+  task: Pick<CalendarTask, "title" | "description" | "progress" | "alerts">
+    & Partial<Pick<CalendarTask, "due" | "showWithoutTime" | "descriptionContentType">>,
   edit: FollowUpEdit,
 ): Partial<CalendarTask> {
-  const patch: Partial<CalendarTask> = {
-    due: dueOf(edit.due),
-    showWithoutTime: true,
-  };
+  // A task with a time of day (set in the task list or on a phone) keeps it on
+  // another day, so alerts relative to it still come at the right time.
+  const time = dueTimeOf({ due: task.due ?? null, showWithoutTime: task.showWithoutTime ?? true });
+  const patch: Partial<CalendarTask> = time
+    ? { due: edit.due ? `${format(edit.due, "yyyy-MM-dd")}T${time}` : null }
+    : { due: dueOf(edit.due), showWithoutTime: true };
   const shown = followUpReminderAlert(task);
   if ((shown?.when.getTime() ?? null) !== (edit.reminderAt?.getTime() ?? null)) {
     const alerts = { ...(task.alerts ?? {}) };
@@ -372,8 +473,9 @@ export function editFollowUpTask(
     patch.alerts = Object.keys(alerts).length > 0 ? alerts : null;
   }
   if (edit.title !== null && edit.title !== task.title) patch.title = edit.title;
+  // An HTML note is only shown here, never written back as text.
   const note = edit.note.trim();
-  if (note !== followUpNote(task)) patch.description = note;
+  if (!isHtmlNote(task) && note !== followUpNote(task)) patch.description = note;
   if (!isOpenFollowUp(task)) patch.progress = "needs-action";
   return patch;
 }

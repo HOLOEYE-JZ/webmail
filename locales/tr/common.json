@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "Yapılacaklar listesini yönetmek için takvimde görev görünümü göster",
       "show_tasks_on_calendar": "Görevleri takvimde göster",
       "show_tasks_on_calendar_desc": "Görevleri ay, hafta ve gün takvim görünümlerinde görüntüle",
+      "show_upcoming_pane": "E-postanın yanında “Yaklaşanlar”ı göster",
+      "show_upcoming_pane_desc": "Açık görevleriniz ve takipleriniz vadeye göre, ileti listesinin yanında",
       "hover_preview": "Etkinlik üzerine gelme önizlemesi",
       "hover_preview_desc": "Takvim etkinliklerinin üzerine gelindiğinde ayrıntı açılır penceresi göster",
       "hover_preview_instant": "Anında",
@@ -4577,6 +4579,41 @@
     "kept_in": "“{list}” görev listesinde e-postaya bağlantıyla saklanır; yalnızca siz görürsünüz. E-posta bayraklanır, telefonda da.",
     "kept_in_tasks": "Görev listenizde e-postaya bağlantıyla saklanır; yalnızca siz görürsünüz. E-posta bayraklanır, telefonda da.",
     "reminder_past": "Bu zaman geçti. Gelecekte bir zaman seçin.",
-    "other_reminders": "{count, plural, one {Bir anımsatıcı daha ayarlı (telefonda veya görev listesinde); korunur.} other {# anımsatıcı daha ayarlı (telefonda veya görev listesinde); korunur.}}"
+    "other_reminders": "{count, plural, one {Bir anımsatıcı daha ayarlı (telefonda veya görev listesinde); korunur.} other {# anımsatıcı daha ayarlı (telefonda veya görev listesinde); korunur.}}",
+    "recurring": "Yinelenen: vadeyi görev listesinde düzenleyin.",
+    "note_html": "Biçimli not: görev listesinde düzenleyin.",
+    "upcoming": {
+      "title": "Benim için yaklaşanlar",
+      "all_tasks": "Tüm görevler",
+      "hide": "Yaklaşanları gizle",
+      "groups": {
+        "overdue": "Gecikmiş",
+        "today": "Bugün",
+        "tomorrow": "Yarın",
+        "this_week": "Bu hafta"
+      },
+      "more": "+{count} daha sonra veya tarihsiz",
+      "empty": "Vadesi gelen bir şey yok",
+      "quick_placeholder": "＋ Anımsatıcı, ör. “İhtarnameleri kontrol et”",
+      "quick_label": "Bugün vadeli yeni anımsatıcı (Enter)",
+      "quick_more": "Gün, saat ve notla anımsatıcı…",
+      "done_label": "Tamamlandı olarak işaretle: {title}",
+      "edit": "Düzenle",
+      "no_mail": "E-postasız anımsatıcı",
+      "no_title": "(başlıksız)",
+      "due_badge": "Vadesi gelen görevler: {count}"
+    },
+    "reminder": {
+      "dialog_title": "Yeni anımsatıcı",
+      "dialog_title_edit": "Anımsatıcıyı düzenle",
+      "what_label": "Ne",
+      "what_placeholder": "ör. İhtarnameleri kontrol et",
+      "delete": "Sil",
+      "kept_in": "“{list}” görev listesinde, e-posta olmadan saklanır; yalnızca siz görürsünüz. Telefonda görevler uygulamasındadır.",
+      "kept_in_tasks": "Görev listenizde, e-posta olmadan saklanır; yalnızca siz görürsünüz. Telefonda görevler uygulamasındadır.",
+      "failed": "Anımsatıcı kaydedilemedi.",
+      "delete_title": "Görev silinsin mi?",
+      "delete_confirm": "“{title}” görev listenizden, telefonunuzda da silinecek. Bu işlem geri alınamaz."
+    }
   }
 }

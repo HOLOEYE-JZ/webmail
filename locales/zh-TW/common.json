@@ -3410,6 +3410,8 @@
       "enable_tasks_desc": "在行事曆中顯示任務檢視以管理待辦事項",
       "show_tasks_on_calendar": "在行事曆上顯示任務",
       "show_tasks_on_calendar_desc": "在行事曆的月／週／日檢視中顯示任務",
+      "show_upcoming_pane": "在郵件旁顯示「待辦」",
+      "show_upcoming_pane_desc": "在郵件清單旁，依到期日顯示未完成的工作與待處理事項",
       "hover_preview": "活動游標暫留預覽",
       "hover_preview_desc": "游標移至行事曆活動上方時顯示詳細資料浮動視窗",
       "hover_preview_instant": "立即",
@@ -4577,6 +4579,41 @@
     "kept_in": "儲存在工作清單「{list}」中，並附有郵件連結；只有您看得到。郵件會加上旗標，手機上也一樣。",
     "kept_in_tasks": "儲存在您的工作清單中，並附有郵件連結；只有您看得到。郵件會加上旗標，手機上也一樣。",
     "reminder_past": "此時間已過，請選擇未來的時間。",
-    "other_reminders": "{count, plural, other {另有 # 個提醒（在手機或工作清單中設定），將會保留。}}"
+    "other_reminders": "{count, plural, other {另有 # 個提醒（在手機或工作清單中設定），將會保留。}}",
+    "recurring": "週期性工作：請在工作清單中編輯到期日。",
+    "note_html": "格式化的備註：請在工作清單中編輯。",
+    "upcoming": {
+      "title": "我的待辦",
+      "all_tasks": "所有工作",
+      "hide": "隱藏待辦",
+      "groups": {
+        "overdue": "已逾期",
+        "today": "今天",
+        "tomorrow": "明天",
+        "this_week": "本週"
+      },
+      "more": "另有 {count} 項（之後或無日期）",
+      "empty": "沒有到期的項目",
+      "quick_placeholder": "＋ 提醒，例如「檢查催款」",
+      "quick_label": "今天到期的新提醒 (Enter)",
+      "quick_more": "含日期、時間與備註的提醒…",
+      "done_label": "標示為已完成：{title}",
+      "edit": "編輯",
+      "no_mail": "沒有郵件的提醒",
+      "no_title": "(無標題)",
+      "due_badge": "到期的工作：{count}"
+    },
+    "reminder": {
+      "dialog_title": "新增提醒",
+      "dialog_title_edit": "編輯提醒",
+      "what_label": "內容",
+      "what_placeholder": "例如：檢查催款",
+      "delete": "刪除",
+      "kept_in": "儲存在工作清單「{list}」中，不附郵件；只有您看得到。手機上在工作 App 中。",
+      "kept_in_tasks": "儲存在您的工作清單中，不附郵件；只有您看得到。手機上在工作 App 中。",
+      "failed": "無法儲存提醒。",
+      "delete_title": "要刪除工作嗎？",
+      "delete_confirm": "「{title}」將從您的工作清單中刪除，手機上也一樣。此動作無法復原。"
+    }
   }
 }
