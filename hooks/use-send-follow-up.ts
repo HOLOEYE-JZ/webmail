@@ -20,7 +20,8 @@ import {
   useWorkingTime,
   type FollowUpMail,
 } from "./use-follow-ups";
-import { deleteGroupTask, useGroupTasks, writeGroupTask } from "./use-group-follow-ups";
+import { deleteGroupTask, writeGroupTask } from "./use-group-follow-ups";
+import { useGroupTasks } from "@/stores/group-task-store";
 
 /**
  * The follow-up the composer's "⚑ Follow up" asks for, written on the sent

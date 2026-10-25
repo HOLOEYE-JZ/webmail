@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DIRECTORY_RETRY_MS, PUSH_DEBOUNCE_MS, addressesOf, findGroupTaskLists, isGroupAccount, refreshGroupTasksFor, useGroupTasks } from '../use-group-follow-ups';
+import { addressesOf } from '../use-group-follow-ups';
+import { isGroupAccount } from '@/lib/group-follow-ups';
+import {
+  DIRECTORY_RETRY_MS,
+  findGroupTaskLists,
+  PUSH_DEBOUNCE_MS,
+  refreshGroupTasksFor,
+  useGroupTasks,
+} from '@/stores/group-task-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';

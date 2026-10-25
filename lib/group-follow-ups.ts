@@ -274,3 +274,31 @@ export function groupFollowUpsByEmailId(
   }
   return byEmail;
 }
+
+/** A group account's task list, with the account's name. */
+export interface GroupTaskList {
+  accountId: string;
+  /** The account's name, its address in Stalwart ("vertrieb@example.com"). */
+  name: string;
+  list: Calendar;
+}
+
+/**
+ * Whether the directory confirms an account as a group's (a group mailbox's
+ * account). Only then: a shared account the directory does not name, or
+ * names otherwise (a colleague's or a manager's delegated mailbox), is never
+ * taken for a group, so nothing is written into a person's own calendar.
+ */
+export function isGroupAccount(accountId: string, principals: readonly Principal[]): boolean {
+  return principals.some((p) => p.id === accountId && p.type === "group");
+}
+
+/**
+ * The tasks a group list's read keeps: open ones only (Stalwart's
+ * CalendarEvent/query filters by neither type nor progress, so the rest is
+ * read and dropped), of the lists read. A done or cancelled one shows at the
+ * mail only until the next read.
+ */
+export function keptGroupTasks(tasks: readonly CalendarTask[], listIds: ReadonlySet<string>): CalendarTask[] {
+  return tasks.filter((t) => t.isShared && isOpenFollowUp(t) && Object.keys(t.calendarIds ?? {}).some((id) => listIds.has(id)));
+}

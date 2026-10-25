@@ -5578,7 +5578,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         .filter(([id, c]) => id !== accountId && (c?.CalendarEvent || c?.Calendar))
         .map(([id]) => id);
       if (otherCalendarAccounts.length > 0) {
-        const { refreshGroupTasksFor } = await import('@/hooks/use-group-follow-ups');
+        const { refreshGroupTasksFor } = await import('./group-task-store');
         if (Object.entries(change.changed).some(([id, c]) => id !== accountId && c?.Calendar)) {
           const calendarStore = useCalendarStore.getState();
           if (calendarStore.supportsCalendar) void calendarStore.fetchCalendars(client);

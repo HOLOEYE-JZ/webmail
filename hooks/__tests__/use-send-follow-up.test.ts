@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { dropFollowUpsOfUnsentMail, findSentCopy, followUpSentMail, resetSentFollowUps, useSendFollowUp, type SentFollowUpText } from '../use-send-follow-up';
-import { useGroupTasks } from '../use-group-follow-ups';
+import { useGroupTasks } from '@/stores/group-task-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';

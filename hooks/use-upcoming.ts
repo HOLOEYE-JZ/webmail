@@ -13,7 +13,13 @@ import { displayNow } from "@/lib/timezone";
 import { debug } from "@/lib/debug";
 import { reachesMailAccount } from "@/lib/deep-links";
 import { normalizeAction } from "@/lib/follow-up-actions";
-import { buildReminderTask, editReminderTask, followUpMailRef, type WorkingTime } from "@/lib/follow-ups";
+import {
+  buildReminderTask,
+  editReminderTask,
+  followUpMailRef,
+  type FollowUpDetails,
+  type WorkingTime,
+} from "@/lib/follow-ups";
 import { dueTaskCount, upcomingTasks, type UpcomingList } from "@/lib/upcoming-tasks";
 import type { CalendarTask } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
@@ -22,15 +28,14 @@ import { useDisplayNow } from "./use-clock";
 import {
   deleteGroupTask,
   groupListOfTask,
-  useGroupTasks,
   useGroupTasksForMe,
   writeGroupTask,
-  type GroupTaskList,
 } from "./use-group-follow-ups";
+import type { GroupTaskList } from "@/lib/group-follow-ups";
+import { useGroupTasks } from "@/stores/group-task-store";
 import {
   useFollowUpsEnabled,
   useWorkingTime,
-  type FollowUpDetails,
 } from "./use-follow-ups";
 import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
 

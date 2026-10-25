@@ -34,13 +34,14 @@ import {
   scheduleFollowUp,
   threadFollowUpEmail,
   type FollowUpChoice,
+  type FollowUpDetails,
   type FollowUpTaskInput,
   type WorkingTime,
 } from "@/lib/follow-ups";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
-import type { TaskPerson } from "@/lib/group-follow-ups";
-import { updateAnyTask, useGroupFollowUpIndex, useGroupTaskList, type GroupTaskList } from "./use-group-follow-ups";
+import { updateAnyTask, useGroupFollowUpIndex, useGroupTaskList } from "./use-group-follow-ups";
+import type { GroupTaskList } from "@/lib/group-follow-ups";
 
 /** Whether the user can keep follow-ups at all: tasks on, a calendar server. */
 export function useFollowUpsEnabled(): boolean {
@@ -434,30 +435,6 @@ export async function completeTask(
     const keywords = fields.keywords as Record<string, boolean> | undefined;
     return mirrorFlag(client, { id: ref.emailId, keywords: {} }, false, client.getAccountId(), !!keywords?.$flagged);
   }, messages);
-}
-
-/** What the dialog sets: the action as the user typed or picked it, days and times as for a quick choice. */
-export interface FollowUpDetails {
-  action: string;
-  /** Midnight of the due day (a display date), or null for none. */
-  due: Date | null;
-  /** The reminder as a real instant, or null for none. */
-  reminderAt: Date | null;
-  note: string;
-  /** Whether the reminder also comes as a mail into the inbox; left out where the dialog did not offer it. */
-  mailReminder?: boolean;
-  /** Whether it settles itself when an answer comes (plan 037 decision 9); left out: as the task has it. */
-  settlesOnReply?: boolean;
-  /**
-   * Where it is kept, as the dialog's "Visible" says: left out or null, the
-   * user's own list; else the group account whose task list takes it.
-   */
-  groupAccountId?: string | null;
-  /**
-   * Whom it is for in a group's list: null, the user; left out, an existing
-   * task's owner unchanged (a new one is the user's).
-   */
-  person?: TaskPerson | null;
 }
 
 export interface FollowUpControls {

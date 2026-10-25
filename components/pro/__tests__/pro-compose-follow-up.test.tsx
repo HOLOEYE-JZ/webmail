@@ -7,7 +7,7 @@ import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useTaskStore } from '@/stores/task-store';
-import { useGroupTasks } from '@/hooks/use-group-follow-ups';
+import { useGroupTasks } from '@/stores/group-task-store';
 import { resetSentFollowUps } from '@/hooks/use-send-follow-up';
 import { cancelAnnouncedSend, resetAnnouncedSends } from '@/lib/plugin-after-send';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';

@@ -25,10 +25,10 @@ import {
   deleteGroupTask,
   groupListOfTask,
   useGroupFollowUpsOf,
-  useGroupTasks,
   useMyAddresses,
   usePrincipals,
 } from "@/hooks/use-group-follow-ups";
+import { useGroupTasks } from "@/stores/group-task-store";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuthStore } from "@/stores/auth-store";

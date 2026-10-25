@@ -8,7 +8,7 @@ import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
 import { followUpMailRef, isOpenFollowUp } from "@/lib/follow-ups";
 import { completedTaskPatch } from "@/lib/task-reminders";
-import { isGroupFollowUpTask, isInGroupList } from "@/lib/group-follow-ups";
+import { isGroupFollowUpTask, isInGroupList, type GroupTaskList } from "@/lib/group-follow-ups";
 import {
   mergeTaskSources,
   scopeGroupAccount,
@@ -21,13 +21,10 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { completeTask, useFollowUpsEnabled } from "./use-follow-ups";
 import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
 import {
-  PUSH_DEBOUNCE_MS,
   isGroupTask,
-  scheduleGroupRefresh,
-  useGroupTasks,
   useMyAddresses,
-  type GroupTaskList,
 } from "./use-group-follow-ups";
+import { PUSH_DEBOUNCE_MS, scheduleGroupRefresh, useGroupTasks } from "@/stores/group-task-store";
 import { openTaskItem } from "./use-upcoming";
 import { useDisplayNow } from "./use-clock";
 

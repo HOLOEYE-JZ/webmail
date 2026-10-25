@@ -5,6 +5,7 @@ import { patchPath } from "@/lib/jmap/patch-object";
 import { FOLLOW_UP_ACTIONS, normalizeAction, type FollowUpActionKey } from "@/lib/follow-up-actions";
 import { FOLLOW_UP_ACTION_NAMES, FOLLOW_UP_NO_SUBJECT } from "@/lib/follow-up-action-names";
 import { htmlToPlainText } from "@/lib/html-to-text";
+import type { TaskPerson } from "@/lib/group-follow-ups";
 import { sanitizeEmailHtml } from "@/lib/email-sanitization";
 import { stripMessageIdBrackets } from "@/lib/email-threading";
 import { isoDay, parseDate, utcDateTime } from "@/lib/task-dates";
@@ -670,6 +671,30 @@ export interface FollowUpEdit {
    * to settle itself on an answer.
    */
   messageId?: string | readonly string[] | null;
+}
+
+/** What the dialog sets: the action as the user typed or picked it, days and times as for a quick choice. */
+export interface FollowUpDetails {
+  action: string;
+  /** Midnight of the due day (a display date), or null for none. */
+  due: Date | null;
+  /** The reminder as a real instant, or null for none. */
+  reminderAt: Date | null;
+  note: string;
+  /** Whether the reminder also comes as a mail into the inbox; left out where the dialog did not offer it. */
+  mailReminder?: boolean;
+  /** Whether it settles itself when an answer comes (plan 037 decision 9); left out: as the task has it. */
+  settlesOnReply?: boolean;
+  /**
+   * Where it is kept, as the dialog's "Visible" says: left out or null, the
+   * user's own list; else the group account whose task list takes it.
+   */
+  groupAccountId?: string | null;
+  /**
+   * Whom it is for in a group's list: null, the user; left out, an existing
+   * task's owner unchanged (a new one is the user's).
+   */
+  person?: TaskPerson | null;
 }
 
 /**

@@ -14,7 +14,6 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import {
   useFollowUp,
   useWorkingTime,
-  type FollowUpDetails,
 } from "@/hooks/use-follow-ups";
 import { useFollowUpDialog, type FollowUpDialogFocus, type GroupDialogTarget } from "@/stores/follow-up-dialog-store";
 import { useReminder } from "@/hooks/use-upcoming";
@@ -25,13 +24,12 @@ import {
   useMyAddresses,
   useTaskListSharees,
   writeGroupTask,
-  type GroupTaskList,
 } from "@/hooks/use-group-follow-ups";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
-import { groupTaskOwner, type TaskPerson } from "@/lib/group-follow-ups";
+import { groupTaskOwner, type GroupTaskList, type TaskPerson } from "@/lib/group-follow-ups";
 
 /** "For" of a group task that names no one: everyone's, until the user names someone. */
 const NOBODY = "\u0000nobody";
@@ -50,10 +48,10 @@ import {
   followUpActionKey,
   followUpDueDay,
   followUpNote,
-  isHtmlNote,
-  isRecurringTask,
   followUpReminder,
   hasFollowUpMailAlert,
+  isHtmlNote,
+  isRecurringTask,
   mailReminderOffered,
   otherFollowUpAlerts,
   proposedFollowUpReminder,
@@ -61,6 +59,7 @@ import {
   scheduleFollowUp,
   settlesOnReply,
   type FollowUpChoice,
+  type FollowUpDetails,
   type WorkingTime,
 } from "@/lib/follow-ups";
 import { FOLLOW_UP_ACTIONS, sanitizeFollowUpActions } from "@/lib/follow-up-actions";

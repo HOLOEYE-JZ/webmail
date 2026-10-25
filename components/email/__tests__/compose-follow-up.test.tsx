@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComposeFollowUp } from '../compose-follow-up';
-import { useGroupTasks } from '@/hooks/use-group-follow-ups';
+import { useGroupTasks } from '@/stores/group-task-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';

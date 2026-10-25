@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FollowUpDialog, ReminderDialog } from '../follow-up-dialog';
 import { FollowUpChip, FollowUpFlagButton, FollowUpInfoBar } from '../follow-up';
 import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
-import { useGroupTasks } from '@/hooks/use-group-follow-ups';
+import { useGroupTasks } from '@/stores/group-task-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';
