@@ -218,7 +218,7 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
   }
 
   const present = new Set(taskState.tasks.filter((t) => !t.isShared && t.progress !== "cancelled").map((t) => t.id));
-  const scope = taskState.scope;
+  const scope = taskState.fetchedCalendarIds;
   const plan = planFollowUpSync({
     tasks,
     present,

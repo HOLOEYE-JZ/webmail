@@ -115,7 +115,7 @@ beforeEach(() => {
   forgetFlaggedMails();
   useToastStore.setState({ toasts: [] });
   useAuthStore.setState({ isAuthenticated: true, client: asClient(), activeAccountId: 'login' });
-  useTaskStore.setState({ tasks: [], scope: undefined, loadedBy: null });
+  useTaskStore.setState({ tasks: [], fetchedCalendarIds: undefined, loadedBy: null });
   useEmailStore.setState({ emails: [], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null, lastPushUpdate: null });
 });
 

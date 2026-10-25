@@ -170,10 +170,10 @@ function useTaskListLoaded(enabled: boolean): void {
     const timer = setTimeout(() => {
       void (async () => {
         const tasks = useTaskStore.getState();
-        if (tasks.isLoading || tasks.loadedBy || tasks.scope || tasks.tasks.length > 0 || tasks.error) return;
+        if (tasks.isLoading || tasks.loadedBy || tasks.fetchedCalendarIds || tasks.tasks.length > 0 || tasks.error) return;
         const ids = followUpCalendars(await ensureCalendars(client)).map((c) => c.id);
         const again = useTaskStore.getState();
-        if (ids.length === 0 || again.isLoading || again.loadedBy || again.scope || again.tasks.length > 0) return;
+        if (ids.length === 0 || again.isLoading || again.loadedBy || again.fetchedCalendarIds || again.tasks.length > 0) return;
         await again.fetchTasks(client, ids);
       })();
     }, OWN_FETCH_DELAY_MS);

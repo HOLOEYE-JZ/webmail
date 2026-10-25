@@ -5566,7 +5566,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           } else if (taskStore.tasks.length > 0) {
             // The scope the tasks were loaded with: all, or the mail view's
             // follow-up calendars.
-            taskStore.fetchTasks(client, taskStore.scope);
+            taskStore.fetchTasks(client, taskStore.fetchedCalendarIds);
           }
         }
       }

@@ -15,17 +15,21 @@ interface TaskStore {
   selectedTaskId: string | null;
   filter: TaskViewFilter;
   showCompleted: boolean;
-  /** Which tasks the list shows: the calendars shown, the user's, or a group mailbox's list (lib/task-list.ts). */
+  /**
+   * Which tasks the task list shows: the calendars shown, the user's, or a
+   * group mailbox's list (lib/task-list.ts). A filter of what is loaded.
+   */
   listScope: TaskListScope;
   isLoading: boolean;
   error: string | null;
   /**
-   * The calendars the last fetch read, or undefined for all of them. A push
-   * refetches the same scope, so the mail view's few calendars (follow-ups)
-   * do not turn into a reload of every account's calendars. A fetch never
-   * narrows it for the same client: asked for fewer, it reads these too.
+   * The calendars the last fetch read, or undefined for all of them (not to
+   * be confused with `listScope`, which tasks the list shows). A push
+   * refetches the same calendars, so the mail view's few (follow-ups) do not
+   * turn into a reload of every account's calendars. A fetch never narrows
+   * them for the same client: asked for fewer, it reads these too.
    */
-  scope: string[] | undefined;
+  fetchedCalendarIds: string[] | undefined;
   /**
    * The client whose fetch the list holds, null while none has finished, the
    * last one could not read every task, or another fetch is under way. Only
@@ -50,8 +54,8 @@ interface TaskStore {
 // Each fetch gets a number: only the latest one's answer is kept, so an
 // answer that comes late never puts an older list back.
 let latestFetch = 0;
-// The client the store's scope was fetched for, null before any fetch.
-let scopeClient: IJMAPClient | null = null;
+// The client `fetchedCalendarIds` were fetched for, null before any fetch.
+let fetchedFor: IJMAPClient | null = null;
 
 /**
  * The calendars a fetch reads: never fewer than the list holds already for
@@ -72,7 +76,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   listScope: 'all',
   isLoading: false,
   error: null,
-  scope: undefined,
+  fetchedCalendarIds: undefined,
   loadedBy: null,
   setTasks: (tasks) => set({ tasks }),
   setSelectedTaskId: (id) => set({ selectedTaskId: id }),
@@ -91,17 +95,17 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   fetchTasks: async (client, calendarIds) => {
     debug.log('tasks', 'TaskStore/fetchTasks start', { calendarIds: calendarIds || 'all' });
     const asked = calendarIds?.length ? [...calendarIds] : undefined;
-    const scope = scopeClient === client ? widenedScope(get().scope, asked) : asked;
-    scopeClient = client;
+    const ids = fetchedFor === client ? widenedScope(get().fetchedCalendarIds, asked) : asked;
+    fetchedFor = client;
     const fetch = ++latestFetch;
     const stillCurrent = () => fetch === latestFetch;
-    set({ isLoading: true, error: null, scope, loadedBy: null });
+    set({ isLoading: true, error: null, fetchedCalendarIds: ids, loadedBy: null });
     try {
       // Only a list read in full counts as loaded: follow-ups take a task
       // missing from it for deleted.
       const { tasks, complete } = client.getCalendarTaskList
-        ? await client.getCalendarTaskList(scope)
-        : { tasks: await client.getCalendarTasks(scope), complete: false };
+        ? await client.getCalendarTaskList(ids)
+        : { tasks: await client.getCalendarTasks(ids), complete: false };
       // A fetch started later decides the list.
       if (!stillCurrent()) return;
       debug.log('tasks', 'TaskStore/fetchTasks received', tasks.length, 'tasks');
@@ -144,7 +148,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Moved into a calendar of another account: the server recreated it
       // under a new id, so reload rather than patch the old entry. (#1204)
       set({ selectedTaskId: get().selectedTaskId === id ? newId : get().selectedTaskId });
-      await get().fetchTasks(client, get().scope);
+      await get().fetchTasks(client, get().fetchedCalendarIds);
       const moved = get().tasks.find(t => t.id === newId)
         ?? ({ ...applyPatchObject(before ?? {}, updates), id: newId } as CalendarTask);
       void taskHooks.onTaskUpdate.emit(taskToView(moved));
@@ -189,7 +193,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   clearTasks: () => {
     latestFetch += 1;
-    scopeClient = null;
-    set({ tasks: [], selectedTaskId: null, error: null, isLoading: false, scope: undefined, loadedBy: null });
+    fetchedFor = null;
+    set({ tasks: [], selectedTaskId: null, error: null, isLoading: false, fetchedCalendarIds: undefined, loadedBy: null });
   },
 }));

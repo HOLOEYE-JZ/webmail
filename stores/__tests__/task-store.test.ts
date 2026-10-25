@@ -153,10 +153,10 @@ describe('task-store', () => {
       await useTaskStore.getState().fetchTasks(client);
       // The mail view's follow-up calendars, then a push refetching the scope.
       await useTaskStore.getState().fetchTasks(client, ['cal-1']);
-      await useTaskStore.getState().fetchTasks(client, useTaskStore.getState().scope);
+      await useTaskStore.getState().fetchTasks(client, useTaskStore.getState().fetchedCalendarIds);
 
       expect(getCalendarTaskList).toHaveBeenLastCalledWith(undefined);
-      expect(useTaskStore.getState().scope).toBeUndefined();
+      expect(useTaskStore.getState().fetchedCalendarIds).toBeUndefined();
       expect(dueTaskReminders(useTaskStore.getState().tasks, Date.now()).map((r) => r.task.id)).toEqual(['elsewhere']);
     });
 

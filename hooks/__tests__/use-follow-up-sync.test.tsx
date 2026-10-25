@@ -107,7 +107,7 @@ beforeEach(() => {
   useAuthStore.setState({ isAuthenticated: true, client: asClient(), activeAccountId: 'login' });
   useSettingsStore.setState({ enableCalendarTasks: true });
   useCalendarStore.setState({ supportsCalendar: true, calendars: [] });
-  useTaskStore.setState({ tasks: [], scope: undefined, loadedBy: null });
+  useTaskStore.setState({ tasks: [], fetchedCalendarIds: undefined, loadedBy: null });
   useEmailStore.setState({ emails: [], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null, lastPushUpdate: null });
 });
 

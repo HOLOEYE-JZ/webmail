@@ -264,7 +264,7 @@ describe('useFollowUpTasks', () => {
     renderHook(() => useFollowUpTasks());
     await vi.waitFor(() => expect(client.getCalendarTasks).toHaveBeenCalled());
     expect(client.getCalendarTasks).toHaveBeenCalledWith(['tasks', 'events']);
-    expect(useTaskStore.getState().scope).toEqual(['tasks', 'events']);
+    expect(useTaskStore.getState().fetchedCalendarIds).toEqual(['tasks', 'events']);
   });
 });
 

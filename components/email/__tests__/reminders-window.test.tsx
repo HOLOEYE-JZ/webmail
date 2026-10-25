@@ -108,7 +108,7 @@ beforeEach(() => {
     timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1,
   });
   useCalendarStore.setState({ supportsCalendar: true, calendars, events: [] });
-  useTaskStore.setState({ tasks: [], isLoading: false, scope: ['tasks'], loadedBy: null, error: null });
+  useTaskStore.setState({ tasks: [], isLoading: false, fetchedCalendarIds: ['tasks'], loadedBy: null, error: null });
   useEmailStore.setState({ emails: [{ ...mail, keywords: { ...mail.keywords } }], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null });
   useFollowUpDialog.setState({ email: null, reminder: null });
   useRemindersWindow.setState({ open: false });
