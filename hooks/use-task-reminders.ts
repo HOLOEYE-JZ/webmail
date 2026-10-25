@@ -16,6 +16,7 @@ import { followMessageLink } from "@/lib/deep-link-handoff";
 import { dueTaskReminders, type TaskReminder } from "@/lib/task-reminders";
 import { followUpMailRef, followUpMailSummary, followUpNote } from "@/lib/follow-ups";
 import { followUpCalendars } from "./use-follow-ups";
+import { useReplyChecks } from "./use-follow-up-replies";
 
 /** How often the window looks at the clock for reminders that fell due. */
 const CHECK_MS = 30_000;
@@ -126,12 +127,20 @@ function useClock(): number {
 
 const NO_REMINDERS: TaskReminder[] = [];
 
-/** The reminders the window shows now; none while reminders are off. */
+/**
+ * The reminders the window shows now; none while reminders are off. A
+ * follow-up that settles itself on an answer shows only once its thread was
+ * looked at after its reminder fell due (`useFollowUpReplies`).
+ */
 export function useDueTaskReminders(): TaskReminder[] {
   const enabled = useRemindersEnabled();
   const tasks = useTaskStore((s) => s.tasks);
+  const checkedAt = useReplyChecks((s) => s.checkedAt);
   const now = useClock();
-  return useMemo(() => (enabled ? dueTaskReminders(tasks, now) : NO_REMINDERS), [enabled, tasks, now]);
+  return useMemo(
+    () => (enabled ? dueTaskReminders(tasks, now, (id) => checkedAt[id]) : NO_REMINDERS),
+    [enabled, tasks, now, checkedAt],
+  );
 }
 
 /** What a reminder is about, as the window and its toast name it. */

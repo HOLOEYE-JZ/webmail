@@ -4642,6 +4642,12 @@
       "failed": "De herinnering kon niet worden opgeslagen.",
       "delete_title": "Taak verwijderen?",
       "delete_confirm": "‘{title}’ wordt uit je takenlijst verwijderd, ook op je telefoon. Dit kan niet ongedaan worden gemaakt."
+    },
+    "reply": {
+      "settles": "Handelt zichzelf af als er een antwoord op deze mail komt",
+      "settles_hint": "(Bulwark zoekt naar een antwoord voordat het je herinnert; de herinnering komt dan alleen in Bulwark, niet op de telefoon of als mail)",
+      "settles_short": "handelt zichzelf af als er een antwoord komt",
+      "answered_note": "Antwoord ontvangen op {day}"
     }
   }
 }

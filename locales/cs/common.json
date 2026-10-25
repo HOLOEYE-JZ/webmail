@@ -4642,6 +4642,12 @@
       "failed": "Připomenutí se nepodařilo uložit.",
       "delete_title": "Smazat úkol?",
       "delete_confirm": "„{title}“ bude smazán z vašeho seznamu úkolů, i v telefonu. Nelze to vrátit zpět."
+    },
+    "reply": {
+      "settles": "Vyřídí se samo, až na tento e-mail přijde odpověď",
+      "settles_hint": "(Bulwark před připomenutím hledá odpověď; připomenutí pak přijde jen v Bulwarku, ne do telefonu ani e-mailem)",
+      "settles_short": "vyřídí se samo, až přijde odpověď",
+      "answered_note": "Odpověď přijata {day}"
     }
   }
 }

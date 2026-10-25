@@ -4642,6 +4642,12 @@
       "failed": "Le rappel n’a pas pu être enregistré.",
       "delete_title": "Supprimer la tâche ?",
       "delete_confirm": "« {title} » sera supprimée de votre liste de tâches, sur votre téléphone aussi. Cette action est irréversible."
+    },
+    "reply": {
+      "settles": "Se termine d'elle-même quand une réponse à ce message arrive",
+      "settles_hint": "(Bulwark cherche une réponse avant de vous le rappeler ; le rappel n'apparaît alors que dans Bulwark, ni sur le téléphone ni par e-mail)",
+      "settles_short": "se termine d'elle-même quand une réponse arrive",
+      "answered_note": "Réponse reçue le {day}"
     }
   }
 }

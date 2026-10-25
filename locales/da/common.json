@@ -4642,6 +4642,12 @@
       "failed": "Påmindelsen kunne ikke gemmes.",
       "delete_title": "Slet opgave?",
       "delete_confirm": "»{title}« slettes fra din opgaveliste, også på telefonen. Det kan ikke fortrydes."
+    },
+    "reply": {
+      "settles": "Klares af sig selv, når der kommer et svar på denne mail",
+      "settles_hint": "(Bulwark kigger efter et svar, før det minder dig om det; påmindelsen kommer så kun i Bulwark, ikke på telefonen eller som mail)",
+      "settles_short": "klares af sig selv, når der kommer et svar",
+      "answered_note": "Svar modtaget {day}"
     }
   }
 }

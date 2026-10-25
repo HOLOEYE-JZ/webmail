@@ -4642,6 +4642,12 @@
       "failed": "Az emlékeztetőt nem sikerült menteni.",
       "delete_title": "Törli a feladatot?",
       "delete_confirm": "A(z) „{title}” törlődik a feladatlistájából, a telefonján is. Ez nem vonható vissza."
+    },
+    "reply": {
+      "settles": "Magától lezárul, ha erre a levélre válasz érkezik",
+      "settles_hint": "(A Bulwark az emlékeztető előtt választ keres; az emlékeztető ekkor csak a Bulwarkban jelenik meg, nem a telefonon és nem levélként)",
+      "settles_short": "magától lezárul, ha válasz érkezik",
+      "answered_note": "Válasz érkezett: {day}"
     }
   }
 }

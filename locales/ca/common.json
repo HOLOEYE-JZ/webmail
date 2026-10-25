@@ -4642,6 +4642,12 @@
       "failed": "No s’ha pogut desar el recordatori.",
       "delete_title": "Voleu suprimir la tasca?",
       "delete_confirm": "«{title}» se suprimirà de la vostra llista de tasques, també al telèfon. No es pot desfer."
+    },
+    "reply": {
+      "settles": "Es completa sol quan arriba una resposta a aquest correu",
+      "settles_hint": "(Bulwark cerca una resposta abans de recordar-t'ho; el recordatori llavors només apareix a Bulwark, no al mòbil ni com a correu)",
+      "settles_short": "es completa sol quan arriba una resposta",
+      "answered_note": "Resposta rebuda el {day}"
     }
   }
 }

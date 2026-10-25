@@ -4642,6 +4642,12 @@
       "failed": "The reminder could not be saved.",
       "delete_title": "Delete task?",
       "delete_confirm": "“{title}” is deleted from your task list, also on your phone. This cannot be undone."
+    },
+    "reply": {
+      "settles": "Settles itself when an answer to this mail comes",
+      "settles_hint": "(Bulwark looks for an answer before it reminds you; the reminder then comes only in Bulwark, not on the phone or as a mail)",
+      "settles_short": "settles itself when an answer comes",
+      "answered_note": "Answer received on {day}"
     }
   }
 }

@@ -4642,6 +4642,12 @@
       "failed": "Die Erinnerung konnte nicht gespeichert werden.",
       "delete_title": "Aufgabe löschen?",
       "delete_confirm": "„{title}“ wird aus Ihrer Aufgabenliste gelöscht, auch auf dem Handy. Das lässt sich nicht rückgängig machen."
+    },
+    "reply": {
+      "settles": "erledigt sich, wenn auf diese Mail eine Antwort kommt",
+      "settles_hint": "(Bulwark sieht vor der Erinnerung nach einer Antwort; die Erinnerung kommt dann nur in Bulwark, nicht aufs Telefon und nicht als Mail)",
+      "settles_short": "erledigt sich, wenn eine Antwort kommt",
+      "answered_note": "Antwort am {day} erhalten"
     }
   }
 }

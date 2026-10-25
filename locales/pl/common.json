@@ -4642,6 +4642,12 @@
       "failed": "Nie udało się zapisać przypomnienia.",
       "delete_title": "Usunąć zadanie?",
       "delete_confirm": "„{title}” zostanie usunięte z Twojej listy zadań, także na telefonie. Tej operacji nie można cofnąć."
+    },
+    "reply": {
+      "settles": "Załatwia się samo, gdy przyjdzie odpowiedź na tę wiadomość",
+      "settles_hint": "(Bulwark przed przypomnieniem szuka odpowiedzi; przypomnienie pojawia się wtedy tylko w Bulwarku, nie na telefonie ani jako e-mail)",
+      "settles_short": "załatwia się samo, gdy przyjdzie odpowiedź",
+      "answered_note": "Odpowiedź otrzymana {day}"
     }
   }
 }

@@ -36,6 +36,7 @@ import {
   proposedFollowUpReminder,
   proposedReminder,
   scheduleFollowUp,
+  settlesOnReply,
   type WorkingTime,
 } from "@/lib/follow-ups";
 import { FOLLOW_UP_ACTIONS, sanitizeFollowUpActions } from "@/lib/follow-up-actions";
@@ -169,6 +170,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       reminder,
       note: task ? followUpNote(task) : "",
       mail: task ? hasFollowUpMailAlert(task) : false,
+      settles: task ? settlesOnReply(task) : false,
       // Alerts the reminder shown leaves out (relative ones, a second one set on a phone): kept as they are.
       otherAlerts: task ? otherFollowUpAlerts(task) : 0,
     };
@@ -190,6 +192,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   const [reminderPast, setReminderPast] = useState(false);
   const [note, setNote] = useState(initial.note);
   const [mailOn, setMailOn] = useState(initial.mail);
+  const [settlesOn, setSettlesOn] = useState(initial.settles);
 
   const actionRef = useRef<HTMLSelectElement>(null);
   const whatRef = useRef<HTMLInputElement>(null);
@@ -240,10 +243,11 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   // Where it is kept: the task's own list, else where a new one goes.
   const taskCalendarId = task ? Object.keys(task.calendarIds ?? {})[0] : undefined;
   const list = (taskCalendarId && calendars.find((c) => c.id === taskCalendarId)) || followUpCalendars(calendars)[0];
-  // "Settles itself when an answer comes" (plan 037 decision 9) is not built
-  // yet; once it is, its box passes true here and the mail is not offered.
-  const settlesOnReply = false;
-  const mailOffered = mailReminderOffered(list, settlesOnReply);
+  // "Settles itself when an answer comes" (plan 037 decision 9), for a mail's
+  // follow-up only: the server would send the alarm mail all the same, so it
+  // is not offered then (and taken off a task that has one).
+  const settles = !isReminder && settlesOn;
+  const mailOffered = mailReminderOffered(list, settles);
 
   const save = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -261,8 +265,9 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       due: displayDateOf(due),
       reminderAt: reminder ? fromDisplayDate(reminder) : null,
       note,
-      // Not offered: the task's alarm mail stays as it is.
+      // Not offered: the task's alarm mail stays as it is (settling on an answer takes it off).
       mailReminder: mailOffered ? reminderOn && mailOn : undefined,
+      ...(isReminder ? {} : { settlesOnReply: settles }),
     });
     setBusy(false);
     if (written) onClose();
@@ -475,6 +480,22 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
                   <span className={cn(!reminderOn && "text-muted-foreground")}>
                     {t("reminder_mail")}{" "}
                     <span id={`${id}-reminder-mail-hint`} className="text-xs text-muted-foreground">{t("reminder_mail_hint")}</span>
+                  </span>
+                </label>
+              )}
+              {!isReminder && (
+                <label className="flex w-fit items-start gap-2 text-foreground">
+                  <input
+                    type="checkbox"
+                    data-testid="follow-up-settles-on-reply"
+                    checked={settlesOn}
+                    onChange={(e) => setSettlesOn(e.target.checked)}
+                    aria-describedby={`${id}-settles-hint`}
+                    className="mt-0.5 rounded border-input"
+                  />
+                  <span>
+                    {t("reply.settles")}{" "}
+                    <span id={`${id}-settles-hint`} className="text-xs text-muted-foreground">{t("reply.settles_hint")}</span>
                   </span>
                 </label>
               )}

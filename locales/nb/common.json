@@ -4642,6 +4642,12 @@
       "failed": "Påminnelsen kunne ikke lagres.",
       "delete_title": "Slette oppgaven?",
       "delete_confirm": "«{title}» slettes fra oppgavelisten din, også på telefonen. Dette kan ikke angres."
+    },
+    "reply": {
+      "settles": "Ordner seg selv når det kommer et svar på denne e-posten",
+      "settles_hint": "(Bulwark ser etter et svar før det minner deg på det; påminnelsen kommer da bare i Bulwark, ikke på telefonen eller som e-post)",
+      "settles_short": "ordner seg selv når det kommer et svar",
+      "answered_note": "Svar mottatt {day}"
     }
   }
 }

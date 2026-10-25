@@ -1,5 +1,5 @@
 import { addDays, differenceInCalendarDays, format, parseISO, startOfDay } from "date-fns";
-import type { CalendarEventAlert, CalendarLink, CalendarTask } from "@/lib/jmap/types";
+import type { CalendarEventAlert, CalendarLink, CalendarRelation, CalendarTask } from "@/lib/jmap/types";
 import { MAIL_ACCOUNT_PARAM } from "@/lib/deep-links";
 import { patchPath } from "@/lib/jmap/patch-object";
 import { FOLLOW_UP_ACTIONS, type FollowUpActionKey } from "@/lib/follow-up-actions";
@@ -157,6 +157,59 @@ export const MAIL_ALERT_LEAD_MS = 1000;
 export function mailAlertTime(reminderAt: Date): Date {
   return new Date(reminderAt.getTime() - MAIL_ALERT_LEAD_MS);
 }
+/**
+ * "Settles itself when an answer comes" (plan 037 decision 9), kept on the
+ * task's relation to the mail's Message-ID (`relatedTo`) as an RFC 8984 §3.3
+ * vendor-specific property: the Message-ID is what an answer names, so the
+ * mark belongs to it. Its value is a `ReplyWatchValue`.
+ *
+ * Why there: such a task gets no alert at all (an alert reaches the phone,
+ * which knows nothing of answers, and Stalwart sends an alarm mail even for a
+ * task answered meanwhile), so the reminder's time, and whether it was
+ * dismissed, live in the mark too. A vendor property on the task itself is
+ * refused by Stalwart (plan 037 M2); on the relation it is kept, written and
+ * patched by path, and goes to iCalendar as `JSPROP`
+ * (draft-ietf-calext-jscalendar-icalendar), which a CalDAV client that keeps
+ * unknown properties writes back. A keyword would become a category a phone
+ * shows; a link a URL some phones open. Where a client drops it, the task is
+ * a plain follow-up without a reminder.
+ */
+export const REPLY_WATCH_PROPERTY = "bulwarkmail.org:settlesOnReply";
+
+/**
+ * The id the reminders window gives a reply watch's reminder, which is no
+ * alert of the task (`replyWatch`). An alert's key is an RFC 8984 Id, which
+ * never holds a NUL.
+ */
+export const REPLY_WATCH_ALERT_ID = "\u0000settles-on-reply";
+
+/** What `REPLY_WATCH_PROPERTY` holds; every member optional, times as UTCDateTime. */
+export interface ReplyWatchValue {
+  /** When Bulwark reminds, unless an answer came; null for no reminder. */
+  reminder?: string | null;
+  /** When that reminder was dismissed (as an alert's `acknowledged`). */
+  acknowledged?: string | null;
+  /** When the answer that settled it came: one that came by then never settles it again. */
+  answeredAt?: string | null;
+  /**
+   * Turned off in the dialog after an answer had settled it: kept only for
+   * `answeredAt`, so turned on again the same answer does not settle it
+   * again. Such a value is no watch (`replyWatch`).
+   */
+  off?: boolean;
+}
+
+/** A follow-up that settles itself when an answer comes, as read from the task. */
+export interface ReplyWatch {
+  /** The `relatedTo` key it is kept on: the mail's Message-ID in angle brackets. */
+  key: string;
+  /** The mail's Message-ID, without angle brackets. */
+  messageId: string;
+  reminder: Date | null;
+  acknowledged: string | null;
+  answeredAt: string | null;
+}
+
 /** RFC 8288: the mail describes what the task is about. */
 const MAIL_LINK_REL = "describedby";
 /** RFC 8288: the mail's sender wrote what the task is about. */
@@ -172,12 +225,16 @@ function utcDateTime(instant: Date): string {
   return instant.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
-function alertAt(reminderAt: Date, action: CalendarEventAlert["action"]): CalendarEventAlert {
+function alertAt(
+  reminderAt: Date,
+  action: CalendarEventAlert["action"],
+  acknowledged: string | null = null,
+): CalendarEventAlert {
   return {
     "@type": "Alert",
     trigger: { "@type": "AbsoluteTrigger", when: utcDateTime(reminderAt) },
     action,
-    acknowledged: null,
+    acknowledged,
     relatedTo: null,
   };
 }
@@ -217,6 +274,13 @@ export interface FollowUpTaskInput {
   note?: string;
   /** Whether the reminder also comes as a mail into the inbox (`mailReminderOffered`). */
   mailReminder?: boolean;
+  /**
+   * Whether it settles itself when an answer comes (plan 037 decision 9):
+   * then the task gets no alert, the reminder is kept in its reply watch, and
+   * no alarm mail is written. Needs the Message-ID; without one, a plain
+   * follow-up is written.
+   */
+  settlesOnReply?: boolean;
 }
 
 /**
@@ -240,6 +304,7 @@ export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTas
   const sender = senderLink(input.from);
   if (sender) links[FOLLOW_UP_SENDER_LINK_ID] = sender;
   const messageId = bareMessageId(input.messageId);
+  const watch = !!input.settlesOnReply && !!messageId;
   return {
     "@type": "Task",
     title: input.title,
@@ -247,11 +312,71 @@ export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTas
     due: dueOf(input.due),
     showWithoutTime: true,
     progress: "needs-action",
-    alerts: alertsOf(input.reminderAt, input.mailReminder),
+    alerts: watch ? null : alertsOf(input.reminderAt, input.mailReminder),
     ...(input.note?.trim() ? { description: input.note.trim() } : {}),
     links,
-    relatedTo: messageId ? { [`<${messageId}>`]: { "@type": "Relation", relation: { parent: true } } } : null,
+    relatedTo: messageId ? { [`<${messageId}>`]: mailRelation(watch ? watchValue(input.reminderAt) : null) } : null,
   };
+}
+
+/** The relation to the mail's Message-ID, with a reply watch when one is given. */
+function mailRelation(watch: ReplyWatchValue | null): CalendarRelation {
+  return {
+    "@type": "Relation",
+    relation: { parent: true },
+    ...(watch ? { [REPLY_WATCH_PROPERTY]: watch } : {}),
+  } as CalendarRelation;
+}
+
+/** A new reply watch reminding at `reminderAt` (null: never). */
+function watchValue(
+  reminderAt: Date | null,
+  answeredAt: string | null = null,
+  acknowledged: string | null = null,
+): ReplyWatchValue {
+  return { reminder: reminderAt ? utcDateTime(reminderAt) : null, acknowledged, answeredAt };
+}
+
+/** The raw value of `REPLY_WATCH_PROPERTY` on the relation `key`, a watch turned off too; null for none. */
+function storedWatchValue(task: Partial<Pick<CalendarTask, "relatedTo">>, key: string): Record<string, unknown> | null {
+  const value = (task.relatedTo?.[key] as unknown as Record<string, unknown> | undefined)?.[REPLY_WATCH_PROPERTY];
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+function readTime(value: unknown): Date | null {
+  if (typeof value !== "string") return null;
+  const at = new Date(value);
+  return Number.isNaN(at.getTime()) ? null : at;
+}
+
+/**
+ * The task's reply watch (`REPLY_WATCH_PROPERTY`), or null when it does not
+ * settle itself on an answer. Only an object counts: Stalwart keeps a member
+ * set to null as null.
+ */
+export function replyWatch(task: Partial<Pick<CalendarTask, "relatedTo">>): ReplyWatch | null {
+  for (const [key, relation] of Object.entries(task.relatedTo ?? {})) {
+    if (relation?.relation && !relation.relation.parent) continue;
+    const value = (relation as unknown as Record<string, unknown> | null)?.[REPLY_WATCH_PROPERTY];
+    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+    if ((value as ReplyWatchValue).off === true) continue;
+    const messageId = bareMessageId(key);
+    if (!messageId) continue;
+    const v = value as Record<string, unknown>;
+    return {
+      key,
+      messageId,
+      reminder: readTime(v.reminder),
+      acknowledged: typeof v.acknowledged === "string" ? v.acknowledged : null,
+      answeredAt: typeof v.answeredAt === "string" ? v.answeredAt : null,
+    };
+  }
+  return null;
+}
+
+/** The patch path of the reply watch kept on `key`, or of one of its members. */
+export function replyWatchPath(key: string, member?: keyof ReplyWatchValue): string {
+  return patchPath("relatedTo", key, REPLY_WATCH_PROPERTY, ...(member ? [member] : []));
 }
 
 /** The sender as a `mailto:` link titled with the name, or null without an address. */
@@ -290,7 +415,7 @@ export function addFollowUpSender(
  * one, every other alert left as it is.
  */
 export function rescheduleFollowUpTask(
-  task: Pick<CalendarTask, "alerts">,
+  task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>,
   due: Date | null,
   reminderAt: Date | null,
 ): Partial<CalendarTask> {
@@ -486,6 +611,16 @@ export interface FollowUpEdit {
    * the task has it (the dialog did not offer it).
    */
   mailReminder?: boolean;
+  /**
+   * Whether it settles itself when an answer comes (`replyWatch`); left out,
+   * as the task has it.
+   */
+  settlesOnReply?: boolean;
+  /**
+   * The mail's Message-ID, for a task that has no relation to it yet and is
+   * to settle itself on an answer.
+   */
+  messageId?: string | readonly string[] | null;
 }
 
 /**
@@ -497,29 +632,98 @@ export interface FollowUpEdit {
  * set elsewhere, one changed meanwhile on another device) stay as the server
  * holds them; a task without alerts gets its map whole. Empty when nothing
  * changes, so an unchanged reminder keeps its `acknowledged`.
+ *
+ * A follow-up that settles itself when an answer comes (`settles`, left out:
+ * as the task has it) keeps its reminder in its reply watch instead, and its
+ * own reminder and alarm mail are taken off: neither the phone nor the mail
+ * server knows of the answer. Alerts set elsewhere stay. Turned off, the
+ * watch goes and the reminder is an alert again.
  */
 function reminderPatch(
-  task: Pick<CalendarTask, "alerts">,
+  task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>,
   reminderAt: Date | null,
   mail?: boolean,
+  settles?: { on: boolean; messageId?: string | readonly string[] | null },
 ): Record<string, unknown> {
+  const watch = replyWatch(task);
+  const wantWatch = settles ? settles.on : !!watch;
+  const messageId = watch?.messageId
+    ?? followUpMessageId({ relatedTo: task.relatedTo ?? null })
+    ?? bareMessageId(settles?.messageId);
+  if (wantWatch && messageId) return watchPatch(task, watch, `<${messageId}>`, reminderAt);
+
+  const patch: Record<string, unknown> = {};
+  // Turned off: an answer that settled it is remembered, so turned on again it does not settle it again.
+  if (watch) patch[replyWatchPath(watch.key)] = watch.answeredAt ? { off: true, answeredAt: watch.answeredAt } : null;
   const shown = followUpReminderAlert(task);
   const hadMail = hasFollowUpMailAlert(task);
   const wantMail = !!reminderAt && (mail ?? hadMail);
-  const moved = (shown?.when.getTime() ?? null) !== (reminderAt?.getTime() ?? null);
   const changes: Record<string, CalendarEventAlert | null> = {};
-  if (moved) changes[shown?.id ?? FOLLOW_UP_ALERT_ID] = reminderAt ? alertAt(reminderAt, "display") : null;
+  // Out of a watch, the reminder becomes the own alert again whatever its
+  // time; an alert set elsewhere, which the watch left, stays.
+  const moved = !!watch || (shown?.when.getTime() ?? null) !== (reminderAt?.getTime() ?? null);
+  if (watch) {
+    // The same time keeps its dismissal: switching the box does not remind again.
+    const same = (watch.reminder?.getTime() ?? null) === (reminderAt?.getTime() ?? null);
+    if (reminderAt) changes[FOLLOW_UP_ALERT_ID] = alertAt(reminderAt, "display", same ? watch.acknowledged : null);
+  } else if (moved) {
+    changes[shown?.id ?? FOLLOW_UP_ALERT_ID] = reminderAt ? alertAt(reminderAt, "display") : null;
+  }
   if (wantMail && reminderAt && (moved || !hadMail)) {
     changes[FOLLOW_UP_MAIL_ALERT_ID] = alertAt(mailAlertTime(reminderAt), "email");
   } else if (!wantMail && hadMail) {
     changes[FOLLOW_UP_MAIL_ALERT_ID] = null;
   }
+  return { ...patch, ...alertChanges(task, changes) };
+}
+
+/** Alert changes by path, or the map whole for a task without alerts; empty for none. */
+function alertChanges(
+  task: Pick<CalendarTask, "alerts">,
+  changes: Record<string, CalendarEventAlert | null>,
+): Record<string, unknown> {
   if (Object.keys(changes).length === 0) return {};
   if (task.alerts && Object.keys(task.alerts).length > 0) {
     return Object.fromEntries(Object.entries(changes).map(([id, alert]) => [`alerts/${patchPath(id)}`, alert]));
   }
   const added = Object.entries(changes).filter((entry): entry is [string, CalendarEventAlert] => !!entry[1]);
   return { alerts: added.length > 0 ? Object.fromEntries(added) : null };
+}
+
+/**
+ * The patch that keeps the reminder in the reply watch on `key`: the watch
+ * written when the task has none (the relation added when it lacks one), else
+ * its reminder moved when its time changed (and opened again); the own
+ * reminder alert and alarm mail taken off.
+ */
+function watchPatch(
+  task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>,
+  watch: ReplyWatch | null,
+  key: string,
+  reminderAt: Date | null,
+): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  if (!watch) {
+    // From the reminder shown so far: a dismissal at the same time, and an
+    // answer that settled it before it was turned off, carry over.
+    const shown = followUpReminderAlert(task);
+    const sameTime = !!shown && shown.when.getTime() === (reminderAt?.getTime() ?? null);
+    const acknowledged = sameTime ? task.alerts?.[shown.id]?.acknowledged ?? null : null;
+    const before = storedWatchValue(task, key);
+    const answeredAt = typeof before?.answeredAt === "string" ? before.answeredAt : null;
+    const value = watchValue(reminderAt, answeredAt, acknowledged);
+    const relation = task.relatedTo?.[key];
+    if (relation) patch[replyWatchPath(key)] = value;
+    else if (task.relatedTo && Object.keys(task.relatedTo).length > 0) patch[`relatedTo/${patchPath(key)}`] = mailRelation(value);
+    else patch.relatedTo = { [key]: mailRelation(value) };
+  } else if ((watch.reminder?.getTime() ?? null) !== (reminderAt?.getTime() ?? null)) {
+    patch[replyWatchPath(watch.key, "reminder")] = reminderAt ? utcDateTime(reminderAt) : null;
+    patch[replyWatchPath(watch.key, "acknowledged")] = null;
+  }
+  const changes: Record<string, null> = {};
+  if (task.alerts?.[FOLLOW_UP_ALERT_ID]) changes[FOLLOW_UP_ALERT_ID] = null;
+  if (hasFollowUpMailAlert(task)) changes[FOLLOW_UP_MAIL_ALERT_ID] = null;
+  return { ...patch, ...alertChanges(task, changes) };
 }
 
 /**
@@ -537,7 +741,7 @@ function reminderPatch(
  */
 export function editFollowUpTask(
   task: Pick<CalendarTask, "title" | "description" | "progress" | "alerts">
-    & Partial<Pick<CalendarTask, "due" | "showWithoutTime" | "descriptionContentType">>,
+    & Partial<Pick<CalendarTask, "due" | "showWithoutTime" | "descriptionContentType" | "relatedTo">>,
   edit: FollowUpEdit,
 ): Partial<CalendarTask> {
   // A task with a time of day (set in the task list or on a phone) keeps it on
@@ -546,7 +750,8 @@ export function editFollowUpTask(
   const patch: Partial<CalendarTask> = time
     ? { due: edit.due ? `${format(edit.due, "yyyy-MM-dd")}T${time}` : null }
     : { due: dueOf(edit.due), showWithoutTime: true };
-  Object.assign(patch, reminderPatch(task, edit.reminderAt, edit.mailReminder));
+  const settles = edit.settlesOnReply === undefined ? undefined : { on: edit.settlesOnReply, messageId: edit.messageId };
+  Object.assign(patch, reminderPatch(task, edit.reminderAt, edit.mailReminder, settles));
   if (edit.title !== null && edit.title !== task.title) patch.title = edit.title;
   // An HTML note is only shown here, never written back as text.
   const note = edit.note.trim();
@@ -779,17 +984,28 @@ export function mailReminderOffered(
   return !!list && !list.isShared && !settlesOnReply;
 }
 
-/** When a follow-up's reminder fires, or null when it has none. */
-export function followUpReminder(task: Pick<CalendarTask, "alerts">): Date | null {
+/**
+ * When a follow-up's reminder fires, or null when it has none: a reply
+ * watch's (`replyWatch`), else the alert's (`followUpReminderAlert`).
+ */
+export function followUpReminder(task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>): Date | null {
+  const watch = replyWatch(task);
+  if (watch) return watch.reminder;
   return followUpReminderAlert(task)?.when ?? null;
+}
+
+/** Whether a follow-up settles itself when an answer comes (`replyWatch`). */
+export function settlesOnReply(task: Partial<Pick<CalendarTask, "relatedTo">>): boolean {
+  return replyWatch(task) !== null;
 }
 
 /**
  * How many of the follow-up's alerts the reminder it shows and its own alarm
  * mail leave out (relative ones, a second one, an alarm mail set elsewhere).
  */
-export function otherFollowUpAlerts(task: Pick<CalendarTask, "alerts">): number {
-  const shown = followUpReminderAlert(task);
+export function otherFollowUpAlerts(task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>): number {
+  // A reply watch keeps the reminder shown: every alert beside it was set elsewhere.
+  const shown = replyWatch(task) ? null : followUpReminderAlert(task);
   const mail = new Set(followUpMailAlertIds(task));
   return Object.entries(task.alerts ?? {}).filter(([id, alert]) => alert && id !== shown?.id && !mail.has(id)).length;
 }

@@ -4642,6 +4642,12 @@
       "failed": "Meeldetuletust ei õnnestunud salvestada.",
       "delete_title": "Kas kustutada ülesanne?",
       "delete_confirm": "„{title}“ kustutatakse sinu ülesannete loendist, ka telefonis. Seda ei saa tagasi võtta."
+    },
+    "reply": {
+      "settles": "Lõpeb ise, kui sellele kirjale tuleb vastus",
+      "settles_hint": "(Bulwark otsib enne meeldetuletust vastust; meeldetuletus tuleb siis ainult Bulwarkis, mitte telefoni ega kirjana)",
+      "settles_short": "lõpeb ise, kui tuleb vastus",
+      "answered_note": "Vastus saabus {day}"
     }
   }
 }

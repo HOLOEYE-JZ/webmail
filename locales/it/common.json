@@ -4642,6 +4642,12 @@
       "failed": "Impossibile salvare il promemoria.",
       "delete_title": "Eliminare l’attività?",
       "delete_confirm": "«{title}» verrà eliminata dal tuo elenco attività, anche sul telefono. L’operazione non può essere annullata."
+    },
+    "reply": {
+      "settles": "Si completa da sola quando arriva una risposta a questa email",
+      "settles_hint": "(Bulwark cerca una risposta prima di ricordartelo; il promemoria allora appare solo in Bulwark, non sul telefono né come email)",
+      "settles_short": "si completa da sola quando arriva una risposta",
+      "answered_note": "Risposta ricevuta il {day}"
     }
   }
 }

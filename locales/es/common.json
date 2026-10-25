@@ -4642,6 +4642,12 @@
       "failed": "No se pudo guardar el recordatorio.",
       "delete_title": "¿Eliminar la tarea?",
       "delete_confirm": "«{title}» se eliminará de tu lista de tareas, también en el teléfono. No se puede deshacer."
+    },
+    "reply": {
+      "settles": "Se completa sola cuando llega una respuesta a este correo",
+      "settles_hint": "(Bulwark busca una respuesta antes de recordártelo; el recordatorio entonces solo aparece en Bulwark, no en el móvil ni como correo)",
+      "settles_short": "se completa sola cuando llega una respuesta",
+      "answered_note": "Respuesta recibida el {day}"
     }
   }
 }

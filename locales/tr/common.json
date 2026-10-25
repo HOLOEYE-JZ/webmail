@@ -4642,6 +4642,12 @@
       "failed": "Anımsatıcı kaydedilemedi.",
       "delete_title": "Görev silinsin mi?",
       "delete_confirm": "“{title}” görev listenizden, telefonunuzda da silinecek. Bu işlem geri alınamaz."
+    },
+    "reply": {
+      "settles": "Bu iletiye yanıt gelince kendiliğinden tamamlanır",
+      "settles_hint": "(Bulwark hatırlatmadan önce bir yanıt arar; hatırlatma o zaman yalnızca Bulwark'ta gelir, telefona veya e-posta olarak gelmez)",
+      "settles_short": "yanıt gelince kendiliğinden tamamlanır",
+      "answered_note": "Yanıt {day} tarihinde alındı"
     }
   }
 }

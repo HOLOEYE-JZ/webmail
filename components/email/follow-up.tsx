@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { differenceInCalendarDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Bell, Check, ChevronDown, Flag, Pencil } from "@/components/icons";
+import { Bell, Check, ChevronDown, Flag, Pencil, Reply } from "@/components/icons";
 import {
   ContextMenu,
   ContextMenuHeader,
@@ -26,6 +26,7 @@ import {
   followUpReminder,
   followUpState,
   scheduleFollowUp,
+  settlesOnReply,
   type FollowUpState,
 } from "@/lib/follow-ups";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
@@ -231,7 +232,8 @@ export function FollowUpFlagButton({ email, className, onlyWhenSet = false, reve
 /**
  * The row's chip: "⚑ due tomorrow", "⚑ Call · due Thu · 🔔 Wed 10:00", red
  * "overdue for 3 days", "✓ completed"; on a group mailbox's mail "⚑ only me ·
- * due Thu", since no colleague sees it.
+ * due Thu", since no colleague sees it. One that settles itself when an
+ * answer comes ends with ↩ and says so in its title.
  */
 export function FollowUpChip({ email, className }: { email: Email; className?: string }) {
   const t = useTranslations("follow_up");
@@ -244,6 +246,7 @@ export function FollowUpChip({ email, className }: { email: Email; className?: s
   const action = state === "done" ? null : fmt.action(task);
   const reminderAt = state === "done" ? null : followUpReminder(task);
   const reminder = reminderAt ? fmt.reminder(reminderAt, now) : null;
+  const settles = state !== "done" && settlesOnReply(task);
   const text = [onlyMe && t("only_me"), ...(state === "done" ? [t("done")] : [action, fmt.due(task, now)])]
     .filter(Boolean)
     .join(" · ");
@@ -252,7 +255,13 @@ export function FollowUpChip({ email, className }: { email: Email; className?: s
       data-testid="follow-up-chip"
       data-follow-up={state}
       data-only-me={onlyMe || undefined}
-      title={[text, reminder && t("bar_reminder", { when: reminder }), onlyMe && t("kept_only_me_tasks")].filter(Boolean).join(" · ")}
+      data-settles-on-reply={settles || undefined}
+      title={[
+        text,
+        reminder && t("bar_reminder", { when: reminder }),
+        settles && t("reply.settles_short"),
+        onlyMe && t("kept_only_me_tasks"),
+      ].filter(Boolean).join(" · ")}
       className={cn("inline-flex max-w-[16rem] shrink-0 items-center gap-1 truncate rounded-full px-2 py-0.5 text-xs", STATE_CLASSES[state], className)}
     >
       <Icon className="h-3 w-3 shrink-0" />
@@ -262,6 +271,12 @@ export function FollowUpChip({ email, className }: { email: Email; className?: s
           <span aria-hidden="true">·</span>
           <Bell className="h-3 w-3 shrink-0" aria-label={t("reminder_label")} />
           {reminder}
+        </span>
+      )}
+      {settles && (
+        <span data-testid="follow-up-chip-settles" className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
+          <span aria-hidden="true">·</span>
+          <Reply className="h-3 w-3 shrink-0" role="img" aria-label={t("reply.settles_short")} />
         </span>
       )}
     </span>
@@ -348,6 +363,12 @@ export function FollowUpInfoBar({ email }: { email: Email }) {
                   <Bell className="h-3.5 w-3.5" aria-label={t("reminder_label")} />
                   {fmt.reminder(reminder, now)}
                 </span>
+              </>
+            )}
+            {settlesOnReply(task) && (
+              <>
+                {sep}
+                <span data-testid="follow-up-bar-settles">{t("reply.settles_short")}</span>
               </>
             )}
             {note && (

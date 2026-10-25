@@ -346,6 +346,73 @@ describe('FollowUpDialog: the reminder also as a mail', () => {
   });
 });
 
+describe('FollowUpDialog: settles itself when an answer comes', () => {
+  const PROP = 'bulwarkmail.org:settlesOnReply';
+  const KEY = '<offer@example.com>';
+  const utc = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+  const watching = (reminder: Date | null) => followUp({
+    alerts: null,
+    relatedTo: { [KEY]: { '@type': 'Relation', relation: { parent: true }, [PROP]: { reminder: reminder && utc(reminder) } } as never },
+  });
+
+  it('writes the reminder into the watch on the Message-ID, no alert, and offers no alarm mail', async () => {
+    const onClose = vi.fn();
+    render(<FollowUpDialog email={mail} focus="reminder" onClose={onClose} />);
+    expect(field('follow-up-settles-on-reply').checked).toBe(false);
+    fireEvent.click(field('follow-up-reminder-mail'));
+    fireEvent.click(field('follow-up-settles-on-reply'));
+    expect(screen.queryByTestId('follow-up-reminder-mail')).toBeNull();
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    const written = client.createCalendarTask.mock.calls[0][0];
+    expect(written.alerts).toBeNull();
+    expect((written.relatedTo as unknown as Record<string, Record<string, unknown>>)[KEY][PROP])
+      .toEqual({ reminder: utc(new Date(2026, 9, 27, 8, 0)), acknowledged: null, answeredAt: null });
+    // The flag mirrors it as any follow-up.
+    expect(flagged()).toBe(true);
+  });
+
+  it('turned on for a follow-up with its alert and alarm mail: both taken off, the watch written', async () => {
+    const task = followUp();
+    task.alerts = {
+      ...task.alerts,
+      'follow-up-mail': { '@type': 'Alert', trigger: { '@type': 'AbsoluteTrigger', when: '2026-10-28T08:59:59Z' }, action: 'email', acknowledged: null, relatedTo: null },
+    };
+    useTaskStore.setState({ tasks: [task] });
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    fireEvent.click(field('follow-up-settles-on-reply'));
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
+    const patch = client.updateCalendarTask.mock.calls[0][1] as Record<string, unknown>;
+    expect(patch).toMatchObject({ 'alerts/follow-up': null, 'alerts/follow-up-mail': null });
+    // Written without its relation to the Message-ID, which the mail gives.
+    expect((patch.relatedTo as Record<string, Record<string, unknown>>)[KEY][PROP])
+      .toEqual({ reminder: utc(new Date(2026, 9, 28, 10, 0)), acknowledged: null, answeredAt: null });
+  });
+
+  it('reads the box back; the chip and the info bar say it settles itself when an answer comes', () => {
+    useTaskStore.setState({ tasks: [watching(new Date(2026, 9, 28, 10, 0))] });
+    const dialog = render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    expect(field('follow-up-settles-on-reply').checked).toBe(true);
+    expect(field('follow-up-reminder-on').checked).toBe(true);
+    expect(field('follow-up-reminder-time').value).toBe('10:00');
+    expect(screen.queryByTestId('follow-up-reminder-mail')).toBeNull();
+    dialog.unmount();
+
+    render(<><FollowUpChip email={mail} /><FollowUpInfoBar email={mail} /></>);
+    expect(screen.getByTestId('follow-up-chip').getAttribute('title')).toContain('reply.settles_short');
+    expect(screen.getByTestId('follow-up-chip-settles')).toBeTruthy();
+    expect(screen.getByTestId('follow-up-chip-reminder')).toBeTruthy();
+    expect(screen.getByTestId('follow-up-bar-settles').textContent).toBe('reply.settles_short');
+    expect(screen.getByTestId('follow-up-bar-reminder')).toBeTruthy();
+  });
+
+  it('is not offered for a reminder without a mail', () => {
+    render(<ReminderDialog taskId={null} title="Check" focus="action" onClose={vi.fn()} />);
+    expect(screen.queryByTestId('follow-up-settles-on-reply')).toBeNull();
+  });
+});
+
 describe('a follow-up written in another language', () => {
   it('reads a German default action as the default, and keeps its title when saved', async () => {
     useTaskStore.setState({ tasks: [followUp({ title: 'Nachverfolgen: Offer 4711' })] });

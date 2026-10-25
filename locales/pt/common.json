@@ -4642,6 +4642,12 @@
       "failed": "Não foi possível guardar o lembrete.",
       "delete_title": "Eliminar a tarefa?",
       "delete_confirm": "«{title}» será eliminada da sua lista de tarefas, também no telemóvel. Não é possível anular."
+    },
+    "reply": {
+      "settles": "Conclui-se sozinho quando chega uma resposta a este e-mail",
+      "settles_hint": "(O Bulwark procura uma resposta antes de lembrar você; o lembrete então aparece só no Bulwark, não no telefone nem por e-mail)",
+      "settles_short": "conclui-se sozinho quando chega uma resposta",
+      "answered_note": "Resposta recebida em {day}"
     }
   }
 }

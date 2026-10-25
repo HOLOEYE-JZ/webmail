@@ -4642,6 +4642,12 @@
       "failed": "無法儲存提醒。",
       "delete_title": "要刪除工作嗎？",
       "delete_confirm": "「{title}」將從您的工作清單中刪除，手機上也一樣。此動作無法復原。"
+    },
+    "reply": {
+      "settles": "收到這封郵件的回覆時自動完成",
+      "settles_hint": "（Bulwark 會在提醒前先尋找回覆；提醒只會出現在 Bulwark，不會傳到手機或以郵件寄出）",
+      "settles_short": "收到回覆時自動完成",
+      "answered_note": "已於 {day} 收到回覆"
     }
   }
 }

@@ -4642,6 +4642,12 @@
       "failed": "Mementoul nu a putut fi salvat.",
       "delete_title": "Ștergeți sarcina?",
       "delete_confirm": "„{title}” va fi ștearsă din lista dvs. de sarcini, și de pe telefon. Acțiunea nu poate fi anulată."
+    },
+    "reply": {
+      "settles": "Se încheie singură când sosește un răspuns la acest e-mail",
+      "settles_hint": "(Bulwark caută un răspuns înainte să îți amintească; mementoul apare atunci doar în Bulwark, nu pe telefon și nici ca e-mail)",
+      "settles_short": "se încheie singură când sosește un răspuns",
+      "answered_note": "Răspuns primit pe {day}"
     }
   }
 }

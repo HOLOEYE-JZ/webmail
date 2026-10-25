@@ -15,7 +15,7 @@ import { isFilterEmpty } from "@/lib/jmap/search-utils";
 import { isAllFoldersSearchScope } from "@/lib/search-scope-folders";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { debug } from "@/lib/debug";
-import { completedTaskPatch } from "@/lib/task-reminders";
+import { completedTaskPatch, type TaskPatch } from "@/lib/task-reminders";
 import {
   DEFAULT_WORKING_TIME,
   buildFollowUpTask,
@@ -23,6 +23,7 @@ import {
   followUpAction,
   followUpMailRef,
   followUpMailSummary,
+  followUpMessageId,
   sameFollowUpAction,
   followUpsByEmailId,
   isOtherAccountMail,
@@ -265,7 +266,8 @@ async function changeFollowUp(
   emailId: string,
   writeTask: () => Promise<boolean>,
   mirror: () => Promise<unknown>,
-  messages: { failed: string; flagFailed: string },
+  /** Null: no toast (a change the user did not make here), only the log. */
+  messages: { failed: string; flagFailed: string } | null,
 ): Promise<boolean> {
   if (pending.has(emailId)) return false;
   pending.add(emailId);
@@ -275,7 +277,7 @@ async function changeFollowUp(
       written = await writeTask();
     } catch (error) {
       debug.error("follow-up: task not written", error);
-      toast.error(messages.failed);
+      if (messages) toast.error(messages.failed);
       return false;
     }
     if (!written) return false;
@@ -283,7 +285,7 @@ async function changeFollowUp(
       await mirror();
     } catch (error) {
       debug.error("follow-up: flag not mirrored", error);
-      toast.error(messages.flagFailed);
+      if (messages) toast.error(messages.flagFailed);
     }
     return true;
   } finally {
@@ -296,15 +298,18 @@ async function changeFollowUp(
  * Marks a task done from a list that holds only the task (the pane
  * "Upcoming"), as the mail's own "Mark complete" does: a follow-up on a mail
  * of the user's own account clears that mail's flag too. Any other task is
- * only completed. Resolves whether the task was written.
+ * only completed. `patch` completes it otherwise than Mark Complete (an
+ * answer that settled it). Resolves whether the task was written.
  */
 export async function completeTask(
   client: IJMAPClient,
   task: CalendarTask,
-  messages: { failed: string; flagFailed: string },
+  /** Null: failures are only logged (a completion in the background). */
+  messages: { failed: string; flagFailed: string } | null,
+  patch?: TaskPatch,
 ): Promise<boolean> {
   // Its reminders that fired are dismissed with it, so reopened it does not remind of them again.
-  const complete = () => useTaskStore.getState().updateTask(client, task.id, completedTaskPatch(task, new Date()));
+  const complete = () => useTaskStore.getState().updateTask(client, task.id, patch ?? completedTaskPatch(task, new Date()));
   const ref = task.isShared ? null : followUpMailRef(task);
   // A group mailbox's mail carries no flag: its follow-up is only completed.
   if (!ref || isOtherAccountMail(ref, client.getAccountId())) {
@@ -312,7 +317,7 @@ export async function completeTask(
       return await complete();
     } catch (error) {
       debug.error("tasks: not completed", error);
-      toast.error(messages.failed);
+      if (messages) toast.error(messages.failed);
       return false;
     }
   }
@@ -373,6 +378,8 @@ export interface FollowUpDetails {
   note: string;
   /** Whether the reminder also comes as a mail into the inbox; left out where the dialog did not offer it. */
   mailReminder?: boolean;
+  /** Whether it settles itself when an answer comes (plan 037 decision 9); left out: as the task has it. */
+  settlesOnReply?: boolean;
 }
 
 export interface FollowUpControls {
@@ -459,6 +466,7 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
       reminderAt: details.reminderAt,
       note: details.note,
       mailReminder: details.mailReminder,
+      settlesOnReply: details.settlesOnReply,
     }));
     return !!created;
   }, [t, mailAccountId]);
@@ -483,8 +491,12 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     const title = sameFollowUpAction(action, followUpAction(task))
       ? null
       : t("task_title", { action, subject: followUpMailSummary(task).subject || email.subject || t("no_subject") });
-    return useTaskStore.getState().updateTask(client, task.id, editFollowUpTask(task, { ...details, title }));
-  }, true), [run, task, t, create]);
+    // Settling on an answer needs the Message-ID; a task written without its relation gets it now.
+    const messageId = details.settlesOnReply && !followUpMessageId(task) && mailAccountId
+      ? await messageIdOf(client, email, mailAccountId)
+      : undefined;
+    return useTaskStore.getState().updateTask(client, task.id, editFollowUpTask(task, { ...details, title, messageId }));
+  }, true), [run, task, t, create, mailAccountId]);
 
   const openDialog = useCallback((focus?: FollowUpDialogFocus) => {
     if (email) useFollowUpDialog.getState().open(email, focus);

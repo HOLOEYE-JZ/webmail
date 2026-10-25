@@ -4642,6 +4642,12 @@
       "failed": "Atgādinājumu neizdevās saglabāt.",
       "delete_title": "Dzēst uzdevumu?",
       "delete_confirm": "“{title}” tiks izdzēsts no jūsu uzdevumu saraksta, arī tālrunī. To nevar atsaukt."
+    },
+    "reply": {
+      "settles": "Izpildās pats, kad uz šo vēstuli pienāk atbilde",
+      "settles_hint": "(Bulwark pirms atgādinājuma meklē atbildi; atgādinājums tad parādās tikai Bulwark, nevis tālrunī vai kā e-pasts)",
+      "settles_short": "izpildās pats, kad pienāk atbilde",
+      "answered_note": "Atbilde saņemta {day}"
     }
   }
 }

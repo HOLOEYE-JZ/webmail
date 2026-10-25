@@ -4642,6 +4642,12 @@
       "failed": "无法保存提醒。",
       "delete_title": "删除任务？",
       "delete_confirm": "“{title}”将从你的任务列表中删除，手机上也一样。此操作无法撤销。"
+    },
+    "reply": {
+      "settles": "收到这封邮件的回复时自动完成",
+      "settles_hint": "（Bulwark 会在提醒前先查找回复；提醒只会出现在 Bulwark 中，不会发到手机或以邮件发送）",
+      "settles_short": "收到回复时自动完成",
+      "answered_note": "已于 {day} 收到回复"
     }
   }
 }

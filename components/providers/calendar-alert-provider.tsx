@@ -2,6 +2,7 @@
 
 import { useCalendarAlerts } from '@/hooks/use-calendar-alerts';
 import { useFollowUpSync } from '@/hooks/use-follow-up-sync';
+import { useFollowUpReplies } from '@/hooks/use-follow-up-replies';
 import { useTaskReminders } from '@/hooks/use-task-reminders';
 import { RemindersWindowHost } from '@/components/email/reminders-window';
 import { ToastContainer } from '@/components/ui/toast';
@@ -11,6 +12,8 @@ export function CalendarAlertProvider({ children }: { children: React.ReactNode 
   useCalendarAlerts();
   // Follow-ups: the mail's flag and its task kept in step, in every view.
   useFollowUpSync();
+  // Follow-ups that settle themselves when an answer comes: the answer looked for.
+  useFollowUpReplies();
   // Task reminders: the toast, then the window "n reminders".
   useTaskReminders();
 

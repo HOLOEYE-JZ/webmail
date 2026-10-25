@@ -9,7 +9,10 @@ import {
   isOpenFollowUp,
   isRecurringTask,
   FOLLOW_UP_MAIL_ALERT_ID,
+  REPLY_WATCH_ALERT_ID,
   hasFollowUpMailAlert,
+  replyWatch,
+  replyWatchPath,
   scheduleFollowUp,
   type WorkingTime,
 } from "@/lib/follow-ups";
@@ -45,6 +48,12 @@ import {
  * - Each write names the alerts it changes by path
  *   (`alerts/<id>/acknowledged`), never the whole map, so a change another
  *   device made meanwhile stays.
+ *
+ * - A follow-up that settles itself when an answer comes (`replyWatch`) has
+ *   no alert: its reminder and its dismissal are kept in the watch, and the
+ *   window shows it under `REPLY_WATCH_ALERT_ID` as if it were one. It is
+ *   held back until the mail's thread was looked at for an answer after it
+ *   fell due (`replyCheckedAt`); an answer completes the task instead.
  *
  * Unlike an event's reminder, which is dropped when it is more than ten
  * minutes late, a task's waits here: one that fell due while the app was
@@ -85,18 +94,34 @@ export interface TaskReminder {
   key: string;
 }
 
+/** When a reply watch's reminder fires, while it is not dismissed; else null. */
+function watchFireTime(task: Partial<Pick<CalendarTask, "relatedTo">>): number | null {
+  const watch = replyWatch(task);
+  if (!watch?.reminder) return null;
+  const fires = watch.reminder.getTime();
+  return isAlertAcknowledged({ acknowledged: watch.acknowledged }, fires) ? null : fires;
+}
+
 /**
  * The reminders the window shows at `nowMs`: one per task, however many of
  * its alerts fired, the earliest first. Late ones are kept, whatever the
  * delay.
+ *
+ * With `replyCheckedAt` (when the thread of a follow-up that settles itself
+ * on an answer was last looked at, `undefined` for not yet), such a task's
+ * reminders are held back until it was looked at after they fell due.
  */
-export function dueTaskReminders(tasks: readonly CalendarTask[], nowMs: number): TaskReminder[] {
+export function dueTaskReminders(
+  tasks: readonly CalendarTask[],
+  nowMs: number,
+  replyCheckedAt?: (taskId: string) => number | undefined,
+): TaskReminder[] {
   const reminders: TaskReminder[] = [];
   for (const task of tasks) {
-    if (!task.alerts || !isOpenFollowUp(task) || !isReminderWindowTask(task)) continue;
+    if (!isOpenFollowUp(task) || !isReminderWindowTask(task)) continue;
     const alertIds: string[] = [];
     let fireTimeMs = -Infinity;
-    for (const [alertId, alert] of Object.entries(task.alerts)) {
+    for (const [alertId, alert] of Object.entries(task.alerts ?? {})) {
       if (!alert || alert.action !== "display") continue;
       const fires = computeTaskFireTime(task, alert.trigger);
       if (fires === null || fires > nowMs) continue;
@@ -104,7 +129,13 @@ export function dueTaskReminders(tasks: readonly CalendarTask[], nowMs: number):
       alertIds.push(alertId);
       fireTimeMs = Math.max(fireTimeMs, fires);
     }
+    const watchFires = watchFireTime(task);
+    if (watchFires !== null && watchFires <= nowMs) {
+      alertIds.push(REPLY_WATCH_ALERT_ID);
+      fireTimeMs = Math.max(fireTimeMs, watchFires);
+    }
     if (alertIds.length === 0) continue;
+    if (replyCheckedAt && replyWatch(task) && !((replyCheckedAt(task.id) ?? -Infinity) >= fireTimeMs)) continue;
     alertIds.sort();
     reminders.push({ task, alertIds, fireTimeMs, key: buildAlertKey(task.id, alertIds.join("+"), fireTimeMs) });
   }
@@ -122,13 +153,27 @@ function utcDateTime(instant: Date): string {
  * only the alerts it means, so a change another device made meanwhile to
  * another alert, or to this one's other parts, is not overwritten.
  */
-export type TaskPatch = Partial<CalendarTask> & { [path: `alerts/${string}`]: unknown };
+export type TaskPatch = Partial<CalendarTask>
+  & { [path: `alerts/${string}`]: unknown }
+  & { [path: `relatedTo/${string}`]: unknown };
 
-function acknowledging(alertIds: readonly string[], now: Date, skip?: string): TaskPatch {
+function acknowledging(
+  task: Partial<Pick<CalendarTask, "relatedTo">>,
+  alertIds: readonly string[],
+  now: Date,
+  skip?: string,
+): TaskPatch {
   const patch: TaskPatch = {};
   const at = utcDateTime(now);
+  const watch = replyWatch(task);
   for (const id of alertIds) {
-    if (id !== skip) patch[`alerts/${patchPath(id)}/acknowledged`] = at;
+    if (id === skip) continue;
+    if (id === REPLY_WATCH_ALERT_ID) {
+      // Kept in the reply watch, which is no alert.
+      if (watch) patch[replyWatchPath(watch.key, "acknowledged") as `relatedTo/${string}`] = at;
+      continue;
+    }
+    patch[`alerts/${patchPath(id)}/acknowledged`] = at;
   }
   return patch;
 }
@@ -139,11 +184,11 @@ function acknowledging(alertIds: readonly string[], now: Date, skip?: string): T
  * it when it fired, so there is nothing left to dismiss.
  */
 export function dismissTaskReminder(
-  _task: Pick<CalendarTask, "alerts">,
+  task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>,
   alertIds: readonly string[],
   now: Date,
 ): TaskPatch {
-  return acknowledging(alertIds, now);
+  return acknowledging(task, alertIds, now);
 }
 
 /**
@@ -155,7 +200,7 @@ export function dismissTaskReminder(
  * series'), and an alarm mail set elsewhere is left as it is.
  */
 export function completedTaskPatch(
-  task: Pick<CalendarTask, "alerts" | "start" | "due"> & Partial<Pick<CalendarTask, "recurrenceRules">>,
+  task: Pick<CalendarTask, "alerts" | "start" | "due"> & Partial<Pick<CalendarTask, "recurrenceRules" | "relatedTo">>,
   now: Date,
 ): TaskPatch {
   const fired: string[] = [];
@@ -164,7 +209,9 @@ export function completedTaskPatch(
     const fires = computeTaskFireTime(task as CalendarTask, alert.trigger);
     if (fires !== null && fires <= now.getTime() && !isAlertAcknowledged(alert, fires)) fired.push(id);
   }
-  const patch: TaskPatch = { progress: "completed", ...acknowledging(fired, now) };
+  const watchFires = watchFireTime(task);
+  if (watchFires !== null && watchFires <= now.getTime()) fired.push(REPLY_WATCH_ALERT_ID);
+  const patch: TaskPatch = { progress: "completed", ...acknowledging(task, fired, now) };
   if (hasFollowUpMailAlert(task) && !isRecurringTask(task as Pick<CalendarTask, "recurrenceRules">)) patch[`alerts/${patchPath(FOLLOW_UP_MAIL_ALERT_ID)}`] = null;
   return patch;
 }
@@ -177,7 +224,7 @@ export function completedTaskPatch(
  * alerts whole gets the same changes in that map, never paths beside it.
  */
 export function withCompletion(
-  before: Pick<CalendarTask, "alerts" | "start" | "due" | "progress"> & Partial<Pick<CalendarTask, "recurrenceRules">> | undefined,
+  before: Pick<CalendarTask, "alerts" | "start" | "due" | "progress"> & Partial<Pick<CalendarTask, "recurrenceRules" | "relatedTo">> | undefined,
   updates: TaskPatch,
   now: Date,
 ): TaskPatch {
@@ -185,8 +232,11 @@ export function withCompletion(
   if (!("alerts" in updates)) return { ...completedTaskPatch(before, now), ...updates };
   const alerts = updates.alerts ?? null;
   const { progress: _progress, ...completion } = completedTaskPatch({ ...before, alerts }, now);
-  const done = applyPatchObject({ alerts: alerts ?? {} }, completion).alerts;
-  return { ...updates, alerts: alerts && Object.keys(done).length > 0 ? done : null };
+  // The alerts' paths go into the map written; a reply watch's stay paths.
+  const toAlerts = Object.fromEntries(Object.entries(completion).filter(([key]) => key.startsWith("alerts/")));
+  const besides = Object.fromEntries(Object.entries(completion).filter(([key]) => !key.startsWith("alerts/")));
+  const done = applyPatchObject({ alerts: alerts ?? {} }, toAlerts).alerts;
+  return { ...besides, ...updates, alerts: alerts && Object.keys(done).length > 0 ? done : null };
 }
 
 /** The key of a snooze alert, unused in `alerts`. */
@@ -205,24 +255,33 @@ function freeKey(alerts: Record<string, CalendarEventAlert>, base: string): stri
  * moved), related to the first fired alert.
  */
 export function snoozeTaskReminder(
-  task: Pick<CalendarTask, "alerts">,
+  task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>,
   alertIds: readonly string[],
   at: Date,
   now: Date,
 ): TaskPatch {
   const alerts = task.alerts ?? {};
+  const watch = replyWatch(task);
+  if (watch && alertIds.includes(REPLY_WATCH_ALERT_ID)) {
+    // A reply watch's reminder moves within the watch; it stays no alert.
+    return {
+      ...acknowledging(task, alertIds, now, REPLY_WATCH_ALERT_ID),
+      [replyWatchPath(watch.key, "reminder")]: utcDateTime(at),
+      [replyWatchPath(watch.key, "acknowledged")]: null,
+    } as TaskPatch;
+  }
   const trigger = { "@type": "AbsoluteTrigger" as const, when: utcDateTime(at) };
   const shown = followUpReminderAlert(task)?.id;
   const absolute = (id: string) => alerts[id]?.trigger?.["@type"] === "AbsoluteTrigger";
   const target = shown && alertIds.includes(shown) && absolute(shown) ? shown : alertIds.find(absolute);
   if (target) {
     return {
-      ...acknowledging(alertIds, now, target),
+      ...acknowledging(task, alertIds, now, target),
       [`alerts/${patchPath(target)}/trigger`]: trigger,
       [`alerts/${patchPath(target)}/acknowledged`]: null,
     };
   }
-  const patch = acknowledging(alertIds, now);
+  const patch = acknowledging(task, alertIds, now);
   const parent = alertIds[0];
   if (!parent) return patch;
   const earlier = Object.entries(alerts).find(([id, alert]) => id !== parent && !!alert?.relatedTo?.[parent]);
