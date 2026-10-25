@@ -1,5 +1,7 @@
 // Admin dashboard types
 
+import { FOLLOW_UP_ACTIONS, type FollowUpActionKey } from '@/lib/follow-up-actions';
+
 /**
  * Operator-authored admin record. Lives in admin.json under the config dir
  * and can be mounted read-only after setup. Only the password hash itself
@@ -71,6 +73,8 @@ export interface FeatureGates {
   archiveActionEnabled: boolean;
   /** The sidebar lists the Tags above the shared mailboxes instead of below them. */
   tagsAboveSharedEnabled: boolean;
+  /** Users may add follow-up actions of their own (Settings > Follow-ups, "Add to my actions"). */
+  customFollowUpActionsEnabled: boolean;
 }
 
 export const DEFAULT_FEATURE_GATES: FeatureGates = {
@@ -103,6 +107,7 @@ export const DEFAULT_FEATURE_GATES: FeatureGates = {
   customFromEnabled: true,
   archiveActionEnabled: true,
   tagsAboveSharedEnabled: false,
+  customFollowUpActionsEnabled: true,
 };
 
 export type ColorMode = 'light' | 'dark' | 'system';
@@ -191,6 +196,12 @@ export interface SettingsPolicy {
    * ones only. Users can always type their own.
    */
   followUpActions?: string[];
+  /**
+   * The built-in follow-up actions a user's menu shows until the user
+   * switches them (Settings > Follow-ups). Sanitized on policy load and
+   * save; absent shows all of them.
+   */
+  followUpBuiltInActions?: FollowUpActionKey[];
 }
 
 /** Set to `public` on a policy answered with the pre-login subset. */
@@ -209,6 +220,7 @@ export const DEFAULT_POLICY: SettingsPolicy = {
   pushRelayUrlLocked: false,
   defaultSidebarApps: [],
   followUpActions: [],
+  followUpBuiltInActions: [...FOLLOW_UP_ACTIONS],
 };
 
 export interface AuditEntry {

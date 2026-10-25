@@ -82,7 +82,7 @@ describe('FollowUpSettings: the actions', () => {
     fireEvent.click(within(row('Send samples')).getByRole('button', { name: /actions.rename/ }));
     const field = screen.getByTestId('follow-up-action-rename');
     fireEvent.change(field, { target: { value: 'Reply' } });
-    expect(screen.getByTestId('follow-up-action-problem')).toHaveTextContent('exists');
+    expect(screen.getByTestId('follow-up-action-rename-problem')).toHaveTextContent('exists');
     fireEvent.change(field, { target: { value: 'Send a sample' } });
     fireEvent.keyDown(field, { key: 'Enter' });
     expect(menu().own).toEqual(['Send a sample']);
@@ -128,6 +128,26 @@ describe('FollowUpSettings: the actions', () => {
     fireEvent.dragStart(row('Call'));
     fireEvent.drop(row('A'));
     expect(names().slice(0, 4)).toEqual(['B', 'A', 'Write a quote', 'Call']);
+  });
+});
+
+describe('FollowUpSettings: the operator\'s policy', () => {
+  it('shows the built-in actions the operator picks until the user switches them', () => {
+    usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: [], followUpBuiltInActions: ['follow_up', 'call'] } });
+    render(<FollowUpSettings />);
+    // The others wait behind "n more", off.
+    expect(names()).toEqual(['Follow up', 'Call']);
+    expect(screen.getByTestId('follow-up-actions-unfold')).toBeInTheDocument();
+  });
+
+  it('hides the own actions and the field to add one when the operator allows none', () => {
+    useSettingsStore.setState({ followUpMenu: { ...EMPTY_FOLLOW_UP_MENU, own: ['Send samples'] } });
+    usePolicyStore.setState({
+      policy: { ...DEFAULT_POLICY, followUpActions: [], features: { ...DEFAULT_POLICY.features, customFollowUpActionsEnabled: false } },
+    });
+    render(<FollowUpSettings />);
+    expect(names()).not.toContain('Send samples');
+    expect(screen.queryByTestId('follow-up-action-new')).toBeNull();
   });
 });
 

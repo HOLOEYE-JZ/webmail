@@ -56,3 +56,14 @@ export function sanitizeFollowUpActions(raw: unknown): string[] {
   }
   return actions;
 }
+
+/**
+ * The built-in actions an operator lets users see before they change their
+ * list (`followUpBuiltInActions`): known keys only, each once, in the
+ * built-in order. Anything but a list means all of them, as before the
+ * setting existed.
+ */
+export function sanitizeBuiltInFollowUpActions(raw: unknown): FollowUpActionKey[] {
+  if (!Array.isArray(raw)) return [...FOLLOW_UP_ACTIONS];
+  return FOLLOW_UP_ACTIONS.filter((key) => raw.includes(key));
+}

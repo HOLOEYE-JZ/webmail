@@ -76,6 +76,9 @@ export async function PUT(request: NextRequest) {
     if (policy.followUpActions !== undefined && !Array.isArray(policy.followUpActions)) {
       return NextResponse.json({ error: 'followUpActions must be an array' }, { status: 400 });
     }
+    if (policy.followUpBuiltInActions !== undefined && !Array.isArray(policy.followUpBuiltInActions)) {
+      return NextResponse.json({ error: 'followUpBuiltInActions must be an array' }, { status: 400 });
+    }
 
     await configManager.setPolicy(policy);
     await auditLog('policy.update', {

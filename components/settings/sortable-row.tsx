@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, type ReactNode } from "react";
-import { GripVertical, Pencil, Trash2 } from "@/components/icons";
+import { Input } from "@/components/ui/input";
+import { Check, GripVertical, Pencil, Trash2, X } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 /**
@@ -124,4 +125,67 @@ export function RowTools({ onEdit, onDelete, editLabel, deleteLabel, deleteDisab
       </button>
     </div>
   );
+}
+
+/**
+ * A row's name edited in place: Enter keeps it, Escape leaves it. `problem`
+ * says why a name cannot be taken: null takes it, "" refuses it silently
+ * (nothing typed), any other text refuses it and is shown under the field.
+ */
+export function RowNameField({ initial, problem, onSave, onCancel, fieldLabel, saveLabel, cancelLabel, testId }: {
+  initial: string;
+  problem: (text: string) => string | null;
+  onSave: (text: string) => void;
+  onCancel: () => void;
+  fieldLabel: string;
+  saveLabel: string;
+  cancelLabel: string;
+  testId?: string;
+}) {
+  const [text, setText] = useState(initial);
+  const issue = problem(text);
+  return (
+    <div className="min-w-0 flex-1">
+      <div className="flex items-center gap-1">
+        <Input
+          autoFocus
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); if (issue === null) onSave(text); }
+            if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onCancel(); }
+          }}
+          aria-label={fieldLabel}
+          aria-invalid={issue ? true : undefined}
+          data-testid={testId}
+          className="h-8"
+        />
+        <button
+          type="button"
+          onClick={() => onSave(text)}
+          disabled={issue !== null}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
+          title={saveLabel}
+          aria-label={saveLabel}
+        >
+          <Check className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          title={cancelLabel}
+          aria-label={cancelLabel}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      {issue && <RowProblem testId={testId && `${testId}-problem`}>{issue}</RowProblem>}
+    </div>
+  );
+}
+
+/** Why a name cannot be taken, under its field. */
+export function RowProblem({ children, testId }: { children: ReactNode; testId?: string }) {
+  return <p role="status" className="mt-1 text-xs text-destructive" data-testid={testId}>{children}</p>;
 }

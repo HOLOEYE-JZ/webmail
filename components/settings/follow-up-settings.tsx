@@ -19,10 +19,10 @@ import {
 } from "@/lib/follow-up-menu";
 import { MAX_EXTRA_FOLLOW_UP_ACTIONS, MAX_FOLLOW_UP_ACTION_LENGTH } from "@/lib/follow-up-actions";
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from "./settings-section";
-import { RowTools, SortableRow, useRowDrag } from "./sortable-row";
+import { RowNameField, RowProblem, RowTools, SortableRow, useRowDrag } from "./sortable-row";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, Lock, X } from "@/components/icons";
+import { Lock } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 /**
@@ -32,8 +32,9 @@ import { cn } from "@/lib/utils";
  */
 export function FollowUpSettings() {
   const t = useTranslations("settings.follow_ups");
-  const { menu, entries, setMenu } = useFollowUpMenu();
+  const { menu, entries, ownAllowed, setMenu } = useFollowUpMenu();
   const organization = useOrganizationName();
+  const problemText = useProblemText();
   const defaultRef = useSettingsStore((s) => s.followUpDefaultAction);
   const mailReminder = useSettingsStore((s) => s.followUpMailReminder);
   const updateSetting = useSettingsStore((s) => s.updateSetting);
@@ -93,11 +94,15 @@ export function FollowUpSettings() {
               data-ref={entry.ref}
             >
               {editing === entry.ref ? (
-                <RenameField
+                <RowNameField
                   initial={entry.text}
-                  problem={(text) => ownActionProblem(text, entries, menu, entry.text)}
+                  problem={(text) => problemText(ownActionProblem(text, entries, menu, entry.text))}
                   onSave={(text) => rename(entry.text, text)}
                   onCancel={() => setEditing(null)}
+                  fieldLabel={t("actions.rename_field", { action: entry.text })}
+                  saveLabel={t("actions.save")}
+                  cancelLabel={t("actions.cancel")}
+                  testId="follow-up-action-rename"
                 />
               ) : (
                 <span
@@ -146,27 +151,31 @@ export function FollowUpSettings() {
             {t("actions.show_off", { count: hiddenCount })}
           </Button>
         )}
-        <form
-          className="flex flex-wrap items-start gap-2"
-          onSubmit={(e) => { e.preventDefault(); add(); }}
-        >
-          <div className="min-w-0 flex-1 basis-48">
-            <Input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={t("actions.new_placeholder")}
-              aria-label={t("actions.new_field")}
-              aria-invalid={draftProblem ? true : undefined}
-              disabled={full}
-              data-testid="follow-up-action-new"
-              className="h-9"
-            />
-            <ProblemNote problem={full ? "full" : draftProblem} />
-          </div>
-          <Button type="submit" variant="outline" className="h-9" disabled={full || !draft.trim() || !!draftProblem} data-testid="follow-up-action-add">
-            {t("actions.add")}
-          </Button>
-        </form>
+        {ownAllowed && (
+          <form
+            className="flex flex-wrap items-start gap-2"
+            onSubmit={(e) => { e.preventDefault(); add(); }}
+          >
+            <div className="min-w-0 flex-1 basis-48">
+              <Input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder={t("actions.new_placeholder")}
+                aria-label={t("actions.new_field")}
+                aria-invalid={draftProblem ? true : undefined}
+                disabled={full}
+                data-testid="follow-up-action-new"
+                className="h-9"
+              />
+              {problemText(full ? "full" : draftProblem) && (
+              <RowProblem testId="follow-up-action-problem">{problemText(full ? "full" : draftProblem)}</RowProblem>
+            )}
+            </div>
+            <Button type="submit" variant="outline" className="h-9" disabled={full || !draft.trim() || !!draftProblem} data-testid="follow-up-action-add">
+              {t("actions.add")}
+            </Button>
+          </form>
+        )}
       </SettingsSection>
 
       <SettingsSection id="defaults" title={t("defaults.title")} description={t("defaults.description")}>
@@ -194,64 +203,13 @@ export function FollowUpSettings() {
   );
 }
 
-/** Why a name cannot be taken, under its field. */
-function ProblemNote({ problem }: { problem: OwnActionProblem | null }) {
+/** Why a name cannot be taken, in words; "" for nothing typed. */
+function useProblemText() {
   const t = useTranslations("settings.follow_ups.problems");
-  if (!problem || problem === "empty") return null;
-  return (
-    <p role="status" className="mt-1 text-xs text-destructive" data-testid="follow-up-action-problem">
-      {problem === "exists" ? t("exists") : problem === "too_long" ? t("too_long", { max: MAX_FOLLOW_UP_ACTION_LENGTH }) : t("full", { max: MAX_EXTRA_FOLLOW_UP_ACTIONS })}
-    </p>
-  );
-}
-
-/** An own action's name, edited in its row: Enter keeps it, Escape leaves it. */
-function RenameField({ initial, problem, onSave, onCancel }: {
-  initial: string;
-  problem: (text: string) => OwnActionProblem | null;
-  onSave: (text: string) => void;
-  onCancel: () => void;
-}) {
-  const t = useTranslations("settings.follow_ups.actions");
-  const [text, setText] = useState(initial);
-  const issue = problem(text);
-  return (
-    <div className="min-w-0 flex-1">
-      <div className="flex items-center gap-1">
-        <Input
-          autoFocus
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") { e.preventDefault(); if (!issue) onSave(text); }
-            if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onCancel(); }
-          }}
-          aria-label={t("rename_field", { action: initial })}
-          aria-invalid={issue && issue !== "empty" ? true : undefined}
-          data-testid="follow-up-action-rename"
-          className="h-8"
-        />
-        <button
-          type="button"
-          onClick={() => onSave(text)}
-          disabled={!!issue}
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
-          title={t("save")}
-          aria-label={t("save")}
-        >
-          <Check className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          title={t("cancel")}
-          aria-label={t("cancel")}
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      <ProblemNote problem={issue} />
-    </div>
-  );
+  return (problem: OwnActionProblem | null): string | null => {
+    if (!problem) return null;
+    if (problem === "empty") return "";
+    if (problem === "exists") return t("exists");
+    return problem === "too_long" ? t("too_long", { max: MAX_FOLLOW_UP_ACTION_LENGTH }) : t("full", { max: MAX_EXTRA_FOLLOW_UP_ACTIONS });
+  };
 }

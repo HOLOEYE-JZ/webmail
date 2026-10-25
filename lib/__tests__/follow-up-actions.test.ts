@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  FOLLOW_UP_ACTIONS,
   MAX_EXTRA_FOLLOW_UP_ACTIONS,
   MAX_FOLLOW_UP_ACTION_LENGTH,
   normalizeAction,
+  sanitizeBuiltInFollowUpActions,
   sanitizeFollowUpActions,
 } from '../follow-up-actions';
 
@@ -32,5 +34,17 @@ describe('sanitizeFollowUpActions', () => {
   it('keeps at most the limit', () => {
     const many = Array.from({ length: MAX_EXTRA_FOLLOW_UP_ACTIONS + 5 }, (_, i) => `Action ${i}`);
     expect(sanitizeFollowUpActions(many)).toHaveLength(MAX_EXTRA_FOLLOW_UP_ACTIONS);
+  });
+});
+
+describe('sanitizeBuiltInFollowUpActions', () => {
+  it('keeps the known keys once, in the built-in order', () => {
+    expect(sanitizeBuiltInFollowUpActions(['call', 'x', 'follow_up', 'call', 3])).toEqual(['follow_up', 'call']);
+    expect(sanitizeBuiltInFollowUpActions([])).toEqual([]);
+  });
+
+  it('shows all of them without a list', () => {
+    expect(sanitizeBuiltInFollowUpActions(undefined)).toEqual([...FOLLOW_UP_ACTIONS]);
+    expect(sanitizeBuiltInFollowUpActions('call')).toEqual([...FOLLOW_UP_ACTIONS]);
   });
 });

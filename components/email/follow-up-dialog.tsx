@@ -339,7 +339,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
   const htmlNote = !!task && isHtmlNote(task);
   const { dialogProps: confirmProps, confirm } = useConfirmDialog();
   const calendars = useCalendarStore((s) => s.calendars);
-  const { menu, entries, setMenu } = useFollowUpMenu();
+  const { menu, entries, ownAllowed, setMenu } = useFollowUpMenu();
   const defaultRef = useSettingsStore((s) => s.followUpDefaultAction);
   const mailDefault = useSettingsStore((s) => s.followUpMailReminder);
   const [busy, setBusy] = useState(false);
@@ -393,7 +393,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose, l
   const [action, setAction] = useState(initial.action);
   const [other, setOther] = useState(() => !isReminder && !entries.some((entry) => entry.text === initial.action));
   // "Add to my actions" beside a typed one, when it could be one.
-  const canKeep = other && !!action.trim() && !ownActionProblem(action, entries, menu);
+  const canKeep = ownAllowed && other && !!action.trim() && !ownActionProblem(action, entries, menu);
   const [due, setDue] = useState(dayInput(initial.due));
   const [dueChoice, setDueChoice] = useState<DueChoice>(initial.choice);
   const [reminderOn, setReminderOn] = useState(!!initial.reminder);

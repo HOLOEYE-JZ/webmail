@@ -363,6 +363,18 @@ describe('FollowUpDialog: the action menu as the user keeps it', () => {
     expect(screen.queryByTestId('follow-up-action-text')).toBeNull();
   });
 
+  it('offers neither own actions nor keeping one when the operator allows none', () => {
+    usePolicyStore.setState({
+      policy: { ...DEFAULT_POLICY, followUpActions: ['Write a quote'], features: { ...DEFAULT_POLICY.features, customFollowUpActionsEnabled: false } },
+    });
+    render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('follow-up-action'));
+    expect(options()).not.toContain('Visit');
+    fireEvent.click(screen.getByRole('option', { name: 'Other…' }));
+    fireEvent.change(field('follow-up-action-text'), { target: { value: 'Check the drawing' } });
+    expect(screen.queryByTestId('follow-up-action-keep')).toBeNull();
+  });
+
   it('"Edit list…" closes the dialog and opens Settings › Follow-ups', () => {
     const onClose = vi.fn();
     render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
