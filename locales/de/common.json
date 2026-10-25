@@ -4539,6 +4539,7 @@
     "done_button": "Erledigt",
     "remove_button": "Entfernen",
     "open_mail": "Mail öffnen",
+    "mail_gone": "Mail nicht mehr vorhanden",
     "failed": "Die Wiedervorlage konnte nicht gespeichert werden.",
     "flag_failed": "Die Wiedervorlage ist gespeichert, aber die Markierung der Mail konnte nicht geändert werden.",
     "no_task_list": "Es gibt keine Aufgabenliste für die Wiedervorlage."

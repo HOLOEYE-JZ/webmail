@@ -4539,6 +4539,7 @@
     "done_button": "Complete",
     "remove_button": "Remove",
     "open_mail": "Open mail",
+    "mail_gone": "Mail no longer available",
     "failed": "The follow-up could not be saved.",
     "flag_failed": "The follow-up is saved, but the mail's flag could not be updated.",
     "no_task_list": "There is no task list to put the follow-up in."

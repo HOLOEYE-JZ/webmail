@@ -4539,6 +4539,7 @@
     "done_button": "Completar",
     "remove_button": "Quitar",
     "open_mail": "Abrir correo",
+    "mail_gone": "El correo ya no existe",
     "failed": "No se pudo guardar el seguimiento.",
     "flag_failed": "El seguimiento se guardó, pero no se pudo actualizar la marca del correo.",
     "no_task_list": "No hay ninguna lista de tareas para guardar el seguimiento."

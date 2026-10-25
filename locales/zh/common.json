@@ -4539,6 +4539,7 @@
     "done_button": "完成",
     "remove_button": "移除",
     "open_mail": "打开邮件",
+    "mail_gone": "邮件已不存在",
     "failed": "无法保存跟进。",
     "flag_failed": "跟进已保存，但无法更新邮件的标记。",
     "no_task_list": "没有可保存跟进的任务列表。"

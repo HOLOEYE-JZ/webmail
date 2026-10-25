@@ -4539,6 +4539,7 @@
     "done_button": "Fuldfør",
     "remove_button": "Fjern",
     "open_mail": "Åbn mail",
+    "mail_gone": "Mailen findes ikke længere",
     "failed": "Opfølgningen kunne ikke gemmes.",
     "flag_failed": "Opfølgningen er gemt, men mailens markering kunne ikke opdateres.",
     "no_task_list": "Der er ingen opgaveliste at gemme opfølgningen i."

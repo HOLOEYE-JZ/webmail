@@ -109,7 +109,7 @@ function useFollowUpIndex(): Map<string, CalendarTask> {
  * user's own task list and links the mail in the primary account; group
  * mailboxes and other logins come later.
  */
-function isOwnMail(email: Email, client: IJMAPClient | null): boolean {
+export function isOwnMail(email: Email, client: IJMAPClient | null): boolean {
   if (!client) return false;
   const activeAccountId = useAuthStore.getState().activeAccountId;
   if (email.sourceClientAccountId && activeAccountId && email.sourceClientAccountId !== activeAccountId) return false;
@@ -129,8 +129,37 @@ export function useThreadFollowUpEmail(emails: readonly Email[], latest: Email):
   return threadFollowUpEmail(emails, index) ?? latest;
 }
 
-// Mails whose follow-up is being written, so a double click writes one task.
+// Mails whose follow-up is being written, so a double click writes one task
+// and the check that keeps flag and task in step leaves them alone meanwhile.
 const pending = new Set<string>();
+
+/** Whether the user is changing this mail's follow-up right now. */
+export function isFollowUpPending(emailId: string): boolean {
+  return pending.has(emailId);
+}
+
+// Mails the user took the star off in the app this session: their open
+// follow-up is completed, never deleted, also when the task list did not
+// hold it yet. Setting the star or a new follow-up here lifts it.
+const unstarredHere = new Set<string>();
+
+export function markUnstarredHere(emailId: string): void {
+  unstarredHere.add(emailId);
+}
+
+export function forgetUnstarredHere(emailId: string): void {
+  unstarredHere.delete(emailId);
+}
+
+export function unstarredHereMails(): ReadonlySet<string> {
+  return unstarredHere;
+}
+
+// Called once the user's own change is written, so the check runs after it.
+let afterChange: (() => void) | null = null;
+export function onFollowUpChanged(listener: (() => void) | null): void {
+  afterChange = listener;
+}
 
 async function messageIdOf(client: IJMAPClient, email: Email): Promise<string | readonly string[] | null> {
   if (email.messageId) return email.messageId;
@@ -145,10 +174,22 @@ async function messageIdOf(client: IJMAPClient, email: Email): Promise<string | 
 /**
  * Sets or clears the mail's $flagged, which mirrors an open follow-up.
  * Resolves false when a plugin vetoed it (the plugin tells the user why).
+ *
+ * `serverFlagged`, the flag as just read from the server, marks a write for
+ * a mail of the user's own account found by id alone (the check that keeps
+ * flag and task in step): it is written there directly and the list and
+ * reader follow with the push, so a row of another account that happens to
+ * share the id is never touched.
  */
-async function mirrorFlag(client: IJMAPClient, email: Email, flagged: boolean): Promise<boolean> {
+export async function mirrorFlag(
+  client: IJMAPClient,
+  email: Pick<Email, "id" | "keywords" | "sourceClientAccountId" | "sourceAccountId">,
+  flagged: boolean,
+  serverFlagged?: boolean,
+): Promise<boolean> {
   const store = useEmailStore.getState();
-  const listed = store.emails.find((e) => e.id === email.id && emailKeyFor(e) === emailKeyFor(email));
+  const byId = serverFlagged !== undefined;
+  const listed = byId ? undefined : store.emails.find((e) => e.id === email.id && emailKeyFor(e) === emailKeyFor(email));
   if (listed) {
     if (!!listed.keywords?.$flagged === flagged) return true;
     // The list's own toggle asks plugins and updates the row.
@@ -156,15 +197,15 @@ async function mirrorFlag(client: IJMAPClient, email: Email, flagged: boolean): 
   }
   // Not in the list (opened by a link, or an unfolded conversation's older
   // mail): ask plugins as the list's toggle does, then write the keyword.
-  const current = store.selectedEmail?.id === email.id ? store.selectedEmail : email;
-  if (!!current.keywords?.$flagged === flagged) return true;
+  const current = byId ? serverFlagged : !!(store.selectedEmail?.id === email.id ? store.selectedEmail : email).keywords?.$flagged;
+  if (current === flagged) return true;
   if (emailHooks.onBeforeEmailStarToggle.size > 0
     && !(await emailHooks.onBeforeEmailStarToggle.intercept({ emailIds: [email.id], starred: flagged }))) {
     return false;
   }
   await client.toggleStar(email.id, flagged);
   void emailHooks.onEmailStarToggle.emit({ emailIds: [email.id], starred: flagged });
-  if (store.selectedEmail?.id === email.id) {
+  if (!byId && store.selectedEmail?.id === email.id) {
     useEmailStore.setState((s) => ({
       selectedEmail: s.selectedEmail && { ...s.selectedEmail, keywords: { ...s.selectedEmail.keywords, $flagged: flagged } },
     }));
@@ -224,10 +265,12 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
       }
     } finally {
       pending.delete(email.id);
+      afterChange?.();
     }
   }, [client, email, t]);
 
   const apply = useCallback((choice: FollowUpChoice) => run(async (client, email) => {
+    forgetUnstarredHere(email.id);
     const { due, reminder } = scheduleFollowUp(choice, displayNow(), workingTime);
     const reminderAt = reminder ? fromDisplayDate(reminder) : null;
     const store = useTaskStore.getState();
@@ -245,6 +288,7 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
       mailUrl: appUrl(buildMailMessageLink(email.id, client.getAccountId())),
       subject: email.subject,
       messageId: await messageIdOf(client, email),
+      from: email.from?.[0] ?? null,
       calendarId: calendar.id,
       due,
       reminderAt,

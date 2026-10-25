@@ -4539,6 +4539,7 @@
     "done_button": "Dokončit",
     "remove_button": "Odebrat",
     "open_mail": "Otevřít zprávu",
+    "mail_gone": "Zpráva už neexistuje",
     "failed": "Příznak se nepodařilo uložit.",
     "flag_failed": "Úkol je uložen, ale příznak zprávy se nepodařilo aktualizovat.",
     "no_task_list": "Není žádný seznam úkolů, kam úkol uložit."

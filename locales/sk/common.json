@@ -4539,6 +4539,7 @@
     "done_button": "Dokončiť",
     "remove_button": "Odstrániť",
     "open_mail": "Otvoriť správu",
+    "mail_gone": "Správa už neexistuje",
     "failed": "Príznak sa nepodarilo uložiť.",
     "flag_failed": "Úloha je uložená, ale príznak správy sa nepodarilo aktualizovať.",
     "no_task_list": "Neexistuje zoznam úloh, kam úlohu uložiť."

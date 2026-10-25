@@ -4539,6 +4539,7 @@
     "done_button": "Kész",
     "remove_button": "Eltávolítás",
     "open_mail": "Levél megnyitása",
+    "mail_gone": "A levél már nem létezik",
     "failed": "A nyomon követést nem sikerült menteni.",
     "flag_failed": "A nyomon követés mentve, de a levél jelölését nem sikerült frissíteni.",
     "no_task_list": "Nincs feladatlista, amelybe a nyomon követés menthető."

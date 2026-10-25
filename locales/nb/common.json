@@ -4539,6 +4539,7 @@
     "done_button": "Fullfør",
     "remove_button": "Fjern",
     "open_mail": "Åpne e-post",
+    "mail_gone": "E-posten finnes ikke lenger",
     "failed": "Oppfølgingen kunne ikke lagres.",
     "flag_failed": "Oppfølgingen er lagret, men merkingen av e-posten kunne ikke oppdateres.",
     "no_task_list": "Det finnes ingen oppgaveliste å lagre oppfølgingen i."

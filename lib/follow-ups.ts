@@ -129,9 +129,13 @@ export function scheduleFollowUp(
 
 /** The key of the follow-up's link to the mail and of its reminder. */
 export const FOLLOW_UP_LINK_ID = "mail";
+/** The key of the link naming the mail's sender, kept for when the mail is gone. */
+export const FOLLOW_UP_SENDER_LINK_ID = "from";
 export const FOLLOW_UP_ALERT_ID = "follow-up";
 /** RFC 8288: the mail describes what the task is about. */
 const MAIL_LINK_REL = "describedby";
+/** RFC 8288: the mail's sender wrote what the task is about. */
+const SENDER_LINK_REL = "author";
 
 /** The task's JSCalendar `due`: a LocalDateTime at the start of the day. */
 function dueOf(due: Date | null): string | null {
@@ -172,6 +176,8 @@ export interface FollowUpTaskInput {
   /** The mail's subject, shown as the link's title. */
   subject?: string;
   messageId?: string | readonly string[] | null;
+  /** The mail's sender, kept in the task so it can still be named once the mail is gone. */
+  from?: { name?: string | null; email?: string | null } | null;
   calendarId: string;
   due: Date | null;
   /** The reminder as a real instant (not a display date). */
@@ -185,7 +191,8 @@ export interface FollowUpTaskInput {
  * the phone shows as a tag).
  */
 export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTask> {
-  const link: CalendarLink = {
+  const links: Record<string, CalendarLink> = {};
+  links[FOLLOW_UP_LINK_ID] = {
     "@type": "Link",
     href: input.mailUrl,
     cid: null,
@@ -195,6 +202,8 @@ export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTas
     display: null,
     title: input.subject || null,
   };
+  const sender = senderLink(input.from);
+  if (sender) links[FOLLOW_UP_SENDER_LINK_ID] = sender;
   const messageId = bareMessageId(input.messageId);
   return {
     "@type": "Task",
@@ -204,9 +213,38 @@ export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTas
     showWithoutTime: true,
     progress: "needs-action",
     alerts: alertsOf(input.reminderAt),
-    links: { [FOLLOW_UP_LINK_ID]: link },
+    links,
     relatedTo: messageId ? { [`<${messageId}>`]: { "@type": "Relation", relation: { parent: true } } } : null,
   };
+}
+
+/** The sender as a `mailto:` link titled with the name, or null without an address. */
+function senderLink(from: FollowUpTaskInput["from"]): CalendarLink | null {
+  const email = from?.email?.trim();
+  if (!email) return null;
+  return {
+    "@type": "Link",
+    href: `mailto:${email}`,
+    cid: null,
+    contentType: null,
+    size: null,
+    rel: SENDER_LINK_REL,
+    display: null,
+    title: from?.name?.trim() || null,
+  };
+}
+
+/**
+ * The patch that adds the sender to a follow-up written without it, or null
+ * when it has one already or the sender is unknown.
+ */
+export function addFollowUpSender(
+  task: Pick<CalendarTask, "links">,
+  from: FollowUpTaskInput["from"],
+): Partial<CalendarTask> | null {
+  if (Object.values(task.links ?? {}).some((link) => link?.rel === SENDER_LINK_REL)) return null;
+  const sender = senderLink(from);
+  return sender ? { links: { ...(task.links ?? {}), [FOLLOW_UP_SENDER_LINK_ID]: sender } } : null;
 }
 
 /** The patch that gives an existing follow-up a new quick choice and opens it again. */
@@ -249,6 +287,47 @@ export function followUpMailRef(task: Pick<CalendarTask, "links">): FollowUpMail
     const match = MAIL_MESSAGE_PATH.exec(url.pathname);
     if (!match) continue;
     return { emailId: decoded(match[1]), accountId: url.searchParams.get(MAIL_ACCOUNT_PARAM) || null };
+  }
+  return null;
+}
+
+/** The Message-ID of the mail a follow-up was written for, without angle brackets. */
+export function followUpMessageId(task: Pick<CalendarTask, "relatedTo">): string | null {
+  for (const [uid, relation] of Object.entries(task.relatedTo ?? {})) {
+    if (relation?.relation && !relation.relation.parent) continue;
+    const bare = bareMessageId(uid);
+    if (bare) return bare;
+  }
+  return null;
+}
+
+/**
+ * What the task keeps of its mail: the subject (the link's title) and the
+ * sender (name, else address). Either is null when the task does not say.
+ */
+export function followUpMailSummary(task: Pick<CalendarTask, "links">): { subject: string | null; sender: string | null } {
+  let subject: string | null = null;
+  let sender: string | null = null;
+  for (const link of Object.values(task.links ?? {})) {
+    if (!link) continue;
+    if (link.rel === MAIL_LINK_REL && subject === null) subject = link.title || null;
+    if (link.rel === SENDER_LINK_REL && sender === null) {
+      sender = link.title || (typeof link.href === "string" ? decoded(link.href.replace(/^mailto:/i, "")) || null : null);
+    }
+  }
+  return { subject, sender };
+}
+
+/**
+ * The patch that points a follow-up's mail link at another Email id, for a
+ * mail found again by its Message-ID under a new id. Null when the task links
+ * no mail.
+ */
+export function relinkFollowUpTask(task: Pick<CalendarTask, "links">, emailId: string): Partial<CalendarTask> | null {
+  for (const [key, link] of Object.entries(task.links ?? {})) {
+    if (link?.rel !== MAIL_LINK_REL || typeof link.href !== "string" || !MAIL_MESSAGE_PATH.test(link.href)) continue;
+    const href = link.href.replace(MAIL_MESSAGE_PATH, `/mail/message/${encodeURIComponent(emailId)}`);
+    return { links: { ...task.links, [key]: { ...link, href } } };
   }
   return null;
 }
@@ -345,4 +424,167 @@ export function dueDistance(due: Date | null, now: Date): DueDistance {
   if (days < 0) return { kind: "days_ago", count: -days };
   if (days < 7) return { kind: "weekday", day: due };
   return { kind: "date", day: due };
+}
+
+// ---------------------------------------------------------------------------
+// Keeping the flag and the task in step
+// ---------------------------------------------------------------------------
+
+/**
+ * A follow-up last seen open while its mail was flagged, as of the task's
+ * `updated` then. It tells which side moved when the two disagree later: a
+ * task still as it was whose mail lost the flag had the flag cleared
+ * elsewhere; a task that changed since was reopened or edited elsewhere.
+ */
+export interface FollowUpMirrorEntry {
+  emailId: string;
+  calendarId: string;
+  updated: string | null;
+}
+
+/** The entries by task id, for the user's own mail account. */
+export type FollowUpMirror = Record<string, FollowUpMirrorEntry>;
+
+/** One follow-up as the check sees it. */
+export interface FollowUpSyncTask {
+  id: string;
+  emailId: string;
+  calendarId: string;
+  open: boolean;
+  updated: string | null;
+  /** As the server gave it, not changed in the browser since. Only those are remembered. */
+  fresh: boolean;
+}
+
+export type FollowUpSyncAction =
+  /**
+   * Set or clear the mail's $flagged for the follow-up `taskId`. `taskGone`:
+   * cleared because the task is no longer in the list.
+   */
+  | { kind: "flag"; taskId: string; emailId: string; flagged: boolean; taskGone?: true }
+  /** The flag was cleared elsewhere: the open task goes, as Outlook's Clear Flag. */
+  | { kind: "delete-task"; taskId: string; emailId: string }
+  /** The user took the star off in this app: the open task is completed. */
+  | { kind: "complete-task"; taskId: string; emailId: string };
+
+/**
+ * Whether an action takes something away on the strength of what the task
+ * list lacks or the flag no longer says: it waits for a complete task list
+ * loaded just before.
+ */
+export function isDestructiveSyncAction(action: FollowUpSyncAction): boolean {
+  return action.kind === "delete-task" || (action.kind === "flag" && !!action.taskGone);
+}
+
+export interface FollowUpSyncInput {
+  /** The follow-ups, at most one per mail (`followUpsByEmailId`). */
+  tasks: readonly FollowUpSyncTask[];
+  /** The id of every task the task list holds now. */
+  present: ReadonlySet<string>;
+  /** Whether the task list holds every task of a calendar (it was loaded). */
+  listed: (calendarId: string) => boolean;
+  /** Each checked mail's $flagged; null for a mail that is gone. Mails not checked are left alone. */
+  flags: ReadonlyMap<string, boolean | null>;
+  mirror: FollowUpMirror;
+  /**
+   * Mails the user took the star off in this app (this session): their open
+   * follow-up is completed, never deleted, whatever the list held then.
+   */
+  unstarredHere?: ReadonlySet<string>;
+}
+
+/** Whether a follow-up counts as open: neither completed nor cancelled. */
+export function isOpenFollowUp(task: Pick<CalendarTask, "progress">): boolean {
+  return task.progress !== "completed" && task.progress !== "cancelled";
+}
+
+/**
+ * What keeps the mails' $flagged and their follow-ups in step. The task is
+ * the original, the flag its mirror:
+ *
+ * - A task completed or deleted clears the flag; one reopened sets it.
+ * - A flag cleared elsewhere deletes the open task, unless the task changed
+ *   since it was last seen in step (then the task wins and the flag is set).
+ * - A flag set elsewhere on a mail without an open follow-up stays a plain
+ *   flag.
+ * - A mail that is gone changes nothing; its task stays.
+ *
+ * Returns the actions and the mirror to keep afterwards.
+ */
+export function planFollowUpSync(input: FollowUpSyncInput): { actions: FollowUpSyncAction[]; mirror: FollowUpMirror } {
+  const mirror: FollowUpMirror = { ...input.mirror };
+  const actions: FollowUpSyncAction[] = [];
+  const decided = new Set<string>();
+
+  for (const task of input.tasks) {
+    decided.add(task.id);
+    const flagged = input.flags.get(task.emailId);
+    if (flagged === undefined) continue;
+    const seen = input.mirror[task.id];
+    if (flagged === null) {
+      delete mirror[task.id];
+      continue;
+    }
+    if (task.open && flagged) {
+      if (task.fresh) mirror[task.id] = { emailId: task.emailId, calendarId: task.calendarId, updated: task.updated };
+    } else if (task.open && input.unstarredHere?.has(task.emailId)) {
+      actions.push({ kind: "complete-task", taskId: task.id, emailId: task.emailId });
+      if (seen) mirror[task.id] = seen;
+    } else if (task.open) {
+      if (seen && seen.emailId === task.emailId && seen.updated === task.updated) {
+        actions.push({ kind: "delete-task", taskId: task.id, emailId: task.emailId });
+        delete mirror[task.id];
+      } else {
+        // New, reopened, moved to another day, or never seen in step here.
+        // Known limit: a browser without the entry (a new one, or storage
+        // cleared) cannot tell a flag cleared elsewhere from a task reopened
+        // elsewhere, so it sets the flag again rather than delete the task;
+        // a Clear Flag made before its first check is undone once. That errs
+        // on the side that loses nothing.
+        actions.push({ kind: "flag", taskId: task.id, emailId: task.emailId, flagged: true });
+      }
+    } else {
+      // Completed: a flag it still mirrors goes; a flag set after it stays.
+      if (flagged && seen) actions.push({ kind: "flag", taskId: task.id, emailId: task.emailId, flagged: false });
+      delete mirror[task.id];
+    }
+  }
+
+  // Remembered follow-ups the list no longer holds were deleted.
+  for (const [taskId, seen] of Object.entries(input.mirror)) {
+    if (decided.has(taskId) || input.present.has(taskId)) continue;
+    if (!input.listed(seen.calendarId)) continue;
+    const flagged = input.flags.get(seen.emailId);
+    if (flagged === undefined) continue;
+    // Another open follow-up on the same mail keeps the flag.
+    const stillFollowedUp = input.tasks.some((t) => t.emailId === seen.emailId && t.open);
+    if (flagged && !stillFollowedUp) actions.push({ kind: "flag", taskId, emailId: seen.emailId, flagged: false, taskGone: true });
+    delete mirror[taskId];
+  }
+
+  // One write per mail: of conflicting wishes, the open follow-up's wins.
+  const byMail = new Map<string, FollowUpSyncAction>();
+  for (const action of actions) {
+    const other = byMail.get(action.emailId);
+    if (!other || (other.kind === "flag" && !other.flagged)) byMail.set(action.emailId, action);
+  }
+  return { actions: [...byMail.values()], mirror };
+}
+
+/** The mirror kept in the browser, read back defensively. */
+export function parseFollowUpMirror(raw: string | null): FollowUpMirror {
+  if (!raw) return {};
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    const mirror: FollowUpMirror = {};
+    for (const [taskId, entry] of Object.entries(value as Record<string, unknown>)) {
+      const e = entry as Partial<FollowUpMirrorEntry> | null;
+      if (!e || typeof e.emailId !== "string" || typeof e.calendarId !== "string") continue;
+      mirror[taskId] = { emailId: e.emailId, calendarId: e.calendarId, updated: typeof e.updated === "string" ? e.updated : null };
+    }
+    return mirror;
+  } catch {
+    return {};
+  }
 }

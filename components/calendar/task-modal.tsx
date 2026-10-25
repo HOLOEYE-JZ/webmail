@@ -10,8 +10,8 @@ import { format, parseISO } from "date-fns";
 import type { CalendarTask, Calendar, CalendarEventAlert } from "@/lib/jmap/types";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { taskToView } from "@/lib/plugin-projection";
-import { followUpMailRef } from "@/lib/follow-ups";
-import { useAuthStore } from "@/stores/auth-store";
+import { followUpMailSummary } from "@/lib/follow-ups";
+import { useFollowUpMail } from "@/hooks/use-follow-up-sync";
 import { buildMailPath } from "@/lib/deep-links";
 import { useRouter } from "@/i18n/navigation";
 
@@ -56,11 +56,15 @@ export function TaskModal({
   const tFollowUp = useTranslations("follow_up");
   const router = useRouter();
   const isEdit = !!task;
-  // A follow-up on a mail links to it. The link names the mail's JMAP
-  // account; it opens here when that is the primary one (or none is named).
-  const mailAccountId = useAuthStore((s) => s.client?.getAccountId() ?? null);
-  const mailRef = task && !task.isShared ? followUpMailRef(task) : null;
-  const followUpMailId = mailRef && (!mailRef.accountId || mailRef.accountId === mailAccountId) ? mailRef.emailId : null;
+  // A follow-up on a mail links to it: the mail found by its id (a moved one
+  // keeps it) or its Message-ID, or named as gone with what the task kept of
+  // it. Only for a mail of the primary account (or a link naming none).
+  const followUpMail = useFollowUpMail(task);
+  const followUpMailId = followUpMail && (followUpMail.kind === "present" || followUpMail.kind === "unknown")
+    ? followUpMail.emailId
+    : null;
+  const followUpMailSummaryOf = task && followUpMail ? followUpMailSummary(task) : null;
+  const followUpMailText = [followUpMailSummaryOf?.sender, followUpMailSummaryOf?.subject].filter(Boolean).join(" · ");
   const titleRef = useRef<HTMLInputElement>(null);
   // task-detail-section: the saved task, for an existing task only.
   const pluginTaskProps = useMemo(() => (task ? { task: taskToView(task) } : null), [task]);
@@ -198,19 +202,27 @@ export function TaskModal({
           className="text-base font-medium"
         />
 
-        {followUpMailId && (
-          <button
-            type="button"
-            data-testid="task-open-mail"
-            onClick={() => {
-              onClose();
-              router.push(buildMailPath({ mailboxId: null, emailId: followUpMailId, threadId: null }) as never);
-            }}
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-          >
-            <Mail className="h-4 w-4" />
-            {tFollowUp("open_mail")}
-          </button>
+        {followUpMail && (
+          <div data-testid="task-mail" data-mail={followUpMail.kind} className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
+            {followUpMail.kind === "gone" && (
+              <span className="text-destructive">{tFollowUp("mail_gone")}</span>
+            )}
+            {followUpMailText && <span className="min-w-0 truncate text-muted-foreground">{followUpMailText}</span>}
+            {followUpMailId && (
+              <button
+                type="button"
+                data-testid="task-open-mail"
+                onClick={() => {
+                  onClose();
+                  router.push(buildMailPath({ mailboxId: null, emailId: followUpMailId, threadId: null }) as never);
+                }}
+                className="text-primary hover:underline"
+              >
+                {tFollowUp("open_mail")}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Description */}

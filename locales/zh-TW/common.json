@@ -4539,6 +4539,7 @@
     "done_button": "完成",
     "remove_button": "移除",
     "open_mail": "開啟郵件",
+    "mail_gone": "郵件已不存在",
     "failed": "無法儲存待處理事項。",
     "flag_failed": "待處理事項已儲存，但無法更新郵件的標幟。",
     "no_task_list": "沒有可儲存待處理事項的工作清單。"

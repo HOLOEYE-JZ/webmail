@@ -4539,6 +4539,7 @@
     "done_button": "Tamamla",
     "remove_button": "Kaldır",
     "open_mail": "E-postayı aç",
+    "mail_gone": "E-posta artık mevcut değil",
     "failed": "Takip kaydedilemedi.",
     "flag_failed": "Takip kaydedildi, ancak e-postanın işareti güncellenemedi.",
     "no_task_list": "Takibin kaydedileceği bir görev listesi yok."

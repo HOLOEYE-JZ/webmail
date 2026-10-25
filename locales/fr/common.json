@@ -4539,6 +4539,7 @@
     "done_button": "Terminé",
     "remove_button": "Supprimer",
     "open_mail": "Ouvrir le message",
+    "mail_gone": "Le message n'existe plus",
     "failed": "Le suivi n'a pas pu être enregistré.",
     "flag_failed": "Le suivi est enregistré, mais l'indicateur du message n'a pas pu être mis à jour.",
     "no_task_list": "Aucune liste de tâches où enregistrer le suivi."

@@ -4539,6 +4539,7 @@
     "done_button": "완료",
     "remove_button": "제거",
     "open_mail": "메일 열기",
+    "mail_gone": "메일이 더 이상 없습니다",
     "failed": "후속 조치를 저장하지 못했습니다.",
     "flag_failed": "후속 조치는 저장되었지만 메일의 플래그를 업데이트하지 못했습니다.",
     "no_task_list": "후속 조치를 저장할 작업 목록이 없습니다."

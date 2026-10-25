@@ -4539,6 +4539,7 @@
     "done_button": "Completato",
     "remove_button": "Rimuovi",
     "open_mail": "Apri messaggio",
+    "mail_gone": "Il messaggio non esiste più",
     "failed": "Impossibile salvare il contrassegno.",
     "flag_failed": "Il contrassegno è salvato, ma non è stato possibile aggiornare il flag del messaggio.",
     "no_task_list": "Non c'è nessun elenco attività in cui salvare il contrassegno."

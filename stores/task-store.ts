@@ -20,6 +20,12 @@ interface TaskStore {
    * do not turn into a reload of every account's calendars.
    */
   scope: string[] | undefined;
+  /**
+   * The client whose fetch the list holds, null while none has finished, the
+   * last one could not read every task, or a fetch of another scope is under
+   * way. Only then does a task missing from the list mean that it was deleted.
+   */
+  loadedBy: IJMAPClient | null;
   setTasks: (tasks: CalendarTask[]) => void;
   setSelectedTaskId: (id: string | null) => void;
   setFilter: (filter: TaskViewFilter) => void;
@@ -42,6 +48,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   isLoading: false,
   error: null,
   scope: undefined,
+  loadedBy: null,
   setTasks: (tasks) => set({ tasks }),
   setSelectedTaskId: (id) => set({ selectedTaskId: id }),
   setFilter: (filter) => {
@@ -57,9 +64,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   fetchTasks: async (client, calendarIds) => {
     debug.log('tasks', 'TaskStore/fetchTasks start', { calendarIds: calendarIds || 'all' });
-    set({ isLoading: true, error: null, scope: calendarIds?.length ? [...calendarIds] : undefined });
+    const scope = calendarIds?.length ? [...calendarIds] : undefined;
+    // A fetch started later for another scope makes this one's list partial.
+    const stillCurrent = () => get().scope === scope;
+    set({ isLoading: true, error: null, scope, loadedBy: null });
     try {
-      const tasks = await client.getCalendarTasks(calendarIds);
+      // Only a list read in full counts as loaded: follow-ups take a task
+      // missing from it for deleted.
+      const { tasks, complete } = client.getCalendarTaskList
+        ? await client.getCalendarTaskList(calendarIds)
+        : { tasks: await client.getCalendarTasks(calendarIds), complete: false };
       debug.log('tasks', 'TaskStore/fetchTasks received', tasks.length, 'tasks');
       tasks.forEach((t, i) => {
         debug.log('tasks', `TaskStore/fetchTasks [${i}]`, {
@@ -68,7 +82,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           showWithoutTime: t.showWithoutTime, calendarIds: t.calendarIds,
         });
       });
-      set({ tasks, isLoading: false });
+      set({ tasks, isLoading: false, loadedBy: complete && stillCurrent() ? client : null });
       if (taskHooks.onTasksLoaded.size > 0) void taskHooks.onTasksLoaded.emit(tasks.map(taskToView));
     } catch (error) {
       debug.error('TaskStore/fetchTasks failed', error);
@@ -134,5 +148,5 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     void taskHooks.onTaskToggleComplete.emit({ taskId: task.id, complete: newProgress === 'completed' });
   },
 
-  clearTasks: () => set({ tasks: [], selectedTaskId: null, error: null, scope: undefined }),
+  clearTasks: () => set({ tasks: [], selectedTaskId: null, error: null, scope: undefined, loadedBy: null }),
 }));

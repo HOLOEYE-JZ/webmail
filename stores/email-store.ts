@@ -2232,6 +2232,25 @@ async function pluginSearchResultIds(query: string, filters: unknown, emails: Em
     .slice(0, MAX_PLUGIN_SEARCH_IDS);
 }
 
+/** A star the user toggled in the app, after it was written. */
+export interface StarToggled {
+  email: Email;
+  starred: boolean;
+}
+
+const starToggleListeners = new Set<(change: StarToggled) => void>();
+
+/**
+ * Hears every star the user toggles in the app (list, reader, keyboard, tabs),
+ * after the write; not the flags written elsewhere. Follow-ups use it: taking
+ * the star off a mail with an open follow-up completes the follow-up.
+ * Returns the unsubscribe.
+ */
+export function onStarToggled(listener: (change: StarToggled) => void): () => void {
+  starToggleListeners.add(listener);
+  return () => { starToggleListeners.delete(listener); };
+}
+
 export const useEmailStore = create<EmailStore>((set, get) => ({
   emails: [],
   mailboxes: [],
@@ -4358,6 +4377,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         ),
       }));
       void emailHooks.onEmailStarToggle.emit({ emailIds: [emailId], starred: !isFlagged });
+      for (const listener of starToggleListeners) {
+        try {
+          listener({ email, starred: !isFlagged });
+        } catch (error) {
+          console.error('Star toggle listener failed:', error);
+        }
+      }
       refillAfterKeywordChange(get, client, ['$flagged']);
     } catch (error) {
       set({

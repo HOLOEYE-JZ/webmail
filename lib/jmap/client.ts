@@ -7870,10 +7870,21 @@ export class JMAPClient implements IJMAPClient {
    * too. Shared tasks come back namespaced like shared events. (#1204)
    */
   async getCalendarTasks(calendarIds?: string[], targetAccountId?: string): Promise<CalendarTask[]> {
-    if (targetAccountId) return this.getAccountCalendarTasks(calendarIds, targetAccountId);
+    if (targetAccountId) return (await this.readAccountCalendarTasks(calendarIds, targetAccountId)).tasks;
+    return (await this.getCalendarTaskList(calendarIds)).tasks;
+  }
 
+  /**
+   * As `getCalendarTasks`, and whether every account asked was read in full.
+   * A query or get that failed leaves its tasks out and `complete` false, so
+   * a caller can tell "no such task" from "not read" (follow-ups delete only
+   * on a complete list). Accounts skipped because they refused calendar
+   * access before hold only shared tasks and do not count.
+   */
+  async getCalendarTaskList(calendarIds?: string[]): Promise<{ tasks: CalendarTask[]; complete: boolean }> {
     const primaryId = this.getCalendarsAccountId();
     const tasks: CalendarTask[] = [];
+    let complete = true;
     for (const accountId of this.getCalendarCapableAccountIds()) {
       if (accountId !== primaryId && this.calendarAccessDenied.has(accountId)) continue;
       let accountCalendarIds: string[] | undefined;
@@ -7884,13 +7895,18 @@ export class JMAPClient implements IJMAPClient {
           .map((parts) => parts.id);
         if (accountCalendarIds.length === 0) continue;
       }
-      const accountTasks = await this.getAccountCalendarTasks(accountCalendarIds, accountId);
-      tasks.push(...accountTasks.map((task) => this.namespaceCalendarTask(task, accountId)));
+      const read = await this.readAccountCalendarTasks(accountCalendarIds, accountId);
+      if (!read.complete) complete = false;
+      tasks.push(...read.tasks.map((task) => this.namespaceCalendarTask(task, accountId)));
     }
-    return tasks;
+    return { tasks, complete };
   }
 
-  private async getAccountCalendarTasks(calendarIds: string[] | undefined, accountId: string): Promise<CalendarTask[]> {
+  /** One account's tasks; `complete` false when a query or get failed or the id bound was hit. */
+  private async readAccountCalendarTasks(
+    calendarIds: string[] | undefined,
+    accountId: string,
+  ): Promise<{ tasks: CalendarTask[]; complete: boolean }> {
     debug.group('CalendarTask/fetch', 'tasks');
     debug.log('tasks', 'CalendarTask/fetch start', { accountId, calendarIds: calendarIds || 'all' });
 
@@ -7900,6 +7916,7 @@ export class JMAPClient implements IJMAPClient {
       const MAX_IDS = 50000; // safety bound
       const timeZone = getUserTimeZone();
       const ids: string[] = [];
+      let complete = true;
       for (let position = 0; position < MAX_IDS;) {
         const queryArgs: Record<string, unknown> = { accountId, limit: QUERY_PAGE, position };
         if (timeZone) {
@@ -7916,19 +7933,20 @@ export class JMAPClient implements IJMAPClient {
           const error = response.methodResponses[0][1];
           debug.warn('tasks', 'CalendarTask/fetch query failed', error);
           debug.groupEnd();
-          return [];
+          return { tasks: [], complete: false };
         }
 
         const pageIds: string[] = response.methodResponses?.[0]?.[1]?.ids || [];
         ids.push(...pageIds);
         if (pageIds.length < QUERY_PAGE) break;
         position += pageIds.length;
+        if (position >= MAX_IDS) complete = false;
       }
 
       debug.log('tasks', 'CalendarTask/fetch query returned', ids.length, 'object ids');
       if (ids.length === 0) {
         debug.groupEnd();
-        return [];
+        return { tasks: [], complete };
       }
 
       // Fetch the objects in batches that respect the server's /get limit.
@@ -7947,6 +7965,9 @@ export class JMAPClient implements IJMAPClient {
 
         if (getResponse.methodResponses?.[0]?.[0] === "CalendarEvent/get") {
           allObjects.push(...(getResponse.methodResponses[0][1].list || []));
+        } else {
+          debug.warn('tasks', 'CalendarTask/fetch get failed', getResponse.methodResponses?.[0]?.[1]);
+          complete = false;
         }
       }
 
@@ -7973,11 +7994,11 @@ export class JMAPClient implements IJMAPClient {
 
       debug.log('tasks', 'CalendarTask/fetch complete,', tasks.length, 'tasks of', allObjects.length, 'objects');
       debug.groupEnd();
-      return tasks;
+      return { tasks, complete };
     } catch (error) {
       debug.error('CalendarTask/fetch failed', error);
       debug.groupEnd();
-      return [];
+      return { tasks: [], complete: false };
     }
   }
 

@@ -4539,6 +4539,7 @@
     "done_button": "Voltooid",
     "remove_button": "Verwijderen",
     "open_mail": "E-mail openen",
+    "mail_gone": "E-mail bestaat niet meer",
     "failed": "De opvolging kon niet worden opgeslagen.",
     "flag_failed": "De opvolging is opgeslagen, maar de markering van de e-mail kon niet worden bijgewerkt.",
     "no_task_list": "Er is geen takenlijst om de opvolging in op te slaan."

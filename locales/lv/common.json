@@ -4539,6 +4539,7 @@
     "done_button": "Pabeigt",
     "remove_button": "Noņemt",
     "open_mail": "Atvērt vēstuli",
+    "mail_gone": "Vēstule vairs nav pieejama",
     "failed": "Turpmāko darbību neizdevās saglabāt.",
     "flag_failed": "Turpmākā darbība ir saglabāta, bet vēstules atzīmi neizdevās atjaunināt.",
     "no_task_list": "Nav uzdevumu saraksta, kurā saglabāt turpmāko darbību."

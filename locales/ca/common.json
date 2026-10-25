@@ -4539,6 +4539,7 @@
     "done_button": "Completa",
     "remove_button": "Elimina",
     "open_mail": "Obre el correu",
+    "mail_gone": "El correu ja no existeix",
     "failed": "No s'ha pogut desar el seguiment.",
     "flag_failed": "El seguiment s'ha desat, però no s'ha pogut actualitzar la marca del correu.",
     "no_task_list": "No hi ha cap llista de tasques on desar el seguiment."

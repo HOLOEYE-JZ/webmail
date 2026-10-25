@@ -4539,6 +4539,7 @@
     "done_button": "Tehtud",
     "remove_button": "Eemalda",
     "open_mail": "Ava kiri",
+    "mail_gone": "Kirja pole enam olemas",
     "failed": "Järelkontrolli ei saanud salvestada.",
     "flag_failed": "Järelkontroll on salvestatud, kuid kirja märget ei saanud uuendada.",
     "no_task_list": "Järelkontrolli salvestamiseks pole ülesannete loendit."

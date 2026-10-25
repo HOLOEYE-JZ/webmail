@@ -4539,6 +4539,7 @@
     "done_button": "Ukończ",
     "remove_button": "Usuń",
     "open_mail": "Otwórz wiadomość",
+    "mail_gone": "Wiadomość już nie istnieje",
     "failed": "Nie udało się zapisać monitu.",
     "flag_failed": "Monit został zapisany, ale nie udało się zaktualizować flagi wiadomości.",
     "no_task_list": "Brak listy zadań, w której można zapisać monit."

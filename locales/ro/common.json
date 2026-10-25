@@ -4539,6 +4539,7 @@
     "done_button": "Finalizează",
     "remove_button": "Elimină",
     "open_mail": "Deschide mesajul",
+    "mail_gone": "Mesajul nu mai există",
     "failed": "Urmărirea nu a putut fi salvată.",
     "flag_failed": "Urmărirea este salvată, dar marcajul mesajului nu a putut fi actualizat.",
     "no_task_list": "Nu există nicio listă de sarcini în care să fie salvată urmărirea."
