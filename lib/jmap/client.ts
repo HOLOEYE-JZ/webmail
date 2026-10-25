@@ -18,6 +18,7 @@ import { contactFromWire, contactToWire } from "./contact-wire";
 import { SchedulingDeniedError } from "./scheduling-error";
 import { PrincipalsRequestError } from "./principals-error";
 import { RescheduleRestoredError, RescheduleUnscheduledError } from "./reschedule-error";
+import { applyPatchObject } from "./patch-object";
 
 export { SchedulingDeniedError, RescheduleRestoredError, RescheduleUnscheduledError };
 import { acceptedFileName, fileNameRulesFrom, type FileNameRules } from "@/lib/file-name-rules";
@@ -8129,7 +8130,9 @@ export class JMAPClient implements IJMAPClient {
 
     // Drop what the server sets itself; keep the uid so it stays the same task.
     const { id: _id, created: _cr, updated: _up, sequence: _sq, isDraft: _idr, isOrigin: _io, baseEventId: _be, blobId: _bl, utcStart: _us, utcEnd: _ue, ...rest } = original as Record<string, unknown>;
-    const created = await this.createCalendarTask({ ...rest, ...patch } as Partial<CalendarTask>, destAccountId);
+    // The patch may name members by path ("alerts/<id>/acknowledged"): applied
+    // to the original, not copied in as keys of their own.
+    const created = await this.createCalendarTask(applyPatchObject(rest, patch) as Partial<CalendarTask>, destAccountId);
     await this.deleteCalendarEvent(source.id, false, source.accountId);
     return created.id;
   }
