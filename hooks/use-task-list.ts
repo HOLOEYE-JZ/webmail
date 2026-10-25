@@ -18,7 +18,8 @@ import {
 } from "@/lib/task-list";
 import type { CalendarTask } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
-import { completeTask, useFollowUpDialog, useFollowUpsEnabled } from "./use-follow-ups";
+import { completeTask, useFollowUpsEnabled } from "./use-follow-ups";
+import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
 import {
   PUSH_DEBOUNCE_MS,
   isGroupTask,

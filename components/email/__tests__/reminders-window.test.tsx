@@ -1,7 +1,7 @@
 import { act, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RemindersWindowHost } from '../reminders-window';
-import { useFollowUpDialog } from '@/hooks/use-follow-ups';
+import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
 import { ownsReminderMails, reminderMailOpener, setReminderMailOpener, useReminderMailOpener, useRemindersWindow, useTaskReminders } from '@/hooks/use-task-reminders';
 import { useProTabStore } from '@/stores/pro-tab-store';
 import { useCalendarAlerts } from '@/hooks/use-calendar-alerts';

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaskListView } from '../task-list-view';
 import { TaskToolbar } from '../task-toolbar';
 import { useTaskList } from '@/hooks/use-task-list';
-import { useFollowUpDialog } from '@/hooks/use-follow-ups';
+import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
 import { useGroupTasks } from '@/hooks/use-group-follow-ups';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';

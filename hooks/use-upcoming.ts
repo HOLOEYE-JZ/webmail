@@ -28,11 +28,11 @@ import {
   type GroupTaskList,
 } from "./use-group-follow-ups";
 import {
-  useFollowUpDialog,
   useFollowUpsEnabled,
   useWorkingTime,
   type FollowUpDetails,
 } from "./use-follow-ups";
+import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
 
 /** The ids of the calendars that make up the user's own task list. */
 function useOwnTaskListIds(): ReadonlySet<string> {

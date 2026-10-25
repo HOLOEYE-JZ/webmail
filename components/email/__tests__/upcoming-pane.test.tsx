@@ -2,7 +2,7 @@ import { act, fireEvent, render, renderHook, screen, waitFor, within } from '@te
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UpcomingPane } from '../upcoming-pane';
 import { FollowUpDialogHost } from '../follow-up-dialog';
-import { useFollowUpDialog } from '@/hooks/use-follow-ups';
+import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
 import { useDueTaskCount } from '@/hooks/use-upcoming';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';

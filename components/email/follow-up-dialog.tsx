@@ -13,12 +13,10 @@ import { HelpTip, PopoverHeading, PopoverOption, PopoverSeparator, PropertyButto
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import {
   useFollowUp,
-  useFollowUpDialog,
   useWorkingTime,
   type FollowUpDetails,
-  type FollowUpDialogFocus,
-  type GroupDialogTarget,
 } from "@/hooks/use-follow-ups";
+import { useFollowUpDialog, type FollowUpDialogFocus, type GroupDialogTarget } from "@/stores/follow-up-dialog-store";
 import { useReminder } from "@/hooks/use-upcoming";
 import {
   deleteGroupTask,

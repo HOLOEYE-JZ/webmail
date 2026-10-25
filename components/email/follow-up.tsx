@@ -17,10 +17,10 @@ import {
   completeTask,
   followUpMailAccount,
   useFollowUp,
-  useFollowUpDialog,
   useFollowUpsEnabled,
   type FollowUpControls,
 } from "@/hooks/use-follow-ups";
+import { useFollowUpDialog } from "@/stores/follow-up-dialog-store";
 import {
   deleteGroupTask,
   groupListOfTask,
