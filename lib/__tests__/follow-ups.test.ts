@@ -8,7 +8,6 @@ import {
   followUpAction,
   followUpActionKey,
   followUpReminderAlert,
-  followUpMailAlertIds,
   hasFollowUpMailAlert,
   mailReminderOffered,
   buildReminderTask,
@@ -525,7 +524,7 @@ describe('the reminder also as a mail (its own alert action: email, a second ahe
   it('knows its own by the key alone, whatever its time; one set elsewhere is another reminder', () => {
     const task = { alerts: { 'follow-up': alert(nine), 'follow-up-mail': alert(nineMail, 'email') } };
     expect(followUpReminderAlert(task)).toEqual({ id: 'follow-up', when: new Date(nine) });
-    expect(followUpMailAlertIds(task)).toEqual(['follow-up-mail']);
+    expect(hasFollowUpMailAlert(task)).toBe(true);
     expect(otherFollowUpAlerts(task)).toBe(0);
     // Its own, at another time (moved elsewhere): still the box's.
     expect(hasFollowUpMailAlert({ alerts: { 'follow-up': alert(nine), 'follow-up-mail': alert(ten, 'email') } })).toBe(true);

@@ -54,7 +54,8 @@ function workingDaysOf(work: WorkingTime): Set<number> {
   return new Set(days.length > 0 ? days : DEFAULT_WORKING_TIME.workingDays);
 }
 
-function atHour(day: Date, hour: number): Date {
+/** `day` at a whole hour (clamped to the day). */
+export function atHour(day: Date, hour: number): Date {
   const result = new Date(day);
   result.setHours(Math.min(Math.max(hour, 0), 23), 0, 0, 0);
   return result;
@@ -74,7 +75,8 @@ function addWorkdays(day: Date, count: number, working: Set<number>): Date {
   return d;
 }
 
-function startOfWeekOf(day: Date, firstDayOfWeek: number): Date {
+/** The first day of the week `day` lies in. */
+export function startOfWeekOf(day: Date, firstDayOfWeek: number): Date {
   const back = (day.getDay() - firstDayOfWeek + 7) % 7;
   return addDays(startOfDay(day), -back);
 }
@@ -783,7 +785,7 @@ function watchPatch(
  * time changed: an unchanged one
  * keeps its `acknowledged`, so it does not fire again; any other alert (a
  * relative one, a second one set on a phone) stays as it is. The own alarm
- * mail (`followUpMailAlertIds`) goes with it: moved with its time, added or
+ * mail (`hasFollowUpMailAlert`) goes with it: moved with its time, added or
  * taken off as `mailReminder` says, gone with the reminder (`reminderPatch`).
  */
 export function editFollowUpTask(
@@ -1002,17 +1004,13 @@ export function followUpReminderAlert(task: Pick<CalendarTask, "alerts">): { id:
 }
 
 /**
- * The reminder's own alarm mail (the dialog's "also as a mail"), known by its
- * key alone: `FOLLOW_UP_MAIL_ALERT_ID`, an alert `action: email`. An alarm
- * mail set elsewhere is not the dialog's and is never changed here.
+ * Whether the reminder also comes as a mail into the inbox: the dialog's own
+ * alarm mail, known by its key alone (`FOLLOW_UP_MAIL_ALERT_ID`, an alert
+ * `action: email`). An alarm mail set elsewhere is not the dialog's and is
+ * never changed here.
  */
-export function followUpMailAlertIds(task: Pick<CalendarTask, "alerts">): string[] {
-  return task.alerts?.[FOLLOW_UP_MAIL_ALERT_ID]?.action === "email" ? [FOLLOW_UP_MAIL_ALERT_ID] : [];
-}
-
-/** Whether the reminder also comes as a mail into the inbox. */
 export function hasFollowUpMailAlert(task: Pick<CalendarTask, "alerts">): boolean {
-  return followUpMailAlertIds(task).length > 0;
+  return task.alerts?.[FOLLOW_UP_MAIL_ALERT_ID]?.action === "email";
 }
 
 /**
@@ -1052,8 +1050,8 @@ export function settlesOnReply(task: Partial<Pick<CalendarTask, "relatedTo">>): 
 export function otherFollowUpAlerts(task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>): number {
   // A reply watch keeps the reminder shown: every alert beside it was set elsewhere.
   const shown = replyWatch(task) ? null : followUpReminderAlert(task);
-  const mail = new Set(followUpMailAlertIds(task));
-  return Object.entries(task.alerts ?? {}).filter(([id, alert]) => alert && id !== shown?.id && !mail.has(id)).length;
+  const mail = hasFollowUpMailAlert(task) ? FOLLOW_UP_MAIL_ALERT_ID : null;
+  return Object.entries(task.alerts ?? {}).filter(([id, alert]) => alert && id !== shown?.id && id !== mail).length;
 }
 
 /**

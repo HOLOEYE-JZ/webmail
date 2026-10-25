@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { parseISO } from 'date-fns';
 import { dueTaskCount, upcomingGroupOf, upcomingTasks } from '../upcoming-tasks';
 import {
   buildFollowUpTask,
@@ -47,32 +48,33 @@ function task(over: Partial<CalendarTask> = {}): CalendarTask {
     ...over,
   } as CalendarTask;
 }
+const day = (text: string | null) => (text ? parseISO(text) : null);
 const due = (day: number, month = 10) => `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00`;
 
 describe('upcomingGroupOf', () => {
   it('sorts by the due day: overdue, today, tomorrow, this week, later', () => {
-    expect(upcomingGroupOf({ due: due(27) }, NOW)).toBe('overdue');
-    expect(upcomingGroupOf({ due: due(20) }, NOW)).toBe('overdue');
-    expect(upcomingGroupOf({ due: due(28) }, NOW)).toBe('today');
-    expect(upcomingGroupOf({ due: '2026-10-28T15:00:00' }, NOW)).toBe('today');
-    expect(upcomingGroupOf({ due: due(29) }, NOW)).toBe('tomorrow');
-    expect(upcomingGroupOf({ due: due(30) }, NOW)).toBe('this-week');
+    expect(upcomingGroupOf(day(due(27)), NOW)).toBe('overdue');
+    expect(upcomingGroupOf(day(due(20)), NOW)).toBe('overdue');
+    expect(upcomingGroupOf(day(due(28)), NOW)).toBe('today');
+    expect(upcomingGroupOf(day('2026-10-28T15:00:00'), NOW)).toBe('today');
+    expect(upcomingGroupOf(day(due(29)), NOW)).toBe('tomorrow');
+    expect(upcomingGroupOf(day(due(30)), NOW)).toBe('this-week');
     // The week ends on Sunday when it starts on Monday.
-    expect(upcomingGroupOf({ due: due(1, 11) }, NOW)).toBe('this-week');
-    expect(upcomingGroupOf({ due: due(2, 11) }, NOW)).toBe('later');
-    expect(upcomingGroupOf({ due: null }, NOW)).toBe('later');
+    expect(upcomingGroupOf(day(due(1, 11)), NOW)).toBe('this-week');
+    expect(upcomingGroupOf(day(due(2, 11)), NOW)).toBe('later');
+    expect(upcomingGroupOf(day(null), NOW)).toBe('later');
   });
 
   it('follows the first day of the week', () => {
     // A week from Sunday ends on Saturday.
-    expect(upcomingGroupOf({ due: due(31) }, NOW, 0)).toBe('this-week');
-    expect(upcomingGroupOf({ due: due(1, 11) }, NOW, 0)).toBe('later');
+    expect(upcomingGroupOf(day(due(31)), NOW, 0)).toBe('this-week');
+    expect(upcomingGroupOf(day(due(1, 11)), NOW, 0)).toBe('later');
   });
 
   it('keeps tomorrow apart even when it is in the next week', () => {
     const sunday = at(1, 9, 0, 11);
-    expect(upcomingGroupOf({ due: due(2, 11) }, sunday)).toBe('tomorrow');
-    expect(upcomingGroupOf({ due: due(3, 11) }, sunday)).toBe('later');
+    expect(upcomingGroupOf(day(due(2, 11)), sunday)).toBe('tomorrow');
+    expect(upcomingGroupOf(day(due(3, 11)), sunday)).toBe('later');
   });
 });
 

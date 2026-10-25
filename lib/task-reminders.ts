@@ -1,10 +1,10 @@
-import { startOfDay } from "date-fns";
 import type { CalendarEventAlert, CalendarTask } from "@/lib/jmap/types";
 import { buildAlertKey, computeTaskFireTime } from "@/lib/calendar-alerts";
 import { applyPatchObject, patchPath } from "@/lib/jmap/patch-object";
 import { utcDateTime } from "@/lib/task-dates";
 import {
   DEFAULT_WORKING_TIME,
+  atHour,
   followUpDueDay,
   followUpReminderAlert,
   isOpenFollowUp,
@@ -186,7 +186,12 @@ export type TaskPatch = Partial<CalendarTask>
   & { [path: `alerts/${string}`]: unknown }
   & { [path: `relatedTo/${string}`]: unknown };
 
-function acknowledging(
+/**
+ * The patch that dismisses a reminder: its alerts acknowledged now (but
+ * `skip`), nothing else changed. An alarm mail beside one is left as it is:
+ * the server sent it when it fired, so there is nothing left to dismiss.
+ */
+export function dismissTaskReminder(
   task: Partial<Pick<CalendarTask, "relatedTo">>,
   alertIds: readonly string[],
   now: Date,
@@ -205,19 +210,6 @@ function acknowledging(
     patch[`alerts/${patchPath(id)}/acknowledged`] = at;
   }
   return patch;
-}
-
-/**
- * The patch that dismisses a reminder: its alerts acknowledged now, nothing
- * else changed. An alarm mail beside one is left as it is: the server sent
- * it when it fired, so there is nothing left to dismiss.
- */
-export function dismissTaskReminder(
-  task: Pick<CalendarTask, "alerts"> & Partial<Pick<CalendarTask, "relatedTo">>,
-  alertIds: readonly string[],
-  now: Date,
-): TaskPatch {
-  return acknowledging(task, alertIds, now);
 }
 
 /**
@@ -240,7 +232,7 @@ export function completedTaskPatch(
   }
   const watchFires = watchFireTime(task);
   if (watchFires !== null && watchFires <= now.getTime()) fired.push(REPLY_WATCH_ALERT_ID);
-  const patch: TaskPatch = { progress: "completed", ...acknowledging(task, fired, now) };
+  const patch: TaskPatch = { progress: "completed", ...dismissTaskReminder(task, fired, now) };
   if (hasFollowUpMailAlert(task) && !isRecurringTask(task as Pick<CalendarTask, "recurrenceRules">)) patch[`alerts/${patchPath(FOLLOW_UP_MAIL_ALERT_ID)}`] = null;
   return patch;
 }
@@ -294,7 +286,7 @@ export function snoozeTaskReminder(
   if (watch && alertIds.includes(REPLY_WATCH_ALERT_ID)) {
     // A reply watch's reminder moves within the watch; it stays no alert.
     return {
-      ...acknowledging(task, alertIds, now, REPLY_WATCH_ALERT_ID),
+      ...dismissTaskReminder(task, alertIds, now, REPLY_WATCH_ALERT_ID),
       [replyWatchPath(watch.key, "reminder")]: utcDateTime(at),
       [replyWatchPath(watch.key, "acknowledged")]: null,
     } as TaskPatch;
@@ -305,12 +297,12 @@ export function snoozeTaskReminder(
   const target = shown && alertIds.includes(shown) && absolute(shown) ? shown : alertIds.find(absolute);
   if (target) {
     return {
-      ...acknowledging(task, alertIds, now, target),
+      ...dismissTaskReminder(task, alertIds, now, target),
       [`alerts/${patchPath(target)}/trigger`]: trigger,
       [`alerts/${patchPath(target)}/acknowledged`]: null,
     };
   }
-  const patch = acknowledging(task, alertIds, now);
+  const patch = dismissTaskReminder(task, alertIds, now);
   const parent = alertIds[0];
   if (!parent) return patch;
   const earlier = Object.entries(alerts).find(([id, alert]) => id !== parent && !!alert?.relatedTo?.[parent]);
@@ -373,8 +365,7 @@ export function snoozeTimes(
     else {
       const due = followUpDueDay(task);
       if (due) {
-        const start = new Date(startOfDay(due));
-        start.setHours(Math.min(Math.max(work.startHour, 0), 23), 0, 0, 0);
+        const start = atHour(due, work.startHour);
         if (start.getTime() > displayNow.getTime()) wall = start;
       }
     }

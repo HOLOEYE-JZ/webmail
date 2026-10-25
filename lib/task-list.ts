@@ -178,11 +178,11 @@ export function taskListGroupOf(
     // A series that may still run but whose next time cannot be told: later, never "no date".
     if (next.kind === "unknown") return "later";
     if (next.kind === "ended") return "no-date";
-    return upcomingGroupOf({ due: format(next.due, LOCAL) }, now, firstDayOfWeek);
+    return upcomingGroupOf(next.due, now, firstDayOfWeek);
   }
   const day = followUpDueDay(task);
   if (!day) return "no-date";
-  return upcomingGroupOf({ due: format(day, LOCAL) }, now, firstDayOfWeek);
+  return upcomingGroupOf(day, now, firstDayOfWeek);
 }
 
 /** The user and the group lists, which decide what is theirs. */

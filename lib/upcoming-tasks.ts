@@ -1,6 +1,6 @@
-import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
+import { addDays, differenceInCalendarDays } from "date-fns";
 import type { CalendarTask } from "@/lib/jmap/types";
-import { followUpDueDay, followUpReminder, isOpenFollowUp, isRecurringTask } from "@/lib/follow-ups";
+import { followUpDueDay, followUpReminder, isOpenFollowUp, isRecurringTask, startOfWeekOf } from "@/lib/follow-ups";
 
 /**
  * "Upcoming for me", the pane beside the mail list, as Outlook's To-Do bar:
@@ -25,16 +25,14 @@ import { followUpDueDay, followUpReminder, isOpenFollowUp, isRecurringTask } fro
 export const UPCOMING_GROUPS = ["overdue", "today", "tomorrow", "this-week"] as const;
 export type UpcomingGroup = (typeof UPCOMING_GROUPS)[number];
 
-/** Where a task stands: one of the pane's groups, or "later" (further out, or no due day). */
-export function upcomingGroupOf(task: Pick<CalendarTask, "due">, now: Date, firstDayOfWeek = 1): UpcomingGroup | "later" {
-  const due = followUpDueDay(task);
+/** Where a task due on `due` stands: one of the pane's groups, or "later" (further out, or no due day). */
+export function upcomingGroupOf(due: Date | null, now: Date, firstDayOfWeek = 1): UpcomingGroup | "later" {
   if (!due) return "later";
   const days = differenceInCalendarDays(due, now);
   if (days < 0) return "overdue";
   if (days === 0) return "today";
   if (days === 1) return "tomorrow";
-  const back = (now.getDay() - firstDayOfWeek + 7) % 7;
-  const weekEnd = addDays(startOfDay(now), 6 - back);
+  const weekEnd = addDays(startOfWeekOf(now, firstDayOfWeek), 6);
   return differenceInCalendarDays(due, weekEnd) <= 0 ? "this-week" : "later";
 }
 
@@ -84,7 +82,7 @@ export function upcomingTasks(
   let later = 0;
   for (const task of mineOf(tasks, calendarIds, forMe)) {
     if (!isOpenFollowUp(task)) continue;
-    const group = isRecurringTask(task) ? "later" : upcomingGroupOf(task, now, firstDayOfWeek);
+    const group = isRecurringTask(task) ? "later" : upcomingGroupOf(followUpDueDay(task), now, firstDayOfWeek);
     if (group === "later") {
       later += 1;
       continue;
