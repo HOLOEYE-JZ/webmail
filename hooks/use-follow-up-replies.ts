@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
+import { reachesMailAccount } from "@/lib/deep-links";
 import { perStoreEpoch } from "@/lib/store-epoch";
 import { dueTaskReminders } from "@/lib/task-reminders";
 import { followUpMailRef, type ReplyWatch } from "@/lib/follow-ups";
@@ -20,7 +21,7 @@ import {
 } from "@/lib/follow-up-replies";
 import type { CalendarTask } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
-import { completeTask, isFollowUpPending, reachesMailAccount, useFollowUpsEnabled } from "./use-follow-ups";
+import { completeTask, isFollowUpPending, useFollowUpsEnabled } from "./use-follow-ups";
 
 /**
  * Looks for the answer that settles a follow-up (`lib/follow-up-replies.ts`)

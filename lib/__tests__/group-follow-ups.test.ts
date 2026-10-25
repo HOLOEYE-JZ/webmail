@@ -12,7 +12,6 @@ import {
   groupTaskSetBy,
   isGroupFollowUpTask,
   isTaskForMe,
-  mergeTasks,
   taskListSharees,
 } from '../group-follow-ups';
 import { buildFollowUpTask, buildReminderTask } from '../follow-ups';
@@ -197,11 +196,6 @@ describe('groupFollowUpsByEmailId', () => {
     expect(index.get('M1')?.map((t) => t.id)).toEqual([open.id, done.id]);
   });
 
-  it('mergeTasks keeps each task once, the later copy winning', () => {
-    const a = task();
-    const b = { ...a, title: 'newer' };
-    expect(mergeTasks([a, task()], [b]).filter((t) => t.id === a.id)).toEqual([b]);
-  });
 });
 
 describe('reminders of a group\'s list', () => {

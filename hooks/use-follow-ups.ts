@@ -9,7 +9,8 @@ import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
-import { appUrl, buildMailMessageLink } from "@/lib/deep-links";
+import { appUrl, buildMailMessageLink, reachesMailAccount } from "@/lib/deep-links";
+import { memoByArray } from "@/lib/utils";
 import { displayNow, fromDisplayDate } from "@/lib/timezone";
 import { isFilterEmpty } from "@/lib/jmap/search-utils";
 import { isAllFoldersSearchScope } from "@/lib/search-scope-folders";
@@ -94,21 +95,10 @@ export function useWorkingTime(): WorkingTime {
 }
 
 // One index per task list and mail account, shared by every row that asks.
-const indexCache = new WeakMap<CalendarTask[], Map<string, Map<string, CalendarTask>>>();
-function followUpIndex(tasks: CalendarTask[], mailAccountId: string, primaryAccountId: string): Map<string, CalendarTask> {
-  let byAccount = indexCache.get(tasks);
-  if (!byAccount) {
-    byAccount = new Map();
-    indexCache.set(tasks, byAccount);
-  }
-  const key = `${primaryAccountId}\u0000${mailAccountId}`;
-  let index = byAccount.get(key);
-  if (!index) {
-    index = followUpsByEmailId(tasks, mailAccountId, primaryAccountId);
-    byAccount.set(key, index);
-  }
-  return index;
-}
+const followUpIndex = memoByArray((tasks: CalendarTask[], accounts: string) => {
+  const [primaryAccountId, mailAccountId] = accounts.split("\u0000");
+  return followUpsByEmailId(tasks, mailAccountId, primaryAccountId);
+});
 
 const NO_FOLLOW_UPS = new Map<string, CalendarTask>();
 
@@ -120,19 +110,7 @@ function useFollowUpIndex(mailAccountId: string | null): Map<string, CalendarTas
   const enabled = useFollowUpsEnabled();
   const client = useAuthStore((s) => s.client);
   const tasks = useTaskStore((s) => s.tasks);
-  return enabled && client && mailAccountId ? followUpIndex(tasks, mailAccountId, client.getAccountId()) : NO_FOLLOW_UPS;
-}
-
-const MAIL_CAPABILITY = "urn:ietf:params:jmap:mail";
-
-/**
- * Whether the signed-in login reaches a mail account: its own, or a shared
- * one (a group mailbox's) it is a member of. Null names the own one.
- */
-export function reachesMailAccount(client: IJMAPClient | null, accountId: string | null): boolean {
-  if (!client) return false;
-  if (!accountId || accountId === client.getAccountId()) return true;
-  return client.hasAccountCapability(MAIL_CAPABILITY, accountId);
+  return enabled && client && mailAccountId ? followUpIndex(tasks, `${client.getAccountId()}\u0000${mailAccountId}`) : NO_FOLLOW_UPS;
 }
 
 /**

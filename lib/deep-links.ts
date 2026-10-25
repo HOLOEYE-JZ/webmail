@@ -279,6 +279,17 @@ export function messageLinkAccount(
 }
 
 /**
+ * Whether the login reaches a mail account: its own (also none named), or a
+ * group mailbox's it is a member of.
+ */
+export function reachesMailAccount(
+  client: { getAccountId(): string; hasAccountCapability(capability: string, accountId?: string): boolean } | null,
+  mailAccountId: string | null | undefined,
+): boolean {
+  return !!client && messageLinkAccount(mailAccountId, client).kind !== 'unreachable';
+}
+
+/**
  * A mail fetched in a group mailbox's account, stamped with that account and
  * the login it was reached through, so every action and the follow-up name
  * that account rather than derive it from the folder on screen.

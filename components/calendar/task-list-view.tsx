@@ -12,7 +12,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useRouter } from "@/i18n/navigation";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useFollowUpFormat, useGroupPeopleText } from "@/components/email/follow-up";
-import { useDisplayNow } from "@/hooks/use-upcoming";
+import { useDisplayNow } from "@/hooks/use-clock";
 import { groupListOfTask, useGroupTasks, useMyAddresses } from "@/hooks/use-group-follow-ups";
 import { openReminderMail } from "@/hooks/use-task-reminders";
 import { openListedTask, opensMail, toggleListedTask } from "@/hooks/use-task-list";

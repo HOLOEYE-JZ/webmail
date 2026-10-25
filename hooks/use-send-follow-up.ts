@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
+import { reachesMailAccount } from "@/lib/deep-links";
 import { normalizeAction } from "@/lib/follow-up-actions";
 import { stripMessageIdBrackets } from "@/lib/email-threading";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
@@ -15,7 +16,6 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import {
   deleteOwnFollowUp,
   followUpOnMail,
-  reachesMailAccount,
   useFollowUpsEnabled,
   useWorkingTime,
   type FollowUpMail,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { startOfDay } from "date-fns";
 import { useAuthStore } from "@/stores/auth-store";
@@ -10,12 +10,14 @@ import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
 import { displayNow } from "@/lib/timezone";
 import { debug } from "@/lib/debug";
+import { reachesMailAccount } from "@/lib/deep-links";
 import { normalizeAction } from "@/lib/follow-up-actions";
 import { buildReminderTask, editReminderTask, followUpMailRef, type WorkingTime } from "@/lib/follow-ups";
 import { dueTaskCount, upcomingTasks, type UpcomingList } from "@/lib/upcoming-tasks";
 import type { CalendarTask } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { locateFollowUpMail } from "./use-follow-up-sync";
+import { useDisplayNow } from "./use-clock";
 import {
   deleteGroupTask,
   groupListOfTask,
@@ -26,25 +28,11 @@ import {
 } from "./use-group-follow-ups";
 import {
   followUpCalendars,
-  reachesMailAccount,
   useFollowUpDialog,
   useFollowUpsEnabled,
   useWorkingTime,
   type FollowUpDetails,
 } from "./use-follow-ups";
-
-/** How often the pane and the badge look at the clock, so a new day moves the groups. */
-const CLOCK_MS = 60_000;
-
-/** Now on the user's wall clock (a display date), refreshed every minute. */
-export function useDisplayNow(): Date {
-  const [now, setNow] = useState(() => displayNow());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(displayNow()), CLOCK_MS);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
 
 /** The ids of the calendars that make up the user's own task list. */
 function useOwnTaskListIds(): ReadonlySet<string> {

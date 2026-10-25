@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 import { useAuthStore } from "@/stores/auth-store";
@@ -17,8 +17,9 @@ import { dueTaskReminders, type TaskReminder } from "@/lib/task-reminders";
 import { followUpMailRef, followUpMailSummary, followUpNote } from "@/lib/follow-ups";
 import { followUpCalendars } from "./use-follow-ups";
 import { useReplyChecks } from "./use-follow-up-replies";
+import { useClock } from "./use-clock";
+import { mergeTaskSources } from "@/lib/task-list";
 import { useGroupReminderScope, useGroupTasksForMe } from "./use-group-follow-ups";
-import { mergeTasks } from "@/lib/group-follow-ups";
 
 /** How often the window looks at the clock for reminders that fell due. */
 const CHECK_MS = 30_000;
@@ -117,16 +118,6 @@ function useRemindersEnabled(): boolean {
   return notifications && tasksOn && supportsCalendar && signedIn;
 }
 
-/** Now as a real instant, refreshed every `CHECK_MS`. */
-function useClock(): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), CHECK_MS);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
-
 const NO_REMINDERS: TaskReminder[] = [];
 
 /**
@@ -140,9 +131,9 @@ export function useDueTaskReminders(): TaskReminder[] {
   // A group mailbox's tasks for the user remind them, and them alone.
   const forMe = useGroupTasksForMe();
   const scope = useGroupReminderScope();
-  const tasks = useMemo(() => mergeTasks(own, forMe), [own, forMe]);
+  const tasks = useMemo(() => mergeTaskSources(own, forMe, scope.groupListIds), [own, forMe, scope]);
   const checkedAt = useReplyChecks((s) => s.checkedAt);
-  const now = useClock();
+  const now = useClock(CHECK_MS);
   return useMemo(
     () => (enabled ? dueTaskReminders(tasks, now, (id) => checkedAt[id], scope) : NO_REMINDERS),
     [enabled, tasks, now, checkedAt, scope],

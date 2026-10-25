@@ -6,6 +6,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
+import { reachesMailAccount } from "@/lib/deep-links";
+import { memoByArray } from "@/lib/utils";
 import { normalizeAction } from "@/lib/follow-up-actions";
 import { cachedPrincipals } from "@/lib/jmap/principal-cache";
 import { applyPatchObject } from "@/lib/jmap/patch-object";
@@ -32,7 +34,7 @@ import {
 import type { Calendar, CalendarTask, Email, Principal } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { GroupReminderScope } from "@/lib/task-reminders";
-import { followUpTaskInput, reachesMailAccount, useFollowUpsEnabled, type FollowUpDetails } from "./use-follow-ups";
+import { followUpTaskInput, useFollowUpsEnabled, type FollowUpDetails } from "./use-follow-ups";
 
 /**
  * The task lists of the group mailboxes the user reaches, and their tasks
@@ -302,20 +304,7 @@ export function useGroupTaskList(accountId: string | null): GroupTaskList | null
 }
 
 // One index per task list and account, shared by every row that asks.
-const indexCache = new WeakMap<CalendarTask[], Map<string, Map<string, CalendarTask[]>>>();
-function groupIndex(tasks: CalendarTask[], accountId: string): Map<string, CalendarTask[]> {
-  let byAccount = indexCache.get(tasks);
-  if (!byAccount) {
-    byAccount = new Map();
-    indexCache.set(tasks, byAccount);
-  }
-  let index = byAccount.get(accountId);
-  if (!index) {
-    index = groupFollowUpsByEmailId(tasks, accountId);
-    byAccount.set(accountId, index);
-  }
-  return index;
-}
+const groupIndex = memoByArray(groupFollowUpsByEmailId);
 
 const NO_TASKS: CalendarTask[] = [];
 const NO_INDEX = new Map<string, CalendarTask[]>();

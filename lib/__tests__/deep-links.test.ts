@@ -11,6 +11,7 @@ import {
   groupMailAccountOf,
   groupMailFolder,
   messageLinkAccount,
+  reachesMailAccount,
   groupMailAsListed,
   stampMailAccount,
   buildCalendarPath,
@@ -445,6 +446,13 @@ describe('messageLinkAccount', () => {
 
   it('is unreachable for an account the login does not reach, never the own one', () => {
     expect(messageLinkAccount('elsewhere', client)).toEqual({ kind: 'unreachable' });
+  });
+
+  it('tells whether the login reaches the account (reachesMailAccount)', () => {
+    expect(reachesMailAccount(client, null)).toBe(true);
+    expect(reachesMailAccount(client, 'grp')).toBe(true);
+    expect(reachesMailAccount(client, 'elsewhere')).toBe(false);
+    expect(reachesMailAccount(null, 'me')).toBe(false);
   });
 });
 

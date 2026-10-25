@@ -274,10 +274,3 @@ export function groupFollowUpsByEmailId(
   }
   return byEmail;
 }
-
-/** Tasks by id, those of `later` replacing those of `first` (the same task loaded twice). */
-export function mergeTasks(first: readonly CalendarTask[], later: readonly CalendarTask[]): CalendarTask[] {
-  if (later.length === 0) return first as CalendarTask[];
-  const ids = new Set(later.map((t) => t.id));
-  return [...first.filter((t) => !ids.has(t.id)), ...later];
-}

@@ -27,7 +27,8 @@ import {
   useMyAddresses,
   type GroupTaskList,
 } from "./use-group-follow-ups";
-import { openTaskItem, useDisplayNow } from "./use-upcoming";
+import { openTaskItem } from "./use-upcoming";
+import { useDisplayNow } from "./use-clock";
 
 /**
  * The calendar's task list (lib/task-list.ts) from the stores: the task
