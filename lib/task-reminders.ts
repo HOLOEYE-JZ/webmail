@@ -16,6 +16,7 @@ import {
   scheduleFollowUp,
   type WorkingTime,
 } from "@/lib/follow-ups";
+import { isGroupFollowUpTask, isTaskForMe } from "@/lib/group-follow-ups";
 
 /**
  * The reminders window, as Outlook's: every reminder of the user's own tasks
@@ -59,7 +60,9 @@ import {
  * minutes late, a task's waits here: one that fell due while the app was
  * closed shows when it opens.
  *
- * Which tasks: the user's own (not a shared calendar's), not repeating. A
+ * Which tasks: the user's own (not a shared calendar's), and those of a
+ * shared list (a group mailbox's) whose owner participant is the user
+ * (lib/group-follow-ups.ts); not repeating. A
  * repeating task's alert is the series' (this app does not expand its
  * occurrences), so dismissing or snoozing it here would change every
  * occurrence; it keeps the plain toast, as before.
@@ -67,9 +70,38 @@ import {
  * Pure: times are real instants unless a name says otherwise.
  */
 
-/** Whether a task's reminders go to the reminders window. */
-export function isReminderWindowTask(task: Pick<CalendarTask, "isShared" | "recurrenceRules">): boolean {
-  return !task.isShared && !isRecurringTask(task);
+/** Who the user is and which group lists are this app's, for a shared task's reminder. */
+export interface GroupReminderScope {
+  /** The user's addresses, lower case. */
+  mine: ReadonlySet<string>;
+  /** The calendar ids of the group task lists this app recognised. */
+  groupListIds: ReadonlySet<string>;
+}
+
+/**
+ * Whether a task's reminders go to the reminders window: one of the user's
+ * own list, or a group follow-up of this app for the user
+ * (lib/group-follow-ups.ts). Any other shared task keeps the plain toast.
+ */
+export function isReminderWindowTask(
+  task: Pick<CalendarTask, "isShared" | "recurrenceRules" | "calendarIds"> & Partial<Pick<CalendarTask, "participants">>,
+  scope?: GroupReminderScope,
+): boolean {
+  if (isRecurringTask(task)) return false;
+  if (!task.isShared) return true;
+  return !!scope && isGroupFollowUpTask(task, scope.groupListIds) && isTaskForMe(task, scope.mine);
+}
+
+/**
+ * Whether a task's reminders are left out of the plain toast: those the
+ * window shows, and a group follow-up of this app for someone else (its
+ * reminder is theirs alone). Any other shared task is toasted as before.
+ */
+export function isToastlessTask(
+  task: Pick<CalendarTask, "isShared" | "recurrenceRules" | "calendarIds"> & Partial<Pick<CalendarTask, "participants">>,
+  scope: GroupReminderScope,
+): boolean {
+  return isReminderWindowTask(task, scope) || isGroupFollowUpTask(task, scope.groupListIds);
 }
 
 /**
@@ -115,10 +147,11 @@ export function dueTaskReminders(
   tasks: readonly CalendarTask[],
   nowMs: number,
   replyCheckedAt?: (taskId: string) => number | undefined,
+  scope?: GroupReminderScope,
 ): TaskReminder[] {
   const reminders: TaskReminder[] = [];
   for (const task of tasks) {
-    if (!isOpenFollowUp(task) || !isReminderWindowTask(task)) continue;
+    if (!isOpenFollowUp(task) || !isReminderWindowTask(task, scope)) continue;
     const alertIds: string[] = [];
     let fireTimeMs = -Infinity;
     for (const [alertId, alert] of Object.entries(task.alerts ?? {})) {

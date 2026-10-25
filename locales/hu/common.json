@@ -4648,6 +4648,35 @@
       "settles_hint": "(A Bulwark az emlékeztető előtt választ keres; az emlékeztető ekkor csak a Bulwarkban jelenik meg, nem a telefonon és nem levélként)",
       "settles_short": "magától lezárul, ha válasz érkezik",
       "answered_note": "Válasz érkezett: {day}"
+    },
+    "group": {
+      "menu_colleague": "Kollégának itt: {group} …",
+      "menu_colleague_short": "Kollégának …",
+      "only_in_group": "csak csoportos postafiókban",
+      "no_list": "a csoportos postafióknak nincs írható feladatlistája",
+      "for_label": "Kinek",
+      "me": "nekem",
+      "chip_me": "én",
+      "for_me": "nekem",
+      "for_person": "neki: {name}",
+      "by_me": "tőlem",
+      "by_person": "tőle: {name}",
+      "visible_label": "Látható",
+      "visible_me": "csak én",
+      "visible_group": "mindenki itt: {group}",
+      "colleague_needs_group": "A kolléga csak a csoportos postafiók feladatlistájában látja.",
+      "people_hint": "Akikkel a(z) {group} feladatlistája meg van osztva.",
+      "not_shared": "A(z) {group} feladatlistája nincs megosztva senkivel: csak a „nekem” választható.",
+      "list_of": "Feladatlista: {group}",
+      "chip_title": "A(z) {group} feladatlistájában, amelyet mindenki lát",
+      "remove_title": "Eltávolítja a nyomon követést?",
+      "remove_confirm": "Törlődik a(z) {group} feladatlistájából mindenki számára, aki látja. Ez nem vonható vissza.",
+      "kept_colleague": "A(z) {group} feladatlistájában: mindenki, akivel meg van osztva, látja a levélnél; emlékeztetőt csak {name} kap.",
+      "kept_me": "A(z) {group} feladatlistájában: a kollégák látják, hogy Ön foglalkozik vele; emlékeztetőt csak Ön kap.",
+      "kept_reminder_colleague": "A(z) {group} feladatlistájában, levél nélkül: mindenki, akivel meg van osztva, látja; emlékeztetőt csak {name} kap.",
+      "kept_reminder_me": "A(z) {group} feladatlistájában, levél nélkül: a kollégák látják; emlékeztetőt csak Ön kap.",
+      "nobody": "senki / mindenki",
+      "kept_nobody": "A(z) {group} feladatlistájában: mindenki látja, akivel meg van osztva; nem szól senkinek külön."
     }
   }
 }

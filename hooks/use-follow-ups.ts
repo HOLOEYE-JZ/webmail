@@ -36,6 +36,8 @@ import {
 } from "@/lib/follow-ups";
 import type { Calendar, CalendarTask, Email } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
+import type { TaskPerson } from "@/lib/group-follow-ups";
+import { updateAnyTask, useGroupFollowUpIndex, useGroupTaskList, type GroupTaskList } from "./use-group-follow-ups";
 
 /** Whether the user can keep follow-ups at all: tasks on, a calendar server. */
 export function useFollowUpsEnabled(): boolean {
@@ -173,8 +175,11 @@ export function isOwnMail(email: Email, client: IJMAPClient | null): boolean {
 export function useThreadFollowUpEmail(emails: readonly Email[], latest: Email): Email {
   const enabled = useFollowUpsEnabled();
   const client = useAuthStore((s) => s.client);
-  const index = useFollowUpIndex(enabled ? followUpMailAccount(latest, client) : null);
-  return threadFollowUpEmail(emails, index) ?? latest;
+  const mailAccountId = enabled ? followUpMailAccount(latest, client) : null;
+  const index = useFollowUpIndex(mailAccountId);
+  // A group mailbox's mails: also one a colleague follows up in the group's list.
+  const groupIndex = useGroupFollowUpIndex(mailAccountId && client && mailAccountId !== client.getAccountId() ? mailAccountId : null);
+  return threadFollowUpEmail(emails, index) ?? threadFollowUpEmail(emails, groupIndex) ?? latest;
 }
 
 // Mails whose follow-up is being written, so a double click writes one task
@@ -209,7 +214,8 @@ export function onFollowUpChanged(listener: (() => void) | null): void {
   afterChange = listener;
 }
 
-async function messageIdOf(client: IJMAPClient, email: Email, accountId: string): Promise<string | readonly string[] | null> {
+/** The mail's Message-ID, read from the server when the list did not give it. */
+export async function messageIdOf(client: IJMAPClient, email: Email, accountId: string): Promise<string | readonly string[] | null> {
   if (email.messageId) return email.messageId;
   try {
     const [fields] = await client.getEmailFields([email.id], ["messageId"], accountId === client.getAccountId() ? undefined : accountId);
@@ -309,7 +315,8 @@ export async function completeTask(
   patch?: TaskPatch,
 ): Promise<boolean> {
   // Its reminders that fired are dismissed with it, so reopened it does not remind of them again.
-  const complete = () => useTaskStore.getState().updateTask(client, task.id, patch ?? completedTaskPatch(task, new Date()));
+  // A group's task is written there (its list is kept apart from the own one).
+  const complete = () => updateAnyTask(client, task, patch ?? completedTaskPatch(task, new Date()));
   const ref = task.isShared ? null : followUpMailRef(task);
   // A group mailbox's mail carries no flag: its follow-up is only completed.
   if (!ref || isOtherAccountMail(ref, client.getAccountId())) {
@@ -343,13 +350,20 @@ export interface ReminderDialogTarget {
   title?: string;
 }
 
+/** A follow-up in a group mailbox's task list: an existing one, or a new one (null). */
+export interface GroupDialogTarget {
+  taskId: string | null;
+}
+
 interface FollowUpDialogState {
   /** The mail whose follow-up the dialog edits, null while it is closed or shows a reminder. */
   email: Email | null;
+  /** Set when the dialog edits a follow-up in the group's task list instead of the user's own. */
+  group: GroupDialogTarget | null;
   /** The reminder without a mail the dialog edits, null while it is closed or shows a mail's. */
   reminder: ReminderDialogTarget | null;
   focus: FollowUpDialogFocus;
-  open: (email: Email, focus?: FollowUpDialogFocus) => void;
+  open: (email: Email, focus?: FollowUpDialogFocus, group?: GroupDialogTarget | null) => void;
   openReminder: (reminder: ReminderDialogTarget, focus?: FollowUpDialogFocus) => void;
   close: () => void;
 }
@@ -361,11 +375,12 @@ interface FollowUpDialogState {
  */
 export const useFollowUpDialog = create<FollowUpDialogState>((set) => ({
   email: null,
+  group: null,
   reminder: null,
   focus: "action",
-  open: (email, focus = "action") => set({ email, reminder: null, focus }),
-  openReminder: (reminder, focus = "action") => set({ email: null, reminder, focus }),
-  close: () => set({ email: null, reminder: null }),
+  open: (email, focus = "action", group = null) => set({ email, group, reminder: null, focus }),
+  openReminder: (reminder, focus = "action") => set({ email: null, group: null, reminder, focus }),
+  close: () => set({ email: null, group: null, reminder: null }),
 }));
 
 /** What the dialog sets: the action as the user typed or picked it, days and times as for a quick choice. */
@@ -380,6 +395,16 @@ export interface FollowUpDetails {
   mailReminder?: boolean;
   /** Whether it settles itself when an answer comes (plan 037 decision 9); left out: as the task has it. */
   settlesOnReply?: boolean;
+  /**
+   * Where it is kept, as the dialog's "Visible" says: left out or null, the
+   * user's own list; else the group account whose task list takes it.
+   */
+  groupAccountId?: string | null;
+  /**
+   * Whom it is for in a group's list: null, the user; left out, an existing
+   * task's owner unchanged (a new one is the user's).
+   */
+  person?: TaskPerson | null;
 }
 
 export interface FollowUpControls {
@@ -393,6 +418,14 @@ export interface FollowUpControls {
   onlyMe: boolean;
   /** The group mailbox's name, when the mail lies in one and its name is known. */
   mailboxName: string | null;
+  /**
+   * The group mailbox's task list, when the mail lies in a group mailbox
+   * whose list the user may write: a follow-up there can be for a colleague
+   * (plan 037 decisions 2, 3). Null on the user's own mail.
+   */
+  group: GroupTaskList | null;
+  /** Opens the dialog for a new follow-up in the group's list ("For a colleague …"). */
+  openGroupDialog: () => void;
   /** The mail's follow-up, open or done. */
   task: CalendarTask | null;
   workingTime: WorkingTime;
@@ -421,6 +454,7 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     : null));
 
   const available = enabled && !!email && !email.isScheduled && !email.keywords?.$draft && !!mailAccountId;
+  const group = useGroupTaskList(available && onlyMe ? mailAccountId : null);
   const task = available && email ? index.get(email.id) ?? null : null;
 
   /**
@@ -502,6 +536,10 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     if (email) useFollowUpDialog.getState().open(email, focus);
   }, [email]);
 
+  const openGroupDialog = useCallback(() => {
+    if (email && group) useFollowUpDialog.getState().open(email, "action", { taskId: null });
+  }, [email, group]);
+
   const markDone = useCallback(async () => {
     await run(async (client) => (
       !!task && useTaskStore.getState().updateTask(client, task.id, completedTaskPatch(task, new Date()))
@@ -520,5 +558,5 @@ export function useFollowUp(email: Email | null | undefined): FollowUpControls {
     return markDone();
   }, [task, apply, remove, markDone]);
 
-  return { available, onlyMe, mailboxName, task, workingTime, apply, save, openDialog, markDone, remove, quickClick };
+  return { available, onlyMe, mailboxName, group, task, workingTime, apply, save, openDialog, openGroupDialog, markDone, remove, quickClick };
 }

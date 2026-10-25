@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark cerca una resposta abans de recordar-t'ho; el recordatori llavors només apareix a Bulwark, no al mòbil ni com a correu)",
       "settles_short": "es completa sol quan arriba una resposta",
       "answered_note": "Resposta rebuda el {day}"
+    },
+    "group": {
+      "menu_colleague": "Per a un company a {group} …",
+      "menu_colleague_short": "Per a un company …",
+      "only_in_group": "només en una bústia de grup",
+      "no_list": "la bústia de grup no té cap llista de tasques on pugueu escriure",
+      "for_label": "Per a",
+      "me": "mi",
+      "chip_me": "jo",
+      "for_me": "per a mi",
+      "for_person": "per a {name}",
+      "by_me": "de mi",
+      "by_person": "de {name}",
+      "visible_label": "Visible",
+      "visible_me": "només jo",
+      "visible_group": "tothom a {group}",
+      "colleague_needs_group": "Un company només ho veu a la llista de tasques de la bústia de grup.",
+      "people_hint": "Les persones amb qui es comparteix la llista de tasques de {group}.",
+      "not_shared": "La llista de tasques de {group} no està compartida amb ningú: només es pot triar «mi».",
+      "list_of": "Llista de tasques {group}",
+      "chip_title": "A la llista de tasques de {group}, que tothom veu",
+      "remove_title": "Voleu treure el seguiment?",
+      "remove_confirm": "S'elimina de la llista de tasques de {group}, per a tothom qui la veu. No es pot desfer.",
+      "kept_colleague": "A la llista de tasques de {group}: tothom amb qui es comparteix ho veu al correu; només {name} rep el recordatori.",
+      "kept_me": "A la llista de tasques de {group}: els companys veuen que us n'ocupeu; només vós rebeu el recordatori.",
+      "kept_reminder_colleague": "A la llista de tasques de {group}, sense correu: tothom amb qui es comparteix ho veu; només {name} rep el recordatori.",
+      "kept_reminder_me": "A la llista de tasques de {group}, sense correu: els companys ho veuen; només vós rebeu el recordatori.",
+      "nobody": "ningú / tothom",
+      "kept_nobody": "A la llista de tasques de {group}: tothom amb qui es comparteix la veu; no és per a ningú en concret."
     }
   }
 }

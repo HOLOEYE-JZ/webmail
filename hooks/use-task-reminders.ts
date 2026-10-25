@@ -17,6 +17,8 @@ import { dueTaskReminders, type TaskReminder } from "@/lib/task-reminders";
 import { followUpMailRef, followUpMailSummary, followUpNote } from "@/lib/follow-ups";
 import { followUpCalendars } from "./use-follow-ups";
 import { useReplyChecks } from "./use-follow-up-replies";
+import { useGroupReminderScope, useGroupTasksForMe } from "./use-group-follow-ups";
+import { mergeTasks } from "@/lib/group-follow-ups";
 
 /** How often the window looks at the clock for reminders that fell due. */
 const CHECK_MS = 30_000;
@@ -134,12 +136,16 @@ const NO_REMINDERS: TaskReminder[] = [];
  */
 export function useDueTaskReminders(): TaskReminder[] {
   const enabled = useRemindersEnabled();
-  const tasks = useTaskStore((s) => s.tasks);
+  const own = useTaskStore((s) => s.tasks);
+  // A group mailbox's tasks for the user remind them, and them alone.
+  const forMe = useGroupTasksForMe();
+  const scope = useGroupReminderScope();
+  const tasks = useMemo(() => mergeTasks(own, forMe), [own, forMe]);
   const checkedAt = useReplyChecks((s) => s.checkedAt);
   const now = useClock();
   return useMemo(
-    () => (enabled ? dueTaskReminders(tasks, now, (id) => checkedAt[id]) : NO_REMINDERS),
-    [enabled, tasks, now, checkedAt],
+    () => (enabled ? dueTaskReminders(tasks, now, (id) => checkedAt[id], scope) : NO_REMINDERS),
+    [enabled, tasks, now, checkedAt, scope],
   );
 }
 

@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark sieht vor der Erinnerung nach einer Antwort; die Erinnerung kommt dann nur in Bulwark, nicht aufs Telefon und nicht als Mail)",
       "settles_short": "erledigt sich, wenn eine Antwort kommt",
       "answered_note": "Antwort am {day} erhalten"
+    },
+    "group": {
+      "menu_colleague": "Für Kollegen in {group} …",
+      "menu_colleague_short": "Für Kollegen …",
+      "only_in_group": "nur im Gruppenpostfach",
+      "no_list": "das Gruppenpostfach hat keine Aufgabenliste, in die Sie schreiben können",
+      "for_label": "Für",
+      "me": "mich",
+      "chip_me": "ich",
+      "for_me": "für mich",
+      "for_person": "für {name}",
+      "by_me": "von mir",
+      "by_person": "von {name}",
+      "visible_label": "Sichtbar",
+      "visible_me": "nur ich",
+      "visible_group": "alle in {group}",
+      "colleague_needs_group": "Ein Kollege sieht sie nur in der Aufgabenliste des Gruppenpostfachs.",
+      "people_hint": "Personen, mit denen die Aufgabenliste von {group} geteilt ist.",
+      "not_shared": "Die Aufgabenliste von {group} ist mit niemandem geteilt – nur „mich“ möglich.",
+      "list_of": "Aufgabenliste {group}",
+      "chip_title": "In der Aufgabenliste von {group}, die alle darin sehen",
+      "remove_title": "Wiedervorlage entfernen?",
+      "remove_confirm": "Sie wird aus der Aufgabenliste von {group} gelöscht, für alle, die sie sehen. Das lässt sich nicht rückgängig machen.",
+      "kept_colleague": "In der Aufgabenliste von {group}: alle, mit denen sie geteilt ist, sehen sie an der Mail; die Erinnerung bekommt nur {name}.",
+      "kept_me": "In der Aufgabenliste von {group}: die Kollegen sehen, dass Sie sich darum kümmern; die Erinnerung bekommen nur Sie.",
+      "kept_reminder_colleague": "In der Aufgabenliste von {group}, ohne Mail: alle, mit denen sie geteilt ist, sehen sie; die Erinnerung bekommt nur {name}.",
+      "kept_reminder_me": "In der Aufgabenliste von {group}, ohne Mail: die Kollegen sehen sie; die Erinnerung bekommen nur Sie.",
+      "nobody": "niemand / alle",
+      "kept_nobody": "In der Aufgabenliste von {group}: alle, mit denen sie geteilt ist, sehen sie; sie ist für niemanden Bestimmten."
     }
   }
 }

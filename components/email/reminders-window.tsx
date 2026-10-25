@@ -7,17 +7,17 @@ import { Bell, Mail, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
-import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
 import { completeTask, useWorkingTime } from "@/hooks/use-follow-ups";
 import { openTaskItem } from "@/hooks/use-upcoming";
+import { updateAnyTask } from "@/hooks/use-group-follow-ups";
 import {
   openReminderMail,
   useDueTaskReminders,
   useReminderText,
   useRemindersWindow,
 } from "@/hooks/use-task-reminders";
-import { useFollowUpFormat } from "@/components/email/follow-up";
+import { GroupTaskSource, useFollowUpFormat } from "@/components/email/follow-up";
 import { debug } from "@/lib/debug";
 import { displayNow, fromDisplayDate } from "@/lib/timezone";
 import { followUpMailSummary, followUpState } from "@/lib/follow-ups";
@@ -111,13 +111,13 @@ export function RemindersWindow({ reminders, onClose }: {
   };
 
   const dismiss = (r: TaskReminder) => run(() => (
-    useTaskStore.getState().updateTask(client!, r.task.id, dismissTaskReminder(r.task, r.alertIds, new Date()))
+    updateAnyTask(client!, r.task, dismissTaskReminder(r.task, r.alertIds, new Date()))
   ));
 
   const dismissAll = () => run(async () => {
     const at = new Date();
     for (const r of reminders) {
-      await useTaskStore.getState().updateTask(client!, r.task.id, dismissTaskReminder(r.task, r.alertIds, at));
+      await updateAnyTask(client!, r.task, dismissTaskReminder(r.task, r.alertIds, at));
     }
   });
 
@@ -126,7 +126,7 @@ export function RemindersWindow({ reminders, onClose }: {
     const at = snoozeTimes(selected.task, new Date(), displayNow(), workingTime, fromDisplayDate)
       .find((x) => x.choice === choice)?.at;
     if (!at) return;
-    await useTaskStore.getState().updateTask(client!, selected.task.id, snoozeTaskReminder(selected.task, selected.alertIds, at, new Date()));
+    await updateAnyTask(client!, selected.task, snoozeTaskReminder(selected.task, selected.alertIds, at, new Date()));
   });
 
   // A mail's follow-up as the mail's own "Mark complete": its flag goes too.
@@ -220,7 +220,10 @@ export function RemindersWindow({ reminders, onClose }: {
                     {fmt.due(r.task, now)}
                   </span>
                 </span>
-                <span className="block truncate text-xs text-muted-foreground">{row.sub}</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  <GroupTaskSource task={r.task} />
+                  {row.sub}
+                </span>
               </span>
             </li>
           );

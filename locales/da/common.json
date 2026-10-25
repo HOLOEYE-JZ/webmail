@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark kigger efter et svar, før det minder dig om det; påmindelsen kommer så kun i Bulwark, ikke på telefonen eller som mail)",
       "settles_short": "klares af sig selv, når der kommer et svar",
       "answered_note": "Svar modtaget {day}"
+    },
+    "group": {
+      "menu_colleague": "Til en kollega i {group} …",
+      "menu_colleague_short": "Til en kollega …",
+      "only_in_group": "kun i en gruppepostkasse",
+      "no_list": "gruppepostkassen har ingen opgaveliste, du kan skrive i",
+      "for_label": "Til",
+      "me": "mig",
+      "chip_me": "mig",
+      "for_me": "til mig",
+      "for_person": "til {name}",
+      "by_me": "fra mig",
+      "by_person": "fra {name}",
+      "visible_label": "Synlig",
+      "visible_me": "kun mig",
+      "visible_group": "alle i {group}",
+      "colleague_needs_group": "En kollega ser den kun i gruppepostkassens opgaveliste.",
+      "people_hint": "De personer, som opgavelisten for {group} er delt med.",
+      "not_shared": "Opgavelisten for {group} er ikke delt med nogen: kun »mig« er muligt.",
+      "list_of": "Opgaveliste {group}",
+      "chip_title": "I opgavelisten for {group}, som alle ser",
+      "remove_title": "Fjern opfølgning?",
+      "remove_confirm": "Den slettes fra opgavelisten for {group} for alle, der ser den. Det kan ikke fortrydes.",
+      "kept_colleague": "I opgavelisten for {group}: alle, den er delt med, ser den ved mailen; kun {name} får påmindelsen.",
+      "kept_me": "I opgavelisten for {group}: kollegerne ser, at du tager dig af det; kun du får påmindelsen.",
+      "kept_reminder_colleague": "I opgavelisten for {group}, uden mail: alle, den er delt med, ser den; kun {name} får påmindelsen.",
+      "kept_reminder_me": "I opgavelisten for {group}, uden mail: kollegerne ser den; kun du får påmindelsen.",
+      "nobody": "ingen / alle",
+      "kept_nobody": "I opgavelisten for {group}: alle, den er delt med, ser den; den er ikke til nogen bestemt."
     }
   }
 }

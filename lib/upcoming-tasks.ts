@@ -10,7 +10,8 @@ import { followUpDueDay, followUpReminder, isOpenFollowUp, isRecurringTask } fro
  * follow-ups live in (`followUpCalendars`), whoever made it: a follow-up on a
  * mail, a reminder without one, a task from the task list or a phone. Not a
  * shared calendar's. As Outlook's To-Do bar, which lists all tasks, not only
- * flagged mails.
+ * flagged mails. Besides them, the tasks of a group mailbox's list that are
+ * for the user (`forMe`, lib/group-follow-ups.ts).
  *
  * A repeating task is only counted with the later ones and never in the
  * badge: its due day is the series' first, which would keep it overdue for
@@ -43,6 +44,16 @@ function isOwnListTask(task: CalendarTask, calendarIds: ReadonlySet<string>): bo
   return Object.keys(task.calendarIds ?? {}).some((id) => calendarIds.has(id));
 }
 
+/** The own list's tasks and the group tasks for the user, each once. */
+function mineOf(
+  tasks: readonly CalendarTask[],
+  calendarIds: ReadonlySet<string>,
+  forMe: readonly CalendarTask[],
+): CalendarTask[] {
+  const ids = new Set(forMe.map((t) => t.id));
+  return [...tasks.filter((t) => isOwnListTask(t, calendarIds) && !ids.has(t.id)), ...forMe];
+}
+
 /** Due day first (none last), then the reminder (none last), then the title. */
 function compareUpcoming(a: CalendarTask, b: CalendarTask): number {
   const dueA = followUpDueDay(a)?.getTime() ?? Infinity;
@@ -67,11 +78,12 @@ export function upcomingTasks(
   calendarIds: ReadonlySet<string>,
   now: Date,
   firstDayOfWeek = 1,
+  forMe: readonly CalendarTask[] = [],
 ): UpcomingList {
   const byGroup = new Map<UpcomingGroup, CalendarTask[]>();
   let later = 0;
-  for (const task of tasks) {
-    if (!isOpenFollowUp(task) || !isOwnListTask(task, calendarIds)) continue;
+  for (const task of mineOf(tasks, calendarIds, forMe)) {
+    if (!isOpenFollowUp(task)) continue;
     const group = isRecurringTask(task) ? "later" : upcomingGroupOf(task, now, firstDayOfWeek);
     if (group === "later") {
       later += 1;
@@ -90,10 +102,15 @@ export function upcomingTasks(
 }
 
 /** The rail's badge: the user's open tasks due today or earlier. */
-export function dueTaskCount(tasks: readonly CalendarTask[], calendarIds: ReadonlySet<string>, now: Date): number {
+export function dueTaskCount(
+  tasks: readonly CalendarTask[],
+  calendarIds: ReadonlySet<string>,
+  now: Date,
+  forMe: readonly CalendarTask[] = [],
+): number {
   let count = 0;
-  for (const task of tasks) {
-    if (!isOpenFollowUp(task) || !isOwnListTask(task, calendarIds) || isRecurringTask(task)) continue;
+  for (const task of mineOf(tasks, calendarIds, forMe)) {
+    if (!isOpenFollowUp(task) || isRecurringTask(task)) continue;
     const due = followUpDueDay(task);
     if (due && differenceInCalendarDays(due, now) <= 0) count += 1;
   }

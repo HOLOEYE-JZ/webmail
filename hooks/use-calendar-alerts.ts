@@ -10,7 +10,8 @@ import { useTaskStore } from '@/stores/task-store';
 import { useCalendarNotificationStore } from '@/stores/calendar-notification-store';
 import { useToastStore } from '@/stores/toast-store';
 import { getPendingAlerts, getPendingTaskAlerts, buildAlertKey } from '@/lib/calendar-alerts';
-import { isReminderWindowTask } from '@/lib/task-reminders';
+import { isToastlessTask } from '@/lib/task-reminders';
+import { useGroupReminderScope } from '@/hooks/use-group-follow-ups';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { getPathPrefix } from '@/lib/browser-navigation';
 import type { CalendarEvent } from '@/lib/jmap/types';
@@ -28,6 +29,7 @@ export function useCalendarAlerts() {
   const { acknowledgedAlerts, acknowledgeAlert, cleanupStaleAlerts } = useCalendarNotificationStore();
   const addToast = useToastStore((s) => s.addToast);
   const t = useTranslations('calendar.notifications');
+  const groupScope = useGroupReminderScope();
   const locale = useLocale();
 
   const lastProactiveFetchRef = useRef<number>(0);
@@ -86,10 +88,11 @@ export function useCalendarAlerts() {
         });
       }
 
-      // Task alerts. The user's own tasks go to the reminders window
-      // (useTaskReminders); a shared or repeating one is toasted here.
+      // Task alerts. The user's own tasks, and a shared list's for the user,
+      // go to the reminders window (useTaskReminders); a shared or repeating
+      // one is toasted here, unless it names someone else as whom it is for.
       if (enableCalendarTasks && storeTasks.length > 0) {
-        const pendingTaskAlerts = getPendingTaskAlerts(storeTasks, calendars, acknowledgedKeys, now, isReminderWindowTask);
+        const pendingTaskAlerts = getPendingTaskAlerts(storeTasks, calendars, acknowledgedKeys, now, (task) => isToastlessTask(task, groupScope));
         for (const taskAlert of pendingTaskAlerts) {
           const key = buildAlertKey(taskAlert.taskId, taskAlert.alertId, taskAlert.fireTimeMs);
           if (shownKeysRef.current.has(key)) continue;
@@ -122,7 +125,7 @@ export function useCalendarAlerts() {
   }, [
     calendarNotificationsEnabled, calendarNotificationSound, notificationSoundChoice,
     isAuthenticated, events, calendars, acknowledgedAlerts,
-    acknowledgeAlert, addToast, t, locale, enableCalendarTasks, storeTasks,
+    acknowledgeAlert, addToast, t, locale, enableCalendarTasks, storeTasks, groupScope,
   ]);
 
   const proactiveFetch = useCallback(async () => {

@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark zoekt naar een antwoord voordat het je herinnert; de herinnering komt dan alleen in Bulwark, niet op de telefoon of als mail)",
       "settles_short": "handelt zichzelf af als er een antwoord komt",
       "answered_note": "Antwoord ontvangen op {day}"
+    },
+    "group": {
+      "menu_colleague": "Voor een collega in {group} …",
+      "menu_colleague_short": "Voor een collega …",
+      "only_in_group": "alleen in een groepspostvak",
+      "no_list": "het groepspostvak heeft geen takenlijst waarin u kunt schrijven",
+      "for_label": "Voor",
+      "me": "mij",
+      "chip_me": "ik",
+      "for_me": "voor mij",
+      "for_person": "voor {name}",
+      "by_me": "van mij",
+      "by_person": "van {name}",
+      "visible_label": "Zichtbaar",
+      "visible_me": "alleen ik",
+      "visible_group": "iedereen in {group}",
+      "colleague_needs_group": "Een collega ziet het alleen in de takenlijst van het groepspostvak.",
+      "people_hint": "De personen met wie de takenlijst van {group} gedeeld is.",
+      "not_shared": "De takenlijst van {group} is met niemand gedeeld: alleen ‘mij’ is mogelijk.",
+      "list_of": "Takenlijst {group}",
+      "chip_title": "In de takenlijst van {group}, die iedereen ziet",
+      "remove_title": "Opvolging verwijderen?",
+      "remove_confirm": "Het wordt uit de takenlijst van {group} verwijderd, voor iedereen die het ziet. Dit kan niet ongedaan worden gemaakt.",
+      "kept_colleague": "In de takenlijst van {group}: iedereen met wie ze gedeeld is ziet het bij de mail; alleen {name} krijgt de herinnering.",
+      "kept_me": "In de takenlijst van {group}: collega's zien dat u het oppakt; alleen u krijgt de herinnering.",
+      "kept_reminder_colleague": "In de takenlijst van {group}, zonder mail: iedereen met wie ze gedeeld is ziet het; alleen {name} krijgt de herinnering.",
+      "kept_reminder_me": "In de takenlijst van {group}, zonder mail: collega's zien het; alleen u krijgt de herinnering.",
+      "nobody": "niemand / iedereen",
+      "kept_nobody": "In de takenlijst van {group}: iedereen met wie ze gedeeld is ziet het; het is voor niemand in het bijzonder."
     }
   }
 }

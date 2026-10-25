@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark caută un răspuns înainte să îți amintească; mementoul apare atunci doar în Bulwark, nu pe telefon și nici ca e-mail)",
       "settles_short": "se încheie singură când sosește un răspuns",
       "answered_note": "Răspuns primit pe {day}"
+    },
+    "group": {
+      "menu_colleague": "Pentru un coleg din {group} …",
+      "menu_colleague_short": "Pentru un coleg …",
+      "only_in_group": "doar într-o căsuță de grup",
+      "no_list": "căsuța de grup nu are o listă de activități în care să puteți scrie",
+      "for_label": "Pentru",
+      "me": "mine",
+      "chip_me": "eu",
+      "for_me": "pentru mine",
+      "for_person": "pentru {name}",
+      "by_me": "de la mine",
+      "by_person": "de la {name}",
+      "visible_label": "Vizibil",
+      "visible_me": "doar eu",
+      "visible_group": "toți din {group}",
+      "colleague_needs_group": "Un coleg o vede doar în lista de activități a căsuței de grup.",
+      "people_hint": "Persoanele cu care este partajată lista de activități a {group}.",
+      "not_shared": "Lista de activități a {group} nu este partajată cu nimeni: se poate alege doar „mine”.",
+      "list_of": "Lista de activități {group}",
+      "chip_title": "În lista de activități a {group}, pe care o văd toți",
+      "remove_title": "Eliminați urmărirea?",
+      "remove_confirm": "Va fi ștearsă din lista de activități a {group} pentru toți cei care o văd. Acțiunea nu poate fi anulată.",
+      "kept_colleague": "În lista de activități a {group}: toți cei cu care este partajată o văd la e-mail; doar {name} primește memento-ul.",
+      "kept_me": "În lista de activități a {group}: colegii văd că vă ocupați; doar dvs. primiți memento-ul.",
+      "kept_reminder_colleague": "În lista de activități a {group}, fără e-mail: toți cei cu care este partajată o văd; doar {name} primește memento-ul.",
+      "kept_reminder_me": "În lista de activități a {group}, fără e-mail: colegii o văd; doar dvs. primiți memento-ul.",
+      "nobody": "nimeni / toți",
+      "kept_nobody": "În lista de activități a {group}: toți cei cu care este partajată o văd; nu este pentru nimeni anume."
     }
   }
 }

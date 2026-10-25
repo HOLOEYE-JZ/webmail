@@ -281,6 +281,8 @@ export interface FollowUpTaskInput {
    * follow-up is written.
    */
   settlesOnReply?: boolean;
+  /** Whom it is for, in a group's task list (lib/group-follow-ups.ts); none in the user's own. */
+  participants?: CalendarTask["participants"];
 }
 
 /**
@@ -316,6 +318,7 @@ export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTas
     ...(input.note?.trim() ? { description: input.note.trim() } : {}),
     links,
     relatedTo: messageId ? { [`<${messageId}>`]: mailRelation(watch ? watchValue(input.reminderAt) : null) } : null,
+    ...(input.participants ? { participants: input.participants } : {}),
   };
 }
 
@@ -442,6 +445,8 @@ export interface ReminderTaskInput {
   note?: string;
   /** Whether the reminder also comes as a mail into the inbox (`mailReminderOffered`). */
   mailReminder?: boolean;
+  /** Whom it is for, in a group's task list (lib/group-follow-ups.ts); none in the user's own. */
+  participants?: CalendarTask["participants"];
 }
 
 /**
@@ -459,6 +464,7 @@ export function buildReminderTask(input: ReminderTaskInput): Partial<CalendarTas
     progress: "needs-action",
     alerts: alertsOf(input.reminderAt, input.mailReminder),
     ...(input.note?.trim() ? { description: input.note.trim() } : {}),
+    ...(input.participants ? { participants: input.participants } : {}),
   };
 }
 

@@ -4648,6 +4648,35 @@
       "settles_hint": "(O Bulwark procura uma resposta antes de lembrar você; o lembrete então aparece só no Bulwark, não no telefone nem por e-mail)",
       "settles_short": "conclui-se sozinho quando chega uma resposta",
       "answered_note": "Resposta recebida em {day}"
+    },
+    "group": {
+      "menu_colleague": "Para um colega em {group} …",
+      "menu_colleague_short": "Para um colega …",
+      "only_in_group": "só numa caixa de grupo",
+      "no_list": "a caixa de grupo não tem uma lista de tarefas em que possa escrever",
+      "for_label": "Para",
+      "me": "mim",
+      "chip_me": "eu",
+      "for_me": "para mim",
+      "for_person": "para {name}",
+      "by_me": "de mim",
+      "by_person": "de {name}",
+      "visible_label": "Visível",
+      "visible_me": "só eu",
+      "visible_group": "todos em {group}",
+      "colleague_needs_group": "Um colega só a vê na lista de tarefas da caixa de grupo.",
+      "people_hint": "As pessoas com quem a lista de tarefas de {group} está partilhada.",
+      "not_shared": "A lista de tarefas de {group} não está partilhada com ninguém: só é possível «mim».",
+      "list_of": "Lista de tarefas {group}",
+      "chip_title": "Na lista de tarefas de {group}, que todos veem",
+      "remove_title": "Remover o seguimento?",
+      "remove_confirm": "É eliminado da lista de tarefas de {group}, para todos os que a veem. Não é possível anular.",
+      "kept_colleague": "Na lista de tarefas de {group}: todos com quem está partilhada veem-no no e-mail; só {name} recebe o lembrete.",
+      "kept_me": "Na lista de tarefas de {group}: os colegas veem que trata do assunto; só você recebe o lembrete.",
+      "kept_reminder_colleague": "Na lista de tarefas de {group}, sem e-mail: todos com quem está partilhada veem-no; só {name} recebe o lembrete.",
+      "kept_reminder_me": "Na lista de tarefas de {group}, sem e-mail: os colegas veem-no; só você recebe o lembrete.",
+      "nobody": "ninguém / todos",
+      "kept_nobody": "Na lista de tarefas de {group}: todos com quem está partilhada a veem; não é para ninguém em particular."
     }
   }
 }

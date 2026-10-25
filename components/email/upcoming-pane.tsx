@@ -10,7 +10,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { completeTask, useFollowUpDialog } from "@/hooks/use-follow-ups";
 import { addReminderToday, openTaskItem, useDisplayNow, useUpcomingTasks } from "@/hooks/use-upcoming";
-import { useFollowUpFormat } from "@/components/email/follow-up";
+import { GroupTaskSource, useFollowUpFormat } from "@/components/email/follow-up";
 import { toDisplayDate } from "@/lib/timezone";
 import { followUpDueDay, followUpMailRef, followUpMailSummary, followUpNote, followUpReminder, isRecurringTask } from "@/lib/follow-ups";
 import type { UpcomingGroup } from "@/lib/upcoming-tasks";
@@ -216,7 +216,7 @@ function UpcomingItem({ task, group, onOpenMail }: {
         </span>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           {mail && <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />}
-          <span className="min-w-0 flex-1 truncate">{sub}</span>
+          <span className="min-w-0 flex-1 truncate"><GroupTaskSource task={task} />{sub}</span>
           {reminder && (
             <span className="inline-flex shrink-0 items-center gap-0.5">
               <Bell className="h-3 w-3" aria-label={t("reminder_label")} />

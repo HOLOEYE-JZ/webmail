@@ -533,6 +533,8 @@ const CALENDAR_TASK_PROPERTIES = [
   'alerts',
   'relatedTo',
   'links',
+  'participants',
+  'organizerCalendarAddress',
   'percentComplete',  // Task-only per RFC 8984 §5.2.4 - used in detection heuristic
 ] as const;
 

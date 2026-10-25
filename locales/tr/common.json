@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark hatırlatmadan önce bir yanıt arar; hatırlatma o zaman yalnızca Bulwark'ta gelir, telefona veya e-posta olarak gelmez)",
       "settles_short": "yanıt gelince kendiliğinden tamamlanır",
       "answered_note": "Yanıt {day} tarihinde alındı"
+    },
+    "group": {
+      "menu_colleague": "{group} içindeki bir iş arkadaşı için …",
+      "menu_colleague_short": "Bir iş arkadaşı için …",
+      "only_in_group": "yalnızca grup posta kutusunda",
+      "no_list": "grup posta kutusunda yazabileceğiniz bir görev listesi yok",
+      "for_label": "Kimin için",
+      "me": "ben",
+      "chip_me": "ben",
+      "for_me": "benim için",
+      "for_person": "{name} için",
+      "by_me": "benden",
+      "by_person": "{name} tarafından",
+      "visible_label": "Görünür",
+      "visible_me": "yalnızca ben",
+      "visible_group": "{group} içindeki herkes",
+      "colleague_needs_group": "Bir iş arkadaşı bunu yalnızca grup posta kutusunun görev listesinde görür.",
+      "people_hint": "{group} görev listesinin paylaşıldığı kişiler.",
+      "not_shared": "{group} görev listesi kimseyle paylaşılmamış: yalnızca “ben” seçilebilir.",
+      "list_of": "Görev listesi {group}",
+      "chip_title": "{group} görev listesinde, herkes görür",
+      "remove_title": "Takip kaldırılsın mı?",
+      "remove_confirm": "{group} görev listesinden, onu gören herkes için silinir. Bu geri alınamaz.",
+      "kept_colleague": "{group} görev listesinde: paylaşılan herkes bunu e-postada görür; hatırlatmayı yalnızca {name} alır.",
+      "kept_me": "{group} görev listesinde: iş arkadaşları sizin ilgilendiğinizi görür; hatırlatmayı yalnızca siz alırsınız.",
+      "kept_reminder_colleague": "{group} görev listesinde, e-posta olmadan: paylaşılan herkes görür; hatırlatmayı yalnızca {name} alır.",
+      "kept_reminder_me": "{group} görev listesinde, e-posta olmadan: iş arkadaşları görür; hatırlatmayı yalnızca siz alırsınız.",
+      "nobody": "kimse / herkes",
+      "kept_nobody": "{group} görev listesinde: paylaşılan herkes görür; belirli bir kişi için değildir."
     }
   }
 }

@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark busca una respuesta antes de recordártelo; el recordatorio entonces solo aparece en Bulwark, no en el móvil ni como correo)",
       "settles_short": "se completa sola cuando llega una respuesta",
       "answered_note": "Respuesta recibida el {day}"
+    },
+    "group": {
+      "menu_colleague": "Para un compañero en {group} …",
+      "menu_colleague_short": "Para un compañero …",
+      "only_in_group": "solo en un buzón de grupo",
+      "no_list": "el buzón de grupo no tiene una lista de tareas en la que pueda escribir",
+      "for_label": "Para",
+      "me": "mí",
+      "chip_me": "yo",
+      "for_me": "para mí",
+      "for_person": "para {name}",
+      "by_me": "de mí",
+      "by_person": "de {name}",
+      "visible_label": "Visible",
+      "visible_me": "solo yo",
+      "visible_group": "todos en {group}",
+      "colleague_needs_group": "Un compañero solo lo ve en la lista de tareas del buzón de grupo.",
+      "people_hint": "Las personas con las que se comparte la lista de tareas de {group}.",
+      "not_shared": "La lista de tareas de {group} no está compartida con nadie: solo se puede elegir «mí».",
+      "list_of": "Lista de tareas {group}",
+      "chip_title": "En la lista de tareas de {group}, que todos ven",
+      "remove_title": "¿Quitar el seguimiento?",
+      "remove_confirm": "Se elimina de la lista de tareas de {group} para todos los que la ven. No se puede deshacer.",
+      "kept_colleague": "En la lista de tareas de {group}: todos con quienes se comparte lo ven en el correo; solo {name} recibe el recordatorio.",
+      "kept_me": "En la lista de tareas de {group}: los compañeros ven que usted se encarga; solo usted recibe el recordatorio.",
+      "kept_reminder_colleague": "En la lista de tareas de {group}, sin correo: todos con quienes se comparte lo ven; solo {name} recibe el recordatorio.",
+      "kept_reminder_me": "En la lista de tareas de {group}, sin correo: los compañeros lo ven; solo usted recibe el recordatorio.",
+      "nobody": "nadie / todos",
+      "kept_nobody": "En la lista de tareas de {group}: todos con quienes se comparte la ven; no es para nadie en concreto."
     }
   }
 }

@@ -1,0 +1,504 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { create } from "zustand";
+import { useAuthStore } from "@/stores/auth-store";
+import { useCalendarStore } from "@/stores/calendar-store";
+import { useTaskStore } from "@/stores/task-store";
+import { debug } from "@/lib/debug";
+import { cachedPrincipals } from "@/lib/jmap/principal-cache";
+import { applyPatchObject } from "@/lib/jmap/patch-object";
+import { appUrl, buildMailMessageLink } from "@/lib/deep-links";
+import {
+  isOpenFollowUp,
+  buildFollowUpTask,
+  buildReminderTask,
+  editFollowUpTask,
+  editReminderTask,
+  followUpAction,
+  followUpMailSummary,
+  sameFollowUpAction,
+} from "@/lib/follow-ups";
+import {
+  addressOf,
+  groupFollowUpsByEmailId,
+  groupTaskOwnerPatch,
+  groupTaskParticipants,
+  groupTaskList,
+  isGroupFollowUpTask,
+  isTaskForMe,
+  principalName,
+  taskListSharees,
+  type TaskPerson,
+} from "@/lib/group-follow-ups";
+import type { Calendar, CalendarTask, Email, Principal } from "@/lib/jmap/types";
+import type { IJMAPClient } from "@/lib/jmap/client-interface";
+import type { GroupReminderScope } from "@/lib/task-reminders";
+import { messageIdOf, reachesMailAccount, useFollowUpsEnabled, type FollowUpDetails } from "./use-follow-ups";
+
+/**
+ * The task lists of the group mailboxes the user reaches, and their tasks
+ * (lib/group-follow-ups.ts). Kept apart from the task store, which holds the
+ * user's own list: the flag keeping (#341) and the pane read that one alone,
+ * and a group account that cannot be read never makes the own list count as
+ * read in part. Only one list per group account is read, the one follow-ups
+ * go into, so the cost stays that of the groups the user is in.
+ */
+
+/** A group account's task list, with the account's name. */
+export interface GroupTaskList {
+  accountId: string;
+  /** The account's name, its address in Stalwart ("vertrieb@example.com"). */
+  name: string;
+  list: Calendar;
+}
+
+interface GroupTaskState {
+  lists: GroupTaskList[];
+  tasks: CalendarTask[];
+  /** The client the lists were read with, null before. */
+  loadedBy: IJMAPClient | null;
+  refresh: (client: IJMAPClient) => Promise<void>;
+  /** Applies a written change here at once (null: deleted). */
+  applyLocal: (id: string, patch: object | null) => void;
+  addLocal: (task: CalendarTask) => void;
+  clear: () => void;
+}
+
+/**
+ * Whether the directory confirms an account as a group's (a group mailbox's
+ * account). Only then: a shared account the directory does not name, or
+ * names otherwise (a colleague's or a manager's delegated mailbox), is never
+ * taken for a group, so nothing is written into a person's own calendar.
+ */
+export function isGroupAccount(accountId: string, principals: readonly Principal[]): boolean {
+  return principals.some((p) => p.id === accountId && p.type === "group");
+}
+
+/** The group lists found, and whether the directory could be read to tell them. */
+export interface GroupTaskListsFound {
+  lists: GroupTaskList[];
+  /** False when shared accounts were there but the directory listed nothing: asked again later. */
+  directoryRead: boolean;
+}
+
+/**
+ * The group accounts' task lists among `calendars`: shared accounts the
+ * login reaches for mail too, which the directory names as groups. Without
+ * the directory (not offered, failed, empty) none.
+ */
+export async function findGroupTaskLists(client: IJMAPClient, calendars: readonly Calendar[]): Promise<GroupTaskListsFound> {
+  const accountIds = [...new Set(calendars.filter((c) => c.isShared && c.accountId).map((c) => c.accountId as string))]
+    .filter((id) => id !== client.getAccountId() && reachesMailAccount(client, id));
+  if (accountIds.length === 0) return { lists: [], directoryRead: true };
+  // An empty answer is not kept by the cache: the next call asks again.
+  const principals = await cachedPrincipals(client);
+  if (principals.length === 0) return { lists: [], directoryRead: false };
+  const lists: GroupTaskList[] = [];
+  for (const accountId of accountIds) {
+    if (!isGroupAccount(accountId, principals)) continue;
+    const list = groupTaskList(calendars, accountId);
+    if (list) lists.push({ accountId, name: list.accountName || accountId, list });
+  }
+  return { lists: lists.sort((a, b) => a.name.localeCompare(b.name)), directoryRead: true };
+}
+
+/**
+ * The tasks a group list's read keeps: open ones only (Stalwart's
+ * CalendarEvent/query filters by neither type nor progress, so the rest is
+ * read and dropped), of the lists read. A done or cancelled one shows at the
+ * mail only until the next read.
+ */
+export function keptGroupTasks(tasks: readonly CalendarTask[], listIds: ReadonlySet<string>): CalendarTask[] {
+  return tasks.filter((t) => t.isShared && isOpenFollowUp(t) && Object.keys(t.calendarIds ?? {}).some((id) => listIds.has(id)));
+}
+
+/** How long pushes are gathered before the lists are read again. */
+export const PUSH_DEBOUNCE_MS = 1_500;
+/** When a directory that could not be read is asked again. */
+export const DIRECTORY_RETRY_MS = 60_000;
+
+// Each read gets a number: an answer of an older read than the latest is
+// dropped, so a late one never overwrites newer state.
+let generation = 0;
+// Bumped by every write applied here: a read begun before it is dropped and
+// made again, so it does not undo the write in the store.
+let localVersion = 0;
+let scheduled: ReturnType<typeof setTimeout> | null = null;
+
+/** Reads the group lists again after `delayMs`; calls meanwhile are gathered into one. */
+export function scheduleGroupRefresh(client: IJMAPClient, delayMs: number): void {
+  if (scheduled) clearTimeout(scheduled);
+  scheduled = setTimeout(() => {
+    scheduled = null;
+    if (useAuthStore.getState().client === client) void useGroupTasks.getState().refresh(client);
+  }, delayMs);
+}
+
+export const useGroupTasks = create<GroupTaskState>((set, get) => ({
+  lists: [],
+  tasks: [],
+  loadedBy: null,
+  refresh: async (client) => {
+    const mine = ++generation;
+    const local = localVersion;
+    const current = () => mine === generation && useAuthStore.getState().client === client;
+    try {
+      const { lists, directoryRead } = await findGroupTaskLists(client, useCalendarStore.getState().calendars);
+      if (!current()) return;
+      if (!directoryRead) scheduleGroupRefresh(client, DIRECTORY_RETRY_MS);
+      if (lists.length === 0) {
+        set({ lists, tasks: [], loadedBy: client });
+        return;
+      }
+      const ids = lists.map((l) => l.list.id);
+      const { tasks } = client.getCalendarTaskList
+        ? await client.getCalendarTaskList(ids)
+        : { tasks: await client.getCalendarTasks(ids) };
+      if (!current()) return;
+      if (local !== localVersion) {
+        // Written meanwhile: read again rather than put back what was there before.
+        scheduleGroupRefresh(client, PUSH_DEBOUNCE_MS);
+        return;
+      }
+      set({ lists, tasks: keptGroupTasks(tasks, new Set(ids)), loadedBy: client });
+    } catch (error) {
+      debug.error("group follow-ups: not loaded", error);
+    }
+  },
+  applyLocal: (id, patch) => {
+    localVersion += 1;
+    set({
+      tasks: patch === null
+        ? get().tasks.filter((t) => t.id !== id)
+        : get().tasks.map((t) => (t.id === id ? { ...applyPatchObject(t, patch), updated: new Date().toISOString() } : t)),
+    });
+  },
+  addLocal: (task) => {
+    localVersion += 1;
+    set({ tasks: [...get().tasks.filter((t) => t.id !== task.id), task] });
+  },
+  clear: () => {
+    generation += 1;
+    if (scheduled) clearTimeout(scheduled);
+    scheduled = null;
+    set({ lists: [], tasks: [], loadedBy: null });
+  },
+}));
+
+/** How long the app waits for a page to load the calendars before it does so itself. */
+const CALENDARS_DELAY_MS = 2_000;
+
+/** The calendars' ids and rights, which decide the group lists: a reload only when they change. */
+function listsKey(calendars: readonly Calendar[]): string {
+  return calendars
+    .filter((c) => c.isShared)
+    .map((c) => `${c.id}:${c.isTasksOnly ? 1 : 0}${c.isDefault ? 1 : 0}${c.myRights?.mayWriteAll || c.myRights?.mayWriteOwn ? 1 : 0}:${Object.keys(c.shareWith ?? {}).sort().join(",")}`)
+    .sort()
+    .join("|");
+}
+
+/**
+ * Loads the group lists and their tasks wherever the app opens (a reminder
+ * for the user may stand in one), and again when the calendars change.
+ * Mounted once.
+ */
+export function useGroupTasksLoaded(): void {
+  const enabled = useFollowUpsEnabled();
+  const client = useAuthStore((s) => s.client);
+  const calendars = useCalendarStore((s) => s.calendars);
+  const key = useMemo(() => listsKey(calendars), [calendars]);
+
+  useEffect(() => {
+    if (!enabled || !client) {
+      useGroupTasks.getState().clear();
+      return;
+    }
+    if (useCalendarStore.getState().calendars.length === 0) {
+      const timer = setTimeout(() => {
+        if (useCalendarStore.getState().calendars.length === 0) void useCalendarStore.getState().fetchCalendars(client);
+      }, CALENDARS_DELAY_MS);
+      return () => clearTimeout(timer);
+    }
+    void useGroupTasks.getState().refresh(client);
+  }, [enabled, client, key]);
+}
+
+/**
+ * After a push naming a change of calendars in an account other than the
+ * login's own: the group lists are read again when one lies there.
+ */
+export function refreshGroupTasksFor(client: IJMAPClient, changedAccountIds: readonly string[]): void {
+  const state = useGroupTasks.getState();
+  if (state.loadedBy !== client) return;
+  if (state.lists.some((l) => changedAccountIds.includes(l.accountId))) scheduleGroupRefresh(client, PUSH_DEBOUNCE_MS);
+}
+
+// ---------------------------------------------------------------------------
+// The user
+// ---------------------------------------------------------------------------
+
+/** The user's own addresses, lower case: identities of the login, calendar addresses, the login name. */
+export function addressesOf(
+  identities: readonly { email?: string | null; localAccountId?: string }[] | null | undefined,
+  username: string | null | undefined,
+  calendarIdentities: readonly { calendarAddress?: string | null }[] | null | undefined,
+): Set<string> {
+  const addresses = new Set<string>();
+  for (const identity of identities ?? []) {
+    if (identity.localAccountId) continue;
+    const a = addressOf(identity.email);
+    if (a) addresses.add(a);
+  }
+  for (const identity of calendarIdentities ?? []) {
+    const a = addressOf(identity.calendarAddress);
+    if (a) addresses.add(a);
+  }
+  const login = addressOf(username);
+  if (login) addresses.add(login);
+  return addresses;
+}
+
+/** As `addressesOf`, following the stores. */
+export function useMyAddresses(): ReadonlySet<string> {
+  const identities = useAuthStore((s) => s.identities);
+  const username = useAuthStore((s) => s.username);
+  const participantIdentities = useCalendarStore((s) => s.participantIdentities);
+  return useMemo(() => addressesOf(identities, username, participantIdentities), [identities, username, participantIdentities]);
+}
+
+/** The user as a group task names them: the calendar address they act as, else their first identity's. */
+export function myPerson(): TaskPerson | null {
+  const auth = useAuthStore.getState();
+  const identities = useCalendarStore.getState().participantIdentities ?? [];
+  const calendarIdentity = identities.find((i) => i.isDefault) ?? identities[0];
+  const mailIdentity = (auth.identities ?? []).find((i) => !i.localAccountId);
+  const email = addressOf(calendarIdentity?.calendarAddress) ?? addressOf(mailIdentity?.email) ?? addressOf(auth.username);
+  if (!email) return null;
+  const name = calendarIdentity?.name?.trim() || mailIdentity?.name?.trim() || email;
+  return { id: null, name, email };
+}
+
+/** The server's principals, loaded once per client; empty until then or when it lists none. */
+export function usePrincipals(enabled = true): readonly Principal[] {
+  const client = useAuthStore((s) => s.client);
+  const [principals, setPrincipals] = useState<readonly Principal[]>([]);
+  useEffect(() => {
+    if (!client || !enabled) return;
+    let cancelled = false;
+    void cachedPrincipals(client).then((list) => { if (!cancelled) setPrincipals(list); });
+    return () => { cancelled = true; };
+  }, [client, enabled]);
+  return principals;
+}
+
+// ---------------------------------------------------------------------------
+// What the mail view and the dialog read
+// ---------------------------------------------------------------------------
+
+/** The group task list of a mail account, when it is a group mailbox's with one. */
+export function useGroupTaskList(accountId: string | null): GroupTaskList | null {
+  const enabled = useFollowUpsEnabled();
+  const lists = useGroupTasks((s) => s.lists);
+  return enabled && accountId ? lists.find((l) => l.accountId === accountId) ?? null : null;
+}
+
+// One index per task list and account, shared by every row that asks.
+const indexCache = new WeakMap<CalendarTask[], Map<string, Map<string, CalendarTask[]>>>();
+function groupIndex(tasks: CalendarTask[], accountId: string): Map<string, CalendarTask[]> {
+  let byAccount = indexCache.get(tasks);
+  if (!byAccount) {
+    byAccount = new Map();
+    indexCache.set(tasks, byAccount);
+  }
+  let index = byAccount.get(accountId);
+  if (!index) {
+    index = groupFollowUpsByEmailId(tasks, accountId);
+    byAccount.set(accountId, index);
+  }
+  return index;
+}
+
+const NO_TASKS: CalendarTask[] = [];
+const NO_INDEX = new Map<string, CalendarTask[]>();
+
+/** The group follow-ups on the mails of a group account, by mail id. */
+export function useGroupFollowUpIndex(accountId: string | null): Map<string, CalendarTask[]> {
+  const enabled = useFollowUpsEnabled();
+  const tasks = useGroupTasks((s) => s.tasks);
+  return enabled && accountId ? groupIndex(tasks, accountId) : NO_INDEX;
+}
+
+/** The group follow-ups on one mail of a group account. */
+export function useGroupFollowUpsOf(emailId: string | null | undefined, accountId: string | null): CalendarTask[] {
+  const index = useGroupFollowUpIndex(accountId);
+  return (emailId && index.get(emailId)) || NO_TASKS;
+}
+
+/** The group tasks for the user (open or not): the pane and the reminders read them beside the own list. */
+export function useGroupTasksForMe(): CalendarTask[] {
+  const enabled = useFollowUpsEnabled();
+  const tasks = useGroupTasks((s) => s.tasks);
+  const { mine, groupListIds } = useGroupReminderScope();
+  return useMemo(
+    () => (enabled ? tasks.filter((t) => isGroupFollowUpTask(t, groupListIds) && isTaskForMe(t, mine)) : NO_TASKS),
+    [enabled, tasks, mine, groupListIds],
+  );
+}
+
+/** The user's addresses and the recognised group lists, for whose reminders a shared task's are. */
+export function useGroupReminderScope(): GroupReminderScope {
+  const mine = useMyAddresses();
+  const lists = useGroupTasks((s) => s.lists);
+  return useMemo(() => ({ mine, groupListIds: new Set(lists.map((l) => l.list.id)) }), [mine, lists]);
+}
+
+/** The group list a task lies in, when it lies in one. */
+export function groupListOfTask(task: Pick<CalendarTask, "calendarIds">, lists: readonly GroupTaskList[]): GroupTaskList | null {
+  const ids = Object.keys(task.calendarIds ?? {});
+  return lists.find((l) => ids.includes(l.list.id)) ?? null;
+}
+
+/** The people a group's task list can name besides the user, by its shares. */
+export function useTaskListSharees(list: Calendar | null): TaskPerson[] {
+  const client = useAuthStore((s) => s.client);
+  const principals = usePrincipals(!!list);
+  const mine = useMyAddresses();
+  return useMemo(
+    () => taskListSharees(list, principals, mine, client?.getAccountId() ?? null),
+    [list, principals, mine, client],
+  );
+}
+
+/** A principal's name for an address, for tests and callers outside React. */
+export function personOfAddress(email: string, principals: readonly Principal[]): TaskPerson {
+  const principal = principals.find((p) => addressOf(p.email) === email);
+  return { id: principal?.id ?? null, name: (principal && principalName(principal)) || email, email };
+}
+
+// ---------------------------------------------------------------------------
+// Writing a group task
+// ---------------------------------------------------------------------------
+
+/** Whether a task is one of a group's list this app reads. */
+export function isGroupTask(task: Pick<CalendarTask, "id">): boolean {
+  return useGroupTasks.getState().tasks.some((t) => t.id === task.id);
+}
+
+/**
+ * Creates a task in a group's list. Through the task store, so plugins see
+ * it as any task; the task store keeps the user's own list only, so it is
+ * taken out there and kept here.
+ */
+export async function createGroupTask(client: IJMAPClient, task: Partial<CalendarTask>): Promise<CalendarTask | null> {
+  const created = await useTaskStore.getState().createTask(client, task);
+  if (!created) return null;
+  useTaskStore.setState((s) => ({ tasks: s.tasks.filter((t) => t.id !== created.id) }));
+  useGroupTasks.getState().addLocal(created);
+  return created;
+}
+
+/** Changes a group task (by paths where the patch names them); false when a plugin stopped it. */
+export async function updateGroupTask(client: IJMAPClient, task: CalendarTask, patch: object): Promise<boolean> {
+  const written = await useTaskStore.getState().updateTask(client, task.id, patch as Partial<CalendarTask>);
+  if (written) useGroupTasks.getState().applyLocal(task.id, patch);
+  return written;
+}
+
+export async function deleteGroupTask(client: IJMAPClient, task: CalendarTask): Promise<boolean> {
+  const deleted = await useTaskStore.getState().deleteTask(client, task.id);
+  if (deleted) useGroupTasks.getState().applyLocal(task.id, null);
+  return deleted;
+}
+
+/** Changes a task wherever it is kept: a group's list or the user's own. */
+export async function updateAnyTask(client: IJMAPClient, task: CalendarTask, patch: object): Promise<boolean> {
+  if (isGroupTask(task)) return updateGroupTask(client, task, patch);
+  return useTaskStore.getState().updateTask(client, task.id, patch as Partial<CalendarTask>);
+}
+
+// ---------------------------------------------------------------------------
+// The dialog's handle on a group task
+// ---------------------------------------------------------------------------
+
+/** The task of a group's list by its id, null while it is not (or no longer) there. */
+export function useGroupTask(taskId: string | null): CalendarTask | null {
+  return useGroupTasks((s) => (taskId ? s.tasks.find((t) => t.id === taskId) ?? null : null));
+}
+
+/** What a group task is to say, besides the fields both lists share. */
+export interface GroupTaskWrite {
+  list: GroupTaskList;
+  /** The task, or null for a new one. */
+  task: CalendarTask | null;
+  /**
+   * Whom it is for; null for the user. Undefined keeps an existing task's
+   * owner as it is (also none: a task without one stays everyone's until
+   * the user names someone); a new one is then the user's.
+   */
+  person: TaskPerson | null | undefined;
+  details: FollowUpDetails;
+  /** The mail of a follow-up, and its account; none for a reminder without one. */
+  mail?: { email: Email; accountId: string } | null;
+  /** Titles in the user's language. */
+  text: { title: (action: string, subject: string) => string; noSubject: string; followUp: string };
+}
+
+/**
+ * Writes a follow-up or reminder into a group's list. A new one names its
+ * owner participant and who set it; a change names a new owner only when it
+ * changed. Never an alarm mail (it would go to the group's inbox) and never
+ * settling on an answer: both are left as the task has them.
+ */
+export async function writeGroupTask(client: IJMAPClient, write: GroupTaskWrite): Promise<boolean> {
+  const me = myPerson();
+  if (!me) return false;
+  const owner = write.person ?? me;
+  const ownerChosen = write.person !== undefined;
+  const { details, task, list, mail } = write;
+  const shared = { ...details, mailReminder: undefined, settlesOnReply: undefined };
+  if (!task) {
+    if (mail) {
+      const action = details.action.replace(/\s+/g, " ").trim() || write.text.followUp;
+      const created = await createGroupTask(client, buildFollowUpTask({
+        title: write.text.title(action, mail.email.subject || write.text.noSubject),
+        mailUrl: appUrl(buildMailMessageLink(mail.email.id, mail.accountId)),
+        subject: mail.email.subject,
+        messageId: await messageIdOf(client, mail.email, mail.accountId),
+        from: mail.email.from?.[0] ?? null,
+        calendarId: list.list.id,
+        due: details.due,
+        reminderAt: details.reminderAt,
+        note: details.note,
+        participants: groupTaskParticipants(owner, me),
+      }));
+      return !!created;
+    }
+    const title = details.action.replace(/\s+/g, " ").trim();
+    if (!title) return false;
+    const created = await createGroupTask(client, buildReminderTask({
+      title,
+      calendarId: list.list.id,
+      due: details.due,
+      reminderAt: details.reminderAt,
+      note: details.note,
+      participants: groupTaskParticipants(owner, me),
+    }));
+    return !!created;
+  }
+  let patch: Record<string, unknown>;
+  if (mail) {
+    const action = details.action.replace(/\s+/g, " ").trim() || write.text.followUp;
+    const title = sameFollowUpAction(action, followUpAction(task))
+      ? null
+      : write.text.title(action, followUpMailSummary(task).subject || mail.email.subject || write.text.noSubject);
+    patch = { ...editFollowUpTask(task, { ...shared, title }) };
+  } else {
+    const title = details.action.replace(/\s+/g, " ").trim();
+    if (!title) return false;
+    patch = { ...editReminderTask(task, { ...shared, title: title === task.title ? null : title }) };
+  }
+  if (ownerChosen) Object.assign(patch, groupTaskOwnerPatch(task, owner, me));
+  if (Object.keys(patch).length === 0) return true;
+  return updateGroupTask(client, task, patch);
+}

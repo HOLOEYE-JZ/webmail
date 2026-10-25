@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark cherche une réponse avant de vous le rappeler ; le rappel n'apparaît alors que dans Bulwark, ni sur le téléphone ni par e-mail)",
       "settles_short": "se termine d'elle-même quand une réponse arrive",
       "answered_note": "Réponse reçue le {day}"
+    },
+    "group": {
+      "menu_colleague": "Pour un collègue dans {group} …",
+      "menu_colleague_short": "Pour un collègue …",
+      "only_in_group": "uniquement dans une boîte partagée",
+      "no_list": "la boîte partagée n'a pas de liste de tâches où vous pouvez écrire",
+      "for_label": "Pour",
+      "me": "moi",
+      "chip_me": "moi",
+      "for_me": "pour moi",
+      "for_person": "pour {name}",
+      "by_me": "de moi",
+      "by_person": "de {name}",
+      "visible_label": "Visible",
+      "visible_me": "moi seul",
+      "visible_group": "tous dans {group}",
+      "colleague_needs_group": "Un collègue ne la voit que dans la liste de tâches de la boîte partagée.",
+      "people_hint": "Les personnes avec qui la liste de tâches de {group} est partagée.",
+      "not_shared": "La liste de tâches de {group} n'est partagée avec personne : seul « moi » est possible.",
+      "list_of": "Liste de tâches {group}",
+      "chip_title": "Dans la liste de tâches de {group}, visible par tous",
+      "remove_title": "Supprimer le suivi ?",
+      "remove_confirm": "Il est supprimé de la liste de tâches de {group}, pour tous ceux qui la voient. Cette action est irréversible.",
+      "kept_colleague": "Dans la liste de tâches de {group} : tous ceux avec qui elle est partagée le voient sur le message ; seul(e) {name} reçoit le rappel.",
+      "kept_me": "Dans la liste de tâches de {group} : vos collègues voient que vous vous en occupez ; vous seul recevez le rappel.",
+      "kept_reminder_colleague": "Dans la liste de tâches de {group}, sans message : tous ceux avec qui elle est partagée le voient ; seul(e) {name} reçoit le rappel.",
+      "kept_reminder_me": "Dans la liste de tâches de {group}, sans message : vos collègues le voient ; vous seul recevez le rappel.",
+      "nobody": "personne / tous",
+      "kept_nobody": "Dans la liste de tâches de {group} : tous ceux avec qui elle est partagée la voient ; elle n'est destinée à personne en particulier."
     }
   }
 }

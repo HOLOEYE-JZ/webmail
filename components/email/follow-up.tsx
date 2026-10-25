@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { differenceInCalendarDays, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Bell, Check, ChevronDown, Flag, Pencil, Reply } from "@/components/icons";
+import { Bell, Check, ChevronDown, Flag, Pencil, Reply, Users } from "@/components/icons";
 import {
   ContextMenu,
   ContextMenuHeader,
@@ -13,8 +13,28 @@ import {
 } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
-import { useFollowUp, type FollowUpControls } from "@/hooks/use-follow-ups";
+import {
+  completeTask,
+  followUpMailAccount,
+  useFollowUp,
+  useFollowUpDialog,
+  useFollowUpsEnabled,
+  type FollowUpControls,
+} from "@/hooks/use-follow-ups";
+import {
+  deleteGroupTask,
+  groupListOfTask,
+  useGroupFollowUpsOf,
+  useGroupTasks,
+  useMyAddresses,
+  usePrincipals,
+} from "@/hooks/use-group-follow-ups";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useAuthStore } from "@/stores/auth-store";
+import { groupTaskPeople, isTaskForMe } from "@/lib/group-follow-ups";
 import { useSettingsStore } from "@/stores/settings-store";
+import { toast } from "@/stores/toast-store";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import {
   FOLLOW_UP_CHOICES,
@@ -145,6 +165,24 @@ export function FollowUpMenuItems({ controls, onClose, heading = true }: {
         testId="follow-up-add-reminder"
         onClick={() => { onClose(); controls.openDialog("reminder"); }}
       />
+      {/* A colleague only in a group mailbox's list: they could not read a mail of the user's own. */}
+      {controls.group ? (
+        <ContextMenuItem
+          icon={Users}
+          label={t("group.menu_colleague", { group: controls.group.name })}
+          testId="follow-up-colleague"
+          onClick={() => { onClose(); controls.openGroupDialog(); }}
+        />
+      ) : (
+        <ContextMenuItem
+          icon={Users}
+          label={t("group.menu_colleague_short")}
+          hint={controls.onlyMe ? t("group.no_list") : t("group.only_in_group")}
+          testId="follow-up-colleague"
+          disabled
+          onClick={() => {}}
+        />
+      )}
       <ContextMenuSeparator />
       <ContextMenuItem
         icon={Check}
@@ -236,6 +274,15 @@ export function FollowUpFlagButton({ email, className, onlyWhenSet = false, reve
  * answer comes ends with ↩ and says so in its title.
  */
 export function FollowUpChip({ email, className }: { email: Email; className?: string }) {
+  return (
+    <>
+      <OwnFollowUpChip email={email} className={className} />
+      <GroupFollowUpChips email={email} className={className} />
+    </>
+  );
+}
+
+function OwnFollowUpChip({ email, className }: { email: Email; className?: string }) {
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
   const { available, onlyMe, task } = useFollowUp(email);
@@ -321,6 +368,15 @@ export function FollowUpReaderButton({ email }: { email: Email }) {
  * me": the user's own task, which no colleague sees.
  */
 export function FollowUpInfoBar({ email }: { email: Email }) {
+  return (
+    <>
+      <OwnFollowUpInfoBar email={email} />
+      <GroupFollowUpInfoBars email={email} />
+    </>
+  );
+}
+
+function OwnFollowUpInfoBar({ email }: { email: Email }) {
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
   const controls = useFollowUp(email);
@@ -399,5 +455,241 @@ export function FollowUpInfoBar({ email }: { email: Email }) {
         {t("remove_button")}
       </button>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// A group mailbox's task list (plan 037 decisions 2, 3)
+// ---------------------------------------------------------------------------
+
+const GROUP_STATE_CLASSES: Record<FollowUpState, string> = {
+  open: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  overdue: "bg-destructive/10 text-destructive font-medium",
+  done: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+};
+
+/** The group follow-ups on a mail of a group mailbox, and that group's list. */
+function useMailGroupFollowUps(email: Email) {
+  const enabled = useFollowUpsEnabled();
+  const client = useAuthStore((s) => s.client);
+  const accountId = enabled ? followUpMailAccount(email, client) : null;
+  const groupAccountId = accountId && client && accountId !== client.getAccountId() ? accountId : null;
+  const tasks = useGroupFollowUpsOf(email.id, groupAccountId);
+  const lists = useGroupTasks((s) => s.lists);
+  const list = groupAccountId ? lists.find((l) => l.accountId === groupAccountId) ?? null : null;
+  return { tasks: email.isScheduled || email.keywords?.$draft ? [] : tasks, list };
+}
+
+/** "for Anna (from Ben)", "for me", "for Anna": whom a group task is for and who set it. */
+function useGroupPeopleText() {
+  const t = useTranslations("follow_up");
+  const mine = useMyAddresses();
+  const principals = usePrincipals();
+  return useCallback((task: CalendarTask) => {
+    const people = groupTaskPeople(task, mine, principals);
+    // A task naming no one (written elsewhere) is everyone's.
+    const forWhom = people.forMe ? t("group.for_me") : t("group.for_person", { name: people.forName ?? t("group.nobody") });
+    const by = people.byMe ? t("group.by_me") : people.byName ? t("group.by_person", { name: people.byName }) : null;
+    // The chip's short name: "me", or the colleague's.
+    const short = people.forMe ? t("group.chip_me") : people.forName ?? t("group.nobody");
+    return { forWhom, by, short, forMe: people.forMe };
+  }, [t, mine, principals]);
+}
+
+/**
+ * The chips of a group mailbox's mail, one per follow-up in the group's
+ * list, which every member sees: "⚑ Anna · Write a quote · due Thu"; the
+ * reminder only on the user's own.
+ */
+function GroupFollowUpChips({ email, className }: { email: Email; className?: string }) {
+  const { tasks, list } = useMailGroupFollowUps(email);
+  if (tasks.length === 0) return null;
+  return <GroupFollowUpChipList tasks={tasks} listName={list?.name ?? null} className={className} />;
+}
+
+function GroupFollowUpChipList({ tasks, listName, className }: { tasks: CalendarTask[]; listName: string | null; className?: string }) {
+  const t = useTranslations("follow_up");
+  const fmt = useFollowUpFormat();
+  const people = useGroupPeopleText();
+  const mine = useMyAddresses();
+  const now = displayNow();
+  return (
+    <>
+      {tasks.map((task) => {
+        const state = followUpState(task, now);
+        const Icon = state === "done" ? Check : Flag;
+        const who = people(task);
+        const reminderAt = state !== "done" && isTaskForMe(task, mine) ? followUpReminder(task) : null;
+        const text = [who.short, ...(state === "done" ? [t("done")] : [fmt.action(task), fmt.due(task, now)])]
+          .filter(Boolean)
+          .join(" · ");
+        return (
+          <span
+            key={task.id}
+            data-testid="group-follow-up-chip"
+            data-follow-up={state}
+            data-for-me={who.forMe || undefined}
+            title={[
+              text,
+              who.by && `${who.forWhom} ${who.by}`,
+              listName && t("group.chip_title", { group: listName }),
+            ].filter(Boolean).join(" · ")}
+            className={cn("inline-flex max-w-[16rem] shrink-0 items-center gap-1 truncate rounded-full px-2 py-0.5 text-xs", GROUP_STATE_CLASSES[state], className)}
+          >
+            <Icon className="h-3 w-3 shrink-0" />
+            <span className="truncate">{text}</span>
+            {reminderAt && (
+              <span className="inline-flex shrink-0 items-center gap-0.5 opacity-80">
+                <span aria-hidden="true">·</span>
+                <Bell className="h-3 w-3 shrink-0" aria-label={t("reminder_label")} />
+                {fmt.reminder(reminderAt, now)}
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * The reader's bar for each follow-up in the group's list: "for Anna (from
+ * Ben) · Task list vertrieb@ · Write a quote · due Thu"; anyone who reads the
+ * list may complete, change or remove it.
+ */
+function GroupFollowUpInfoBars({ email }: { email: Email }) {
+  const { tasks, list } = useMailGroupFollowUps(email);
+  if (tasks.length === 0) return null;
+  return <>{tasks.map((task) => <GroupFollowUpInfoBar key={task.id} email={email} task={task} listName={list?.name ?? null} />)}</>;
+}
+
+function GroupFollowUpInfoBar({ email, task, listName }: { email: Email; task: CalendarTask; listName: string | null }) {
+  const t = useTranslations("follow_up");
+  const fmt = useFollowUpFormat();
+  const people = useGroupPeopleText();
+  const mine = useMyAddresses();
+  const client = useAuthStore((s) => s.client);
+  const { dialogProps, confirm } = useConfirmDialog();
+  const [busy, setBusy] = useState(false);
+  const now = displayNow();
+  const state = followUpState(task, now);
+  const due = followUpDueDay(task);
+  const reminder = isTaskForMe(task, mine) ? followUpReminder(task) : null;
+  const note = followUpNote(task);
+  const who = people(task);
+  const Icon = state === "done" ? Check : Flag;
+  const sep = <span aria-hidden="true"> · </span>;
+  const messages = { failed: t("failed"), flagFailed: t("flag_failed") };
+
+  const markDone = async () => {
+    if (!client || busy) return;
+    setBusy(true);
+    await completeTask(client, task, messages);
+    setBusy(false);
+  };
+  const remove = async () => {
+    if (!client || busy) return;
+    // Colleagues see it too: asked first.
+    if (!(await confirm({
+      title: t("group.remove_title"),
+      message: t("group.remove_confirm", { group: listName ?? "" }),
+      confirmText: t("remove_button"),
+      variant: "destructive",
+    }))) return;
+    setBusy(true);
+    try {
+      await deleteGroupTask(client, task);
+    } catch {
+      toast.error(t("failed"));
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div
+      data-testid="group-follow-up-bar"
+      data-follow-up={state}
+      role="status"
+      className={cn("border-b border-border px-6 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm", GROUP_STATE_CLASSES[state])}
+    >
+      <Icon className="w-4 h-4 shrink-0" />
+      <span className="flex-1 min-w-[12rem]">
+        <span data-testid="group-follow-up-bar-for">{who.by ? `${who.forWhom} (${who.by})` : who.forWhom}</span>
+        {listName && (
+          <>
+            {sep}
+            <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{t("group.list_of", { group: listName })}</span>
+          </>
+        )}
+        {sep}
+        {state === "done" ? t("bar_done") : (
+          <>
+            <b>{fmt.action(task) ?? t("bar_action")}</b>
+            {sep}
+            {due ? (state === "overdue" ? fmt.due(task, now) : t("due_on", { day: fmt.day(due) })) : t("no_date")}
+            {reminder && (
+              <>
+                {sep}
+                <span className="inline-flex items-center gap-1">
+                  <Bell className="h-3.5 w-3.5" aria-label={t("reminder_label")} />
+                  {fmt.reminder(reminder, now)}
+                </span>
+              </>
+            )}
+            {note && (
+              <>
+                {sep}
+                <span className="break-words">{t("bar_note", { note })}</span>
+              </>
+            )}
+          </>
+        )}
+      </span>
+      {state !== "done" && (
+        <button type="button" disabled={busy} className="underline underline-offset-2 hover:opacity-80" onClick={() => void markDone()}>
+          {t("done_button")}
+        </button>
+      )}
+      {state !== "done" && (
+        <button
+          type="button"
+          data-testid="group-follow-up-bar-change"
+          className="underline underline-offset-2 hover:opacity-80"
+          onClick={() => useFollowUpDialog.getState().open(email, "action", { taskId: task.id })}
+        >
+          {t("change_button")}
+        </button>
+      )}
+      <button type="button" disabled={busy} className="underline underline-offset-2 hover:opacity-80" onClick={() => void remove()}>
+        {t("remove_button")}
+      </button>
+      <ConfirmDialog {...dialogProps} />
+    </div>
+  );
+}
+
+/**
+ * Where a task of a group's list comes from, before what the pane and the
+ * reminders window say of it: "👥 vertrieb@ · from Ben · ". Nothing for a
+ * task of the user's own list.
+ */
+export function GroupTaskSource({ task }: { task: CalendarTask }) {
+  const lists = useGroupTasks((s) => s.lists);
+  const list = task.isShared ? groupListOfTask(task, lists) : null;
+  if (!list) return null;
+  return <GroupTaskSourceText task={task} name={list.name} />;
+}
+
+function GroupTaskSourceText({ task, name }: { task: CalendarTask; name: string }) {
+  const t = useTranslations("follow_up");
+  const people = useGroupPeopleText();
+  const list = { name };
+  const who = people(task);
+  return (
+    <span data-testid="group-task-source" className="inline-flex items-center gap-1" title={t("group.chip_title", { group: list.name })}>
+      <Users className="h-3 w-3 shrink-0" aria-label={t("group.list_of", { group: list.name })} />
+      <span>{[list.name, who.by].filter(Boolean).join(" · ")}</span>
+      <span aria-hidden="true"> · </span>
+    </span>
   );
 }

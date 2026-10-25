@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark przed przypomnieniem szuka odpowiedzi; przypomnienie pojawia się wtedy tylko w Bulwarku, nie na telefonie ani jako e-mail)",
       "settles_short": "załatwia się samo, gdy przyjdzie odpowiedź",
       "answered_note": "Odpowiedź otrzymana {day}"
+    },
+    "group": {
+      "menu_colleague": "Dla współpracownika w {group} …",
+      "menu_colleague_short": "Dla współpracownika …",
+      "only_in_group": "tylko w skrzynce grupowej",
+      "no_list": "skrzynka grupowa nie ma listy zadań, do której możesz pisać",
+      "for_label": "Dla",
+      "me": "mnie",
+      "chip_me": "ja",
+      "for_me": "dla mnie",
+      "for_person": "dla {name}",
+      "by_me": "ode mnie",
+      "by_person": "od {name}",
+      "visible_label": "Widoczne",
+      "visible_me": "tylko ja",
+      "visible_group": "wszyscy w {group}",
+      "colleague_needs_group": "Współpracownik widzi to tylko na liście zadań skrzynki grupowej.",
+      "people_hint": "Osoby, którym udostępniono listę zadań {group}.",
+      "not_shared": "Lista zadań {group} nie jest nikomu udostępniona: można wybrać tylko „mnie”.",
+      "list_of": "Lista zadań {group}",
+      "chip_title": "Na liście zadań {group}, którą widzą wszyscy",
+      "remove_title": "Usunąć monit?",
+      "remove_confirm": "Zostanie usunięty z listy zadań {group} dla wszystkich, którzy ją widzą. Tego nie można cofnąć.",
+      "kept_colleague": "Na liście zadań {group}: wszyscy, którym ją udostępniono, widzą to przy wiadomości; przypomnienie dostaje tylko {name}.",
+      "kept_me": "Na liście zadań {group}: współpracownicy widzą, że się tym zajmujesz; przypomnienie dostajesz tylko ty.",
+      "kept_reminder_colleague": "Na liście zadań {group}, bez wiadomości: wszyscy, którym ją udostępniono, to widzą; przypomnienie dostaje tylko {name}.",
+      "kept_reminder_me": "Na liście zadań {group}, bez wiadomości: współpracownicy to widzą; przypomnienie dostajesz tylko ty.",
+      "nobody": "nikt / wszyscy",
+      "kept_nobody": "Na liście zadań {group}: widzą to wszyscy, którym ją udostępniono; nie jest dla nikogo konkretnego."
     }
   }
 }

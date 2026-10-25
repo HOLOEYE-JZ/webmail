@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark cerca una risposta prima di ricordartelo; il promemoria allora appare solo in Bulwark, non sul telefono né come email)",
       "settles_short": "si completa da sola quando arriva una risposta",
       "answered_note": "Risposta ricevuta il {day}"
+    },
+    "group": {
+      "menu_colleague": "Per un collega in {group} …",
+      "menu_colleague_short": "Per un collega …",
+      "only_in_group": "solo in una casella di gruppo",
+      "no_list": "la casella di gruppo non ha un elenco attività in cui puoi scrivere",
+      "for_label": "Per",
+      "me": "me",
+      "chip_me": "io",
+      "for_me": "per me",
+      "for_person": "per {name}",
+      "by_me": "da me",
+      "by_person": "da {name}",
+      "visible_label": "Visibile",
+      "visible_me": "solo io",
+      "visible_group": "tutti in {group}",
+      "colleague_needs_group": "Un collega lo vede solo nell'elenco attività della casella di gruppo.",
+      "people_hint": "Le persone con cui è condiviso l'elenco attività di {group}.",
+      "not_shared": "L'elenco attività di {group} non è condiviso con nessuno: si può scegliere solo «me».",
+      "list_of": "Elenco attività {group}",
+      "chip_title": "Nell'elenco attività di {group}, visibile a tutti",
+      "remove_title": "Rimuovere il promemoria?",
+      "remove_confirm": "Viene eliminato dall'elenco attività di {group}, per tutti quelli che lo vedono. L'operazione non può essere annullata.",
+      "kept_colleague": "Nell'elenco attività di {group}: tutti quelli con cui è condiviso lo vedono sul messaggio; solo {name} riceve il promemoria.",
+      "kept_me": "Nell'elenco attività di {group}: i colleghi vedono che te ne occupi tu; solo tu ricevi il promemoria.",
+      "kept_reminder_colleague": "Nell'elenco attività di {group}, senza messaggio: tutti quelli con cui è condiviso lo vedono; solo {name} riceve il promemoria.",
+      "kept_reminder_me": "Nell'elenco attività di {group}, senza messaggio: i colleghi lo vedono; solo tu ricevi il promemoria.",
+      "nobody": "nessuno / tutti",
+      "kept_nobody": "Nell'elenco attività di {group}: tutti quelli con cui è condiviso lo vedono; non è per nessuno in particolare."
     }
   }
 }

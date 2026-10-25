@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark looks for an answer before it reminds you; the reminder then comes only in Bulwark, not on the phone or as a mail)",
       "settles_short": "settles itself when an answer comes",
       "answered_note": "Answer received on {day}"
+    },
+    "group": {
+      "menu_colleague": "For a colleague in {group} …",
+      "menu_colleague_short": "For a colleague …",
+      "only_in_group": "only in a group mailbox",
+      "no_list": "the group mailbox has no task list you can write to",
+      "for_label": "For",
+      "me": "me",
+      "chip_me": "me",
+      "for_me": "for me",
+      "for_person": "for {name}",
+      "by_me": "from me",
+      "by_person": "from {name}",
+      "visible_label": "Visible",
+      "visible_me": "only me",
+      "visible_group": "everyone in {group}",
+      "colleague_needs_group": "A colleague sees it only in the group mailbox's task list.",
+      "people_hint": "The people the task list of {group} is shared with.",
+      "not_shared": "The task list of {group} is shared with no one: only “me” can be chosen.",
+      "list_of": "Task list {group}",
+      "chip_title": "In the task list of {group}, which everyone in it sees",
+      "remove_title": "Remove follow-up?",
+      "remove_confirm": "It is deleted from the task list of {group}, for everyone who sees it. This cannot be undone.",
+      "kept_colleague": "In the task list of {group}: everyone it is shared with sees it at the mail; only {name} is reminded.",
+      "kept_me": "In the task list of {group}: colleagues see that you are taking care of it; only you are reminded.",
+      "kept_reminder_colleague": "In the task list of {group}, without a mail: everyone it is shared with sees it; only {name} is reminded.",
+      "kept_reminder_me": "In the task list of {group}, without a mail: colleagues see it; only you are reminded.",
+      "nobody": "nobody / everyone",
+      "kept_nobody": "In the task list of {group}: everyone it is shared with sees it; it is for no one in particular."
     }
   }
 }

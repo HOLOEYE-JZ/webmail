@@ -4648,6 +4648,35 @@
       "settles_hint": "（Bulwark 會在提醒前先尋找回覆；提醒只會出現在 Bulwark，不會傳到手機或以郵件寄出）",
       "settles_short": "收到回覆時自動完成",
       "answered_note": "已於 {day} 收到回覆"
+    },
+    "group": {
+      "menu_colleague": "為 {group} 中的同事 …",
+      "menu_colleague_short": "為同事 …",
+      "only_in_group": "僅限群組信箱",
+      "no_list": "群組信箱沒有您可寫入的工作清單",
+      "for_label": "負責人",
+      "me": "我",
+      "chip_me": "我",
+      "for_me": "我",
+      "for_person": "{name}",
+      "by_me": "由我",
+      "by_person": "由 {name}",
+      "visible_label": "可見範圍",
+      "visible_me": "僅我",
+      "visible_group": "{group} 中的所有人",
+      "colleague_needs_group": "同事只能在群組信箱的工作清單中看到它。",
+      "people_hint": "與 {group} 的工作清單共用的人員。",
+      "not_shared": "{group} 的工作清單未與任何人共用:只能選擇「我」。",
+      "list_of": "工作清單 {group}",
+      "chip_title": "在 {group} 的工作清單中,所有人可見",
+      "remove_title": "移除後續追蹤?",
+      "remove_confirm": "它將從 {group} 的工作清單中刪除,所有能看到的人都將看不到。此動作無法復原。",
+      "kept_colleague": "在 {group} 的工作清單中:所有共用對象都能在郵件旁看到;只有 {name} 會收到提醒。",
+      "kept_me": "在 {group} 的工作清單中:同事能看到由您負責;只有您會收到提醒。",
+      "kept_reminder_colleague": "在 {group} 的工作清單中(無郵件):所有共用對象都能看到;只有 {name} 會收到提醒。",
+      "kept_reminder_me": "在 {group} 的工作清單中(無郵件):同事能看到;只有您會收到提醒。",
+      "nobody": "無人 / 所有人",
+      "kept_nobody": "在 {group} 的工作清單中:所有共用對象都能看到;未指定具體負責人。"
     }
   }
 }

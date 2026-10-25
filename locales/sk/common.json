@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark pred pripomenutím hľadá odpoveď; pripomenutie potom príde len v Bulwarku, nie do telefónu ani e-mailom)",
       "settles_short": "vybaví sa samo, keď príde odpoveď",
       "answered_note": "Odpoveď prijatá {day}"
+    },
+    "group": {
+      "menu_colleague": "Pre kolegu v {group} …",
+      "menu_colleague_short": "Pre kolegu …",
+      "only_in_group": "len v skupinovej schránke",
+      "no_list": "skupinová schránka nemá zoznam úloh, do ktorého môžete zapisovať",
+      "for_label": "Pre",
+      "me": "mňa",
+      "chip_me": "ja",
+      "for_me": "pre mňa",
+      "for_person": "pre {name}",
+      "by_me": "odo mňa",
+      "by_person": "od {name}",
+      "visible_label": "Viditeľné",
+      "visible_me": "len ja",
+      "visible_group": "všetci v {group}",
+      "colleague_needs_group": "Kolega to vidí len v zozname úloh skupinovej schránky.",
+      "people_hint": "Ľudia, s ktorými je zoznam úloh {group} zdieľaný.",
+      "not_shared": "Zoznam úloh {group} nie je s nikým zdieľaný: možno zvoliť len „mňa“.",
+      "list_of": "Zoznam úloh {group}",
+      "chip_title": "V zozname úloh {group}, ktorý vidia všetci",
+      "remove_title": "Odstrániť sledovanie?",
+      "remove_confirm": "Odstráni sa zo zoznamu úloh {group} pre všetkých, ktorí ho vidia. Túto akciu nemožno vrátiť.",
+      "kept_colleague": "V zozname úloh {group}: všetci, s ktorými je zdieľaný, to vidia pri e-maile; pripomenutie dostane len {name}.",
+      "kept_me": "V zozname úloh {group}: kolegovia vidia, že sa o to staráte; pripomenutie dostanete len vy.",
+      "kept_reminder_colleague": "V zozname úloh {group}, bez e-mailu: všetci, s ktorými je zdieľaný, to vidia; pripomenutie dostane len {name}.",
+      "kept_reminder_me": "V zozname úloh {group}, bez e-mailu: kolegovia to vidia; pripomenutie dostanete len vy.",
+      "nobody": "nikto / všetci",
+      "kept_nobody": "V zozname úloh {group}: vidia to všetci, s ktorými je zdieľaný; nie je určené nikomu konkrétnemu."
     }
   }
 }

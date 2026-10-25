@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark pirms atgādinājuma meklē atbildi; atgādinājums tad parādās tikai Bulwark, nevis tālrunī vai kā e-pasts)",
       "settles_short": "izpildās pats, kad pienāk atbilde",
       "answered_note": "Atbilde saņemta {day}"
+    },
+    "group": {
+      "menu_colleague": "Kolēģim grupā {group} …",
+      "menu_colleague_short": "Kolēģim …",
+      "only_in_group": "tikai grupas pastkastē",
+      "no_list": "grupas pastkastei nav uzdevumu saraksta, kurā varat rakstīt",
+      "for_label": "Kam",
+      "me": "man",
+      "chip_me": "es",
+      "for_me": "man",
+      "for_person": "lietotājam {name}",
+      "by_me": "no manis",
+      "by_person": "no {name}",
+      "visible_label": "Redzams",
+      "visible_me": "tikai es",
+      "visible_group": "visi grupā {group}",
+      "colleague_needs_group": "Kolēģis to redz tikai grupas pastkastes uzdevumu sarakstā.",
+      "people_hint": "Personas, ar kurām {group} uzdevumu saraksts ir kopīgots.",
+      "not_shared": "{group} uzdevumu saraksts nav kopīgots ne ar vienu: var izvēlēties tikai “man”.",
+      "list_of": "Uzdevumu saraksts {group}",
+      "chip_title": "{group} uzdevumu sarakstā, ko redz visi",
+      "remove_title": "Noņemt atgādni?",
+      "remove_confirm": "Tā tiks dzēsta no {group} uzdevumu saraksta visiem, kas to redz. To nevar atsaukt.",
+      "kept_colleague": "{group} uzdevumu sarakstā: visi, ar kuriem tas ir kopīgots, to redz pie e-pasta; atgādinājumu saņem tikai {name}.",
+      "kept_me": "{group} uzdevumu sarakstā: kolēģi redz, ka jūs par to rūpējaties; atgādinājumu saņemat tikai jūs.",
+      "kept_reminder_colleague": "{group} uzdevumu sarakstā, bez e-pasta: visi, ar kuriem tas ir kopīgots, to redz; atgādinājumu saņem tikai {name}.",
+      "kept_reminder_me": "{group} uzdevumu sarakstā, bez e-pasta: kolēģi to redz; atgādinājumu saņemat tikai jūs.",
+      "nobody": "neviens / visi",
+      "kept_nobody": "{group} uzdevumu sarakstā: visi, ar kuriem tas ir kopīgots, to redz; tas nav paredzēts nevienam konkrētam."
     }
   }
 }

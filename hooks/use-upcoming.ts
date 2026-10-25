@@ -16,6 +16,14 @@ import type { CalendarTask } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { locateFollowUpMail } from "./use-follow-up-sync";
 import {
+  deleteGroupTask,
+  groupListOfTask,
+  useGroupTasks,
+  useGroupTasksForMe,
+  writeGroupTask,
+  type GroupTaskList,
+} from "./use-group-follow-ups";
+import {
   followUpCalendars,
   reachesMailAccount,
   useFollowUpDialog,
@@ -53,13 +61,14 @@ const NOTHING_UPCOMING: UpcomingList = { groups: [], later: 0 };
 export function useUpcomingTasks(): UpcomingList {
   const enabled = useFollowUpsEnabled();
   const tasks = useTaskStore((s) => s.tasks);
+  const forMe = useGroupTasksForMe();
   const ids = useOwnTaskListIds();
   const firstDayOfWeek = useSettingsStore((s) => s.firstDayOfWeek);
   const now = useDisplayNow();
   const day = startOfDay(now).getTime();
   return useMemo(
-    () => (enabled ? upcomingTasks(tasks, ids, new Date(day), firstDayOfWeek) : NOTHING_UPCOMING),
-    [enabled, tasks, ids, day, firstDayOfWeek],
+    () => (enabled ? upcomingTasks(tasks, ids, new Date(day), firstDayOfWeek, forMe) : NOTHING_UPCOMING),
+    [enabled, tasks, ids, day, firstDayOfWeek, forMe],
   );
 }
 
@@ -67,10 +76,11 @@ export function useUpcomingTasks(): UpcomingList {
 export function useDueTaskCount(): number {
   const enabled = useFollowUpsEnabled();
   const tasks = useTaskStore((s) => s.tasks);
+  const forMe = useGroupTasksForMe();
   const ids = useOwnTaskListIds();
   const now = useDisplayNow();
   const day = startOfDay(now).getTime();
-  return useMemo(() => (enabled ? dueTaskCount(tasks, ids, new Date(day)) : 0), [enabled, tasks, ids, day]);
+  return useMemo(() => (enabled ? dueTaskCount(tasks, ids, new Date(day), forMe) : 0), [enabled, tasks, ids, day, forMe]);
 }
 
 /**
@@ -147,6 +157,10 @@ export interface ReminderControls {
   available: boolean;
   /** The task, or null for a new reminder. */
   task: CalendarTask | null;
+  /** The group's task list the task lies in; null for the user's own. */
+  group: GroupTaskList | null;
+  /** The group lists a new reminder can go into (the dialog's "Visible"). */
+  groups: GroupTaskList[];
   workingTime: WorkingTime;
   /** Writes it as the dialog says; `details.action` is what to do, the title. */
   save: (details: FollowUpDetails) => Promise<boolean>;
@@ -158,15 +172,30 @@ export function useReminder(taskId: string | null): ReminderControls {
   const t = useTranslations("follow_up");
   const enabled = useFollowUpsEnabled();
   const client = useAuthStore((s) => s.client);
-  const task = useTaskStore((s) => (taskId ? s.tasks.find((x) => x.id === taskId) ?? null : null));
+  const ownTask = useTaskStore((s) => (taskId ? s.tasks.find((x) => x.id === taskId) ?? null : null));
+  const groupTask = useGroupTasks((s) => (taskId ? s.tasks.find((x) => x.id === taskId) ?? null : null));
+  const lists = useGroupTasks((s) => s.lists);
+  const task = groupTask ?? ownTask;
+  const group = groupTask ? groupListOfTask(groupTask, lists) : null;
   const workingTime = useWorkingTime();
-  const available = enabled && !!client && (!taskId || !!task);
+  const available = enabled && !!client && (!taskId || !!task) && (!groupTask || !!group);
 
   const save = useCallback(async (details: FollowUpDetails) => {
     if (!client) return false;
     const title = details.action.replace(/\s+/g, " ").trim();
     if (!title) return false;
     try {
+      // A group's list, as the task lies in one or the dialog's "Visible" chose one.
+      const target = group ?? (!task && details.groupAccountId ? lists.find((l) => l.accountId === details.groupAccountId) : null);
+      if (target) {
+        return await writeGroupTask(client, {
+          list: target,
+          task,
+          person: details.person,
+          details,
+          text: { title: (action) => action, noSubject: t("no_subject"), followUp: t("actions.follow_up") },
+        });
+      }
       if (task) {
         const patch = editReminderTask(task, { ...details, title: title === task.title ? null : title });
         return await useTaskStore.getState().updateTask(client, task.id, patch);
@@ -190,17 +219,18 @@ export function useReminder(taskId: string | null): ReminderControls {
       toast.error(t("reminder.failed"));
       return false;
     }
-  }, [client, task, t]);
+  }, [client, task, t, group, lists]);
 
   const remove = useCallback(async () => {
     if (!client || !task) return;
     try {
-      await useTaskStore.getState().deleteTask(client, task.id);
+      if (group) await deleteGroupTask(client, task);
+      else await useTaskStore.getState().deleteTask(client, task.id);
     } catch (error) {
       debug.error("reminder: not deleted", error);
       toast.error(t("reminder.failed"));
     }
-  }, [client, task, t]);
+  }, [client, task, t, group]);
 
-  return { available, task, workingTime, save, remove };
+  return { available, task, group, groups: lists, workingTime, save, remove };
 }

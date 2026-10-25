@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { format, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Bell, Flag, Mail, X } from "@/components/icons";
+import { Bell, Flag, Mail, Users, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -14,8 +14,27 @@ import {
   useFollowUpDialog,
   type FollowUpDetails,
   type FollowUpDialogFocus,
+  type GroupDialogTarget,
 } from "@/hooks/use-follow-ups";
 import { useReminder } from "@/hooks/use-upcoming";
+import {
+  deleteGroupTask,
+  useGroupTask,
+  useMyAddresses,
+  useTaskListSharees,
+  writeGroupTask,
+  type GroupTaskList,
+} from "@/hooks/use-group-follow-ups";
+import { useAuthStore } from "@/stores/auth-store";
+import { toast } from "@/stores/toast-store";
+import { debug } from "@/lib/debug";
+import { groupTaskOwner, type TaskPerson } from "@/lib/group-follow-ups";
+
+/** "For" of a group task that names no one: everyone's, until the user names someone. */
+const NOBODY = "\u0000nobody";
+/** Whom the form's "For" holds: a colleague, null for the user, or `NOBODY`. */
+type PersonChoice = TaskPerson | null | typeof NOBODY;
+const isPerson = (choice: PersonChoice): choice is TaskPerson => !!choice && choice !== NOBODY;
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCalendarStore } from "@/stores/calendar-store";
@@ -62,10 +81,21 @@ function displayDateOf(day: string, time = "00:00"): Date | null {
  */
 export function FollowUpDialogHost() {
   const email = useFollowUpDialog((s) => s.email);
+  const group = useFollowUpDialog((s) => s.group);
   const reminder = useFollowUpDialog((s) => s.reminder);
   const focus = useFollowUpDialog((s) => s.focus);
   const close = useFollowUpDialog((s) => s.close);
-  if (email) return <FollowUpDialog key={`${email.id}:${focus}`} email={email} focus={focus} onClose={close} />;
+  if (email) {
+    return (
+      <FollowUpDialog
+        key={`${email.id}:${focus}:${group ? group.taskId ?? "new" : "own"}`}
+        email={email}
+        focus={focus}
+        group={group}
+        onClose={close}
+      />
+    );
+  }
   if (reminder) {
     return (
       <ReminderDialog
@@ -80,6 +110,24 @@ export function FollowUpDialogHost() {
   return null;
 }
 
+/**
+ * Where a new task can go besides the user's own list, and for whom (plan
+ * 037 decision 8): "Visible" (only me / everyone in a group mailbox) and
+ * "For" (me / the people the group's task list is shared with).
+ */
+interface PlaceChoice {
+  /** The group lists offered; for an existing group task its own alone. */
+  groups: GroupTaskList[];
+  /** An existing group task: its list stays. */
+  fixed: boolean;
+  /** The group list chosen at first, null for the user's own. */
+  initialGroup: string | null;
+  /** Whom it is for at first, null for the user. */
+  initialPerson: PersonChoice;
+  /** "For a colleague …": the first colleague is chosen once the list's people are known. */
+  colleague: boolean;
+}
+
 /** What the form needs of a mail's follow-up or of a reminder. */
 interface FormControls {
   available: boolean;
@@ -91,18 +139,97 @@ interface FormControls {
   workingTime: WorkingTime;
   save: (details: FollowUpDetails) => Promise<boolean>;
   remove: () => Promise<void>;
+  /** Offered where a group's list can take it; none: the user's own list, for the user. */
+  place?: PlaceChoice;
+}
+
+/** A group task's owner as the form's "For" holds it: null for the user, `NOBODY` for none. */
+function ownerPerson(task: CalendarTask | null, mine: ReadonlySet<string>): PersonChoice {
+  if (!task) return null;
+  const owner = groupTaskOwner(task);
+  if (!owner?.email) return NOBODY;
+  if (mine.has(owner.email)) return null;
+  return { id: null, name: owner.name || owner.email.split("@")[0], email: owner.email };
+}
+
+/** Runs a group write; a failure is said, as the own list's writes do. */
+async function guarded(write: () => Promise<boolean>, failed: string): Promise<boolean> {
+  try {
+    return await write();
+  } catch (error) {
+    debug.error("group follow-up: not written", error);
+    toast.error(failed);
+    return false;
+  }
 }
 
 /**
  * Outlook's "Custom" follow-up: what to do, the due day, the reminder and a
  * note, all kept in the follow-up's task and read back from it.
  */
-export function FollowUpDialog({ email, focus, onClose }: {
+export function FollowUpDialog({ email, focus, group, onClose }: {
   email: Email;
   focus: FollowUpDialogFocus;
+  /** A follow-up in the group's list (an existing one, or a new one for a colleague). */
+  group?: GroupDialogTarget | null;
   onClose: () => void;
 }) {
-  const controls = useFollowUp(email);
+  const t = useTranslations("follow_up");
+  const own = useFollowUp(email);
+  const client = useAuthStore((s) => s.client);
+  const mine = useMyAddresses();
+  const groupTask = useGroupTask(group?.taskId ?? null);
+  const list = own.group;
+  const text = useMemo(() => ({
+    title: (action: string, subject: string) => t("task_title", { action, subject }),
+    noSubject: t("no_subject"),
+    followUp: t("actions.follow_up"),
+  }), [t]);
+
+  const writeGroup = useCallback((target: GroupTaskList, task: CalendarTask | null, details: FollowUpDetails) => (
+    client
+      ? guarded(() => writeGroupTask(client, {
+        list: target,
+        task,
+        person: details.person,
+        details,
+        mail: { email, accountId: target.accountId },
+        text,
+      }), t("failed"))
+      : Promise.resolve(false)
+  ), [client, email, text, t]);
+
+  // Read once: the form keeps what the user chose while the lists reload.
+  const [initialPerson] = useState(() => ownerPerson(groupTask, mine));
+
+  let controls: FormControls;
+  if (group) {
+    controls = {
+      available: own.available && !!list && (group.taskId === null || !!groupTask),
+      // "Only me" here is the own list's, as on any group mailbox's mail.
+      onlyMe: own.onlyMe,
+      mailboxName: own.mailboxName,
+      task: groupTask,
+      workingTime: own.workingTime,
+      // "Visible: only me" keeps it in the user's own list, as on any group mailbox's mail.
+      save: (details) => (details.groupAccountId && list ? writeGroup(list, groupTask, details) : own.save(details)),
+      remove: async () => {
+        if (client && groupTask) await guarded(() => deleteGroupTask(client, groupTask), t("failed"));
+      },
+      place: list
+        ? { groups: [list], fixed: !!groupTask, initialGroup: list.accountId, initialPerson, colleague: !groupTask }
+        : undefined,
+    };
+  } else {
+    controls = {
+      ...own,
+      // "Visible: everyone in vertrieb@" turns a new follow-up into one of the group's list.
+      save: (details) => (details.groupAccountId && list ? writeGroup(list, null, details) : own.save(details)),
+      place: !own.task && list
+        ? { groups: [list], fixed: false, initialGroup: null, initialPerson: null, colleague: false }
+        : undefined,
+    };
+  }
   return <FollowUpForm controls={controls} email={email} focus={focus} onClose={onClose} />;
 }
 
@@ -119,8 +246,15 @@ export function ReminderDialog({ taskId, title, focus, onClose }: {
   focus: FollowUpDialogFocus;
   onClose: () => void;
 }) {
-  const controls = useReminder(taskId);
-  return <FollowUpForm controls={controls} title={title} focus={focus} onClose={onClose} />;
+  const reminder = useReminder(taskId);
+  const mine = useMyAddresses();
+  const [initialPerson] = useState(() => ownerPerson(reminder.group ? reminder.task : null, mine));
+  const place: PlaceChoice | undefined = reminder.group
+    ? { groups: [reminder.group], fixed: true, initialGroup: reminder.group.accountId, initialPerson, colleague: false }
+    : !reminder.task && reminder.groups.length > 0
+      ? { groups: reminder.groups, fixed: false, initialGroup: null, initialPerson: null, colleague: false }
+      : undefined;
+  return <FollowUpForm controls={{ ...reminder, place }} title={title} focus={focus} onClose={onClose} />;
 }
 
 function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }: {
@@ -194,6 +328,46 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   const [mailOn, setMailOn] = useState(initial.mail);
   const [settlesOn, setSettlesOn] = useState(initial.settles);
 
+  // "Visible" and "For": the group list chosen (null: the user's own) and
+  // whom it is for (null: the user). A colleague only in a group's list.
+  const place = controls.place;
+  const [groupId, setGroupId] = useState<string | null>(place?.initialGroup ?? null);
+  const [person, setPerson] = useState<PersonChoice>(place?.initialPerson ?? null);
+  // Whom an existing group task is for changes only when the user picks someone.
+  const [personPicked, setPersonPicked] = useState(false);
+  // The group whose people "For" offers: the one chosen, else the first offered.
+  const target = place ? place.groups.find((g) => g.accountId === groupId) ?? place.groups[0] ?? null : null;
+  const sharees = useTaskListSharees(target?.list ?? null);
+  const people = useMemo(() => {
+    const listed = [...sharees];
+    // Whom an existing task is for stays offered, also once the list is no longer shared with them.
+    if (isPerson(person) && !listed.some((p) => p.email === person.email)) listed.unshift(person);
+    return listed;
+  }, [sharees, person]);
+  const chosen = useRef(false);
+  useEffect(() => {
+    // "For a colleague …": the first one, once known, unless the user chose already.
+    if (!place?.colleague || chosen.current || sharees.length === 0 || !target) return;
+    chosen.current = true;
+    setPerson(sharees[0]);
+    setGroupId(target.accountId);
+  }, [place?.colleague, sharees, target]);
+  const pickPerson = (p: TaskPerson | null) => {
+    chosen.current = true;
+    setPersonPicked(true);
+    setPerson(p);
+    // A colleague is only possible in the group's list.
+    if (p && !groupId && target) setGroupId(target.accountId);
+  };
+  const pickGroup = (accountId: string | null) => {
+    chosen.current = true;
+    if (accountId === groupId) return;
+    setGroupId(accountId);
+    // Another group's people are others.
+    if (accountId !== target?.accountId) setPerson(null);
+  };
+  const inGroup = !!groupId && !!target;
+
   const actionRef = useRef<HTMLSelectElement>(null);
   const whatRef = useRef<HTMLInputElement>(null);
   const reminderTimeRef = useRef<HTMLInputElement>(null);
@@ -246,8 +420,10 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   // "Settles itself when an answer comes" (plan 037 decision 9), for a mail's
   // follow-up only: the server would send the alarm mail all the same, so it
   // is not offered then (and taken off a task that has one).
-  const settles = !isReminder && settlesOn;
-  const mailOffered = mailReminderOffered(list, settles);
+  // Neither is offered for a group's list: the alarm mail would go to the
+  // group's inbox, and settling on an answer would be the group's reminder.
+  const settles = !isReminder && !inGroup && settlesOn;
+  const mailOffered = mailReminderOffered(inGroup ? target.list : list, settles);
 
   const save = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -267,7 +443,10 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       note,
       // Not offered: the task's alarm mail stays as it is (settling on an answer takes it off).
       mailReminder: mailOffered ? reminderOn && mailOn : undefined,
-      ...(isReminder ? {} : { settlesOnReply: settles }),
+      ...(isReminder || inGroup ? {} : { settlesOnReply: settles }),
+      groupAccountId: inGroup ? target.accountId : null,
+      // An existing task's owner only when picked; a new one's always (null: the user).
+      person: inGroup && (personPicked || !task) ? (isPerson(person) ? person : null) : undefined,
     });
     setBusy(false);
     if (written) onClose();
@@ -275,10 +454,14 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
 
   const remove = async () => {
     // Deleting a task cannot be undone, and it may have come from the task list or a phone: asked first.
-    if (isReminder && !(await confirm({
-      title: t("reminder.delete_title"),
-      message: t("reminder.delete_confirm", { title: task?.title?.trim() || t("upcoming.no_title") }),
-      confirmText: t("reminder.delete"),
+    // One of a group's list too: colleagues see it.
+    const fromGroup = place?.fixed && target;
+    if ((isReminder || fromGroup) && !(await confirm({
+      title: fromGroup ? t("group.remove_title") : t("reminder.delete_title"),
+      message: fromGroup
+        ? t("group.remove_confirm", { group: target.name })
+        : t("reminder.delete_confirm", { title: task?.title?.trim() || t("upcoming.no_title") }),
+      confirmText: isReminder ? t("reminder.delete") : t("remove_button"),
       variant: "destructive",
     }))) return;
     setBusy(true);
@@ -289,7 +472,13 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
 
   const sender = email?.from?.[0]?.name || email?.from?.[0]?.email;
   // On a group mailbox's mail the follow-up is the user's alone ("only me"): the list says so.
-  const kept = isReminder
+  const kept = inGroup
+    ? (person === NOBODY
+      ? t("group.kept_nobody", { group: target.name })
+      : isPerson(person)
+      ? t(isReminder ? "group.kept_reminder_colleague" : "group.kept_colleague", { group: target.name, name: person.name })
+      : t(isReminder ? "group.kept_reminder_me" : "group.kept_me", { group: target.name }))
+    : isReminder
     ? (list?.name ? t("reminder.kept_in", { list: list.name }) : t("reminder.kept_in_tasks"))
     : controls.onlyMe
       ? (list?.name ? t("kept_only_me", { list: list.name }) : t("kept_only_me_tasks"))
@@ -388,6 +577,21 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
             </>
             )}
 
+            {place && target && (
+              <PlaceFields
+                id={id}
+                groups={place.groups}
+                fixed={place.fixed}
+                target={target}
+                groupId={groupId}
+                person={person}
+                nobody={place.initialPerson === NOBODY}
+                people={people}
+                onPerson={pickPerson}
+                onGroup={pickGroup}
+              />
+            )}
+
             <div className="space-y-1.5">
               <span id={`${id}-due`} className="block font-medium text-foreground">{t("due_label")}</span>
               <div role="group" aria-labelledby={`${id}-due`} className="flex flex-wrap gap-1.5">
@@ -483,7 +687,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
                   </span>
                 </label>
               )}
-              {!isReminder && (
+              {!isReminder && !inGroup && (
                 <label className="flex w-fit items-start gap-2 text-foreground">
                   <input
                     type="checkbox"
@@ -553,6 +757,113 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       </div>
     </div>
     <ConfirmDialog {...confirmProps} />
+    </>
+  );
+}
+
+const PILL = "rounded-full border px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+const PILL_ON = "border-orange-500 bg-orange-500/10 text-orange-700 dark:text-orange-300";
+const PILL_OFF = "border-border text-muted-foreground hover:bg-muted hover:text-foreground";
+
+/**
+ * "For" (me, or one of the people the group's task list is shared with) and
+ * "Visible" (only me, or everyone in the group mailbox). A colleague is
+ * possible only in the group's list; an existing group task stays there.
+ */
+function PlaceFields({ id, groups, fixed, target, groupId, person, nobody, people, onPerson, onGroup }: {
+  id: string;
+  groups: GroupTaskList[];
+  fixed: boolean;
+  target: GroupTaskList;
+  groupId: string | null;
+  person: PersonChoice;
+  /** The task names no one: "nobody / everyone" is offered as it stands. */
+  nobody: boolean;
+  people: TaskPerson[];
+  onPerson: (person: TaskPerson | null) => void;
+  onGroup: (accountId: string | null) => void;
+}) {
+  const t = useTranslations("follow_up");
+  return (
+    <>
+      <div className="space-y-1.5">
+        <span id={`${id}-for`} className="block font-medium text-foreground">{t("group.for_label")}</span>
+        <div role="group" aria-labelledby={`${id}-for`} data-testid="follow-up-for" className="flex flex-wrap gap-1.5">
+          {nobody && (
+            <button
+              type="button"
+              aria-pressed={person === NOBODY}
+              data-testid="follow-up-for-nobody"
+              disabled={person !== NOBODY}
+              className={cn(PILL, person === NOBODY ? PILL_ON : PILL_OFF)}
+            >
+              {t("group.nobody")}
+            </button>
+          )}
+          <button
+            type="button"
+            aria-pressed={person === null}
+            data-testid="follow-up-for-me"
+            onClick={() => onPerson(null)}
+            className={cn(PILL, person === null ? PILL_ON : PILL_OFF)}
+          >
+            {t("group.me")}
+          </button>
+          {people.map((p) => {
+            const pressed = isPerson(person) && person.email === p.email;
+            return (
+              <button
+                key={p.email}
+                type="button"
+                aria-pressed={pressed}
+                data-testid="follow-up-for-person"
+                title={p.email}
+                onClick={() => onPerson(p)}
+                className={cn(PILL, pressed ? PILL_ON : PILL_OFF)}
+              >
+                {p.name}
+              </button>
+            );
+          })}
+        </div>
+        <p data-testid="follow-up-for-hint" className="text-xs text-muted-foreground">
+          {people.length === 0 ? t("group.not_shared", { group: target.name }) : t("group.people_hint", { group: target.name })}
+        </p>
+      </div>
+
+      <div className="space-y-1.5">
+        <span id={`${id}-visible`} className="block font-medium text-foreground">{t("group.visible_label")}</span>
+        <div role="group" aria-labelledby={`${id}-visible`} data-testid="follow-up-visible" className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            aria-pressed={!groupId}
+            data-testid="follow-up-visible-me"
+            disabled={fixed || isPerson(person)}
+            title={isPerson(person) ? t("group.colleague_needs_group") : undefined}
+            onClick={() => onGroup(null)}
+            className={cn(PILL, !groupId ? PILL_ON : PILL_OFF)}
+          >
+            {t("group.visible_me")}
+          </button>
+          {groups.map((g) => {
+            const pressed = groupId === g.accountId;
+            return (
+              <button
+                key={g.accountId}
+                type="button"
+                aria-pressed={pressed}
+                data-testid="follow-up-visible-group"
+                disabled={fixed && !pressed}
+                onClick={() => onGroup(g.accountId)}
+                className={cn(PILL, "inline-flex items-center gap-1", pressed ? PILL_ON : PILL_OFF)}
+              >
+                <Users className="h-3 w-3" aria-hidden="true" />
+                {t("group.visible_group", { group: g.name })}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }

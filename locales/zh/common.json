@@ -4648,6 +4648,35 @@
       "settles_hint": "（Bulwark 会在提醒前先查找回复；提醒只会出现在 Bulwark 中，不会发到手机或以邮件发送）",
       "settles_short": "收到回复时自动完成",
       "answered_note": "已于 {day} 收到回复"
+    },
+    "group": {
+      "menu_colleague": "为 {group} 中的同事 …",
+      "menu_colleague_short": "为同事 …",
+      "only_in_group": "仅限群组邮箱",
+      "no_list": "群组邮箱没有您可写入的任务列表",
+      "for_label": "负责人",
+      "me": "我",
+      "chip_me": "我",
+      "for_me": "我",
+      "for_person": "{name}",
+      "by_me": "由我",
+      "by_person": "由 {name}",
+      "visible_label": "可见范围",
+      "visible_me": "仅我",
+      "visible_group": "{group} 中的所有人",
+      "colleague_needs_group": "同事只能在群组邮箱的任务列表中看到它。",
+      "people_hint": "与 {group} 的任务列表共享的人员。",
+      "not_shared": "{group} 的任务列表未与任何人共享:只能选择“我”。",
+      "list_of": "任务列表 {group}",
+      "chip_title": "在 {group} 的任务列表中,所有人可见",
+      "remove_title": "移除跟进?",
+      "remove_confirm": "它将从 {group} 的任务列表中删除,所有能看到的人都将看不到。此操作无法撤销。",
+      "kept_colleague": "在 {group} 的任务列表中:所有共享对象都能在邮件旁看到;只有 {name} 会收到提醒。",
+      "kept_me": "在 {group} 的任务列表中:同事能看到由您负责;只有您会收到提醒。",
+      "kept_reminder_colleague": "在 {group} 的任务列表中(无邮件):所有共享对象都能看到;只有 {name} 会收到提醒。",
+      "kept_reminder_me": "在 {group} 的任务列表中(无邮件):同事能看到;只有您会收到提醒。",
+      "nobody": "无人 / 所有人",
+      "kept_nobody": "在 {group} 的任务列表中:所有共享对象都能看到;未指定具体负责人。"
     }
   }
 }

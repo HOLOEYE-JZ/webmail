@@ -4648,6 +4648,35 @@
       "settles_hint": "(Bulwark otsib enne meeldetuletust vastust; meeldetuletus tuleb siis ainult Bulwarkis, mitte telefoni ega kirjana)",
       "settles_short": "lõpeb ise, kui tuleb vastus",
       "answered_note": "Vastus saabus {day}"
+    },
+    "group": {
+      "menu_colleague": "Kolleegile kaustas {group} …",
+      "menu_colleague_short": "Kolleegile …",
+      "only_in_group": "ainult rühmapostkastis",
+      "no_list": "rühmapostkastil pole ülesandeloendit, kuhu saaksid kirjutada",
+      "for_label": "Kellele",
+      "me": "mulle",
+      "chip_me": "mina",
+      "for_me": "mulle",
+      "for_person": "kasutajale {name}",
+      "by_me": "minult",
+      "by_person": "kasutajalt {name}",
+      "visible_label": "Nähtav",
+      "visible_me": "ainult mina",
+      "visible_group": "kõik kaustas {group}",
+      "colleague_needs_group": "Kolleeg näeb seda ainult rühmapostkasti ülesandeloendis.",
+      "people_hint": "Inimesed, kellega {group} ülesandeloend on jagatud.",
+      "not_shared": "{group} ülesandeloendit pole kellegagi jagatud: valida saab ainult „mulle“.",
+      "list_of": "Ülesandeloend {group}",
+      "chip_title": "{group} ülesandeloendis, mida kõik näevad",
+      "remove_title": "Kas eemaldada järelkontroll?",
+      "remove_confirm": "See kustutatakse {group} ülesandeloendist kõigi jaoks, kes seda näevad. Seda ei saa tagasi võtta.",
+      "kept_colleague": "{group} ülesandeloendis: kõik, kellega see on jagatud, näevad seda kirja juures; meeldetuletuse saab ainult {name}.",
+      "kept_me": "{group} ülesandeloendis: kolleegid näevad, et tegeled sellega; meeldetuletuse saad ainult sina.",
+      "kept_reminder_colleague": "{group} ülesandeloendis, ilma kirjata: kõik, kellega see on jagatud, näevad seda; meeldetuletuse saab ainult {name}.",
+      "kept_reminder_me": "{group} ülesandeloendis, ilma kirjata: kolleegid näevad seda; meeldetuletuse saad ainult sina.",
+      "nobody": "mitte keegi / kõik",
+      "kept_nobody": "{group} ülesandeloendis: kõik, kellega see on jagatud, näevad seda; see pole kellelegi kindlale."
     }
   }
 }

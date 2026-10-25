@@ -4648,6 +4648,35 @@
       "settles_hint": "（Bulwark はリマインダーの前に返信を探します。リマインダーは Bulwark にだけ表示され、スマートフォンやメールには届きません）",
       "settles_short": "返信が届いたら自動で完了",
       "answered_note": "{day} に返信を受信"
+    },
+    "group": {
+      "menu_colleague": "{group} の同僚向け …",
+      "menu_colleague_short": "同僚向け …",
+      "only_in_group": "グループメールボックスのみ",
+      "no_list": "グループメールボックスに書き込めるタスクリストがありません",
+      "for_label": "担当",
+      "me": "自分",
+      "chip_me": "自分",
+      "for_me": "自分",
+      "for_person": "{name} さん",
+      "by_me": "自分から",
+      "by_person": "{name} さんから",
+      "visible_label": "表示",
+      "visible_me": "自分のみ",
+      "visible_group": "{group} の全員",
+      "colleague_needs_group": "同僚にはグループメールボックスのタスクリストでのみ表示されます。",
+      "people_hint": "{group} のタスクリストを共有しているユーザー。",
+      "not_shared": "{group} のタスクリストは誰とも共有されていません:「自分」のみ選択できます。",
+      "list_of": "タスクリスト {group}",
+      "chip_title": "{group} のタスクリスト内(全員に表示)",
+      "remove_title": "フォローアップを削除しますか?",
+      "remove_confirm": "{group} のタスクリストから、表示しているすべてのユーザーに対して削除されます。元に戻せません。",
+      "kept_colleague": "{group} のタスクリスト: 共有先の全員がメールで確認できます。リマインダーは {name} さんにのみ届きます。",
+      "kept_me": "{group} のタスクリスト: あなたが対応中であることが同僚に表示されます。リマインダーはあなたにのみ届きます。",
+      "kept_reminder_colleague": "{group} のタスクリスト(メールなし): 共有先の全員に表示されます。リマインダーは {name} さんにのみ届きます。",
+      "kept_reminder_me": "{group} のタスクリスト(メールなし): 同僚に表示されます。リマインダーはあなたにのみ届きます。",
+      "nobody": "指定なし / 全員",
+      "kept_nobody": "{group} のタスクリスト: 共有先の全員に表示されます。特定の担当者はいません。"
     }
   }
 }
