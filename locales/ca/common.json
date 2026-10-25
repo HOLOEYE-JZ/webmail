@@ -4601,6 +4601,7 @@
       "next-week": "La setmana vinent",
       "no-date": "Sense data"
     },
+    "undo": "Desfés",
     "mark_done": "Marca com a completat",
     "remove": "Esborra el seguiment",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Nota amb format: editeu-la a la llista de tasques.",
     "upcoming": {
       "title": "Pendent per a mi",
-      "all_tasks": "Totes les tasques",
       "hide": "Amaga els pendents",
       "groups": {
         "overdue": "Endarrerit",
         "today": "Avui",
         "tomorrow": "Demà",
-        "this_week": "Aquesta setmana"
+        "this_week": "Aquesta setmana",
+        "next_week": "La setmana vinent",
+        "later": "Més endavant",
+        "no_date": "Sense data"
       },
-      "more": "+{count} més endavant o sense data",
       "empty": "Res pendent",
+      "open_list": "Obre a la llista de tasques",
+      "no_date_all": "totes les {count} a la llista de tasques",
+      "done_toast": "Completada: {title}",
+      "flag_label": "Seguiment: {title}",
       "quick_placeholder": "＋ Recordatori, p. ex. «Revisar les reclamacions»",
       "quick_label": "Recordatori nou, per a avui (Retorn)",
       "quick_more": "Recordatori amb dia, hora i nota…",

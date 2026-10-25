@@ -4601,6 +4601,7 @@
       "next-week": "La prossima settimana",
       "no-date": "Nessuna data"
     },
+    "undo": "Annulla",
     "mark_done": "Segna come completato",
     "remove": "Cancella contrassegno",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Nota formattata: modificala nell’elenco attività.",
     "upcoming": {
       "title": "In arrivo per me",
-      "all_tasks": "Tutte le attività",
       "hide": "Nascondi «In arrivo»",
       "groups": {
         "overdue": "Scadute",
         "today": "Oggi",
         "tomorrow": "Domani",
-        "this_week": "Questa settimana"
+        "this_week": "Questa settimana",
+        "next_week": "La prossima settimana",
+        "later": "Più avanti",
+        "no_date": "Senza data"
       },
-      "more": "+{count} più avanti o senza data",
       "empty": "Niente in scadenza",
+      "open_list": "Apri nell'elenco attività",
+      "no_date_all": "tutte le {count} nell'elenco attività",
+      "done_toast": "Completata: {title}",
+      "flag_label": "Completamento: {title}",
       "quick_placeholder": "＋ Promemoria, ad es. «Controllare i solleciti»",
       "quick_label": "Nuovo promemoria per oggi (Invio)",
       "quick_more": "Promemoria con giorno, ora e nota…",

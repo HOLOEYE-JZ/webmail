@@ -4601,6 +4601,7 @@
       "next-week": "Volgende week",
       "no-date": "Geen datum"
     },
+    "undo": "Ongedaan maken",
     "mark_done": "Als voltooid markeren",
     "remove": "Opvolging wissen",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Opgemaakte notitie: bewerk die in de takenlijst.",
     "upcoming": {
       "title": "Binnenkort voor mij",
-      "all_tasks": "Alle taken",
       "hide": "Binnenkort verbergen",
       "groups": {
         "overdue": "Te laat",
         "today": "Vandaag",
         "tomorrow": "Morgen",
-        "this_week": "Deze week"
+        "this_week": "Deze week",
+        "next_week": "Volgende week",
+        "later": "Later",
+        "no_date": "Geen datum"
       },
-      "more": "+{count} later of zonder datum",
       "empty": "Niets te doen",
+      "open_list": "Openen in de takenlijst",
+      "no_date_all": "alle {count} in de takenlijst",
+      "done_toast": "Voltooid: {title}",
+      "flag_label": "Opvolgen: {title}",
       "quick_placeholder": "＋ Herinnering, bijv. ‘Aanmaningen controleren’",
       "quick_label": "Nieuwe herinnering voor vandaag (Enter)",
       "quick_more": "Herinnering met dag, tijd en notitie…",

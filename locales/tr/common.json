@@ -4601,6 +4601,7 @@
       "next-week": "Gelecek hafta",
       "no-date": "Tarih yok"
     },
+    "undo": "Geri al",
     "mark_done": "Tamamlandı olarak işaretle",
     "remove": "Takibi kaldır",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Biçimli not: görev listesinde düzenleyin.",
     "upcoming": {
       "title": "Benim için yaklaşanlar",
-      "all_tasks": "Tüm görevler",
       "hide": "Yaklaşanları gizle",
       "groups": {
         "overdue": "Gecikmiş",
         "today": "Bugün",
         "tomorrow": "Yarın",
-        "this_week": "Bu hafta"
+        "this_week": "Bu hafta",
+        "next_week": "Gelecek hafta",
+        "later": "Daha sonra",
+        "no_date": "Tarihsiz"
       },
-      "more": "+{count} daha sonra veya tarihsiz",
       "empty": "Vadesi gelen bir şey yok",
+      "open_list": "Görev listesinde aç",
+      "no_date_all": "görev listesindeki {count} öğenin tümü",
+      "done_toast": "Tamamlandı: {title}",
+      "flag_label": "İzle: {title}",
       "quick_placeholder": "＋ Anımsatıcı, ör. “İhtarnameleri kontrol et”",
       "quick_label": "Bugün vadeli yeni anımsatıcı (Enter)",
       "quick_more": "Gün, saat ve notla anımsatıcı…",

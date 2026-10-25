@@ -4601,6 +4601,7 @@
       "next-week": "La semaine prochaine",
       "no-date": "Sans date"
     },
+    "undo": "Annuler",
     "mark_done": "Marquer comme terminé",
     "remove": "Effacer le suivi",
     "task_title": "{action} : {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Note mise en forme : modifiez-la dans la liste de tâches.",
     "upcoming": {
       "title": "À venir pour moi",
-      "all_tasks": "Toutes les tâches",
       "hide": "Masquer « À venir »",
       "groups": {
         "overdue": "En retard",
         "today": "Aujourd’hui",
         "tomorrow": "Demain",
-        "this_week": "Cette semaine"
+        "this_week": "Cette semaine",
+        "next_week": "La semaine prochaine",
+        "later": "Plus tard",
+        "no_date": "Sans date"
       },
-      "more": "+{count} plus tard ou sans date",
       "empty": "Rien à faire",
+      "open_list": "Ouvrir dans la liste des tâches",
+      "no_date_all": "les {count} dans la liste des tâches",
+      "done_toast": "Terminée : {title}",
+      "flag_label": "Suivi : {title}",
       "quick_placeholder": "＋ Rappel, p. ex. « Vérifier les relances »",
       "quick_label": "Nouveau rappel pour aujourd’hui (Entrée)",
       "quick_more": "Rappel avec jour, heure et note…",

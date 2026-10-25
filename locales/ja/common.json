@@ -4601,6 +4601,7 @@
       "next-week": "来週",
       "no-date": "日付なし"
     },
+    "undo": "元に戻す",
     "mark_done": "完了にする",
     "remove": "フォローアップを解除",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "書式付きメモ: タスク リストで編集してください。",
     "upcoming": {
       "title": "自分の予定タスク",
-      "all_tasks": "すべてのタスク",
       "hide": "予定タスクを隠す",
       "groups": {
         "overdue": "期限切れ",
         "today": "今日",
         "tomorrow": "明日",
-        "this_week": "今週"
+        "this_week": "今週",
+        "next_week": "来週",
+        "later": "後日",
+        "no_date": "日付なし"
       },
-      "more": "ほか {count} 件（後日または日付なし）",
       "empty": "期限のあるものはありません",
+      "open_list": "タスク一覧で開く",
+      "no_date_all": "タスク一覧ですべて ({count} 件)",
+      "done_toast": "完了: {title}",
+      "flag_label": "フラグの設定: {title}",
       "quick_placeholder": "＋ アラーム（例:「督促状を確認」）",
       "quick_label": "今日が期限の新しいアラーム (Enter)",
       "quick_more": "日付・時刻・メモ付きのアラーム…",

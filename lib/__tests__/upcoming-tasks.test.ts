@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseISO } from 'date-fns';
-import { dueTaskCount, upcomingGroupOf, upcomingTasks } from '../upcoming-tasks';
+import { NO_DATE_SHOWN, dueTaskCount, paneGroupOf, upcomingGroupOf, upcomingTasks } from '../upcoming-tasks';
 import {
   buildFollowUpTask,
   buildReminderTask,
@@ -78,34 +78,74 @@ describe('upcomingGroupOf', () => {
   });
 });
 
+describe('paneGroupOf', () => {
+  it('adds next week, later and no date to the near groups', () => {
+    expect(paneGroupOf(day(due(27)), NOW)).toBe('overdue');
+    expect(paneGroupOf(day(due(28)), NOW)).toBe('today');
+    expect(paneGroupOf(day(due(29)), NOW)).toBe('tomorrow');
+    expect(paneGroupOf(day(due(1, 11)), NOW)).toBe('this-week');
+    // Next week runs Monday to Sunday.
+    expect(paneGroupOf(day(due(2, 11)), NOW)).toBe('next-week');
+    expect(paneGroupOf(day(due(8, 11)), NOW)).toBe('next-week');
+    expect(paneGroupOf(day(due(9, 11)), NOW)).toBe('later');
+    expect(paneGroupOf(day(null), NOW)).toBe('no-date');
+  });
+
+  it('follows the first day of the week', () => {
+    expect(paneGroupOf(day(due(1, 11)), NOW, 0)).toBe('next-week');
+    expect(paneGroupOf(day(due(7, 11)), NOW, 0)).toBe('next-week');
+    expect(paneGroupOf(day(due(8, 11)), NOW, 0)).toBe('later');
+  });
+
+  it('keeps tomorrow apart when it opens the next week', () => {
+    const sunday = at(1, 9, 0, 11);
+    expect(paneGroupOf(day(due(2, 11)), sunday)).toBe('tomorrow');
+    expect(paneGroupOf(day(due(3, 11)), sunday)).toBe('next-week');
+    expect(paneGroupOf(day(due(9, 11)), sunday)).toBe('later');
+  });
+});
+
 describe('upcomingTasks', () => {
-  it('lists the open tasks of the own task list by group and counts the rest', () => {
+  it('lists the open tasks of the own task list in all seven groups, with their counts', () => {
     const late = task({ due: due(26) });
     const today = task({ due: due(28) });
     const tomorrow = task({ due: due(29) });
     const week = task({ due: due(30) });
+    const next = task({ due: due(4, 11) });
+    const later = task({ due: due(10, 11) });
+    const none = task({ due: null });
     const list = upcomingTasks([
-      week, tomorrow, today, late,
-      task({ due: due(10, 11) }),
-      task({ due: null }),
+      none, later, next, week, tomorrow, today, late,
       task({ due: due(28), progress: 'completed' }),
       task({ due: due(28), progress: 'cancelled' }),
       task({ due: due(28), calendarIds: { other: true } }),
       task({ due: due(28), isShared: true }),
     ], OWN, NOW);
-    expect(list.groups.map((g) => [g.group, g.tasks.map((t) => t.id)])).toEqual([
-      ['overdue', [late.id]],
-      ['today', [today.id]],
-      ['tomorrow', [tomorrow.id]],
-      ['this-week', [week.id]],
+    expect(list.groups.map((g) => [g.group, g.tasks.map((t) => t.id), g.count])).toEqual([
+      ['overdue', [late.id], 1],
+      ['today', [today.id], 1],
+      ['tomorrow', [tomorrow.id], 1],
+      ['this-week', [week.id], 1],
+      ['next-week', [next.id], 1],
+      ['later', [later.id], 1],
+      ['no-date', [none.id], 1],
     ]);
-    expect(list.later).toBe(2);
   });
 
   it('leaves out empty groups', () => {
     const list = upcomingTasks([task({ due: due(29) })], OWN, NOW);
     expect(list.groups.map((g) => g.group)).toEqual(['tomorrow']);
-    expect(list.later).toBe(0);
+  });
+
+  it('lists the newest tasks without a due day, as many as it shows, and counts them all', () => {
+    const made = (n: number) => task({ due: null, created: new Date(Date.UTC(2026, 9, 1, n)).toISOString() });
+    const all = Array.from({ length: NO_DATE_SHOWN + 5 }, (_, i) => made(i));
+    const [group] = upcomingTasks(all, OWN, NOW).groups;
+    expect(group.group).toBe('no-date');
+    expect(group.count).toBe(NO_DATE_SHOWN + 5);
+    expect(group.tasks).toHaveLength(NO_DATE_SHOWN);
+    expect(group.tasks[0].id).toBe(all[all.length - 1].id);
+    expect(group.tasks.map((t) => t.id)).not.toContain(all[4].id);
   });
 
   it('orders a group by due day, then reminder, then title', () => {
@@ -251,16 +291,15 @@ describe('a repeating task', () => {
     ...over,
   });
 
-  it('is only counted as later, never overdue, and never in the badge', () => {
+  it('stands under later, never overdue, and never in the badge', () => {
     const list = upcomingTasks([daily(), task({ due: due(28) })], OWN, NOW);
-    expect(list.groups.map((g) => [g.group, g.tasks.length])).toEqual([['today', 1]]);
-    expect(list.later).toBe(1);
+    expect(list.groups.map((g) => [g.group, g.tasks.length])).toEqual([['today', 1], ['later', 1]]);
     expect(dueTaskCount([daily()], OWN, NOW)).toBe(0);
   });
 
   it('as Stalwart names its rule, too', () => {
     const stalwart = { ...daily({ recurrenceRules: null }), recurrenceRule: { frequency: 'weekly' } } as CalendarTask;
-    expect(upcomingTasks([stalwart], OWN, NOW)).toEqual({ groups: [], later: 1 });
+    expect(upcomingTasks([stalwart], OWN, NOW).groups.map((g) => [g.group, g.count])).toEqual([['later', 1]]);
     expect(dueTaskCount([stalwart], OWN, NOW)).toBe(0);
   });
 

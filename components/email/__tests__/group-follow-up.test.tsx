@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FollowUpDialog, ReminderDialog } from '../follow-up-dialog';
 import { FollowUpChip, FollowUpFlagButton, FollowUpInfoBar } from '../follow-up';
 import { FollowUpPopoverHost } from '../follow-up-popover';
+import { TasksPanel } from '@/components/calendar/tasks-panel';
 import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
 import { useFollowUpPopover } from '@/stores/follow-up-popover-store';
 import { useGroupTasks } from '@/stores/group-task-store';
@@ -135,6 +136,7 @@ function makeClient() {
     deleteCalendarTask: vi.fn(async () => {}),
     toggleStar: vi.fn(async () => {}),
     getPrincipals: vi.fn(async () => principals),
+    getEmail: vi.fn(async (id: string) => (id === 'M1' ? { ...mail } : null)),
     hasAccountCapability: vi.fn((_capability: string, accountId?: string) => accountId === 'me' || accountId === 'grp'),
   };
 }
@@ -463,5 +465,44 @@ describe('at the mail', () => {
     const chip = screen.getByTestId('group-follow-up-chip');
     expect(chip.textContent).toMatch(/^group\.chip_me · /);
     expect(chip.getAttribute('data-for-me')).toBe('true');
+  });
+});
+
+describe('in the tasks panel', () => {
+  const forMe = {
+    for: {
+      '@type': 'Participant', name: 'Mia', calendarAddress: 'mailto:me@example.com', roles: { owner: true },
+      'bulwarkmail.org:setBy': { name: 'Ben', email: 'ben@example.com' },
+    } as never,
+  };
+
+  it('opens the popover of a follow-up for the user on the group\'s task, and moves that one', async () => {
+    setGroupList(groupList(), [groupTask({ participants: forMe })]);
+    render(<><TasksPanel onOpenMail={vi.fn()} /><FollowUpPopoverHost /></>);
+    await act(async () => { fireEvent.click(screen.getByTestId('upcoming-flag')); });
+    await waitFor(() => expect(screen.getByTestId('follow-up-popover')).toBeTruthy());
+    expect(useFollowUpPopover.getState().groupTaskId).toBe('grp:t1');
+    expect(client.getEmail).toHaveBeenCalledWith('M1', 'grp');
+
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-tomorrow')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
+    expect(client.updateCalendarTask.mock.calls[0][0]).toBe('grp:t1');
+    expect(client.updateCalendarTask.mock.calls[0][1].due).toBe('2026-10-27T00:00:00');
+    expect(client.toggleStar).not.toHaveBeenCalled();
+  });
+
+  it('completes a group\'s reminder without a mail there, from its popover', async () => {
+    setGroupList(groupList(), [groupTask({ participants: forMe, links: null, title: 'Call the trade fair' })]);
+    render(<><TasksPanel onOpenMail={vi.fn()} /><FollowUpPopoverHost /></>);
+    await act(async () => { fireEvent.contextMenu(screen.getByTestId('upcoming-item')); });
+    await waitFor(() => expect(screen.getByTestId('follow-up-popover')).toBeTruthy());
+    expect(useFollowUpPopover.getState().taskId).toBe('grp:t1');
+    expect(client.getEmail).not.toHaveBeenCalled();
+
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-done')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
+    expect(client.updateCalendarTask.mock.calls[0][0]).toBe('grp:t1');
+    expect(client.updateCalendarTask.mock.calls[0][1]).toMatchObject({ progress: 'completed' });
+    expect(useGroupTasks.getState().tasks[0].progress).toBe('completed');
   });
 });

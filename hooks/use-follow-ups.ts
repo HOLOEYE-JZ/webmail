@@ -439,6 +439,32 @@ export async function completeTask(
   }, messages);
 }
 
+/**
+ * Takes back `completeTask` (an undo): the task open again, wherever it is
+ * kept, and a follow-up on a mail of the user's own account flagged again.
+ */
+export async function reopenTask(
+  client: IJMAPClient,
+  task: CalendarTask,
+  messages: { failed: string; flagFailed: string },
+): Promise<boolean> {
+  const reopen = () => updateAnyTask(client, task, { progress: "needs-action" });
+  const ref = task.isShared ? null : followUpMailRef(task);
+  if (!ref || isOtherAccountMail(ref, client.getAccountId())) {
+    try {
+      return await reopen();
+    } catch (error) {
+      debug.error("tasks: not reopened", error);
+      toast.error(messages.failed);
+      return false;
+    }
+  }
+  return changeFollowUp({ accountId: client.getAccountId(), emailId: ref.emailId }, reopen, () => {
+    const listed = useEmailStore.getState().emails.find((e) => e.id === ref.emailId && isOwnMail(e, client));
+    return mirrorFlag(client, listed ?? { id: ref.emailId, keywords: {} }, true, client.getAccountId());
+  }, messages);
+}
+
 export interface FollowUpControls {
   /** Whether this mail can get a follow-up here. */
   available: boolean;

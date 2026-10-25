@@ -4601,6 +4601,7 @@
       "next-week": "Próxima semana",
       "no-date": "Sem data"
     },
+    "undo": "Desfazer",
     "mark_done": "Marcar como concluído",
     "remove": "Limpar acompanhamento",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Nota formatada: edite-a na lista de tarefas.",
     "upcoming": {
       "title": "Próximo para mim",
-      "all_tasks": "Todas as tarefas",
       "hide": "Ocultar próximos",
       "groups": {
         "overdue": "Em atraso",
         "today": "Hoje",
         "tomorrow": "Amanhã",
-        "this_week": "Esta semana"
+        "this_week": "Esta semana",
+        "next_week": "Próxima semana",
+        "later": "Mais tarde",
+        "no_date": "Sem data"
       },
-      "more": "+{count} mais tarde ou sem data",
       "empty": "Nada pendente",
+      "open_list": "Abrir na lista de tarefas",
+      "no_date_all": "todas as {count} na lista de tarefas",
+      "done_toast": "Concluída: {title}",
+      "flag_label": "Acompanhamento: {title}",
       "quick_placeholder": "＋ Lembrete, p. ex. «Verificar as cobranças»",
       "quick_label": "Novo lembrete para hoje (Enter)",
       "quick_more": "Lembrete com dia, hora e nota…",

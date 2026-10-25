@@ -24,7 +24,7 @@ import { getTimedEventBoundsForDay } from "@/lib/calendar-utils";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { formatDateTime, cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
-import { TASK_LIST_PATH, TasksPanel, showMyTasks, type OpenTaskMail } from "@/components/calendar/tasks-panel";
+import { TasksPanel, type OpenTaskMail } from "@/components/calendar/tasks-panel";
 import type { CalendarEvent } from "@/lib/jmap/types";
 
 export type MvSidePanelId = "calendar" | "tasks" | "contacts";
@@ -73,7 +73,8 @@ export function MvSidePanel({ onOpenMail }: {
           {active === "calendar" && <CalendarPanel onClose={() => setOpen(null)} />}
           {active === "tasks" && (
             <>
-              <PanelHeader title={t("mv_tasks")} href={TASK_LIST_PATH} onNavigate={showMyTasks} onClose={() => setOpen(null)} />
+              {/* No "open in full": the panel's foot is its one way into the task list. */}
+              <PanelHeader title={t("mv_tasks")} onClose={() => setOpen(null)} />
               <TasksPanel onOpenMail={onOpenMail} />
             </>
           )}
@@ -107,12 +108,11 @@ export function MvSidePanel({ onOpenMail }: {
   );
 }
 
-function PanelHeader({ title, subtitle, href, onNavigate, onClose, children }: {
+function PanelHeader({ title, subtitle, href, onClose, children }: {
   title: string;
   subtitle?: React.ReactNode;
-  href: string;
-  /** Runs as the "open in full" link is followed. */
-  onNavigate?: () => void;
+  /** Where "open in full" goes; none: no such link. */
+  href?: string;
   onClose: () => void;
   children?: React.ReactNode;
 }) {
@@ -125,15 +125,16 @@ function PanelHeader({ title, subtitle, href, onNavigate, onClose, children }: {
         {subtitle && <div className="text-sm font-medium text-primary">{subtitle}</div>}
       </div>
       {children}
-      <Link
-        href={href}
-        onClick={onNavigate}
-        className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-        title={t("mv_open_full")}
-        aria-label={t("mv_open_full")}
-      >
-        <ExternalLink className="h-[18px] w-[18px]" />
-      </Link>
+      {href && (
+        <Link
+          href={href}
+          className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+          title={t("mv_open_full")}
+          aria-label={t("mv_open_full")}
+        >
+          <ExternalLink className="h-[18px] w-[18px]" />
+        </Link>
+      )}
       <button
         type="button"
         onClick={onClose}

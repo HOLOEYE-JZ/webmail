@@ -4601,6 +4601,7 @@
       "next-week": "الأسبوع القادم",
       "no-date": "بدون تاريخ"
     },
+    "undo": "تراجع",
     "mark_done": "وضع علامة مكتمل",
     "remove": "مسح المتابعة",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "ملاحظة منسّقة: عدّلها في قائمة المهام.",
     "upcoming": {
       "title": "القادم لي",
-      "all_tasks": "كل المهام",
       "hide": "إخفاء القادم",
       "groups": {
         "overdue": "متأخرة",
         "today": "اليوم",
         "tomorrow": "غدًا",
-        "this_week": "هذا الأسبوع"
+        "this_week": "هذا الأسبوع",
+        "next_week": "الأسبوع القادم",
+        "later": "لاحقًا",
+        "no_date": "بلا تاريخ"
       },
-      "more": "+{count} لاحقًا أو بلا تاريخ",
       "empty": "لا شيء مستحق",
+      "open_list": "فتح في قائمة المهام",
+      "no_date_all": "كل {count} في قائمة المهام",
+      "done_toast": "تم الإنجاز: {title}",
+      "flag_label": "متابعة: {title}",
       "quick_placeholder": "＋ تذكير، مثل «مراجعة المطالبات»",
       "quick_label": "تذكير جديد مستحق اليوم (Enter)",
       "quick_more": "تذكير مع اليوم والوقت وملاحظة…",

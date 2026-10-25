@@ -4601,6 +4601,7 @@
       "next-week": "다음 주",
       "no-date": "날짜 없음"
     },
+    "undo": "실행 취소",
     "mark_done": "완료로 표시",
     "remove": "후속 조치 지우기",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "서식 있는 메모: 작업 목록에서 편집하세요.",
     "upcoming": {
       "title": "나의 예정 작업",
-      "all_tasks": "모든 작업",
       "hide": "예정 작업 숨기기",
       "groups": {
         "overdue": "기한 지남",
         "today": "오늘",
         "tomorrow": "내일",
-        "this_week": "이번 주"
+        "this_week": "이번 주",
+        "next_week": "다음 주",
+        "later": "나중",
+        "no_date": "날짜 없음"
       },
-      "more": "나중 또는 날짜 없음 +{count}",
       "empty": "기한이 된 항목 없음",
+      "open_list": "작업 목록에서 열기",
+      "no_date_all": "작업 목록에서 {count}개 모두",
+      "done_toast": "완료됨: {title}",
+      "flag_label": "후속 조치: {title}",
       "quick_placeholder": "＋ 미리 알림, 예: “독촉장 확인”",
       "quick_label": "오늘 기한의 새 미리 알림 (Enter)",
       "quick_more": "날짜, 시간, 메모가 있는 미리 알림…",

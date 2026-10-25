@@ -4601,6 +4601,7 @@
       "next-week": "Săptămâna viitoare",
       "no-date": "Fără dată"
     },
+    "undo": "Anulează",
     "mark_done": "Marchează ca finalizat",
     "remove": "Șterge urmărirea",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Notă formatată: modificați-o în lista de sarcini.",
     "upcoming": {
       "title": "Urmează pentru mine",
-      "all_tasks": "Toate sarcinile",
       "hide": "Ascunde ce urmează",
       "groups": {
         "overdue": "Restante",
         "today": "Azi",
         "tomorrow": "Mâine",
-        "this_week": "Săptămâna aceasta"
+        "this_week": "Săptămâna aceasta",
+        "next_week": "Săptămâna viitoare",
+        "later": "Mai târziu",
+        "no_date": "Fără dată"
       },
-      "more": "+{count} mai târziu sau fără dată",
       "empty": "Nimic scadent",
+      "open_list": "Deschide în lista de activități",
+      "no_date_all": "toate cele {count} în lista de activități",
+      "done_toast": "Finalizat: {title}",
+      "flag_label": "Urmărire: {title}",
       "quick_placeholder": "＋ Memento, de ex. „Verifică somațiile”",
       "quick_label": "Memento nou, scadent azi (Enter)",
       "quick_more": "Memento cu zi, oră și notă…",

@@ -4601,6 +4601,7 @@
       "next-week": "La próxima semana",
       "no-date": "Sin fecha"
     },
+    "undo": "Deshacer",
     "mark_done": "Marcar como completado",
     "remove": "Borrar seguimiento",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Nota con formato: edítala en la lista de tareas.",
     "upcoming": {
       "title": "Pendiente para mí",
-      "all_tasks": "Todas las tareas",
       "hide": "Ocultar pendientes",
       "groups": {
         "overdue": "Vencidas",
         "today": "Hoy",
         "tomorrow": "Mañana",
-        "this_week": "Esta semana"
+        "this_week": "Esta semana",
+        "next_week": "La próxima semana",
+        "later": "Más adelante",
+        "no_date": "Sin fecha"
       },
-      "more": "+{count} más adelante o sin fecha",
       "empty": "Nada pendiente",
+      "open_list": "Abrir en la lista de tareas",
+      "no_date_all": "las {count} en la lista de tareas",
+      "done_toast": "Completada: {title}",
+      "flag_label": "Seguimiento: {title}",
       "quick_placeholder": "＋ Recordatorio, p. ej. «Revisar las reclamaciones»",
       "quick_label": "Nuevo recordatorio para hoy (Intro)",
       "quick_more": "Recordatorio con día, hora y nota…",

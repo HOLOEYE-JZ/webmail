@@ -4601,6 +4601,7 @@
       "next-week": "Next week",
       "no-date": "No date"
     },
+    "undo": "Undo",
     "mark_done": "Mark complete",
     "remove": "Clear follow-up",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Formatted note: edit it in the task list.",
     "upcoming": {
       "title": "Upcoming for me",
-      "all_tasks": "All tasks",
       "hide": "Hide upcoming",
       "groups": {
         "overdue": "Overdue",
         "today": "Today",
         "tomorrow": "Tomorrow",
-        "this_week": "This week"
+        "this_week": "This week",
+        "next_week": "Next week",
+        "later": "Later",
+        "no_date": "No date"
       },
-      "more": "+{count} later or without a date",
       "empty": "Nothing due",
+      "open_list": "Open in the task list",
+      "no_date_all": "all {count} in the task list",
+      "done_toast": "Completed: {title}",
+      "flag_label": "Follow up: {title}",
       "quick_placeholder": "＋ Reminder",
       "quick_label": "New reminder, due today (Enter)",
       "quick_more": "Reminder with day, time and note…",

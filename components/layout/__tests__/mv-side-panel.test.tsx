@@ -11,6 +11,15 @@ import { buildFollowUpTask, buildReminderTask } from '@/lib/follow-ups';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { Calendar, CalendarTask } from '@/lib/jmap/types';
 
+// Links as anchors, so the ways out of the mail view can be told.
+vi.mock('@/i18n/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
+  usePathname: () => '/en',
+  Link: ({ children, href, ...rest }: { children: React.ReactNode; href: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} {...rest}>{children}</a>
+  ),
+}));
+
 describe('MvSidePanel', () => {
   beforeEach(() => {
     useCalendarStore.setState({ supportsCalendar: true, calendars: [], events: [] } as never);
@@ -110,7 +119,7 @@ describe('MvSidePanel Tasks', () => {
   const titles = (group: string) => within(screen.getByTestId(`upcoming-group-${group}`))
     .getAllByTestId('upcoming-open').map((b) => b.textContent);
 
-  it('opens the shared tasks panel: plain tasks and follow-ups by due day, the rest counted', () => {
+  it('opens the shared tasks panel: plain tasks and follow-ups by due day, the far ones folded', () => {
     useTaskStore.setState({
       tasks: [
         reminder('r1', 'Check the dunning run', day(26)),
@@ -123,7 +132,9 @@ describe('MvSidePanel Tasks', () => {
     expect(titles('overdue')[0]).toContain('Check the dunning run');
     expect(titles('today')[0]).toContain('Lena Brandt · Offer 4711');
     expect(within(panel).getAllByTestId('upcoming-item')).toHaveLength(2);
-    expect(within(panel).getByText('upcoming.more')).toBeTruthy();
+    expect(within(screen.getByTestId('upcoming-group-no-date')).getByTestId('upcoming-group-head').getAttribute('aria-expanded')).toBe('false');
+    // Its one way into the task list is the panel's foot, not the header.
+    expect(within(panel).getAllByRole('link').map((a) => a.getAttribute('data-testid'))).toEqual(['upcoming-open-list']);
   });
 
   it('adds a task due today from its line, into the task list', async () => {

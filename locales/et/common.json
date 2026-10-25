@@ -4601,6 +4601,7 @@
       "next-week": "Järgmine nädal",
       "no-date": "Kuupäevata"
     },
+    "undo": "Võta tagasi",
     "mark_done": "Märgi tehtuks",
     "remove": "Eemalda järelkontroll",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Vormindatud märkus: muuda seda ülesannete loendis.",
     "upcoming": {
       "title": "Minu ees ootamas",
-      "all_tasks": "Kõik ülesanded",
       "hide": "Peida ees ootav",
       "groups": {
         "overdue": "Tähtaeg möödas",
         "today": "Täna",
         "tomorrow": "Homme",
-        "this_week": "See nädal"
+        "this_week": "See nädal",
+        "next_week": "Järgmine nädal",
+        "later": "Hiljem",
+        "no_date": "Kuupäevata"
       },
-      "more": "+{count} hiljem või kuupäevata",
       "empty": "Midagi pole tähtajaga",
+      "open_list": "Ava ülesannete loendis",
+      "no_date_all": "kõik {count} ülesannete loendis",
+      "done_toast": "Lõpetatud: {title}",
+      "flag_label": "Järelkontroll: {title}",
       "quick_placeholder": "＋ Meeldetuletus, nt „Kontrolli meeldetuletuskirju“",
       "quick_label": "Uus meeldetuletus tähtajaga täna (Enter)",
       "quick_more": "Meeldetuletus päeva, kellaaja ja märkusega…",

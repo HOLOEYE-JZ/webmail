@@ -4601,6 +4601,7 @@
       "next-week": "W przyszłym tygodniu",
       "no-date": "Bez daty"
     },
+    "undo": "Cofnij",
     "mark_done": "Oznacz jako ukończone",
     "remove": "Wyczyść monit",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Sformatowana notatka: edytuj ją na liście zadań.",
     "upcoming": {
       "title": "Nadchodzące dla mnie",
-      "all_tasks": "Wszystkie zadania",
       "hide": "Ukryj nadchodzące",
       "groups": {
         "overdue": "Zaległe",
         "today": "Dzisiaj",
         "tomorrow": "Jutro",
-        "this_week": "W tym tygodniu"
+        "this_week": "W tym tygodniu",
+        "next_week": "W przyszłym tygodniu",
+        "later": "Później",
+        "no_date": "Bez daty"
       },
-      "more": "+{count} później lub bez daty",
       "empty": "Nic do zrobienia",
+      "open_list": "Otwórz na liście zadań",
+      "no_date_all": "wszystkie ({count}) na liście zadań",
+      "done_toast": "Ukończono: {title}",
+      "flag_label": "Monit: {title}",
       "quick_placeholder": "＋ Przypomnienie, np. „Sprawdzić monity”",
       "quick_label": "Nowe przypomnienie na dziś (Enter)",
       "quick_more": "Przypomnienie z dniem, godziną i notatką…",

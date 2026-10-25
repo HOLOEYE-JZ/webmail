@@ -4601,6 +4601,7 @@
       "next-week": "下週",
       "no-date": "無日期"
     },
+    "undo": "復原",
     "mark_done": "標示為已完成",
     "remove": "清除待處理",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "格式化的備註：請在工作清單中編輯。",
     "upcoming": {
       "title": "我的待辦",
-      "all_tasks": "所有工作",
       "hide": "隱藏待辦",
       "groups": {
         "overdue": "已逾期",
         "today": "今天",
         "tomorrow": "明天",
-        "this_week": "本週"
+        "this_week": "本週",
+        "next_week": "下週",
+        "later": "之後",
+        "no_date": "無日期"
       },
-      "more": "另有 {count} 項（之後或無日期）",
       "empty": "沒有到期的項目",
+      "open_list": "在待辦清單中開啟",
+      "no_date_all": "待辦清單中的全部 {count} 項",
+      "done_toast": "已完成：{title}",
+      "flag_label": "待處理：{title}",
       "quick_placeholder": "＋ 提醒，例如「檢查催款」",
       "quick_label": "今天到期的新提醒 (Enter)",
       "quick_more": "含日期、時間與備註的提醒…",

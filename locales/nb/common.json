@@ -4601,6 +4601,7 @@
       "next-week": "Neste uke",
       "no-date": "Ingen dato"
     },
+    "undo": "Angre",
     "mark_done": "Merk som fullført",
     "remove": "Fjern oppfølging",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Formatert notat: endre det i oppgavelisten.",
     "upcoming": {
       "title": "Kommende for meg",
-      "all_tasks": "Alle oppgaver",
       "hide": "Skjul kommende",
       "groups": {
         "overdue": "Forfalt",
         "today": "I dag",
         "tomorrow": "I morgen",
-        "this_week": "Denne uken"
+        "this_week": "Denne uken",
+        "next_week": "Neste uke",
+        "later": "Senere",
+        "no_date": "Uten dato"
       },
-      "more": "+{count} senere eller uten dato",
       "empty": "Ingenting forfaller",
+      "open_list": "Åpne i oppgavelisten",
+      "no_date_all": "alle {count} i oppgavelisten",
+      "done_toast": "Fullført: {title}",
+      "flag_label": "Oppfølging: {title}",
       "quick_placeholder": "＋ Påminnelse, f.eks. «Sjekk purringene»",
       "quick_label": "Ny påminnelse, forfaller i dag (Enter)",
       "quick_more": "Påminnelse med dag, klokkeslett og notat …",

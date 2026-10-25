@@ -4602,6 +4602,7 @@
       "next-week": "בשבוע הבא",
       "no-date": "ללא תאריך"
     },
+    "undo": "ביטול",
     "mark_done": "סימון כהושלם",
     "remove": "ניקוי מעקב",
     "task_title": "{action}: {subject}",
@@ -4668,16 +4669,21 @@
     "note_html": "הערה מעוצבת: יש לערוך אותה ברשימת המשימות.",
     "upcoming": {
       "title": "ממתין לי",
-      "all_tasks": "כל המשימות",
       "hide": "הסתרת הממתינים",
       "groups": {
         "overdue": "באיחור",
         "today": "היום",
         "tomorrow": "מחר",
-        "this_week": "השבוע"
+        "this_week": "השבוע",
+        "next_week": "בשבוע הבא",
+        "later": "בהמשך",
+        "no_date": "ללא תאריך"
       },
-      "more": "+{count} בהמשך או ללא תאריך",
       "empty": "אין דבר לביצוע",
+      "open_list": "פתיחה ברשימת המשימות",
+      "no_date_all": "כל {count} ברשימת המשימות",
+      "done_toast": "הושלם: {title}",
+      "flag_label": "מעקב: {title}",
       "quick_placeholder": "＋ תזכורת, למשל „לבדוק תזכורות תשלום”",
       "quick_label": "תזכורת חדשה להיום (Enter)",
       "quick_more": "תזכורת עם יום, שעה והערה…",

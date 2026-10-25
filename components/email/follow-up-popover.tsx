@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { isSameDay } from "date-fns";
-import { Check, Flag, Pencil, Users } from "@/components/icons";
+import { Check, Flag, Pencil, Trash2, Users } from "@/components/icons";
 import {
   ContextMenu,
   ContextMenuHeader,
@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/context-menu";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { completeTask, useFollowUp, type FollowUpControls } from "@/hooks/use-follow-ups";
-import { deleteGroupTask, updateGroupTask, useGroupTask } from "@/hooks/use-group-follow-ups";
+import { deleteGroupTask, updateAnyTask, updateGroupTask, useGroupTask } from "@/hooks/use-group-follow-ups";
+import { useReminder } from "@/hooks/use-upcoming";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuthStore } from "@/stores/auth-store";
@@ -29,20 +30,24 @@ import { useFollowUpFormat } from "./follow-up";
 /**
  * The popover "Follow up" for the mail `useFollowUpPopover` names, as a
  * menu: the quick choices, Custom …, For a colleague …, done and remove;
- * for a follow-up in a group mailbox's task list, the same on that one.
- * A choice closes it, as do Escape, Tab and a click outside. Mounted once.
+ * for a follow-up in a group mailbox's task list, the same on that one;
+ * for a task without a mail (a reminder), the quick choices, Change …, done
+ * and delete. A choice closes it, as do Escape, Tab and a click outside.
+ * Mounted once.
  */
 export function FollowUpPopoverHost() {
   const email = useFollowUpPopover((s) => s.email);
   const groupTaskId = useFollowUpPopover((s) => s.groupTaskId);
+  const taskId = useFollowUpPopover((s) => s.taskId);
   const position = useFollowUpPopover((s) => s.position);
   const trigger = useFollowUpPopover((s) => s.trigger);
   const close = useFollowUpPopover((s) => s.close);
   const { dialogProps, confirm } = useConfirmDialog();
   const own = useFollowUp(email);
   const group = useGroupFollowUpControls(own, email, groupTaskId, confirm);
-  const controls = groupTaskId ? group : own;
-  const isOpen = !!email && controls.available;
+  const reminder = useReminderControls(taskId, confirm);
+  const controls = taskId ? reminder : groupTaskId ? group : own;
+  const isOpen = (!!email || !!taskId) && controls.available;
 
   const triggerRef = useRef<HTMLElement | null>(null);
   triggerRef.current = trigger;
@@ -80,7 +85,7 @@ export function FollowUpPopoverHost() {
     <>
       <ContextMenu ref={boxRef} isOpen={isOpen} position={position} onClose={close}>
         <div ref={menuRef} onKeyDown={onKeyDown} data-testid="follow-up-popover" className="w-72 max-w-full">
-          {isOpen && <FollowUpPopoverItems controls={controls} onClose={close} />}
+          {isOpen && <FollowUpPopoverItems controls={controls} withoutMail={!!taskId} onClose={close} />}
         </div>
       </ContextMenu>
       <ConfirmDialog {...dialogProps} />
@@ -140,17 +145,88 @@ function useGroupFollowUpControls(own: FollowUpControls, email: Email | null, ta
   };
 }
 
+/**
+ * The popover's handle on a task without a mail, the user's own or a group
+ * list's: moved, completed or deleted there, nothing set on any mail;
+ * deleting it is asked first, as the dialog does.
+ */
+function useReminderControls(taskId: string | null, confirm: Confirm): FollowUpControls {
+  const t = useTranslations("follow_up");
+  const client = useAuthStore((s) => s.client);
+  const reminder = useReminder(taskId);
+  const { task, group, workingTime } = reminder;
+
+  const write = async (change: () => Promise<boolean>) => {
+    try {
+      await change();
+    } catch (error) {
+      debug.error("reminder: not written", error);
+      toast.error(t("reminder.failed"));
+    }
+  };
+
+  const markDone = async () => {
+    if (client && task) await completeTask(client, task, { failed: t("reminder.failed"), flagFailed: t("flag_failed") });
+  };
+
+  return {
+    available: !!taskId && reminder.available && !!task,
+    onlyMe: false,
+    mailboxName: null,
+    group,
+    openGroupDialog: () => {},
+    task,
+    workingTime,
+    apply: async (choice) => {
+      if (!client || !task) return;
+      const { due, reminder: at } = scheduleFollowUp(choice, displayNow(), workingTime);
+      await write(() => updateAnyTask(client, task, rescheduleFollowUpTask(task, due, at ? fromDisplayDate(at) : null)));
+    },
+    save: reminder.save,
+    openDialog: () => {
+      if (task) useFollowUpDialog.getState().openReminder({ taskId: task.id });
+    },
+    markDone,
+    remove: async () => {
+      if (!task) return;
+      if (!(await confirm(group
+        ? {
+          title: t("group.remove_title"),
+          message: t("group.remove_confirm", { group: group.name }),
+          confirmText: t("remove_button"),
+          variant: "destructive",
+        }
+        : {
+          title: t("reminder.delete_title"),
+          message: t("reminder.delete_confirm", { title: task.title ?? "" }),
+          confirmText: t("reminder.delete"),
+          variant: "destructive",
+        }))) return;
+      await reminder.remove();
+    },
+    quickClick: markDone,
+  };
+}
+
 /** The entries: each quick choice with its due day and reminder on the right. */
-function FollowUpPopoverItems({ controls, onClose }: { controls: FollowUpControls; onClose: () => void }) {
+function FollowUpPopoverItems({ controls, withoutMail, onClose }: {
+  controls: FollowUpControls;
+  /** A task without a mail: headed by its title, no colleague, deleted rather than cleared. */
+  withoutMail: boolean;
+  onClose: () => void;
+}) {
   const t = useTranslations("follow_up");
   const fmt = useFollowUpFormat();
   const now = displayNow();
   const { task, workingTime } = controls;
   const open = !!task && task.progress !== "completed";
+  const heading = withoutMail
+    ? task?.title?.trim() || t("upcoming.no_title")
+    : controls.onlyMe ? t("menu_title_only_me") : t("menu_title");
 
   return (
     <>
-      <ContextMenuHeader>{controls.onlyMe ? t("menu_title_only_me") : t("menu_title")}</ContextMenuHeader>
+      <ContextMenuHeader>{heading}</ContextMenuHeader>
       {FOLLOW_UP_CHOICES.map((choice) => {
         const { due, reminder } = scheduleFollowUp(choice, now, workingTime);
         // The reminder's time, with its weekday when it comes before the due day.
@@ -171,12 +247,12 @@ function FollowUpPopoverItems({ controls, onClose }: { controls: FollowUpControl
       })}
       <ContextMenuItem
         icon={Pencil}
-        label={t("custom")}
+        label={withoutMail ? t("change_button") : t("custom")}
         testId="follow-up-custom"
         onClick={() => { onClose(); controls.openDialog("action"); }}
       />
       {/* A colleague only in a group mailbox's list: they could not read a mail of the user's own. */}
-      {controls.group ? (
+      {withoutMail ? null : controls.group ? (
         <ContextMenuItem
           icon={Users}
           label={t("group.menu_colleague", { group: controls.group.name })}
@@ -212,8 +288,8 @@ function FollowUpPopoverItems({ controls, onClose }: { controls: FollowUpControl
         onClick={() => { onClose(); void controls.markDone(); }}
       />
       <ContextMenuItem
-        icon={Flag}
-        label={t("remove")}
+        icon={withoutMail ? Trash2 : Flag}
+        label={withoutMail ? t("reminder.delete") : t("remove")}
         testId="follow-up-remove"
         disabled={!task}
         onClick={() => { onClose(); void controls.remove(); }}

@@ -21,7 +21,7 @@ import {
 } from "@/lib/follow-ups";
 import type { WorkingTime } from "@/lib/follow-up-schedule";
 import { dueTaskCount, upcomingTasks, type UpcomingList } from "@/lib/upcoming-tasks";
-import type { CalendarTask } from "@/lib/jmap/types";
+import type { CalendarTask, Email } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { locateFollowUpMail } from "./use-follow-up-sync";
 import { useDisplayNow } from "./use-clock";
@@ -45,7 +45,7 @@ function useOwnTaskListIds(): ReadonlySet<string> {
   return useMemo(() => new Set(followUpCalendars(calendars).map((c) => c.id)), [calendars]);
 }
 
-const NOTHING_UPCOMING: UpcomingList = { groups: [], later: 0 };
+const NOTHING_UPCOMING: UpcomingList = { groups: [] };
 
 /**
  * The tasks panel beside the mail: the user's open tasks by due day. It
@@ -106,6 +106,22 @@ export async function openTaskItem(
   }
   toast.error(mailGone);
   useFollowUpDialog.getState().openReminder({ taskId: task.id });
+}
+
+/**
+ * The mail of a follow-up listed with only its task, read as the row opens
+ * it (a moved mail found again first), for the popover that acts on it;
+ * null for a task without a mail, or one whose mail is gone or lies in an
+ * account the login does not reach.
+ */
+export async function followUpEmailOf(client: IJMAPClient, task: CalendarTask): Promise<Email | null> {
+  const mail = followUpMailRef(task);
+  if (!mail || !reachesMailAccount(client, mail.accountId)) return null;
+  const found = await locateFollowUpMail(client, task);
+  if (found.kind !== "present" && found.kind !== "unknown") return null;
+  const accountId = mail.accountId ?? client.getAccountId();
+  const email = await client.getEmail(found.emailId, accountId);
+  return email ? { ...email, sourceAccountId: accountId } : null;
 }
 
 /** The calendar a new reminder goes into: the one follow-ups go into. */

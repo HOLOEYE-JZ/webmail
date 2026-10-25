@@ -2,6 +2,9 @@ import { act, fireEvent, render, renderHook, screen, waitFor, within } from '@te
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TasksPanel, TasksSidebar, useTasksPanelOpen } from '../tasks-panel';
 import { FollowUpDialogHost } from '@/components/email/follow-up-dialog';
+import { FollowUpPopoverHost } from '@/components/email/follow-up-popover';
+import { useFollowUpPopover } from '@/stores/follow-up-popover-store';
+import { useToastStore } from '@/stores/toast-store';
 import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
 import { useDueTaskCount } from '@/hooks/use-upcoming';
 import { useAuthStore } from '@/stores/auth-store';
@@ -23,6 +26,15 @@ const TEXTS: Record<string, string> = {
   no_subject: '(no subject)',
   'upcoming.no_mail': 'Reminder without a mail',
 };
+// Links as anchors, so the ways out of the mail view can be told.
+vi.mock('@/i18n/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
+  usePathname: () => '/en',
+  Link: ({ children, href, ...rest }: { children: React.ReactNode; href: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} {...rest}>{children}</a>
+  ),
+}));
+
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) => {
     const text = TEXTS[key];
@@ -76,6 +88,7 @@ function makeClient() {
   return {
     getAccountId: () => 'acc',
     getEmailFields: vi.fn(async (ids: string[]) => ids.filter((id) => id === 'M1').map((id) => ({ id, keywords: { $flagged: true } }))),
+    getEmail: vi.fn(async (id: string, _accountId?: string) => (id === 'M1' ? { ...mail } : null)),
     queryEmailFields: vi.fn(async () => []),
     createCalendarTask: vi.fn(async (task: Partial<CalendarTask>) => ({ ...task, id: 'task-new', uid: 'u', updated: '' }) as CalendarTask),
     updateCalendarTask: vi.fn(async (id: string, _updates: Partial<CalendarTask>) => id),
@@ -91,6 +104,8 @@ const field = (testId: string) => screen.getByTestId(testId) as HTMLInputElement
 const note = () => field('follow-up-note');
 const titles = (group: string) => within(screen.getByTestId(`upcoming-group-${group}`))
   .getAllByTestId('upcoming-open').map((b) => b.textContent);
+const head = (group: string) => within(screen.getByTestId(`upcoming-group-${group}`)).getByTestId('upcoming-group-head');
+const items = (group: string) => within(screen.getByTestId(`upcoming-group-${group}`)).queryAllByTestId('upcoming-item');
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -103,6 +118,9 @@ beforeEach(() => {
   useTaskStore.setState({ tasks: [] });
   useEmailStore.setState({ emails: [{ ...mail, keywords: { ...mail.keywords } }], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null });
   useFollowUpDialog.setState({ email: null, reminder: null });
+  useFollowUpPopover.setState({ email: null, groupTaskId: null, taskId: null, trigger: null });
+  useToastStore.setState({ toasts: [] });
+  localStorage.clear();
 });
 
 afterEach(() => {
@@ -110,26 +128,84 @@ afterEach(() => {
 });
 
 describe('TasksPanel', () => {
-  it('groups the open tasks of the own list: overdue, today, tomorrow, this week, the rest counted', () => {
+  it('groups the open tasks of the own list in all seven groups, the far three folded with their count', () => {
     useTaskStore.setState({
       tasks: [
         reminder('r1', 'Check the dunning run', day(26)),
         mailFollowUp('f1', day(28)),
         reminder('r2', 'Order toner', day(29)),
         reminder('r3', 'Book the hall', day(30)),
+        reminder('r7', 'Renew the certificate', new Date(2026, 10, 4)),
         reminder('r4', 'Next month', new Date(2026, 10, 20)),
         reminder('r5', 'Some day', null),
+        reminder('r8', 'Another day', null),
         reminder('r6', 'Done already', day(28), { progress: 'completed' }),
       ],
     });
     render(<TasksPanel onOpenMail={vi.fn()} />);
+    expect(screen.getAllByTestId('upcoming-group-head').map((h) => h.textContent)).toEqual([
+      'upcoming.groups.overdue1',
+      'upcoming.groups.today1',
+      'upcoming.groups.tomorrow1',
+      'upcoming.groups.this_week1',
+      'upcoming.groups.next_week1',
+      'upcoming.groups.later1',
+      'upcoming.groups.no_date2',
+    ]);
     expect(titles('overdue')[0]).toContain('Check the dunning run');
     expect(titles('today')[0]).toContain('Call');
     expect(titles('today')[0]).toContain('Lena Brandt · Offer 4711');
     expect(titles('tomorrow')[0]).toContain('Order toner');
     expect(titles('this-week')[0]).toContain('Book the hall');
-    expect(screen.getByText('upcoming.more{"count":2}')).toBeTruthy();
+    for (const group of ['next-week', 'later', 'no-date']) {
+      expect(head(group).getAttribute('aria-expanded')).toBe('false');
+      expect(items(group)).toHaveLength(0);
+    }
+    expect(head('today').getAttribute('aria-expanded')).toBe('true');
     expect(screen.queryByText(/Done already/)).toBeNull();
+  });
+
+  it('folds and opens a group in place, and keeps it so in this browser', () => {
+    useTaskStore.setState({ tasks: [reminder('r1', 'Order toner', day(28)), reminder('r2', 'Some day', null)] });
+    const first = render(<TasksPanel onOpenMail={vi.fn()} />);
+    fireEvent.click(head('no-date'));
+    expect(titles('no-date')[0]).toContain('Some day');
+    fireEvent.click(head('today'));
+    expect(items('today')).toHaveLength(0);
+    first.unmount();
+
+    render(<TasksPanel onOpenMail={vi.fn()} />);
+    expect(items('today')).toHaveLength(0);
+    expect(titles('no-date')[0]).toContain('Some day');
+    fireEvent.click(head('today'));
+    expect(titles('today')[0]).toContain('Order toner');
+  });
+
+  it('lists the 20 newest without a date, and names the task list for all of them', () => {
+    useTaskStore.setState({
+      tasks: Array.from({ length: 25 }, (_, i) => reminder(`n${i}`, `Some day ${i}`, null, {
+        created: new Date(Date.UTC(2026, 9, 1, i)).toISOString(),
+      })),
+    });
+    render(<TasksPanel onOpenMail={vi.fn()} />);
+    expect(head('no-date').textContent).toBe('upcoming.groups.no_date25');
+    fireEvent.click(head('no-date'));
+    expect(items('no-date')).toHaveLength(20);
+    expect(titles('no-date')[0]).toContain('Some day 24');
+    const all = screen.getByTestId('upcoming-no-date-all');
+    expect(all.textContent).toBe('upcoming.no_date_all{"count":25}');
+    expect(all.getAttribute('href')).toContain('/calendar/tasks');
+  });
+
+  it('leads out of the mail only from its foot, which names the task list', () => {
+    useTaskStore.setState({ tasks: [reminder('r1', 'Order toner', day(28)), mailFollowUp('f1', day(29)), reminder('r2', 'Some day', null)] });
+    const { container } = render(<TasksPanel onOpenMail={vi.fn()} />);
+    fireEvent.click(head('no-date'));
+    const links = container.querySelectorAll('a');
+    expect(links).toHaveLength(1);
+    expect(links[0].getAttribute('data-testid')).toBe('upcoming-open-list');
+    expect(links[0].textContent).toBe('upcoming.open_list');
+    expect(links[0].getAttribute('href')).toContain('/calendar/tasks');
   });
 
   it('shows an HTML note as text', () => {
@@ -139,7 +215,7 @@ describe('TasksPanel', () => {
     expect(titles('today')[0]).not.toContain('<');
   });
 
-  it('counts a repeating task only with the later ones', () => {
+  it('lists a repeating task under later, without a date or a check box', () => {
     useTaskStore.setState({
       tasks: [reminder('r1', 'Weekly report', day(20), {
         recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' }] as unknown as CalendarTask['recurrenceRules'],
@@ -147,14 +223,14 @@ describe('TasksPanel', () => {
     });
     render(<TasksPanel onOpenMail={vi.fn()} />);
     expect(screen.queryByTestId('upcoming-group-overdue')).toBeNull();
+    fireEvent.click(head('later'));
+    expect(titles('later')[0]).toBe('Weekly reportReminder without a mail');
     expect(screen.queryByTestId('upcoming-done')).toBeNull();
-    expect(screen.getByText('upcoming.more{"count":1}')).toBeTruthy();
   });
 
   it('says when nothing is due', () => {
     render(<TasksPanel onOpenMail={vi.fn()} />);
     expect(screen.getByTestId('upcoming-empty')).toBeTruthy();
-    expect(screen.queryByText(/upcoming\.more/)).toBeNull();
   });
 
   it('adds a reminder due today on Enter, without a mail, and lists it under Today at once', async () => {
@@ -189,6 +265,31 @@ describe('TasksPanel', () => {
     expect(client.toggleStar).not.toHaveBeenCalled();
     expect(client.getEmailFields).not.toHaveBeenCalled();
     expect(screen.getByTestId('upcoming-empty')).toBeTruthy();
+  });
+
+  it('takes a completion back from its toast', async () => {
+    useTaskStore.setState({ tasks: [reminder('r1', 'Check the dunning run', day(28))] });
+    render(<TasksPanel onOpenMail={vi.fn()} />);
+    await act(async () => { fireEvent.click(screen.getByTestId('upcoming-done')); });
+    await waitFor(() => expect(useToastStore.getState().toasts).toHaveLength(1));
+    const [shown] = useToastStore.getState().toasts;
+    expect(shown.title).toBe('upcoming.done_toast{"title":"Check the dunning run"}');
+    expect(shown.action?.label).toBe('undo');
+
+    await act(async () => { shown.action?.onClick(); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenLastCalledWith('r1', { progress: 'needs-action' }));
+    expect(titles('today')[0]).toContain('Check the dunning run');
+  });
+
+  it('flags the mail again when a follow-up\'s completion is taken back', async () => {
+    useTaskStore.setState({ tasks: [mailFollowUp('f1', day(28))] });
+    render(<TasksPanel onOpenMail={vi.fn()} />);
+    await act(async () => { fireEvent.click(screen.getByTestId('upcoming-done')); });
+    await waitFor(() => expect(useToastStore.getState().toasts).toHaveLength(1));
+    await act(async () => { useToastStore.getState().toasts[0].action?.onClick(); });
+    await waitFor(() => expect(client.toggleStar).toHaveBeenCalledTimes(2));
+    expect(client.toggleStar.mock.calls[1].slice(0, 2)).toEqual(['M1', true]);
+    expect(client.updateCalendarTask).toHaveBeenLastCalledWith('f1', { progress: 'needs-action' });
   });
 
   it('marks a mail\'s follow-up done as the mail does: the flag goes too', async () => {
@@ -252,6 +353,63 @@ describe('TasksPanel', () => {
     expect(client.getEmailFields).not.toHaveBeenCalled();
   });
 
+  it('opens the popover on the mail from a follow-up\'s flag, without opening the mail', async () => {
+    const onOpenMail = vi.fn();
+    useTaskStore.setState({ tasks: [mailFollowUp('f1', day(28))] });
+    render(<TasksPanel onOpenMail={onOpenMail} />);
+    await act(async () => { fireEvent.click(screen.getByTestId('upcoming-flag')); });
+    await waitFor(() => expect(useFollowUpPopover.getState().email?.id).toBe('M1'));
+    const state = useFollowUpPopover.getState();
+    expect(state.email?.sourceAccountId).toBe('acc');
+    expect(state.groupTaskId).toBeNull();
+    expect(state.taskId).toBeNull();
+    expect(client.getEmail).toHaveBeenCalledWith('M1', 'acc');
+    expect(onOpenMail).not.toHaveBeenCalled();
+  });
+
+  it('opens the popover on a reminder by its right click: moved, changed, done or deleted there', async () => {
+    useTaskStore.setState({ tasks: [reminder('r1', 'Cancel the maintenance contract', day(28))] });
+    render(<><TasksPanel onOpenMail={vi.fn()} /><FollowUpPopoverHost /></>);
+    await act(async () => { fireEvent.contextMenu(screen.getByTestId('upcoming-item'), { clientX: 40, clientY: 60 }); });
+    await waitFor(() => expect(screen.getByTestId('follow-up-popover')).toBeTruthy());
+    expect(useFollowUpPopover.getState().taskId).toBe('r1');
+    expect(useFollowUpPopover.getState().position).toEqual({ x: 40, y: 60 });
+    expect(client.getEmail).not.toHaveBeenCalled();
+    const popover = screen.getByTestId('follow-up-popover');
+    expect(within(popover).getByText('Cancel the maintenance contract')).toBeTruthy();
+    expect(within(popover).getAllByRole('menuitem').map((e) => e.getAttribute('data-testid'))).toEqual([
+      'follow-up-today',
+      'follow-up-tomorrow',
+      'follow-up-this-week',
+      'follow-up-next-week',
+      'follow-up-no-date',
+      'follow-up-custom',
+      'follow-up-done',
+      'follow-up-remove',
+    ]);
+    expect(within(popover).getByTestId('follow-up-custom').textContent).toBe('change_button');
+    expect(within(popover).getByTestId('follow-up-remove').textContent).toBe('reminder.delete');
+
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-tomorrow')); });
+    await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
+    expect(client.updateCalendarTask.mock.calls[0][0]).toBe('r1');
+    expect(client.updateCalendarTask.mock.calls[0][1].due).toBe('2026-10-29T00:00:00');
+    expect(client.toggleStar).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('follow-up-popover')).toBeNull();
+
+    await act(async () => { fireEvent.contextMenu(screen.getByTestId('upcoming-item'), { clientX: 40, clientY: 60 }); });
+    await waitFor(() => expect(screen.getByTestId('follow-up-popover')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('follow-up-custom'));
+    expect(useFollowUpDialog.getState().reminder).toEqual({ taskId: 'r1' });
+
+    await act(async () => { fireEvent.contextMenu(screen.getByTestId('upcoming-item'), { clientX: 40, clientY: 60 }); });
+    await waitFor(() => expect(screen.getByTestId('follow-up-popover')).toBeTruthy());
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-remove')); });
+    const ask = screen.getByRole('alertdialog');
+    expect(within(ask).getByText('reminder.delete_confirm{"title":"Cancel the maintenance contract"}')).toBeTruthy();
+    await act(async () => { fireEvent.click(within(ask).getByText('reminder.delete')); });
+    await waitFor(() => expect(client.deleteCalendarTask).toHaveBeenCalledWith('r1'));
+  });
 });
 
 describe('TasksSidebar', () => {
@@ -261,6 +419,7 @@ describe('TasksSidebar', () => {
     render(<TasksSidebar onClose={onClose} onOpenMail={vi.fn()} />);
     expect(screen.getByRole('complementary', { name: 'upcoming.title' })).toBeTruthy();
     expect(titles('today')[0]).toContain('Order toner');
+    expect(screen.queryByRole('link', { name: 'upcoming.all_tasks' })).toBeNull();
     fireEvent.click(screen.getByTestId('upcoming-hide'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });

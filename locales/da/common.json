@@ -4601,6 +4601,7 @@
       "next-week": "Næste uge",
       "no-date": "Ingen dato"
     },
+    "undo": "Fortryd",
     "mark_done": "Markér som fuldført",
     "remove": "Ryd opfølgning",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Formateret note: ret den i opgavelisten.",
     "upcoming": {
       "title": "Kommende for mig",
-      "all_tasks": "Alle opgaver",
       "hide": "Skjul kommende",
       "groups": {
         "overdue": "Forfaldne",
         "today": "I dag",
         "tomorrow": "I morgen",
-        "this_week": "Denne uge"
+        "this_week": "Denne uge",
+        "next_week": "Næste uge",
+        "later": "Senere",
+        "no_date": "Ingen dato"
       },
-      "more": "+{count} senere eller uden dato",
       "empty": "Intet forfalder",
+      "open_list": "Åbn i opgavelisten",
+      "no_date_all": "alle {count} i opgavelisten",
+      "done_toast": "Fuldført: {title}",
+      "flag_label": "Opfølgning: {title}",
       "quick_placeholder": "＋ Påmindelse, f.eks. »Tjek rykkerkørslen«",
       "quick_label": "Ny påmindelse, forfalder i dag (Enter)",
       "quick_more": "Påmindelse med dag, klokkeslæt og note …",

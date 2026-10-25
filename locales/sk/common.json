@@ -4601,6 +4601,7 @@
       "next-week": "Budúci týždeň",
       "no-date": "Bez dátumu"
     },
+    "undo": "Späť",
     "mark_done": "Označiť ako dokončené",
     "remove": "Zrušiť príznak",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Formátovaná poznámka: upravte ju v zozname úloh.",
     "upcoming": {
       "title": "Nadchádzajúce pre mňa",
-      "all_tasks": "Všetky úlohy",
       "hide": "Skryť nadchádzajúce",
       "groups": {
         "overdue": "Po termíne",
         "today": "Dnes",
         "tomorrow": "Zajtra",
-        "this_week": "Tento týždeň"
+        "this_week": "Tento týždeň",
+        "next_week": "Budúci týždeň",
+        "later": "Neskôr",
+        "no_date": "Bez dátumu"
       },
-      "more": "+{count} neskôr alebo bez dátumu",
       "empty": "Nič nie je na rade",
+      "open_list": "Otvoriť v zozname úloh",
+      "no_date_all": "všetkých {count} v zozname úloh",
+      "done_toast": "Dokončené: {title}",
+      "flag_label": "Spracovať: {title}",
       "quick_placeholder": "＋ Pripomenutie, napr. „Skontrolovať upomienky“",
       "quick_label": "Nové pripomenutie s termínom dnes (Enter)",
       "quick_more": "Pripomenutie s dňom, časom a poznámkou…",

@@ -4601,6 +4601,7 @@
       "next-week": "Jövő héten",
       "no-date": "Nincs dátum"
     },
+    "undo": "Visszavonás",
     "mark_done": "Megjelölés készként",
     "remove": "Nyomon követés törlése",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Formázott megjegyzés: a feladatlistában módosítsa.",
     "upcoming": {
       "title": "Rám váró teendők",
-      "all_tasks": "Összes feladat",
       "hide": "Teendők elrejtése",
       "groups": {
         "overdue": "Lejárt",
         "today": "Ma",
         "tomorrow": "Holnap",
-        "this_week": "Ezen a héten"
+        "this_week": "Ezen a héten",
+        "next_week": "Jövő héten",
+        "later": "Később",
+        "no_date": "Dátum nélkül"
       },
-      "more": "+{count} később vagy dátum nélkül",
       "empty": "Nincs esedékes teendő",
+      "open_list": "Megnyitás a feladatlistában",
+      "no_date_all": "mind a(z) {count} a feladatlistában",
+      "done_toast": "Kész: {title}",
+      "flag_label": "Utókövetés: {title}",
       "quick_placeholder": "＋ Emlékeztető, pl. „Felszólítások ellenőrzése”",
       "quick_label": "Új emlékeztető mára (Enter)",
       "quick_more": "Emlékeztető nappal, időponttal és megjegyzéssel…",

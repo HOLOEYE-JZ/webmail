@@ -4601,6 +4601,7 @@
       "next-week": "Nächste Woche",
       "no-date": "Kein Datum"
     },
+    "undo": "Rückgängig",
     "mark_done": "Als erledigt markieren",
     "remove": "Nachverfolgung entfernen",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "Formatierte Notiz – in der Aufgabenliste bearbeiten.",
     "upcoming": {
       "title": "Anstehend für mich",
-      "all_tasks": "Alle Aufgaben",
       "hide": "Anstehend ausblenden",
       "groups": {
         "overdue": "Überfällig",
         "today": "Heute",
         "tomorrow": "Morgen",
-        "this_week": "Diese Woche"
+        "this_week": "Diese Woche",
+        "next_week": "Nächste Woche",
+        "later": "Später",
+        "no_date": "Ohne Datum"
       },
-      "more": "+{count} später oder ohne Datum",
       "empty": "Nichts fällig",
+      "open_list": "In der Aufgabenliste öffnen",
+      "no_date_all": "alle {count} in der Aufgabenliste",
+      "done_toast": "Erledigt: {title}",
+      "flag_label": "Nachverfolgung: {title}",
       "quick_placeholder": "＋ Erinnerung",
       "quick_label": "Neue Erinnerung, fällig heute (Eingabetaste)",
       "quick_more": "Erinnerung mit Tag, Uhrzeit und Notiz …",

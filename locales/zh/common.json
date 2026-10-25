@@ -4601,6 +4601,7 @@
       "next-week": "下周",
       "no-date": "无日期"
     },
+    "undo": "撤销",
     "mark_done": "标记为完成",
     "remove": "清除跟进",
     "task_title": "{action}: {subject}",
@@ -4667,16 +4668,21 @@
     "note_html": "带格式的备注：请在任务列表中编辑。",
     "upcoming": {
       "title": "我的待办",
-      "all_tasks": "所有任务",
       "hide": "隐藏待办",
       "groups": {
         "overdue": "已逾期",
         "today": "今天",
         "tomorrow": "明天",
-        "this_week": "本周"
+        "this_week": "本周",
+        "next_week": "下周",
+        "later": "以后",
+        "no_date": "无日期"
       },
-      "more": "另有 {count} 项（以后或无日期）",
       "empty": "没有到期事项",
+      "open_list": "在任务列表中打开",
+      "no_date_all": "任务列表中的全部 {count} 项",
+      "done_toast": "已完成：{title}",
+      "flag_label": "后续处理：{title}",
       "quick_placeholder": "＋ 提醒，例如“检查催款”",
       "quick_label": "今天到期的新提醒 (Enter)",
       "quick_more": "带日期、时间和备注的提醒…",
