@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 import { useAuthStore } from "@/stores/auth-store";
-import { useCalendarStore } from "@/stores/calendar-store";
+import { ensureCalendars, useCalendarStore } from "@/stores/calendar-store";
+import { followUpCalendars } from "@/lib/calendar-tasks";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
@@ -36,7 +37,7 @@ import {
   type FollowUpTaskInput,
   type WorkingTime,
 } from "@/lib/follow-ups";
-import type { Calendar, CalendarTask, Email } from "@/lib/jmap/types";
+import type { CalendarTask, Email } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { TaskPerson } from "@/lib/group-follow-ups";
 import { updateAnyTask, useGroupFollowUpIndex, useGroupTaskList, type GroupTaskList } from "./use-group-follow-ups";
@@ -46,17 +47,6 @@ export function useFollowUpsEnabled(): boolean {
   const tasksOn = useSettingsStore((s) => s.enableCalendarTasks);
   const supportsCalendar = useCalendarStore((s) => s.supportsCalendar);
   return tasksOn && supportsCalendar;
-}
-
-/**
- * The user's own calendars follow-ups live in: the task list a new one goes
- * into first, then the default calendar (where it goes without a task list).
- */
-export function followUpCalendars(calendars: Calendar[]): Calendar[] {
-  const own = calendars.filter((c) => !c.isShared);
-  const tasksOnly = own.find((c) => c.isTasksOnly);
-  const fallback = own.find((c) => c.isDefault) ?? own[0];
-  return [tasksOnly, fallback].filter((c, i, all): c is Calendar => !!c && all.indexOf(c) === i);
 }
 
 /**
@@ -73,9 +63,7 @@ export function useFollowUpTasks(): void {
     if (!enabled || !client) return;
     let cancelled = false;
     void (async () => {
-      const calendarStore = useCalendarStore.getState();
-      if (calendarStore.calendars.length === 0) await calendarStore.fetchCalendars(client);
-      const ids = followUpCalendars(useCalendarStore.getState().calendars).map((c) => c.id);
+      const ids = followUpCalendars(await ensureCalendars(client)).map((c) => c.id);
       if (cancelled || ids.length === 0) return;
       await useTaskStore.getState().fetchTasks(client, ids);
     })();
@@ -318,9 +306,7 @@ export async function createOwnFollowUp(
   details: FollowUpDetails,
   text: FollowUpText,
 ): Promise<CalendarTask | null> {
-  const calendarStore = useCalendarStore.getState();
-  if (calendarStore.calendars.length === 0) await calendarStore.fetchCalendars(client);
-  const [calendar] = followUpCalendars(useCalendarStore.getState().calendars);
+  const [calendar] = followUpCalendars(await ensureCalendars(client));
   if (!calendar) {
     if (text.noTaskList) toast.error(text.noTaskList);
     else debug.warn("follow-up", "no task list to put the follow-up in");

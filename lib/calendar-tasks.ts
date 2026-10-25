@@ -1,5 +1,5 @@
 import { format, parseISO } from "date-fns";
-import type { CalendarTask } from "@/lib/jmap/types";
+import type { Calendar, CalendarTask } from "@/lib/jmap/types";
 
 /**
  * Tasks shown on the calendar grid (#1107): only tasks with a due date, and
@@ -9,6 +9,25 @@ import type { CalendarTask } from "@/lib/jmap/types";
 export function filterTasksByCalendars(tasks: CalendarTask[], selectedCalendarIds: string[]): CalendarTask[] {
   const selected = new Set(selectedCalendarIds);
   return tasks.filter((task) => Object.keys(task.calendarIds ?? {}).some((id) => selected.has(id)));
+}
+
+/**
+ * The calendar a new task goes into when none is chosen: the one holding
+ * only tasks, else the default calendar, else the first.
+ */
+export function defaultTaskCalendar<T extends Pick<Calendar, "isTasksOnly" | "isDefault">>(calendars: readonly T[]): T | undefined {
+  return calendars.find((c) => c.isTasksOnly) ?? calendars.find((c) => c.isDefault) ?? calendars[0];
+}
+
+/**
+ * The user's own calendars follow-ups and reminders live in: the task list a
+ * new one goes into first (`defaultTaskCalendar`), then the default calendar
+ * (where it goes without a task list). Never a shared calendar.
+ */
+export function followUpCalendars(calendars: readonly Calendar[]): Calendar[] {
+  const own = calendars.filter((c) => !c.isShared);
+  const fallback = own.find((c) => c.isDefault) ?? own[0];
+  return [defaultTaskCalendar(own), fallback].filter((c, i, all): c is Calendar => !!c && all.indexOf(c) === i);
 }
 
 /** yyyy-MM-dd of the day a task is due, or null when it has no valid due date. */

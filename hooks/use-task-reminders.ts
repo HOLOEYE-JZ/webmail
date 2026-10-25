@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { create } from "zustand";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarNotificationStore } from "@/stores/calendar-notification-store";
-import { useCalendarStore } from "@/stores/calendar-store";
+import { ensureCalendars, useCalendarStore } from "@/stores/calendar-store";
+import { followUpCalendars } from "@/lib/calendar-tasks";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
 import { useProTabStore } from "@/stores/pro-tab-store";
@@ -15,7 +16,6 @@ import { groupMailAccountOf } from "@/lib/deep-links";
 import { followMessageLink } from "@/lib/deep-link-handoff";
 import { dueTaskReminders, type TaskReminder } from "@/lib/task-reminders";
 import { followUpMailRef, followUpMailSummary, followUpNote } from "@/lib/follow-ups";
-import { followUpCalendars } from "./use-follow-ups";
 import { useReplyChecks } from "./use-follow-up-replies";
 import { useClock } from "./use-clock";
 import { mergeTaskSources } from "@/lib/task-list";
@@ -171,9 +171,7 @@ function useTaskListLoaded(enabled: boolean): void {
       void (async () => {
         const tasks = useTaskStore.getState();
         if (tasks.isLoading || tasks.loadedBy || tasks.scope || tasks.tasks.length > 0 || tasks.error) return;
-        const calendars = useCalendarStore.getState();
-        if (calendars.calendars.length === 0) await calendars.fetchCalendars(client);
-        const ids = followUpCalendars(useCalendarStore.getState().calendars).map((c) => c.id);
+        const ids = followUpCalendars(await ensureCalendars(client)).map((c) => c.id);
         const again = useTaskStore.getState();
         if (ids.length === 0 || again.isLoading || again.loadedBy || again.scope || again.tasks.length > 0) return;
         await again.fetchTasks(client, ids);

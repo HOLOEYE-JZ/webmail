@@ -17,6 +17,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { defaultTaskCalendar } from "@/lib/calendar-tasks";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -286,7 +287,7 @@ function TasksPanel({ onClose }: { onClose: () => void }) {
   }, [client, calendars.length, fetchCalendars, fetchTasks]);
 
   const pending = tasks.filter((task) => task.progress !== "completed" && task.progress !== "cancelled");
-  const taskCalendar = calendars.find((c) => c.isTasksOnly) ?? calendars[0];
+  const taskCalendar = defaultTaskCalendar(calendars);
 
   return (
     <>

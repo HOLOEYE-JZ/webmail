@@ -4,7 +4,8 @@ import { useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { startOfDay } from "date-fns";
 import { useAuthStore } from "@/stores/auth-store";
-import { useCalendarStore } from "@/stores/calendar-store";
+import { ensureCalendars, useCalendarStore } from "@/stores/calendar-store";
+import { followUpCalendars } from "@/lib/calendar-tasks";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
@@ -27,7 +28,6 @@ import {
   type GroupTaskList,
 } from "./use-group-follow-ups";
 import {
-  followUpCalendars,
   useFollowUpDialog,
   useFollowUpsEnabled,
   useWorkingTime,
@@ -105,9 +105,7 @@ export async function openTaskItem(
 
 /** The calendar a new reminder goes into: the one follow-ups go into. */
 async function reminderCalendar(client: IJMAPClient): Promise<string | null> {
-  const calendarStore = useCalendarStore.getState();
-  if (calendarStore.calendars.length === 0) await calendarStore.fetchCalendars(client);
-  return followUpCalendars(useCalendarStore.getState().calendars)[0]?.id ?? null;
+  return followUpCalendars(await ensureCalendars(client))[0]?.id ?? null;
 }
 
 /**

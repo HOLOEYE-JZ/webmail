@@ -12,7 +12,6 @@ import { useFollowUpFormat } from "@/components/email/follow-up";
 import { HelpTip, PopoverHeading, PopoverOption, PopoverSeparator, PropertyButton, PropertyPopover } from "@/components/email/follow-up-controls";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import {
-  followUpCalendars,
   useFollowUp,
   useFollowUpDialog,
   useWorkingTime,
@@ -44,6 +43,7 @@ const isPerson = (choice: PersonChoice): choice is TaskPerson => !!choice && cho
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCalendarStore } from "@/stores/calendar-store";
+import { followUpCalendars } from "@/lib/calendar-tasks";
 import { usePolicyStore } from "@/stores/policy-store";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import {

@@ -2016,3 +2016,11 @@ registerCalendarSubscriptionSyncBridge(
   })
 );
 
+
+/** The store's calendars, loaded first when the calendar was never opened. */
+export async function ensureCalendars(client: IJMAPClient): Promise<Calendar[]> {
+  if (useCalendarStore.getState().calendars.length === 0) {
+    await useCalendarStore.getState().fetchCalendars(client);
+  }
+  return useCalendarStore.getState().calendars;
+}
