@@ -88,6 +88,12 @@ function makeClient() {
 
 let client: ReturnType<typeof makeClient>;
 const field = (testId: string) => screen.getByTestId(testId) as HTMLInputElement;
+/** The note, opened first where it is folded ("＋ Note"). */
+const note = () => {
+  const add = screen.queryByTestId('follow-up-note-add');
+  if (add) fireEvent.click(add);
+  return screen.getByTestId('follow-up-note');
+};
 const titles = (group: string) => within(screen.getByTestId(`upcoming-group-${group}`))
   .getAllByTestId('upcoming-open').map((b) => b.textContent);
 
@@ -267,16 +273,16 @@ describe('the dialog for a reminder without a mail', () => {
     expect(screen.queryByTestId('follow-up-action')).toBeNull();
     expect(field('reminder-what').value).toBe('Order toner');
     // Due today; the reminder proposed for the next full hour.
-    expect(field('follow-up-due').value).toBe('2026-10-28');
+    expect(field('follow-up-due-choice').value).toBe('today');
     expect(field('follow-up-reminder-on').checked).toBe(true);
     expect(field('follow-up-reminder-day').value).toBe('2026-10-28');
     expect(field('follow-up-reminder-time').value).toBe('11:00');
     expect(screen.getByTestId('follow-up-kept').textContent).toBe('reminder.kept_in{"list":"My tasks"}');
 
     fireEvent.change(field('reminder-what'), { target: { value: 'Order toner for the 2nd floor' } });
-    fireEvent.click(screen.getByTestId('follow-up-dialog-tomorrow'));
+    fireEvent.change(field('follow-up-due-choice'), { target: { value: 'tomorrow' } });
     fireEvent.change(field('follow-up-reminder-time'), { target: { value: '09:15' } });
-    fireEvent.change(screen.getByTestId('follow-up-note'), { target: { value: 'HP 410A' } });
+    fireEvent.change(note(), { target: { value: 'HP 410A' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
 
     await waitFor(() => expect(client.createCalendarTask).toHaveBeenCalledTimes(1));
@@ -307,8 +313,8 @@ describe('the dialog for a reminder without a mail', () => {
 
     expect(screen.getByText('reminder.dialog_title_edit')).toBeTruthy();
     expect(field('reminder-what').value).toBe('Order toner');
-    expect(field('follow-up-due').value).toBe('2026-10-29');
-    fireEvent.change(screen.getByTestId('follow-up-note'), { target: { value: 'HP 410A' } });
+    expect(field('follow-up-due-choice').value).toBe('tomorrow');
+    fireEvent.change(note(), { target: { value: 'HP 410A' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
 
     await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
@@ -343,10 +349,10 @@ describe('the dialog for a reminder without a mail', () => {
     useFollowUpDialog.getState().openReminder({ taskId: 'r1' });
     render(<FollowUpDialogHost />);
     expect(field('follow-up-due').disabled).toBe(true);
-    expect((screen.getByTestId('follow-up-dialog-tomorrow') as HTMLButtonElement).disabled).toBe(true);
+    expect(field('follow-up-due-choice').disabled).toBe(true);
     expect(screen.getByTestId('follow-up-recurring').textContent).toBe('recurring');
 
-    fireEvent.change(screen.getByTestId('follow-up-note'), { target: { value: 'Send to Ben' } });
+    fireEvent.change(note(), { target: { value: 'Send to Ben' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(client.updateCalendarTask).toHaveBeenCalledTimes(1));
     expect(client.updateCalendarTask.mock.calls[0]).toEqual(['r1', { description: 'Send to Ben' }]);

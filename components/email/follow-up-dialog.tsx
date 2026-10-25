@@ -4,9 +4,11 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl";
 import { format, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Bell, Flag, Mail, Users, X } from "@/components/icons";
+import { Bell, Flag, Lock, Mail, Pencil, Plus, Users, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useFollowUpFormat } from "@/components/email/follow-up";
+import { HelpTip, PopoverHeading, PopoverOption, PopoverSeparator, PropertyButton, PropertyPopover } from "@/components/email/follow-up-controls";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import {
   followUpCalendars,
@@ -59,13 +61,11 @@ import {
   proposedReminder,
   scheduleFollowUp,
   settlesOnReply,
+  type FollowUpChoice,
   type WorkingTime,
 } from "@/lib/follow-ups";
 import { FOLLOW_UP_ACTIONS, sanitizeFollowUpActions } from "@/lib/follow-up-actions";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
-
-/** The select's entry that opens the free text. */
-const OTHER = "\u0000other";
 
 const isoDay = (day: Date | null) => (day ? format(day, "yyyy-MM-dd") : "");
 
@@ -309,6 +309,15 @@ export function ReminderDialog({ taskId, title, focus, onClose }: {
   return <FollowUpForm controls={{ ...reminder, place }} title={title} focus={focus} onClose={onClose} />;
 }
 
+/** The due select's entry that shows the date input. */
+const PICK = "pick";
+type DueChoice = FollowUpChoice | typeof PICK;
+/** From this many group lists on, "Visible" offers a search field above them. */
+const GROUP_SEARCH_FROM = 6;
+
+const SELECT = "h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
+const SMALL_INPUT = "h-8 w-auto px-2 py-1";
+
 function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }: {
   controls: FormControls;
   /** The mail of a follow-up (what the dialog names of it); none for a reminder without one. */
@@ -318,6 +327,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   onClose: () => void;
 }) {
   const t = useTranslations("follow_up");
+  const fmt = useFollowUpFormat();
   const id = useId();
   const { task, workingTime } = controls;
   const isReminder = !email;
@@ -351,9 +361,12 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
     const action = isReminder
       ? (task ? task.title ?? "" : newTitle)
       : task ? shownAction(followUpAction(task)) : start ? shownAction(start.action) : t("actions.follow_up");
+    // The due select shows the quick choice whose day it is, else the date itself.
+    const choice = FOLLOW_UP_CHOICES.find((c) => isoDay(scheduleFollowUp(c, now, workingTime).due) === isoDay(due)) ?? PICK;
     return {
       action,
       due,
+      choice: choice as DueChoice,
       reminder,
       note: task ? followUpNote(task) : start?.note ?? "",
       mail: task ? hasFollowUpMailAlert(task) : start?.mailReminder ?? false,
@@ -372,14 +385,21 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   const [action, setAction] = useState(initial.action);
   const [other, setOther] = useState(() => !isReminder && !actions.includes(initial.action));
   const [due, setDue] = useState(isoDay(initial.due));
+  const [dueChoice, setDueChoice] = useState<DueChoice>(initial.choice);
   const [reminderOn, setReminderOn] = useState(!!initial.reminder);
   // Empty without a reminder, so turning one on proposes a time to come.
   const [reminderDay, setReminderDay] = useState(isoDay(initial.reminder));
   const [reminderTime, setReminderTime] = useState(initial.reminder ? format(initial.reminder, "HH:mm") : "");
   const [reminderPast, setReminderPast] = useState(false);
   const [note, setNote] = useState(initial.note);
+  // "＋ Note" until there is one.
+  const [noteOpen, setNoteOpen] = useState(!!initial.note);
   const [mailOn, setMailOn] = useState(initial.mail);
   const [settlesOn, setSettlesOn] = useState(initial.settles);
+  // The property popover that is open, if any.
+  const [popover, setPopover] = useState<"action" | "where" | "for" | null>(null);
+  const closePopover = useCallback(() => setPopover(null), []);
+  const [groupQuery, setGroupQuery] = useState("");
 
   // "Visible" and "For": the group list chosen (null: the user's own) and
   // whom it is for (null: the user). A colleague only in a group's list.
@@ -416,13 +436,16 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
     chosen.current = true;
     if (accountId === groupId) return;
     setGroupId(accountId);
-    // Another group's people are others.
-    if (accountId !== target?.accountId) setPerson(null);
+    // Another group's people are others; "only me" is the user's own list, for the user.
+    if (accountId !== target?.accountId || accountId === null) setPerson(null);
   };
   const inGroup = !!groupId && !!target;
 
-  const actionRef = useRef<HTMLSelectElement>(null);
+  const actionRef = useRef<HTMLButtonElement>(null);
+  const whereRef = useRef<HTMLButtonElement>(null);
+  const forRef = useRef<HTMLButtonElement>(null);
   const whatRef = useRef<HTMLInputElement>(null);
+  const dueDateRef = useRef<HTMLInputElement>(null);
   const reminderTimeRef = useRef<HTMLInputElement>(null);
   const dialogRef = useFocusTrap({ isActive: true, onEscape: onClose, restoreFocus: true });
 
@@ -444,6 +467,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   const choices = FOLLOW_UP_CHOICES.map((choice) => ({ choice, ...scheduleFollowUp(choice, now, workingTime) }));
 
   const pickChoice = (choice: (typeof choices)[number]) => {
+    setDueChoice(choice.choice);
     setDue(isoDay(choice.due));
     if (choice.reminder) {
       setReminderOn(true);
@@ -452,6 +476,25 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
     } else {
       setReminderOn(false);
     }
+  };
+
+  const pickDue = (value: string) => {
+    const choice = choices.find((c) => c.choice === value);
+    if (choice) {
+      pickChoice(choice);
+      return;
+    }
+    // "Pick a date…": the date input, with the day chosen so far.
+    setDueChoice(PICK);
+    setTimeout(() => {
+      const input = dueDateRef.current;
+      input?.focus();
+      try {
+        input?.showPicker?.();
+      } catch {
+        // Not offered without a user gesture in some browsers: the field has the focus.
+      }
+    }, 0);
   };
 
   const toggleReminder = (on: boolean) => {
@@ -524,6 +567,7 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
   };
 
   const sender = email?.from?.[0]?.name || email?.from?.[0]?.email;
+  // What happens, in one sentence: where it is kept, who sees it, who is reminded.
   // On a group mailbox's mail the follow-up is the user's alone ("only me"): the list says so.
   const kept = inGroup
     ? (person === NOBODY
@@ -540,6 +584,12 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
     ? (task ? t("reminder.dialog_title_edit") : t("reminder.dialog_title"))
     : (task ? t("dialog_title_edit") : t("dialog_title"));
   const HeadIcon = isReminder ? Bell : Flag;
+  const reminderHelp = mailOffered || initial.otherAlerts > 0;
+
+  const groups = place?.groups ?? [];
+  const query = groupQuery.trim().toLocaleLowerCase();
+  const shownGroups = query ? groups.filter((g) => g.name.toLocaleLowerCase().includes(query)) : groups;
+  const whoName = person === NOBODY ? t("group.nobody") : isPerson(person) ? person.name : t("group.me");
 
   return (
     <>
@@ -553,10 +603,10 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
         aria-modal="true"
         aria-labelledby={`${id}-title`}
         data-testid="follow-up-dialog"
-        className="w-full max-w-md max-h-full overflow-y-auto rounded-lg border border-border bg-background shadow-xl animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg max-h-full overflow-y-auto rounded-lg border border-border bg-background shadow-xl animate-in zoom-in-95 duration-200"
       >
         <form onSubmit={save}>
-          <div className="flex items-center gap-2 border-b border-border px-5 py-3">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <HeadIcon className="h-4 w-4 shrink-0 text-orange-600 dark:text-orange-400" />
             <h2 id={`${id}-title`} className="flex-1 text-base font-semibold text-foreground">
               {heading}
@@ -571,10 +621,10 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
             </button>
           </div>
 
-          <div className="space-y-4 px-5 py-4 text-sm">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-3 px-4 py-4 text-sm">
             {isReminder ? (
-              <div className="space-y-1.5">
-                <label htmlFor={`${id}-what`} className="block font-medium text-foreground">{t("reminder.what_label")}</label>
+              <div className="col-span-2">
+                <label htmlFor={`${id}-what`} className="sr-only">{t("reminder.what_label")}</label>
                 <Input
                   ref={whatRef}
                   id={`${id}-what`}
@@ -583,223 +633,357 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
                   maxLength={200}
                   placeholder={t("reminder.what_placeholder")}
                   onChange={(e) => setAction(e.target.value)}
+                  className="h-10 text-base"
                 />
               </div>
             ) : (
             <>
-            <p className="flex items-center gap-1.5 truncate text-muted-foreground">
-              <Mail className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">
-                {[controls.mailboxName, sender, email?.subject || t("no_subject")].filter(Boolean).join(" · ")}
-              </span>
-            </p>
-            {controls.hint && (
-              <p data-testid="follow-up-hint" className="text-xs text-muted-foreground">{controls.hint}</p>
-            )}
-
-            <div className="space-y-1.5">
-              <label htmlFor={`${id}-action`} className="block font-medium text-foreground">{t("action_label")}</label>
-              <select
+            <div className="col-span-2 flex min-w-0 items-center gap-2">
+              <PropertyButton
                 ref={actionRef}
                 id={`${id}-action`}
                 data-testid="follow-up-action"
-                value={other ? OTHER : action}
-                onChange={(e) => {
-                  if (e.target.value === OTHER) {
-                    setOther(true);
-                    setAction("");
-                  } else {
-                    setOther(false);
-                    setAction(e.target.value);
-                  }
-                }}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                set
+                expanded={popover === "action"}
+                aria-label={`${t("action_label")}: ${other ? t("action_other") : action}`}
+                icon={<Flag className="h-3.5 w-3.5 shrink-0 text-orange-600 dark:text-orange-400" aria-hidden="true" />}
+                onClick={() => setPopover((p) => (p === "action" ? null : "action"))}
+                className="shrink-0 max-w-[60%]"
               >
-                {actions.map((a) => <option key={a} value={a}>{a}</option>)}
-                <option value={OTHER}>{t("action_other")}</option>
-              </select>
-              {other && (
-                <Input
-                  data-testid="follow-up-action-text"
-                  aria-label={t("action_text")}
-                  placeholder={t("action_text")}
-                  value={action}
-                  maxLength={200}
-                  autoFocus
-                  onChange={(e) => setAction(e.target.value)}
-                />
+                {other ? t("action_other") : action}
+              </PropertyButton>
+              <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-muted-foreground">
+                <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate" title={email?.subject || undefined}>
+                  {[controls.mailboxName, sender, email?.subject || t("no_subject")].filter(Boolean).join(" · ")}
+                </span>
+              </span>
+              {controls.hint && (
+                <HelpTip label={t("help")} testId="follow-up-hint">{controls.hint}</HelpTip>
               )}
+              <PropertyPopover anchor={actionRef} open={popover === "action"} onClose={closePopover} label={t("action_label")} testId="follow-up-action-list">
+                {actions.map((a) => (
+                  <PopoverOption
+                    key={a}
+                    selected={!other && a === action}
+                    testId="follow-up-action-option"
+                    onSelect={() => { setOther(false); setAction(a); setPopover(null); actionRef.current?.focus(); }}
+                  >
+                    {a}
+                  </PopoverOption>
+                ))}
+                <PopoverSeparator />
+                <PopoverOption
+                  selected={other}
+                  testId="follow-up-action-other"
+                  icon={<Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
+                  onSelect={() => { if (!other) setAction(""); setOther(true); setPopover(null); }}
+                >
+                  {t("action_other")}
+                </PopoverOption>
+              </PropertyPopover>
             </div>
+            {other && (
+              <Input
+                data-testid="follow-up-action-text"
+                aria-label={t("action_text")}
+                placeholder={t("action_text")}
+                value={action}
+                maxLength={200}
+                autoFocus
+                onChange={(e) => setAction(e.target.value)}
+                className="col-span-2 h-9"
+              />
+            )}
             </>
             )}
 
-            {place && target && (
-              <PlaceFields
-                id={id}
-                groups={place.groups}
-                fixed={place.fixed}
-                target={target}
-                groupId={groupId}
-                person={person}
-                nobody={place.initialPerson === NOBODY}
-                people={people}
-                onPerson={pickPerson}
-                onGroup={pickGroup}
-              />
-            )}
-
-            <div className="space-y-1.5">
-              <span id={`${id}-due`} className="block font-medium text-foreground">{t("due_label")}</span>
-              <div role="group" aria-labelledby={`${id}-due`} className="flex flex-wrap gap-1.5">
-                {choices.map((c) => {
-                  const pressed = isoDay(c.due) === due;
-                  return (
-                    <button
-                      key={c.choice}
-                      type="button"
-                      aria-pressed={pressed}
-                      data-testid={`follow-up-dialog-${c.choice}`}
-                      disabled={recurring}
-                      onClick={() => pickChoice(c)}
-                      className={cn(
-                        "rounded-full border px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-                        pressed
-                          ? "border-orange-500 bg-orange-500/10 text-orange-700 dark:text-orange-300"
-                          : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
-                    >
-                      {t(`choices.${c.choice}`)}
-                    </button>
-                  );
-                })}
-              </div>
-              <Input
-                type="date"
-                data-testid="follow-up-due"
-                aria-label={t("due_date")}
-                value={due}
+            <label htmlFor={`${id}-due`} className="font-medium text-muted-foreground">{t("due_label")}</label>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <select
+                id={`${id}-due`}
+                data-testid="follow-up-due-choice"
+                value={dueChoice}
                 disabled={recurring}
-                aria-describedby={recurring ? `${id}-recurring` : undefined}
-                onChange={(e) => setDue(e.target.value)}
-                className="w-auto"
-              />
+                onChange={(e) => pickDue(e.target.value)}
+                className={cn(SELECT, "min-w-0 max-w-full")}
+              >
+                {choices.map((c) => (
+                  <option key={c.choice} value={c.choice}>
+                    {c.due ? t("choice_with_day", { choice: t(`choices.${c.choice}`), day: fmt.day(c.due) }) : t(`choices.${c.choice}`)}
+                  </option>
+                ))}
+                <option value={PICK}>{t("choices.pick")}</option>
+              </select>
+              {dueChoice === PICK && (
+                <Input
+                  ref={dueDateRef}
+                  type="date"
+                  data-testid="follow-up-due"
+                  aria-label={t("due_date")}
+                  value={due}
+                  disabled={recurring}
+                  onChange={(e) => setDue(e.target.value)}
+                  className={SMALL_INPUT}
+                />
+              )}
               {recurring && (
-                <p id={`${id}-recurring`} data-testid="follow-up-recurring" className="text-xs text-muted-foreground">
-                  {t("recurring")}
-                </p>
+                <HelpTip label={t("help")} testId="follow-up-recurring">{t("recurring")}</HelpTip>
               )}
             </div>
 
-            <div className="space-y-1.5">
-              <label className="flex w-fit items-center gap-2 font-medium text-foreground">
+            <span id={`${id}-reminder`} className="font-medium text-muted-foreground">{t("reminder_label")}</span>
+            <div role="group" aria-labelledby={`${id}-reminder`} className="flex min-w-0 flex-wrap items-center gap-2">
+              <label className="relative inline-flex h-[18px] w-8 shrink-0 cursor-pointer">
                 <input
                   type="checkbox"
+                  role="switch"
                   data-testid="follow-up-reminder-on"
+                  aria-label={t("reminder_label")}
                   checked={reminderOn}
                   onChange={(e) => toggleReminder(e.target.checked)}
-                  className="rounded border-input"
+                  className="peer sr-only"
                 />
-                <Bell className="h-3.5 w-3.5" />
-                {t("reminder_label")}
+                <span aria-hidden="true" className="absolute inset-0 rounded-full bg-muted-foreground/30 transition-colors peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-1 peer-focus-visible:ring-offset-background" />
+                <span aria-hidden="true" className="absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-3.5" />
               </label>
-              <div className="flex flex-wrap gap-2">
-                <Input
-                  type="date"
-                  data-testid="follow-up-reminder-day"
-                  aria-label={t("reminder_day")}
-                  value={reminderDay}
-                  disabled={!reminderOn}
-                  aria-invalid={reminderPast || undefined}
-                  onChange={(e) => { setReminderDay(e.target.value); setReminderPast(false); }}
-                  className="w-auto"
-                />
-                <Input
-                  ref={reminderTimeRef}
-                  type="time"
-                  data-testid="follow-up-reminder-time"
-                  aria-label={t("reminder_time")}
-                  value={reminderTime}
-                  disabled={!reminderOn}
-                  aria-invalid={reminderPast || undefined}
-                  aria-describedby={reminderPast ? `${id}-reminder-past` : undefined}
-                  onChange={(e) => { setReminderTime(e.target.value); setReminderPast(false); }}
-                  className="w-auto"
-                />
-              </div>
+              <Input
+                type="date"
+                data-testid="follow-up-reminder-day"
+                aria-label={t("reminder_day")}
+                value={reminderDay}
+                disabled={!reminderOn}
+                aria-invalid={reminderPast || undefined}
+                onChange={(e) => { setReminderDay(e.target.value); setReminderPast(false); }}
+                className={SMALL_INPUT}
+              />
+              <Input
+                ref={reminderTimeRef}
+                type="time"
+                data-testid="follow-up-reminder-time"
+                aria-label={t("reminder_time")}
+                value={reminderTime}
+                disabled={!reminderOn}
+                aria-invalid={reminderPast || undefined}
+                aria-describedby={reminderPast ? `${id}-reminder-past` : undefined}
+                onChange={(e) => { setReminderTime(e.target.value); setReminderPast(false); }}
+                className={SMALL_INPUT}
+              />
               {mailOffered && (
-                <label className="flex w-fit items-start gap-2 text-foreground">
+                <label title={t("reminder_mail")} className={cn("relative inline-flex shrink-0", reminderOn ? "cursor-pointer" : "cursor-not-allowed")}>
                   <input
                     type="checkbox"
                     data-testid="follow-up-reminder-mail"
+                    aria-label={t("reminder_mail")}
                     checked={reminderOn && mailOn}
                     disabled={!reminderOn}
                     onChange={(e) => setMailOn(e.target.checked)}
-                    aria-describedby={`${id}-reminder-mail-hint`}
-                    className="mt-0.5 rounded border-input disabled:cursor-not-allowed"
+                    className="peer sr-only"
                   />
-                  <span className={cn(!reminderOn && "text-muted-foreground")}>
-                    {t("reminder_mail")}{" "}
-                    <span id={`${id}-reminder-mail-hint`} className="text-xs text-muted-foreground">{t("reminder_mail_hint")}</span>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "inline-grid h-8 w-8 place-items-center rounded-md border border-border bg-muted text-muted-foreground transition-colors",
+                      "hover:text-foreground peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground",
+                      "peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-disabled:opacity-50",
+                    )}
+                  >
+                    <Mail className="h-4 w-4" />
                   </span>
                 </label>
               )}
-              {!isReminder && !inGroup && (
-                <label className="flex w-fit items-start gap-2 text-foreground">
+              {reminderHelp && (
+                <HelpTip label={t("help")}>
+                  {mailOffered && <span className="block">{t("reminder_mail_hint")}</span>}
+                  {initial.otherAlerts > 0 && (
+                    <span data-testid="follow-up-other-reminders" className="block">
+                      {t("other_reminders", { count: initial.otherAlerts })}
+                    </span>
+                  )}
+                </HelpTip>
+              )}
+            </div>
+            {reminderPast && (
+              <p id={`${id}-reminder-past`} role="alert" data-testid="follow-up-reminder-past" className="col-start-2 -mt-1 text-xs text-destructive">
+                {t("reminder_past")}
+              </p>
+            )}
+            {!isReminder && !inGroup && (
+              <div className="col-start-2 -mt-1 flex min-w-0 items-center gap-1.5">
+                <label className="flex min-w-0 items-center gap-2 text-foreground">
                   <input
                     type="checkbox"
                     data-testid="follow-up-settles-on-reply"
                     checked={settlesOn}
                     onChange={(e) => setSettlesOn(e.target.checked)}
-                    aria-describedby={`${id}-settles-hint`}
-                    className="mt-0.5 rounded border-input"
+                    className="rounded border-input"
                   />
-                  <span>
-                    {t("reply.settles")}{" "}
-                    <span id={`${id}-settles-hint`} className="text-xs text-muted-foreground">{t("reply.settles_hint")}</span>
-                  </span>
+                  <span>{t("reply.settles")}</span>
                 </label>
-              )}
-              {reminderPast && (
-                <p id={`${id}-reminder-past`} role="alert" data-testid="follow-up-reminder-past" className="text-xs text-destructive">
-                  {t("reminder_past")}
-                </p>
-              )}
-              {initial.otherAlerts > 0 && (
-                <p data-testid="follow-up-other-reminders" className="text-xs text-muted-foreground">
-                  {t("other_reminders", { count: initial.otherAlerts })}
-                </p>
+                <HelpTip label={t("help")}>{t("reply.settles_hint")}</HelpTip>
+              </div>
+            )}
+
+            {place && target ? (
+              <>
+                <span id={`${id}-place`} className="self-start pt-1.5 font-medium text-muted-foreground">{t("group.for_label")}</span>
+                <div role="group" aria-labelledby={`${id}-place`} className="grid min-w-0 gap-1.5">
+                  <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                    <PropertyButton
+                      ref={whereRef}
+                      data-testid="follow-up-visible"
+                      set={inGroup}
+                      expanded={popover === "where"}
+                      disabled={place.fixed}
+                      aria-label={`${t("group.visible_label")}: ${inGroup ? target.name : t("group.only_for_me")}`}
+                      icon={inGroup
+                        ? <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        : <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                      onClick={() => setPopover((p) => (p === "where" ? null : "where"))}
+                    >
+                      {inGroup ? target.name : t("group.only_for_me")}
+                    </PropertyButton>
+                    {inGroup && (
+                      <PropertyButton
+                        ref={forRef}
+                        data-testid="follow-up-for"
+                        expanded={popover === "for"}
+                        aria-label={`${t("group.for_label")}: ${whoName}`}
+                        icon={<Bell className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                        onClick={() => setPopover((p) => (p === "for" ? null : "for"))}
+                      >
+                        {t("group.to", { name: whoName })}
+                      </PropertyButton>
+                    )}
+                  </div>
+                  <p data-testid="follow-up-kept" className="text-xs leading-snug text-muted-foreground">{kept}</p>
+                </div>
+                <PropertyPopover
+                  anchor={whereRef}
+                  open={popover === "where"}
+                  onClose={closePopover}
+                  label={t("group.visible_label")}
+                  testId="follow-up-visible-list"
+                  header={groups.length >= GROUP_SEARCH_FROM && (
+                    <Input
+                      type="search"
+                      data-testid="follow-up-visible-search"
+                      aria-label={t("group.search")}
+                      placeholder={t("group.search")}
+                      value={groupQuery}
+                      onChange={(e) => setGroupQuery(e.target.value)}
+                      className="mb-1 h-8"
+                    />
+                  )}
+                >
+                  <PopoverOption
+                    selected={!groupId}
+                    testId="follow-up-visible-me"
+                    icon={<Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
+                    onSelect={() => { pickGroup(null); setPopover(null); whereRef.current?.focus(); }}
+                  >
+                    {t("group.only_for_me")}
+                  </PopoverOption>
+                  <PopoverSeparator />
+                  <PopoverHeading>{t("group.team_heading")}</PopoverHeading>
+                  {shownGroups.map((g) => (
+                    <PopoverOption
+                      key={g.accountId}
+                      selected={groupId === g.accountId}
+                      testId="follow-up-visible-group"
+                      icon={<Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
+                      onSelect={() => { pickGroup(g.accountId); setPopover(null); whereRef.current?.focus(); }}
+                    >
+                      {g.name}
+                    </PopoverOption>
+                  ))}
+                  {shownGroups.length === 0 && (
+                    <p className="px-2 py-1.5 text-xs text-muted-foreground">{t("group.no_match")}</p>
+                  )}
+                </PropertyPopover>
+                <PropertyPopover anchor={forRef} open={popover === "for" && inGroup} onClose={closePopover} label={t("group.for_label")} testId="follow-up-for-list">
+                  <PopoverOption
+                    selected={person === null}
+                    testId="follow-up-for-me"
+                    onSelect={() => { pickPerson(null); setPopover(null); forRef.current?.focus(); }}
+                  >
+                    {t("group.me")}
+                  </PopoverOption>
+                  {place.initialPerson === NOBODY && (
+                    // Only as the task stands: nobody is never written from here.
+                    <PopoverOption selected={person === NOBODY} disabled={person !== NOBODY} testId="follow-up-for-nobody">
+                      {t("group.nobody")}
+                    </PopoverOption>
+                  )}
+                  <PopoverSeparator />
+                  {people.length > 0 ? (
+                    <>
+                      <PopoverHeading>{t("group.people_hint", { group: target.name })}</PopoverHeading>
+                      {people.map((p) => (
+                        <PopoverOption
+                          key={p.email}
+                          selected={isPerson(person) && person.email === p.email}
+                          title={p.email}
+                          testId="follow-up-for-person"
+                          onSelect={() => { pickPerson(p); setPopover(null); forRef.current?.focus(); }}
+                        >
+                          {p.name}
+                        </PopoverOption>
+                      ))}
+                    </>
+                  ) : (
+                    <PopoverOption
+                      selected={false}
+                      disabled
+                      title={t("group.not_shared", { group: target.name })}
+                      testId="follow-up-for-hint"
+                    >
+                      {t("group.colleague")}
+                    </PopoverOption>
+                  )}
+                </PropertyPopover>
+              </>
+            ) : (
+              <p data-testid="follow-up-kept" className="col-span-2 text-xs leading-snug text-muted-foreground">{kept}</p>
+            )}
+
+            <div className="col-span-2">
+              {noteOpen ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <label htmlFor={`${id}-note`} className="font-medium text-muted-foreground">{t("note_label")}</label>
+                    {htmlNote && <HelpTip label={t("help")} testId="follow-up-note-html">{t("note_html")}</HelpTip>}
+                  </div>
+                  <textarea
+                    id={`${id}-note`}
+                    data-testid="follow-up-note"
+                    rows={2}
+                    value={note}
+                    placeholder={t("note_placeholder")}
+                    readOnly={htmlNote}
+                    autoFocus={!initial.note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className={cn(
+                      "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      htmlNote && "bg-muted/40 text-muted-foreground",
+                    )}
+                  />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  data-testid="follow-up-note-add"
+                  onClick={() => setNoteOpen(true)}
+                  className="inline-flex items-center gap-1 rounded px-1 py-0.5 -ml-1 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t("note_label")}
+                </button>
               )}
             </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor={`${id}-note`} className="block font-medium text-foreground">{t("note_label")}</label>
-              <textarea
-                id={`${id}-note`}
-                data-testid="follow-up-note"
-                rows={2}
-                value={note}
-                placeholder={t("note_placeholder")}
-                readOnly={htmlNote}
-                aria-describedby={htmlNote ? `${id}-note-html` : undefined}
-                onChange={(e) => setNote(e.target.value)}
-                className={cn(
-                  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  htmlNote && "bg-muted/40 text-muted-foreground",
-                )}
-              />
-              {htmlNote && (
-                <p id={`${id}-note-html`} data-testid="follow-up-note-html" className="text-xs text-muted-foreground">
-                  {t("note_html")}
-                </p>
-              )}
-            </div>
-
-            <p data-testid="follow-up-kept" className="text-xs text-muted-foreground">
-              {kept}
-            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 border-t border-border px-5 py-3">
+          <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3">
             {task && (
               <Button type="button" variant="outline" disabled={busy} onClick={() => void remove()} data-testid="follow-up-dialog-remove">
                 {isReminder ? t("reminder.delete") : t("remove_button")}
@@ -813,113 +997,6 @@ function FollowUpForm({ controls, email, title: newTitle = "", focus, onClose }:
       </div>
     </div>
     <ConfirmDialog {...confirmProps} />
-    </>
-  );
-}
-
-const PILL = "rounded-full border px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50";
-const PILL_ON = "border-orange-500 bg-orange-500/10 text-orange-700 dark:text-orange-300";
-const PILL_OFF = "border-border text-muted-foreground hover:bg-muted hover:text-foreground";
-
-/**
- * "For" (me, or one of the people the group's task list is shared with) and
- * "Visible" (only me, or everyone in the group mailbox). A colleague is
- * possible only in the group's list; an existing group task stays there.
- */
-function PlaceFields({ id, groups, fixed, target, groupId, person, nobody, people, onPerson, onGroup }: {
-  id: string;
-  groups: GroupTaskList[];
-  fixed: boolean;
-  target: GroupTaskList;
-  groupId: string | null;
-  person: PersonChoice;
-  /** The task names no one: "nobody / everyone" is offered as it stands. */
-  nobody: boolean;
-  people: TaskPerson[];
-  onPerson: (person: TaskPerson | null) => void;
-  onGroup: (accountId: string | null) => void;
-}) {
-  const t = useTranslations("follow_up");
-  return (
-    <>
-      <div className="space-y-1.5">
-        <span id={`${id}-for`} className="block font-medium text-foreground">{t("group.for_label")}</span>
-        <div role="group" aria-labelledby={`${id}-for`} data-testid="follow-up-for" className="flex flex-wrap gap-1.5">
-          {nobody && (
-            <button
-              type="button"
-              aria-pressed={person === NOBODY}
-              data-testid="follow-up-for-nobody"
-              disabled={person !== NOBODY}
-              className={cn(PILL, person === NOBODY ? PILL_ON : PILL_OFF)}
-            >
-              {t("group.nobody")}
-            </button>
-          )}
-          <button
-            type="button"
-            aria-pressed={person === null}
-            data-testid="follow-up-for-me"
-            onClick={() => onPerson(null)}
-            className={cn(PILL, person === null ? PILL_ON : PILL_OFF)}
-          >
-            {t("group.me")}
-          </button>
-          {people.map((p) => {
-            const pressed = isPerson(person) && person.email === p.email;
-            return (
-              <button
-                key={p.email}
-                type="button"
-                aria-pressed={pressed}
-                data-testid="follow-up-for-person"
-                title={p.email}
-                onClick={() => onPerson(p)}
-                className={cn(PILL, pressed ? PILL_ON : PILL_OFF)}
-              >
-                {p.name}
-              </button>
-            );
-          })}
-        </div>
-        <p data-testid="follow-up-for-hint" className="text-xs text-muted-foreground">
-          {people.length === 0 ? t("group.not_shared", { group: target.name }) : t("group.people_hint", { group: target.name })}
-        </p>
-      </div>
-
-      <div className="space-y-1.5">
-        <span id={`${id}-visible`} className="block font-medium text-foreground">{t("group.visible_label")}</span>
-        <div role="group" aria-labelledby={`${id}-visible`} data-testid="follow-up-visible" className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            aria-pressed={!groupId}
-            data-testid="follow-up-visible-me"
-            disabled={fixed || isPerson(person)}
-            title={isPerson(person) ? t("group.colleague_needs_group") : undefined}
-            onClick={() => onGroup(null)}
-            className={cn(PILL, !groupId ? PILL_ON : PILL_OFF)}
-          >
-            {t("group.visible_me")}
-          </button>
-          {groups.map((g) => {
-            const pressed = groupId === g.accountId;
-            return (
-              <button
-                key={g.accountId}
-                type="button"
-                aria-pressed={pressed}
-                data-testid="follow-up-visible-group"
-                disabled={fixed && !pressed}
-                onClick={() => onGroup(g.accountId)}
-                className={cn(PILL, "inline-flex items-center gap-1", pressed ? PILL_ON : PILL_OFF)}
-              >
-                <Users className="h-3 w-3" aria-hidden="true" />
-                {t("group.visible_group", { group: g.name })}
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </>
   );
 }

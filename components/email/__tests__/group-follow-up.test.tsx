@@ -139,6 +139,9 @@ function makeClient() {
 
 let client: ReturnType<typeof makeClient>;
 const field = (testId: string) => screen.getByTestId(testId) as HTMLInputElement;
+/** Opens a property button's popover ("Visible", "For"). */
+const open = (button: string) => fireEvent.click(screen.getByTestId(button));
+const selected = (el: HTMLElement) => el.getAttribute('aria-selected');
 
 function setGroupList(list: Calendar, tasks: CalendarTask[] = []) {
   useGroupTasks.setState({
@@ -196,13 +199,19 @@ describe('the dialog in the group\'s list', () => {
   it('offers me and the people the list is shared with, picks the first colleague and writes the task for them', async () => {
     const onClose = vi.fn();
     render(<FollowUpDialog email={groupMail} focus="action" group={{ taskId: null }} onClose={onClose} />);
-    await waitFor(() => expect(screen.getAllByTestId('follow-up-for-person').map((b) => b.textContent)).toEqual(['Anna', 'Ben']));
+    // The first colleague, once the list's people are known.
+    await waitFor(() => expect(screen.getByTestId('follow-up-for').textContent).toBe('group.to{"name":"Anna"}'));
+    open('follow-up-for');
+    expect(screen.getAllByTestId('follow-up-for-person').map((b) => b.textContent)).toEqual(['Anna', 'Ben']);
     // The user is never listed twice: offered as "me".
     expect(screen.getByTestId('follow-up-for-me').textContent).toBe('group.me');
-    await waitFor(() => expect(screen.getAllByTestId('follow-up-for-person')[0].getAttribute('aria-pressed')).toBe('true'));
-    // A colleague: only "everyone in sales@".
-    expect((screen.getByTestId('follow-up-visible-me') as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getByTestId('follow-up-visible-group').getAttribute('aria-pressed')).toBe('true');
+    expect(selected(screen.getAllByTestId('follow-up-for-person')[0])).toBe('true');
+    open('follow-up-for');
+    // A colleague: in the group's list.
+    expect(screen.getByTestId('follow-up-visible').textContent).toBe('sales@example.com');
+    open('follow-up-visible');
+    expect(selected(screen.getByTestId('follow-up-visible-group'))).toBe('true');
+    open('follow-up-visible');
     // Neither the alarm mail (it would go to the group's inbox) nor settling on an answer.
     expect(screen.queryByTestId('follow-up-reminder-mail')).toBeNull();
     expect(screen.queryByTestId('follow-up-settles-on-reply')).toBeNull();
@@ -231,16 +240,24 @@ describe('the dialog in the group\'s list', () => {
     setGroupList(groupList({}));
     render(<FollowUpDialog email={groupMail} focus="action" group={{ taskId: null }} onClose={vi.fn()} />);
     await act(async () => {});
+    open('follow-up-for');
     expect(screen.queryAllByTestId('follow-up-for-person')).toHaveLength(0);
-    expect(screen.getByTestId('follow-up-for-hint').textContent).toBe('group.not_shared{"group":"sales@example.com"}');
+    // "A colleague…" greyed, the reason as its tooltip.
+    const colleague = screen.getByTestId('follow-up-for-hint');
+    expect(colleague.getAttribute('aria-disabled')).toBe('true');
+    expect(colleague.getAttribute('title')).toBe('group.not_shared{"group":"sales@example.com"}');
     expect(screen.getByTestId('follow-up-kept').textContent).toBe('group.kept_me{"group":"sales@example.com"}');
   });
 
   it('a new follow-up of the own kind can go into the group\'s list for the user', async () => {
     const onClose = vi.fn();
     render(<FollowUpDialog email={groupMail} focus="action" onClose={onClose} />);
-    expect(screen.getByTestId('follow-up-visible-me').getAttribute('aria-pressed')).toBe('true');
+    // No "For" while it is only mine.
+    expect(screen.queryByTestId('follow-up-for')).toBeNull();
+    open('follow-up-visible');
+    expect(selected(screen.getByTestId('follow-up-visible-me'))).toBe('true');
     fireEvent.click(screen.getByTestId('follow-up-visible-group'));
+    expect(screen.getByTestId('follow-up-for').textContent).toBe('group.to{"name":"group.me"}');
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     const written = client.createCalendarTask.mock.calls[0][0];
@@ -252,10 +269,13 @@ describe('the dialog in the group\'s list', () => {
     setGroupList(groupList(), [groupTask()]);
     const onClose = vi.fn();
     render(<FollowUpDialog email={groupMail} focus="action" group={{ taskId: 'grp:t1' }} onClose={onClose} />);
+    // An existing group task stays in its list.
+    expect((screen.getByTestId('follow-up-visible') as HTMLButtonElement).disabled).toBe(true);
+    open('follow-up-for');
     await waitFor(() => expect(screen.getAllByTestId('follow-up-for-person')).toHaveLength(2));
-    expect(screen.getAllByTestId('follow-up-for-person')[0].getAttribute('aria-pressed')).toBe('true');
-    expect((screen.getByTestId('follow-up-visible-me') as HTMLButtonElement).disabled).toBe(true);
+    expect(selected(screen.getAllByTestId('follow-up-for-person')[0])).toBe('true');
     fireEvent.click(screen.getAllByTestId('follow-up-for-person')[1]);
+    expect(screen.getByTestId('follow-up-for').textContent).toBe('group.to{"name":"Ben"}');
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     const [id, patch] = client.updateCalendarTask.mock.calls[0];
@@ -267,6 +287,7 @@ describe('the dialog in the group\'s list', () => {
   it('a reminder without a mail can go into a group\'s list', async () => {
     const onClose = vi.fn();
     render(<ReminderDialog taskId={null} title="Check the dunning run" focus="action" onClose={onClose} />);
+    open('follow-up-visible');
     fireEvent.click(screen.getByTestId('follow-up-visible-group'));
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -282,9 +303,12 @@ describe('"only me" and tasks naming no one', () => {
   it('"only me" in the colleague dialog keeps it in the user\'s own list, as on any group mailbox\'s mail', async () => {
     const onClose = vi.fn();
     render(<FollowUpDialog email={groupMail} focus="action" group={{ taskId: null }} onClose={onClose} />);
-    await waitFor(() => expect(screen.getAllByTestId('follow-up-for-person')[0].getAttribute('aria-pressed')).toBe('true'));
+    await waitFor(() => expect(screen.getByTestId('follow-up-for').textContent).toBe('group.to{"name":"Anna"}'));
+    open('follow-up-for');
     fireEvent.click(screen.getByTestId('follow-up-for-me'));
+    open('follow-up-visible');
     fireEvent.click(screen.getByTestId('follow-up-visible-me'));
+    expect(screen.queryByTestId('follow-up-for')).toBeNull();
     expect(screen.getByTestId('follow-up-kept').textContent).toBe('kept_only_me{"list":"My tasks"}');
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -299,9 +323,13 @@ describe('"only me" and tasks naming no one', () => {
     setGroupList(groupList(), [groupTask({ participants: null, organizerCalendarAddress: null })]);
     const onClose = vi.fn();
     render(<FollowUpDialog email={groupMail} focus="action" group={{ taskId: 'grp:t1' }} onClose={onClose} />);
-    expect(screen.getByTestId('follow-up-for-nobody').getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByTestId('follow-up-for-me').getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByTestId('follow-up-for').textContent).toBe('group.to{"name":"group.nobody"}');
+    open('follow-up-for');
+    expect(selected(screen.getByTestId('follow-up-for-nobody'))).toBe('true');
+    expect(selected(screen.getByTestId('follow-up-for-me'))).toBe('false');
+    open('follow-up-for');
     expect(screen.getByTestId('follow-up-kept').textContent).toBe('group.kept_nobody{"group":"sales@example.com"}');
+    fireEvent.click(screen.getByTestId('follow-up-note-add'));
     fireEvent.change(field('follow-up-note'), { target: { value: 'Two units' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -314,6 +342,7 @@ describe('"only me" and tasks naming no one', () => {
     setGroupList(groupList(), [groupTask({ participants: null })]);
     const onClose = vi.fn();
     render(<FollowUpDialog email={groupMail} focus="action" group={{ taskId: 'grp:t1' }} onClose={onClose} />);
+    open('follow-up-for');
     fireEvent.click(screen.getByTestId('follow-up-for-me'));
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(onClose).toHaveBeenCalled());

@@ -109,6 +109,18 @@ let client: ReturnType<typeof makeClient>;
 const flagged = () => !!useEmailStore.getState().emails[0].keywords.$flagged;
 const field = (testId: string) => screen.getByTestId(testId) as HTMLInputElement;
 
+/** Opens a property button's popover and chooses one of its options. */
+const choose = (button: string, option: string | RegExp) => {
+  fireEvent.click(screen.getByTestId(button));
+  fireEvent.click(screen.getByRole('option', { name: option }));
+};
+/** The note, opened first where it is folded ("＋ Note"). */
+const note = () => {
+  const add = screen.queryByTestId('follow-up-note-add');
+  if (add) fireEvent.click(add);
+  return screen.getByTestId('follow-up-note');
+};
+
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
@@ -132,19 +144,25 @@ describe('FollowUpDialog', () => {
     render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
 
     // A new one starts as Outlook's Custom does: due tomorrow, no reminder.
-    expect(field('follow-up-action').value).toBe('Follow up');
-    expect(field('follow-up-due').value).toBe('2026-10-27');
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Follow up');
+    expect(field('follow-up-due-choice').value).toBe('tomorrow');
+    // The date itself only once "Pick a date…" is chosen.
+    expect(screen.queryByTestId('follow-up-due')).toBeNull();
+    // The note is folded until there is one.
+    expect(screen.queryByTestId('follow-up-note')).toBeNull();
     expect(field('follow-up-reminder-on').checked).toBe(false);
     expect(screen.getByTestId('follow-up-kept').textContent).toBe('kept_in{"list":"My tasks"}');
 
-    fireEvent.change(field('follow-up-action'), { target: { value: 'Call' } });
-    fireEvent.click(screen.getByTestId('follow-up-dialog-this-week'));
+    choose('follow-up-action', 'Call');
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Call');
+    expect(screen.queryByTestId('follow-up-action-list')).toBeNull();
+    fireEvent.change(field('follow-up-due-choice'), { target: { value: 'this-week' } });
     // The quick choice sets the reminder too: two working days on, at 08:00.
-    expect(field('follow-up-due').value).toBe('2026-10-30');
+    expect(field('follow-up-due-choice').value).toBe('this-week');
     expect(field('follow-up-reminder-on').checked).toBe(true);
     expect(field('follow-up-reminder-day').value).toBe('2026-10-28');
     fireEvent.change(field('follow-up-reminder-time'), { target: { value: '10:30' } });
-    fireEvent.change(screen.getByTestId('follow-up-note'), { target: { value: 'Ask for the drawing' } });
+    fireEvent.change(note(), { target: { value: 'Ask for the drawing' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -166,8 +184,10 @@ describe('FollowUpDialog', () => {
     render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
 
     // An operator's action is one of the list.
-    expect(field('follow-up-action').value).toBe('Write a quote');
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Write a quote');
     expect(screen.queryByTestId('follow-up-action-text')).toBeNull();
+    // A day none of the quick choices gives: shown as the date.
+    expect(field('follow-up-due-choice').value).toBe('pick');
     expect(field('follow-up-due').value).toBe('2026-10-29');
     expect(field('follow-up-reminder-on').checked).toBe(true);
     expect(field('follow-up-reminder-day').value).toBe('2026-10-28');
@@ -179,7 +199,7 @@ describe('FollowUpDialog', () => {
   it('shows an action of the user\'s own as free text', () => {
     useTaskStore.setState({ tasks: [followUp()] });
     render(<FollowUpDialog email={mail} focus="action" onClose={vi.fn()} />);
-    expect(field('follow-up-action').value).toBe('\u0000other');
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Other…');
     expect(field('follow-up-action-text').value).toBe('Write a quote');
   });
 
@@ -217,6 +237,50 @@ describe('FollowUpDialog', () => {
     expect(field('follow-up-reminder-day').value).toBe('2026-10-27');
     expect(field('follow-up-reminder-time').value).toBe('08:00');
     await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId('follow-up-reminder-time')));
+  });
+});
+
+describe('FollowUpDialog: the controls', () => {
+  it('"Pick a date…" shows the date input, and the day picked is written', async () => {
+    const onClose = vi.fn();
+    render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
+    fireEvent.change(field('follow-up-due-choice'), { target: { value: 'pick' } });
+    expect(field('follow-up-due').value).toBe('2026-10-27');
+    fireEvent.change(field('follow-up-due'), { target: { value: '2026-11-12' } });
+    await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(client.createCalendarTask.mock.calls[0][0]).toMatchObject({ due: '2026-11-12T00:00:00' });
+  });
+
+  it('the action\'s popover: Escape closes it and not the dialog, "Other…" asks for the text', () => {
+    const onClose = vi.fn();
+    render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
+    const button = screen.getByTestId('follow-up-action');
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    // The chosen one has the focus.
+    expect(document.activeElement).toBe(screen.getByRole('option', { name: 'Follow up' }));
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByTestId('follow-up-action-list')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(button);
+
+    choose('follow-up-action', 'Other…');
+    expect(field('follow-up-action-text').value).toBe('');
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Other…');
+  });
+
+  it('explains behind ⓘ, not under the fields', () => {
+    render(<FollowUpDialog email={mail} focus="reminder" onClose={vi.fn()} />);
+    const tips = screen.getAllByRole('tooltip', { hidden: true });
+    expect(tips.map((tip) => tip.textContent)).toEqual(['reminder_mail_hint', 'reply.settles_hint']);
+    expect(tips.every((tip) => tip.hidden)).toBe(true);
+    const help = screen.getAllByRole('button', { name: 'help' })[0];
+    fireEvent.focus(help);
+    expect(tips[0].hidden).toBe(false);
+    expect(help.getAttribute('aria-describedby')).toBe(tips[0].id);
+    fireEvent.blur(help);
+    expect(tips[0].hidden).toBe(true);
   });
 });
 
@@ -422,7 +486,7 @@ describe('a follow-up written in another language', () => {
 
     const onClose = vi.fn();
     render(<FollowUpDialog email={mail} focus="action" onClose={onClose} />);
-    expect(field('follow-up-action').value).toBe('Follow up');
+    expect(screen.getByTestId('follow-up-action').textContent).toBe('Follow up');
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(client.updateCalendarTask.mock.calls[0][1]).not.toHaveProperty('title');

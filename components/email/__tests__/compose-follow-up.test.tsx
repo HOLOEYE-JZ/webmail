@@ -109,7 +109,9 @@ describe('ComposeFollowUp', () => {
     expect(screen.getByTestId('follow-up-hint').textContent).toBe('send.dialog_hint');
     expect(field('follow-up-due').value).toBe('2026-10-29');
     expect(field('follow-up-settles-on-reply').checked).toBe(true);
-    fireEvent.change(field('follow-up-action'), { target: { value: 'actions.call' } });
+    fireEvent.click(screen.getByTestId('follow-up-action'));
+    fireEvent.click(screen.getByRole('option', { name: 'actions.call' }));
+    fireEvent.click(screen.getByTestId('follow-up-note-add'));
     fireEvent.change(field('follow-up-note'), { target: { value: 'ask for the order' } });
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -135,6 +137,7 @@ describe('ComposeFollowUp', () => {
 
     fireEvent.change(field('composer-follow-up-choice'), { target: { value: 'custom' } });
     expect(screen.getByTestId('follow-up-kept').textContent).toContain('kept_only_me');
+    fireEvent.click(screen.getByTestId('follow-up-visible'));
     fireEvent.click(screen.getByTestId('follow-up-visible-group'));
     await act(async () => { fireEvent.click(screen.getByTestId('follow-up-dialog-save')); });
     const value = onChange.mock.calls[0][0] as Extract<SendFollowUp, { choice: 'custom' }>;
@@ -145,7 +148,9 @@ describe('ComposeFollowUp', () => {
     rerender(<Row client={client} initial={value} onChange={onChange} />);
     expect(screen.getByTestId('composer-follow-up-hint').textContent).toContain('group.list_of');
     fireEvent.click(screen.getByTestId('composer-follow-up-change'));
-    expect(screen.getByTestId('follow-up-visible-group').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByTestId('follow-up-visible').textContent).toBe('sales@example.com');
+    fireEvent.click(screen.getByTestId('follow-up-visible'));
+    expect(screen.getByTestId('follow-up-visible-group').getAttribute('aria-selected')).toBe('true');
   });
 
   it('shows nothing while follow-ups are off', () => {
