@@ -17,7 +17,8 @@ import { groupListOfTask, useMyAddresses } from "@/hooks/use-group-follow-ups";
 import { useGroupTasks } from "@/stores/group-task-store";
 import { openReminderMail } from "@/hooks/use-task-reminders";
 import { openListedTask, opensMail, toggleListedTask } from "@/hooks/use-task-list";
-import { followUpMailRef, followUpMailSummary, followUpNote, followUpReminder, isRecurringTask } from "@/lib/follow-ups";
+import { followUpMailRef, followUpMailSummary, followUpNote, followUpReminder } from "@/lib/follow-ups";
+import { isRecurringTask } from "@/lib/calendar-tasks";
 import { isTaskForMe } from "@/lib/group-follow-ups";
 import { taskListDue, type TaskListGroup, type TaskListSection } from "@/lib/task-list";
 

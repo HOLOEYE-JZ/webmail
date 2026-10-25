@@ -8,9 +8,9 @@ import {
   editReminderTask,
   followUpNote,
   followUpsByEmailId,
-  planFollowUpSync,
-  proposedReminder,
 } from '../follow-ups';
+import { planFollowUpSync } from '@/lib/follow-up-sync';
+import { proposedReminder } from '@/lib/follow-up-schedule';
 import type { CalendarTask } from '@/lib/jmap/types';
 
 // Display dates: local fields are the user's wall clock. 28.10.2026 is a Wednesday.

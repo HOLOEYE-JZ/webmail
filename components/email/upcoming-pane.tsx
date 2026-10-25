@@ -15,7 +15,8 @@ import { addReminderToday, openTaskItem, useUpcomingTasks } from "@/hooks/use-up
 import { useDisplayNow } from "@/hooks/use-clock";
 import { GroupTaskSource, useFollowUpFormat } from "@/components/email/follow-up";
 import { toDisplayDate } from "@/lib/timezone";
-import { followUpDueDay, followUpMailRef, followUpMailSummary, followUpNote, followUpReminder, isRecurringTask } from "@/lib/follow-ups";
+import { followUpDueDay, followUpMailRef, followUpMailSummary, followUpNote, followUpReminder } from "@/lib/follow-ups";
+import { isRecurringTask } from "@/lib/calendar-tasks";
 import type { UpcomingGroup } from "@/lib/upcoming-tasks";
 import type { CalendarTask } from "@/lib/jmap/types";
 

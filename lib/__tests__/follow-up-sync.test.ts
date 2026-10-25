@@ -5,14 +5,16 @@ import {
   followUpMailSummary,
   followUpMessageId,
   followUpMailRef,
-  waitsForFreshTasks,
+  relinkFollowUpTask,
+} from '../follow-ups';
+import {
   parseFollowUpMirror,
   planFollowUpSync,
-  relinkFollowUpTask,
+  waitsForFreshTasks,
   type FollowUpMirror,
   type FollowUpSyncInput,
   type FollowUpSyncTask,
-} from '../follow-ups';
+} from '@/lib/follow-up-sync';
 import type { CalendarTask } from '@/lib/jmap/types';
 
 // The task is the original, the mail's $flagged its mirror: whichever side

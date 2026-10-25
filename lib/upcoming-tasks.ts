@@ -1,6 +1,8 @@
 import { addDays, differenceInCalendarDays } from "date-fns";
 import type { CalendarTask } from "@/lib/jmap/types";
-import { followUpDueDay, followUpReminder, isOpenFollowUp, isRecurringTask, startOfWeekOf } from "@/lib/follow-ups";
+import { followUpDueDay, followUpReminder } from "@/lib/follow-ups";
+import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
+import { startOfWeekOf } from "@/lib/follow-up-schedule";
 
 /**
  * "Upcoming for me", the pane beside the mail list, as Outlook's To-Do bar:
@@ -81,7 +83,7 @@ export function upcomingTasks(
   const byGroup = new Map<UpcomingGroup, CalendarTask[]>();
   let later = 0;
   for (const task of mineOf(tasks, calendarIds, forMe)) {
-    if (!isOpenFollowUp(task)) continue;
+    if (!isOpenTask(task)) continue;
     const group = isRecurringTask(task) ? "later" : upcomingGroupOf(followUpDueDay(task), now, firstDayOfWeek);
     if (group === "later") {
       later += 1;
@@ -108,7 +110,7 @@ export function dueTaskCount(
 ): number {
   let count = 0;
   for (const task of mineOf(tasks, calendarIds, forMe)) {
-    if (!isOpenFollowUp(task) || isRecurringTask(task)) continue;
+    if (!isOpenTask(task) || isRecurringTask(task)) continue;
     const due = followUpDueDay(task);
     if (due && differenceInCalendarDays(due, now) <= 0) count += 1;
   }

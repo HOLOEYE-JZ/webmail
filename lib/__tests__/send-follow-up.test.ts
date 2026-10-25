@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from 'vitest';
-import { DEFAULT_WORKING_TIME, scheduleNoAnswer } from '../follow-ups';
+import { DEFAULT_WORKING_TIME, scheduleNoAnswer } from '@/lib/follow-up-schedule';
 import {
   detailsOf,
   draftFollowUp,

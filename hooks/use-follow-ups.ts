@@ -21,7 +21,6 @@ import { normalizeAction } from "@/lib/follow-up-actions";
 import { perStoreEpoch } from "@/lib/store-epoch";
 import { completedTaskPatch, type TaskPatch } from "@/lib/task-reminders";
 import {
-  DEFAULT_WORKING_TIME,
   buildFollowUpTask,
   editFollowUpTask,
   followUpMailRef,
@@ -31,13 +30,16 @@ import {
   mailAccountOfMailboxIds,
   rescheduleFollowUpTask,
   retitle,
-  scheduleFollowUp,
   threadFollowUpEmail,
-  type FollowUpChoice,
   type FollowUpDetails,
   type FollowUpTaskInput,
-  type WorkingTime,
 } from "@/lib/follow-ups";
+import {
+  DEFAULT_WORKING_TIME,
+  scheduleFollowUp,
+  type FollowUpChoice,
+  type WorkingTime,
+} from "@/lib/follow-up-schedule";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { updateAnyTask, useGroupFollowUpIndex, useGroupTaskList } from "./use-group-follow-ups";

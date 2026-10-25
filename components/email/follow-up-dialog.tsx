@@ -39,11 +39,10 @@ const isPerson = (choice: PersonChoice): choice is TaskPerson => !!choice && cho
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCalendarStore } from "@/stores/calendar-store";
-import { followUpCalendars } from "@/lib/calendar-tasks";
+import { followUpCalendars, isRecurringTask } from "@/lib/calendar-tasks";
 import { usePolicyStore } from "@/stores/policy-store";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import {
-  FOLLOW_UP_CHOICES,
   followUpAction,
   followUpActionKey,
   followUpDueDay,
@@ -51,17 +50,19 @@ import {
   followUpReminder,
   hasFollowUpMailAlert,
   isHtmlNote,
-  isRecurringTask,
   mailReminderOffered,
   otherFollowUpAlerts,
+  type FollowUpDetails,
+} from "@/lib/follow-ups";
+import { settlesOnReply } from "@/lib/follow-up-replies";
+import {
+  FOLLOW_UP_CHOICES,
   proposedFollowUpReminder,
   proposedReminder,
   scheduleFollowUp,
-  settlesOnReply,
   type FollowUpChoice,
-  type FollowUpDetails,
   type WorkingTime,
-} from "@/lib/follow-ups";
+} from "@/lib/follow-up-schedule";
 import { FOLLOW_UP_ACTIONS, sanitizeFollowUpActions } from "@/lib/follow-up-actions";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
 

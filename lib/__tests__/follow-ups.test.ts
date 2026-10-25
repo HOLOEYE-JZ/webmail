@@ -1,9 +1,7 @@
 import { applyPatchObject } from '../jmap/patch-object';
 import { describe, it, expect } from 'vitest';
 import {
-  DEFAULT_WORKING_TIME,
   buildFollowUpTask,
-  dueDistance,
   editFollowUpTask,
   followUpAction,
   followUpActionKey,
@@ -14,7 +12,6 @@ import {
   otherFollowUpAlerts,
   sameFollowUpAction,
   followUpNote,
-  proposedFollowUpReminder,
   followUpMailRef,
   followUpReminder,
   followUpState,
@@ -23,11 +20,16 @@ import {
   mailAccountOfMailboxIds,
   rescheduleFollowUpTask,
   retitle,
-  scheduleFollowUp,
   threadFollowUpEmail,
+} from '../follow-ups';
+import {
+  DEFAULT_WORKING_TIME,
+  dueDistance,
+  proposedFollowUpReminder,
+  scheduleFollowUp,
   type FollowUpChoice,
   type WorkingTime,
-} from '../follow-ups';
+} from '@/lib/follow-up-schedule';
 import type { CalendarEventAlert, CalendarTask } from '@/lib/jmap/types';
 
 // Display dates: local fields are the user's wall clock. 26.10.2026 is a Monday.

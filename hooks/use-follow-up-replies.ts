@@ -9,14 +9,14 @@ import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
 import { reachesMailAccount } from "@/lib/deep-links";
 import { perStoreEpoch } from "@/lib/store-epoch";
-import { dueTaskReminders } from "@/lib/task-reminders";
-import { followUpMailRef, type ReplyWatch } from "@/lib/follow-ups";
+import { answeredTaskPatch, dueTaskReminders } from "@/lib/task-reminders";
+import { followUpMailRef } from "@/lib/follow-ups";
 import {
-  THREAD_MAIL_PROPERTIES,
-  answeredTaskPatch,
   findReply,
   replyChecksDue,
+  THREAD_MAIL_PROPERTIES,
   watchesForReply,
+  type ReplyWatch,
   type ThreadMail,
 } from "@/lib/follow-up-replies";
 import type { CalendarTask } from "@/lib/jmap/types";

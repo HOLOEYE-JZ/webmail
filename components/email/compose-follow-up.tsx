@@ -10,7 +10,7 @@ import { useFollowUpsEnabled, useWorkingTime } from "@/hooks/use-follow-ups";
 import { useGroupTaskList } from "@/hooks/use-group-follow-ups";
 import { useEmailStore } from "@/stores/email-store";
 import { displayNow, fromDisplayDate } from "@/lib/timezone";
-import { NO_ANSWER_CHOICES, scheduleNoAnswer, type NoAnswerChoice } from "@/lib/follow-ups";
+import { NO_ANSWER_CHOICES, scheduleNoAnswer, type NoAnswerChoice } from "@/lib/follow-up-schedule";
 import { detailsOf, sendFollowUpDetails, storedDetails, type SendFollowUp } from "@/lib/send-follow-up";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 

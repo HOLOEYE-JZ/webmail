@@ -1,5 +1,5 @@
-import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
-import type { CalendarEventAlert, CalendarLink, CalendarRelation, CalendarTask } from "@/lib/jmap/types";
+import { differenceInCalendarDays, startOfDay } from "date-fns";
+import type { CalendarEventAlert, CalendarLink, CalendarTask } from "@/lib/jmap/types";
 import { MAIL_ACCOUNT_PARAM } from "@/lib/deep-links";
 import { patchPath } from "@/lib/jmap/patch-object";
 import { FOLLOW_UP_ACTIONS, normalizeAction, type FollowUpActionKey } from "@/lib/follow-up-actions";
@@ -7,8 +7,17 @@ import { FOLLOW_UP_ACTION_NAMES, FOLLOW_UP_NO_SUBJECT } from "@/lib/follow-up-ac
 import { htmlToPlainText } from "@/lib/html-to-text";
 import type { TaskPerson } from "@/lib/group-follow-ups";
 import { sanitizeEmailHtml } from "@/lib/email-sanitization";
-import { stripMessageIdBrackets } from "@/lib/email-threading";
 import { isoDay, parseDate, utcDateTime } from "@/lib/task-dates";
+import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
+import {
+  bareMessageId,
+  mailRelation,
+  replyWatch,
+  replyWatchPath,
+  storedWatchValue,
+  watchValue,
+  type ReplyWatch,
+} from "@/lib/follow-up-replies";
 
 /**
  * Follow-ups on a mail, as Outlook's "Flag for follow up" does them.
@@ -18,155 +27,14 @@ import { isoDay, parseDate, utcDateTime } from "@/lib/task-dates";
  * permalink. JMAP keywords carry no date, so the task is the original and the
  * mail's $flagged only mirrors it, which lets a phone's mail app show the flag.
  *
+ * This module writes the task, changes it as the dialog and the menu do, and
+ * reads it for the list, the reader and the dialog. When it is due and
+ * reminds is lib/follow-up-schedule.ts; settling on an answer
+ * lib/follow-up-replies.ts; keeping the flag in step lib/follow-up-sync.ts.
+ *
  * Everything here is pure: dates in and out are *display dates*, whose local
  * fields read as the wall clock in the user's time zone (see lib/timezone.ts).
  */
-
-/** The quick choices of the follow-up menu, in Outlook's order. */
-export const FOLLOW_UP_CHOICES = ["today", "tomorrow", "this-week", "next-week", "no-date"] as const;
-export type FollowUpChoice = (typeof FOLLOW_UP_CHOICES)[number];
-
-/** When the user works: whole hours and `Date.getDay` weekdays. */
-export interface WorkingTime {
-  startHour: number;
-  endHour: number;
-  workingDays: readonly number[];
-  /** 0 = Sunday, 1 = Monday, 6 = Saturday. */
-  firstDayOfWeek: number;
-}
-
-/** Outlook's defaults: Monday to Friday, 08:00 to 17:00. */
-export const DEFAULT_WORKING_TIME: WorkingTime = {
-  startHour: 8,
-  endHour: 17,
-  workingDays: [1, 2, 3, 4, 5],
-  firstDayOfWeek: 1,
-};
-
-export interface FollowUpSchedule {
-  /** Midnight of the due day, or null for "No date". */
-  due: Date | null;
-  /** When the reminder fires, or null for none. */
-  reminder: Date | null;
-}
-
-function workingDaysOf(work: WorkingTime): Set<number> {
-  const days = work.workingDays.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
-  return new Set(days.length > 0 ? days : DEFAULT_WORKING_TIME.workingDays);
-}
-
-/** `day` at a whole hour (clamped to the day). */
-export function atHour(day: Date, hour: number): Date {
-  const result = new Date(day);
-  result.setHours(Math.min(Math.max(hour, 0), 23), 0, 0, 0);
-  return result;
-}
-
-/** The first working day after `day`. */
-function nextWorkday(day: Date, working: Set<number>): Date {
-  let d = addDays(day, 1);
-  while (!working.has(d.getDay())) d = addDays(d, 1);
-  return d;
-}
-
-/** `day` moved on by `count` working days. */
-function addWorkdays(day: Date, count: number, working: Set<number>): Date {
-  let d = day;
-  for (let i = 0; i < count; i++) d = nextWorkday(d, working);
-  return d;
-}
-
-/** The first day of the week `day` lies in. */
-export function startOfWeekOf(day: Date, firstDayOfWeek: number): Date {
-  const back = (day.getDay() - firstDayOfWeek + 7) % 7;
-  return addDays(startOfDay(day), -back);
-}
-
-function workdaysOfWeek(weekStart: Date, working: Set<number>): Date[] {
-  return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).filter((d) => working.has(d.getDay()));
-}
-
-/**
- * Due day and reminder of a quick choice, from the working time:
- *
- * - Today: due today, reminded an hour before the workday ends.
- * - Tomorrow: due the next working day, reminded when it starts.
- * - This week: due the week's last working day, reminded two working days
- *   from now (never after the due day) when the workday starts.
- * - Next week: due next week's last working day, reminded when next week's
- *   first working day starts.
- * - No date: neither.
- *
- * A reminder that would already lie in the past is left out.
- */
-export function scheduleFollowUp(
-  choice: FollowUpChoice,
-  now: Date,
-  work: WorkingTime = DEFAULT_WORKING_TIME,
-): FollowUpSchedule {
-  const working = workingDaysOf(work);
-  const today = startOfDay(now);
-  const future = (reminder: Date) => (reminder.getTime() > now.getTime() ? reminder : null);
-
-  switch (choice) {
-    case "today":
-      return { due: today, reminder: future(atHour(today, work.endHour - 1)) };
-    case "tomorrow": {
-      const day = nextWorkday(today, working);
-      return { due: day, reminder: atHour(day, work.startHour) };
-    }
-    case "this-week": {
-      const days = workdaysOfWeek(startOfWeekOf(today, work.firstDayOfWeek), working);
-      const last = days[days.length - 1];
-      // Past the week's last working day (a weekend): due today.
-      const due = last && last.getTime() >= today.getTime() ? last : today;
-      const remindDay = addWorkdays(today, 2, working);
-      const day = remindDay.getTime() > due.getTime() ? due : remindDay;
-      return { due, reminder: future(atHour(day, work.startHour)) };
-    }
-    case "next-week": {
-      const days = workdaysOfWeek(addDays(startOfWeekOf(today, work.firstDayOfWeek), 7), working);
-      return { due: days[days.length - 1], reminder: atHour(days[0], work.startHour) };
-    }
-    case "no-date":
-      return { due: null, reminder: null };
-  }
-}
-
-/**
- * The composer's "Remind me if no answer by …" (plan 037 decision 10): a sent
- * mail comes back three working days or a week after the day it goes out.
- */
-export const NO_ANSWER_CHOICES = ["three-workdays", "week"] as const;
-export type NoAnswerChoice = (typeof NO_ANSWER_CHOICES)[number];
-
-/**
- * Due day and reminder of a no-answer choice, counted from `sent` (the day the
- * mail goes out, a display date):
- *
- * - Three working days: due the third working day after it.
- * - A week: due the same weekday a week on, or the next working day after
- *   that when it is none.
- *
- * Reminded when that day's work starts; never in the past.
- */
-export function scheduleNoAnswer(
-  choice: NoAnswerChoice,
-  sent: Date,
-  work: WorkingTime = DEFAULT_WORKING_TIME,
-): { due: Date; reminder: Date | null } {
-  const working = workingDaysOf(work);
-  const day = startOfDay(sent);
-  let due: Date;
-  if (choice === "three-workdays") {
-    due = addWorkdays(day, 3, working);
-  } else {
-    due = addDays(day, 7);
-    while (!working.has(due.getDay())) due = addDays(due, 1);
-  }
-  const reminder = atHour(due, work.startHour);
-  return { due, reminder: reminder.getTime() > sent.getTime() ? reminder : null };
-}
 
 // ---------------------------------------------------------------------------
 // The task
@@ -174,9 +42,12 @@ export function scheduleNoAnswer(
 
 /** The key of the follow-up's link to the mail and of its reminder. */
 export const FOLLOW_UP_LINK_ID = "mail";
+
 /** The key of the link naming the mail's sender, kept for when the mail is gone. */
 export const FOLLOW_UP_SENDER_LINK_ID = "from";
+
 export const FOLLOW_UP_ALERT_ID = "follow-up";
+
 /**
  * The key of the reminder's alarm mail: an alert `action: email` with the
  * reminder, which the server sends into the user's inbox even when no client
@@ -197,61 +68,10 @@ export const MAIL_ALERT_LEAD_MS = 1000;
 export function mailAlertTime(reminderAt: Date): Date {
   return new Date(reminderAt.getTime() - MAIL_ALERT_LEAD_MS);
 }
-/**
- * "Settles itself when an answer comes" (plan 037 decision 9), kept on the
- * task's relation to the mail's Message-ID (`relatedTo`) as an RFC 8984 §3.3
- * vendor-specific property: the Message-ID is what an answer names, so the
- * mark belongs to it. Its value is a `ReplyWatchValue`.
- *
- * Why there: such a task gets no alert at all (an alert reaches the phone,
- * which knows nothing of answers, and Stalwart sends an alarm mail even for a
- * task answered meanwhile), so the reminder's time, and whether it was
- * dismissed, live in the mark too. A vendor property on the task itself is
- * refused by Stalwart (plan 037 M2); on the relation it is kept, written and
- * patched by path, and goes to iCalendar as `JSPROP`
- * (draft-ietf-calext-jscalendar-icalendar), which a CalDAV client that keeps
- * unknown properties writes back. A keyword would become a category a phone
- * shows; a link a URL some phones open. Where a client drops it, the task is
- * a plain follow-up without a reminder.
- */
-export const REPLY_WATCH_PROPERTY = "bulwarkmail.org:settlesOnReply";
-
-/**
- * The id the reminders window gives a reply watch's reminder, which is no
- * alert of the task (`replyWatch`). An alert's key is an RFC 8984 Id, which
- * never holds a NUL.
- */
-export const REPLY_WATCH_ALERT_ID = "\u0000settles-on-reply";
-
-/** What `REPLY_WATCH_PROPERTY` holds; every member optional, times as UTCDateTime. */
-export interface ReplyWatchValue {
-  /** When Bulwark reminds, unless an answer came; null for no reminder. */
-  reminder?: string | null;
-  /** When that reminder was dismissed (as an alert's `acknowledged`). */
-  acknowledged?: string | null;
-  /** When the answer that settled it came: one that came by then never settles it again. */
-  answeredAt?: string | null;
-  /**
-   * Turned off in the dialog after an answer had settled it: kept only for
-   * `answeredAt`, so turned on again the same answer does not settle it
-   * again. Such a value is no watch (`replyWatch`).
-   */
-  off?: boolean;
-}
-
-/** A follow-up that settles itself when an answer comes, as read from the task. */
-export interface ReplyWatch {
-  /** The `relatedTo` key it is kept on: the mail's Message-ID in angle brackets. */
-  key: string;
-  /** The mail's Message-ID, without angle brackets. */
-  messageId: string;
-  reminder: Date | null;
-  acknowledged: string | null;
-  answeredAt: string | null;
-}
 
 /** RFC 8288: the mail describes what the task is about. */
 const MAIL_LINK_REL = "describedby";
+
 /** RFC 8288: the mail's sender wrote what the task is about. */
 const SENDER_LINK_REL = "author";
 
@@ -281,13 +101,6 @@ function alertsOf(reminderAt: Date | null, mail = false): Record<string, Calenda
     [FOLLOW_UP_ALERT_ID]: alertAt(reminderAt, "display"),
     ...(mail ? { [FOLLOW_UP_MAIL_ALERT_ID]: alertAt(mailAlertTime(reminderAt), "email") } : {}),
   };
-}
-
-/** A Message-ID without its angle brackets, as JMAP's `messageId` gives it. */
-function bareMessageId(messageId: string | readonly string[] | null | undefined): string | null {
-  const first = Array.isArray(messageId) ? messageId[0] : messageId;
-  if (typeof first !== "string") return null;
-  return stripMessageIdBrackets(first) || null;
 }
 
 export interface FollowUpTaskInput {
@@ -354,60 +167,6 @@ export function buildFollowUpTask(input: FollowUpTaskInput): Partial<CalendarTas
     relatedTo: messageId ? { [`<${messageId}>`]: mailRelation(watch ? watchValue(input.reminderAt) : null) } : null,
     ...(input.participants ? { participants: input.participants } : {}),
   };
-}
-
-/** The relation to the mail's Message-ID, with a reply watch when one is given. */
-function mailRelation(watch: ReplyWatchValue | null): CalendarRelation {
-  return {
-    "@type": "Relation",
-    relation: { parent: true },
-    ...(watch ? { [REPLY_WATCH_PROPERTY]: watch } : {}),
-  } as CalendarRelation;
-}
-
-/** A new reply watch reminding at `reminderAt` (null: never). */
-function watchValue(
-  reminderAt: Date | null,
-  answeredAt: string | null = null,
-  acknowledged: string | null = null,
-): ReplyWatchValue {
-  return { reminder: reminderAt ? utcDateTime(reminderAt) : null, acknowledged, answeredAt };
-}
-
-/** The raw value of `REPLY_WATCH_PROPERTY` on the relation `key`, a watch turned off too; null for none. */
-function storedWatchValue(task: Partial<Pick<CalendarTask, "relatedTo">>, key: string): Record<string, unknown> | null {
-  const value = (task.relatedTo?.[key] as unknown as Record<string, unknown> | undefined)?.[REPLY_WATCH_PROPERTY];
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
-}
-
-/**
- * The task's reply watch (`REPLY_WATCH_PROPERTY`), or null when it does not
- * settle itself on an answer. Only an object counts: Stalwart keeps a member
- * set to null as null.
- */
-export function replyWatch(task: Partial<Pick<CalendarTask, "relatedTo">>): ReplyWatch | null {
-  for (const [key, relation] of Object.entries(task.relatedTo ?? {})) {
-    if (relation?.relation && !relation.relation.parent) continue;
-    const value = (relation as unknown as Record<string, unknown> | null)?.[REPLY_WATCH_PROPERTY];
-    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
-    if ((value as ReplyWatchValue).off === true) continue;
-    const messageId = bareMessageId(key);
-    if (!messageId) continue;
-    const v = value as Record<string, unknown>;
-    return {
-      key,
-      messageId,
-      reminder: parseDate(v.reminder),
-      acknowledged: typeof v.acknowledged === "string" ? v.acknowledged : null,
-      answeredAt: typeof v.answeredAt === "string" ? v.answeredAt : null,
-    };
-  }
-  return null;
-}
-
-/** The patch path of the reply watch kept on `key`, or of one of its members. */
-export function replyWatchPath(key: string, member?: keyof ReplyWatchValue): string {
-  return patchPath("relatedTo", key, REPLY_WATCH_PROPERTY, ...(member ? [member] : []));
 }
 
 /** The sender as a `mailto:` link titled with the name, or null without an address. */
@@ -494,21 +253,6 @@ export function buildReminderTask(input: ReminderTaskInput): Partial<CalendarTas
     ...(input.note?.trim() ? { description: input.note.trim() } : {}),
     ...(input.participants ? { participants: input.participants } : {}),
   };
-}
-
-/**
- * The reminder the dialog proposes for a reminder without a mail: on the due
- * day at the start of work while that is still to come; on a due day already
- * begun, the next full hour while the workday lasts; else the next working
- * day's start.
- */
-export function proposedReminder(due: Date | null, now: Date, work: WorkingTime = DEFAULT_WORKING_TIME): Date {
-  if (due && differenceInCalendarDays(due, now) === 0) {
-    const start = atHour(now, work.startHour);
-    const at = start.getTime() > now.getTime() ? start : atHour(now, now.getHours() + 1);
-    if (at.getTime() > now.getTime() && at.getHours() < work.endHour) return at;
-  }
-  return proposedFollowUpReminder(due, now, work);
 }
 
 /**
@@ -618,33 +362,10 @@ export function followUpNote(task: Pick<CalendarTask, "description" | "descripti
   return (isHtmlNote(task) ? htmlToPlainText(sanitizeEmailHtml(description)) : description).trim();
 }
 
-/**
- * Whether a task repeats: its due day is the series', so it is neither
- * grouped by it nor completed or moved from here, only in the task list.
- * Stalwart names the rule `recurrenceRule`, RFC 8984 `recurrenceRules`.
- */
-export function isRecurringTask(task: Pick<CalendarTask, "recurrenceRules">): boolean {
-  const raw = task as { recurrenceRules?: unknown; recurrenceRule?: unknown };
-  return (Array.isArray(raw.recurrenceRules) && raw.recurrenceRules.length > 0) || !!raw.recurrenceRule;
-}
-
 /** The time of a due date-time with one ("14:30:00"), or null for a whole day. */
 function dueTimeOf(task: Pick<CalendarTask, "due" | "showWithoutTime">): string | null {
   if (task.showWithoutTime !== false || !task.due) return null;
   return /T(\d{2}:\d{2}(?::\d{2})?)/.exec(task.due)?.[1] ?? null;
-}
-
-/**
- * The reminder the dialog proposes when the user turns one on: the due day's
- * start of work, else (no due day, or that time has passed) the next working
- * day's start.
- */
-export function proposedFollowUpReminder(due: Date | null, now: Date, work: WorkingTime = DEFAULT_WORKING_TIME): Date {
-  if (due) {
-    const onDue = atHour(due, work.startHour);
-    if (onDue.getTime() > now.getTime()) return onDue;
-  }
-  return scheduleFollowUp("tomorrow", now, work).reminder ?? atHour(addDays(startOfDay(now), 1), work.startHour);
 }
 
 /** What the dialog writes. */
@@ -830,7 +551,7 @@ export function editFollowUpTask(
   // An HTML note is only shown here, never written back as text.
   const note = edit.note.trim();
   if (!isHtmlNote(task) && note !== followUpNote(task)) patch.description = note;
-  if (!isOpenFollowUp(task)) patch.progress = "needs-action";
+  if (!isOpenTask(task)) patch.progress = "needs-action";
   return patch;
 }
 
@@ -1063,11 +784,6 @@ export function followUpReminder(task: Pick<CalendarTask, "alerts"> & Partial<Pi
   return followUpReminderAlert(task)?.when ?? null;
 }
 
-/** Whether a follow-up settles itself when an answer comes (`replyWatch`). */
-export function settlesOnReply(task: Partial<Pick<CalendarTask, "relatedTo">>): boolean {
-  return replyWatch(task) !== null;
-}
-
 /**
  * How many of the follow-up's alerts the reminder it shows and its own alarm
  * mail leave out (relative ones, a second one, an alarm mail set elsewhere).
@@ -1077,195 +793,4 @@ export function otherFollowUpAlerts(task: Pick<CalendarTask, "alerts"> & Partial
   const shown = replyWatch(task) ? null : followUpReminderAlert(task);
   const mail = hasFollowUpMailAlert(task) ? FOLLOW_UP_MAIL_ALERT_ID : null;
   return Object.entries(task.alerts ?? {}).filter(([id, alert]) => alert && id !== shown?.id && id !== mail).length;
-}
-
-/**
- * How far the due day is from today, for the row's chip: "due tomorrow",
- * "due Thu", "overdue for 3 days".
- */
-export type DueDistance =
-  | { kind: "none" }
-  | { kind: "today" }
-  | { kind: "tomorrow" }
-  | { kind: "weekday"; day: Date }
-  | { kind: "date"; day: Date }
-  | { kind: "yesterday" }
-  | { kind: "days_ago"; count: number };
-
-export function dueDistance(due: Date | null, now: Date): DueDistance {
-  if (!due) return { kind: "none" };
-  const days = differenceInCalendarDays(due, now);
-  if (days === 0) return { kind: "today" };
-  if (days === 1) return { kind: "tomorrow" };
-  if (days === -1) return { kind: "yesterday" };
-  if (days < 0) return { kind: "days_ago", count: -days };
-  if (days < 7) return { kind: "weekday", day: due };
-  return { kind: "date", day: due };
-}
-
-// ---------------------------------------------------------------------------
-// Keeping the flag and the task in step
-// ---------------------------------------------------------------------------
-
-/**
- * A follow-up last seen open while its mail was flagged, as of the task's
- * `updated` then. It tells which side moved when the two disagree later: a
- * task still as it was whose mail lost the flag had the flag cleared
- * elsewhere; a task that changed since was reopened or edited elsewhere.
- */
-export interface FollowUpMirrorEntry {
-  emailId: string;
-  calendarId: string;
-  updated: string | null;
-}
-
-/** The entries by task id, for the user's own mail account. */
-export type FollowUpMirror = Record<string, FollowUpMirrorEntry>;
-
-/** One follow-up as the check sees it. */
-export interface FollowUpSyncTask {
-  id: string;
-  emailId: string;
-  calendarId: string;
-  open: boolean;
-  updated: string | null;
-  /** As the server gave it, not changed in the browser since. Only those are remembered. */
-  fresh: boolean;
-}
-
-export type FollowUpSyncAction =
-  /**
-   * Set or clear the mail's $flagged for the follow-up `taskId`. `taskGone`:
-   * cleared because the task is no longer in the list.
-   */
-  | { kind: "flag"; taskId: string; emailId: string; flagged: boolean; taskGone?: true }
-  /**
-   * The open task is completed: the user took the star off in this app, or
-   * (`flagClearedElsewhere`) the flag was cleared in another client. The
-   * check never deletes a task.
-   */
-  | { kind: "complete-task"; taskId: string; emailId: string; flagClearedElsewhere?: true };
-
-/**
- * Whether an action acts on the strength of what the task list lacks or the
- * flag no longer says: it waits for a complete task list loaded just before,
- * so a task another tab or device changed a moment ago is seen as it is now.
- */
-export function waitsForFreshTasks(action: FollowUpSyncAction): boolean {
-  return action.kind === "complete-task" ? !!action.flagClearedElsewhere : !!action.taskGone;
-}
-
-export interface FollowUpSyncInput {
-  /** The follow-ups, at most one per mail (`followUpsByEmailId`). */
-  tasks: readonly FollowUpSyncTask[];
-  /** The id of every task the task list holds now. */
-  present: ReadonlySet<string>;
-  /** Whether the task list holds every task of a calendar (it was loaded). */
-  listed: (calendarId: string) => boolean;
-  /** Each checked mail's $flagged; null for a mail that is gone. Mails not checked are left alone. */
-  flags: ReadonlyMap<string, boolean | null>;
-  mirror: FollowUpMirror;
-  /**
-   * Mails the user took the star off in this app (this session): their open
-   * follow-up is completed, also one never seen in step here.
-   */
-  unstarredHere?: ReadonlySet<string>;
-}
-
-/** Whether a follow-up counts as open: neither completed nor cancelled. */
-export function isOpenFollowUp(task: Pick<CalendarTask, "progress">): boolean {
-  return task.progress !== "completed" && task.progress !== "cancelled";
-}
-
-/**
- * What keeps the mails' $flagged and their follow-ups in step. The task is
- * the original, the flag its mirror:
- *
- * - A task completed or deleted clears the flag; one reopened sets it.
- * - A flag cleared elsewhere (another client, a phone) completes the open
- *   task, unless the task changed since it was last seen in step (then the
- *   task wins and the flag is set). Nothing here ever deletes a task, so a
- *   flag cleared in another tab whose own write of the task is late or
- *   failed only completes what that tab meant to complete.
- * - A flag set elsewhere on a mail without an open follow-up stays a plain
- *   flag.
- * - A mail that is gone changes nothing; its task stays.
- *
- * Returns the actions and the mirror to keep afterwards.
- */
-export function planFollowUpSync(input: FollowUpSyncInput): { actions: FollowUpSyncAction[]; mirror: FollowUpMirror } {
-  const mirror: FollowUpMirror = { ...input.mirror };
-  const actions: FollowUpSyncAction[] = [];
-  const decided = new Set<string>();
-
-  for (const task of input.tasks) {
-    decided.add(task.id);
-    const flagged = input.flags.get(task.emailId);
-    if (flagged === undefined) continue;
-    const seen = input.mirror[task.id];
-    if (flagged === null) {
-      delete mirror[task.id];
-      continue;
-    }
-    if (task.open && flagged) {
-      if (task.fresh) mirror[task.id] = { emailId: task.emailId, calendarId: task.calendarId, updated: task.updated };
-    } else if (task.open && input.unstarredHere?.has(task.emailId)) {
-      actions.push({ kind: "complete-task", taskId: task.id, emailId: task.emailId });
-    } else if (task.open) {
-      if (seen && seen.emailId === task.emailId && seen.updated === task.updated) {
-        // Kept until the completion is written; the next check forgets it.
-        actions.push({ kind: "complete-task", taskId: task.id, emailId: task.emailId, flagClearedElsewhere: true });
-      } else {
-        // New, reopened, moved to another day, or never seen in step here.
-        // Known limit: a browser without the entry (a new one, or storage
-        // cleared) cannot tell a flag cleared elsewhere from a task reopened
-        // elsewhere, so it sets the flag again rather than complete the task;
-        // a flag cleared before its first check comes back once. That errs
-        // on the side that loses nothing.
-        actions.push({ kind: "flag", taskId: task.id, emailId: task.emailId, flagged: true });
-      }
-    } else {
-      // Completed: a flag it still mirrors goes; a flag set after it stays.
-      if (flagged && seen) actions.push({ kind: "flag", taskId: task.id, emailId: task.emailId, flagged: false });
-      delete mirror[task.id];
-    }
-  }
-
-  // Remembered follow-ups the list no longer holds were deleted.
-  for (const [taskId, seen] of Object.entries(input.mirror)) {
-    if (decided.has(taskId) || input.present.has(taskId)) continue;
-    if (!input.listed(seen.calendarId)) continue;
-    const flagged = input.flags.get(seen.emailId);
-    if (flagged === undefined) continue;
-    // Another open follow-up on the same mail keeps the flag.
-    const stillFollowedUp = input.tasks.some((t) => t.emailId === seen.emailId && t.open);
-    if (flagged && !stillFollowedUp) actions.push({ kind: "flag", taskId, emailId: seen.emailId, flagged: false, taskGone: true });
-    delete mirror[taskId];
-  }
-
-  // One write per mail: of conflicting wishes, the open follow-up's wins.
-  const byMail = new Map<string, FollowUpSyncAction>();
-  for (const action of actions) {
-    const other = byMail.get(action.emailId);
-    if (!other || (other.kind === "flag" && !other.flagged)) byMail.set(action.emailId, action);
-  }
-  return { actions: [...byMail.values()], mirror };
-}
-
-/** The mirror kept in the browser, read back defensively. */
-export function parseFollowUpMirror(raw: string | null): FollowUpMirror {
-  if (!raw) return {};
-  try {
-    const value: unknown = JSON.parse(raw);
-    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-    const mirror: FollowUpMirror = {};
-    for (const [taskId, entry] of Object.entries(value as Record<string, unknown>)) {
-      const e = entry as Partial<FollowUpMirrorEntry> | null;
-      if (!e || typeof e.emailId !== "string" || typeof e.calendarId !== "string") continue;
-      mirror[taskId] = { emailId: e.emailId, calendarId: e.calendarId, updated: typeof e.updated === "string" ? e.updated : null };
-    }
-    return mirror;
-  } catch {
-    return {};
-  }
 }

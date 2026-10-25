@@ -1,6 +1,7 @@
 import type { Calendar, CalendarParticipant, CalendarTask, Principal } from "@/lib/jmap/types";
 import { patchPath } from "@/lib/jmap/patch-object";
-import { followUpMailRef, isOpenFollowUp } from "@/lib/follow-ups";
+import { followUpMailRef } from "@/lib/follow-ups";
+import { isOpenTask } from "@/lib/calendar-tasks";
 
 /**
  * Follow-ups and reminders in a group mailbox's task list (plan 037
@@ -270,7 +271,7 @@ export function groupFollowUpsByEmailId(
     byEmail.set(ref.emailId, list);
   }
   for (const list of byEmail.values()) {
-    list.sort((a, b) => Number(isOpenFollowUp(b)) - Number(isOpenFollowUp(a)) || (b.updated ?? "").localeCompare(a.updated ?? ""));
+    list.sort((a, b) => Number(isOpenTask(b)) - Number(isOpenTask(a)) || (b.updated ?? "").localeCompare(a.updated ?? ""));
   }
   return byEmail;
 }
@@ -300,5 +301,5 @@ export function isGroupAccount(accountId: string, principals: readonly Principal
  * mail only until the next read.
  */
 export function keptGroupTasks(tasks: readonly CalendarTask[], listIds: ReadonlySet<string>): CalendarTask[] {
-  return tasks.filter((t) => t.isShared && isOpenFollowUp(t) && Object.keys(t.calendarIds ?? {}).some((id) => listIds.has(id)));
+  return tasks.filter((t) => t.isShared && isOpenTask(t) && Object.keys(t.calendarIds ?? {}).some((id) => listIds.has(id)));
 }

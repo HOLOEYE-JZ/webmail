@@ -15,15 +15,17 @@ import {
   followUpMailSummary,
   followUpMessageId,
   followUpsByEmailId,
-  isOpenFollowUp,
+  relinkFollowUpTask,
+} from "@/lib/follow-ups";
+import { isOpenTask } from "@/lib/calendar-tasks";
+import {
   parseFollowUpMirror,
   planFollowUpSync,
-  relinkFollowUpTask,
+  waitsForFreshTasks,
   type FollowUpMirror,
   type FollowUpSyncAction,
   type FollowUpSyncTask,
-  waitsForFreshTasks,
-} from "@/lib/follow-ups";
+} from "@/lib/follow-up-sync";
 import type { CalendarTask, EmailAddress } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import {
@@ -195,7 +197,7 @@ export async function checkFollowUps(client: IJMAPClient, loginId: string | null
       id: task.id,
       emailId,
       calendarId: calendarOf(task),
-      open: isOpenFollowUp(task),
+      open: isOpenTask(task),
       updated: task.updated ?? null,
       fresh: fetched.has(task),
     });

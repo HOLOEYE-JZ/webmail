@@ -2,14 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   PUSH_RECHECK_MS,
   RECHECK_MS,
-  answeredTaskPatch,
   findReply,
   replyChecksDue,
   watchesForReply,
   type ThreadMail,
 } from '../follow-up-replies';
+import { answeredTaskPatch } from '@/lib/task-reminders';
 import { applyPatchObject } from '../jmap/patch-object';
-import { REPLY_WATCH_PROPERTY, buildFollowUpTask, replyWatch } from '../follow-ups';
+import { buildFollowUpTask } from '../follow-ups';
+import { REPLY_WATCH_PROPERTY, replyWatch } from '@/lib/follow-up-replies';
 import type { CalendarTask } from '../jmap/types';
 
 const FLAGGED = { id: 'M1', receivedAt: '2026-10-26T08:00:00Z' };

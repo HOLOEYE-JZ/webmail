@@ -10,7 +10,7 @@ import { normalizeAction } from "@/lib/follow-up-actions";
 import { stripMessageIdBrackets } from "@/lib/email-threading";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import { rememberDraftFollowUp, sendFollowUpDetails, type SendFollowUp } from "@/lib/send-follow-up";
-import type { WorkingTime } from "@/lib/follow-ups";
+import type { WorkingTime } from "@/lib/follow-up-schedule";
 import type { CalendarTask, Email, SendEmailResult } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import {

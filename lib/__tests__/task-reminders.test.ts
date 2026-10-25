@@ -12,7 +12,8 @@ import {
 } from '../task-reminders';
 import { getPendingAlerts, getPendingTaskAlerts } from '../calendar-alerts';
 import { applyPatchObject, patchPath } from '../jmap/patch-object';
-import { buildFollowUpTask, buildReminderTask, followUpReminder, hasFollowUpMailAlert, type WorkingTime } from '../follow-ups';
+import { buildFollowUpTask, buildReminderTask, followUpReminder, hasFollowUpMailAlert } from '../follow-ups';
+import type { WorkingTime } from '@/lib/follow-up-schedule';
 import type { CalendarEvent, CalendarEventAlert, CalendarTask } from '../jmap/types';
 
 const NOW = new Date('2026-10-28T09:30:00Z');

@@ -2,7 +2,8 @@ import { addYears, format, startOfDay } from "date-fns";
 import { parseDate } from "@/lib/task-dates";
 import type { CalendarEvent, CalendarRecurrenceRule, CalendarTask } from "@/lib/jmap/types";
 import { expandRecurringEvents } from "@/lib/recurrence-expansion";
-import { followUpDueDay, followUpMailRef, followUpReminder, isOpenFollowUp, isRecurringTask } from "@/lib/follow-ups";
+import { followUpDueDay, followUpMailRef, followUpReminder } from "@/lib/follow-ups";
+import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
 import { isGroupFollowUpTask, isInGroupList, isTaskForMe } from "@/lib/group-follow-ups";
 import { upcomingGroupOf } from "@/lib/upcoming-tasks";
 import type { TaskViewFilter } from "@/stores/task-store";
@@ -172,7 +173,7 @@ export function taskListGroupOf(
   now: Date,
   firstDayOfWeek = 1,
 ): TaskListGroup {
-  if (!isOpenFollowUp(task)) return "done";
+  if (!isOpenTask(task)) return "done";
   if (isRecurringTask(task)) {
     const next = nextOccurrence(task, now);
     // A series that may still run but whose next time cannot be told: later, never "no date".
@@ -260,7 +261,7 @@ export function tasksByStatus(
     case "overdue":
       return tasks.filter((task) => taskListGroupOf(task, now, firstDayOfWeek) === "overdue");
     default:
-      return showCompleted ? [...tasks] : tasks.filter(isOpenFollowUp);
+      return showCompleted ? [...tasks] : tasks.filter(isOpenTask);
   }
 }
 

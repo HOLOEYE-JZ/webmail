@@ -65,3 +65,19 @@ export function groupTasksByDueDay(tasks: CalendarTask[] | undefined): Map<strin
   }
   return map;
 }
+
+/** Whether a task counts as open: neither completed nor cancelled. */
+export function isOpenTask(task: Pick<CalendarTask, "progress">): boolean {
+  return task.progress !== "completed" && task.progress !== "cancelled";
+}
+
+/**
+ * Whether a task repeats: its due day is the series', so follow-ups and
+ * reminders neither group it by that day nor complete or move it; the task
+ * list handles its occurrences. Stalwart names the rule `recurrenceRule`,
+ * RFC 8984 `recurrenceRules`.
+ */
+export function isRecurringTask(task: Pick<CalendarTask, "recurrenceRules">): boolean {
+  const raw = task as { recurrenceRules?: unknown; recurrenceRule?: unknown };
+  return (Array.isArray(raw.recurrenceRules) && raw.recurrenceRules.length > 0) || !!raw.recurrenceRule;
+}

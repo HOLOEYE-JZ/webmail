@@ -6,7 +6,8 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
-import { followUpMailRef, isOpenFollowUp } from "@/lib/follow-ups";
+import { followUpMailRef } from "@/lib/follow-ups";
+import { isOpenTask } from "@/lib/calendar-tasks";
 import { completedTaskPatch } from "@/lib/task-reminders";
 import { isGroupFollowUpTask, isInGroupList, type GroupTaskList } from "@/lib/group-follow-ups";
 import {
@@ -142,7 +143,7 @@ export async function toggleListedTask(
 ): Promise<void> {
   const inGroupStore = isGroupTask(task);
   try {
-    if (isOpenFollowUp(task) && !task.isShared && followUpMailRef(task)) {
+    if (isOpenTask(task) && !task.isShared && followUpMailRef(task)) {
       await completeTask(client, task, messages, undefined, () => toggleInStores(client, task));
     } else {
       await toggleInStores(client, task);

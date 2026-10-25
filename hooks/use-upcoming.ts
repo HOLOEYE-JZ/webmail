@@ -18,8 +18,8 @@ import {
   editReminderTask,
   followUpMailRef,
   type FollowUpDetails,
-  type WorkingTime,
 } from "@/lib/follow-ups";
+import type { WorkingTime } from "@/lib/follow-up-schedule";
 import { dueTaskCount, upcomingTasks, type UpcomingList } from "@/lib/upcoming-tasks";
 import type { CalendarTask } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";

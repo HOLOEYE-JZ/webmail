@@ -1,15 +1,8 @@
-import type { CalendarTask } from "@/lib/jmap/types";
+import type { CalendarRelation, CalendarTask } from "@/lib/jmap/types";
 import { stripMessageIdBrackets } from "@/lib/email-threading";
-import { parseDate } from "@/lib/task-dates";
-import { completedTaskPatch, type TaskPatch } from "@/lib/task-reminders";
-import {
-  isHtmlNote,
-  isOpenFollowUp,
-  isRecurringTask,
-  replyWatch,
-  replyWatchPath,
-  type ReplyWatch,
-} from "@/lib/follow-ups";
+import { patchPath } from "@/lib/jmap/patch-object";
+import { parseDate, utcDateTime } from "@/lib/task-dates";
+import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
 
 /**
  * Follow-ups that settle themselves when an answer comes (plan 037 decision
@@ -32,8 +25,138 @@ import {
  * compared here. An answer whose subject changed so much that the server put
  * it in a thread of its own is not found: the reminder comes.
  *
+ * Whether a task settles itself is a mark on it, its reply watch
+ * (`REPLY_WATCH_PROPERTY`), written and read below.
+ *
  * Pure: the hook `use-follow-up-replies` asks the server.
  */
+
+// ---------------------------------------------------------------------------
+// The mark on the task
+// ---------------------------------------------------------------------------
+
+/**
+ * "Settles itself when an answer comes" (plan 037 decision 9), kept on the
+ * task's relation to the mail's Message-ID (`relatedTo`) as an RFC 8984 §3.3
+ * vendor-specific property: the Message-ID is what an answer names, so the
+ * mark belongs to it. Its value is a `ReplyWatchValue`.
+ *
+ * Why there: such a task gets no alert at all (an alert reaches the phone,
+ * which knows nothing of answers, and Stalwart sends an alarm mail even for a
+ * task answered meanwhile), so the reminder's time, and whether it was
+ * dismissed, live in the mark too. A vendor property on the task itself is
+ * refused by Stalwart (plan 037 M2); on the relation it is kept, written and
+ * patched by path, and goes to iCalendar as `JSPROP`
+ * (draft-ietf-calext-jscalendar-icalendar), which a CalDAV client that keeps
+ * unknown properties writes back. A keyword would become a category a phone
+ * shows; a link a URL some phones open. Where a client drops it, the task is
+ * a plain follow-up without a reminder.
+ */
+export const REPLY_WATCH_PROPERTY = "bulwarkmail.org:settlesOnReply";
+
+/**
+ * The id the reminders window gives a reply watch's reminder, which is no
+ * alert of the task (`replyWatch`). An alert's key is an RFC 8984 Id, which
+ * never holds a NUL.
+ */
+export const REPLY_WATCH_ALERT_ID = "\u0000settles-on-reply";
+
+/** What `REPLY_WATCH_PROPERTY` holds; every member optional, times as UTCDateTime. */
+export interface ReplyWatchValue {
+  /** When Bulwark reminds, unless an answer came; null for no reminder. */
+  reminder?: string | null;
+  /** When that reminder was dismissed (as an alert's `acknowledged`). */
+  acknowledged?: string | null;
+  /** When the answer that settled it came: one that came by then never settles it again. */
+  answeredAt?: string | null;
+  /**
+   * Turned off in the dialog after an answer had settled it: kept only for
+   * `answeredAt`, so turned on again the same answer does not settle it
+   * again. Such a value is no watch (`replyWatch`).
+   */
+  off?: boolean;
+}
+
+/** A follow-up that settles itself when an answer comes, as read from the task. */
+export interface ReplyWatch {
+  /** The `relatedTo` key it is kept on: the mail's Message-ID in angle brackets. */
+  key: string;
+  /** The mail's Message-ID, without angle brackets. */
+  messageId: string;
+  reminder: Date | null;
+  acknowledged: string | null;
+  answeredAt: string | null;
+}
+
+/** A Message-ID without its angle brackets, as JMAP's `messageId` gives it. */
+export function bareMessageId(messageId: string | readonly string[] | null | undefined): string | null {
+  const first = Array.isArray(messageId) ? messageId[0] : messageId;
+  if (typeof first !== "string") return null;
+  return stripMessageIdBrackets(first) || null;
+}
+
+/** The relation to the mail's Message-ID, with a reply watch when one is given. */
+export function mailRelation(watch: ReplyWatchValue | null): CalendarRelation {
+  return {
+    "@type": "Relation",
+    relation: { parent: true },
+    ...(watch ? { [REPLY_WATCH_PROPERTY]: watch } : {}),
+  } as CalendarRelation;
+}
+
+/** A new reply watch reminding at `reminderAt` (null: never). */
+export function watchValue(
+  reminderAt: Date | null,
+  answeredAt: string | null = null,
+  acknowledged: string | null = null,
+): ReplyWatchValue {
+  return { reminder: reminderAt ? utcDateTime(reminderAt) : null, acknowledged, answeredAt };
+}
+
+/** The raw value of `REPLY_WATCH_PROPERTY` on the relation `key`, a watch turned off too; null for none. */
+export function storedWatchValue(task: Partial<Pick<CalendarTask, "relatedTo">>, key: string): Record<string, unknown> | null {
+  const value = (task.relatedTo?.[key] as unknown as Record<string, unknown> | undefined)?.[REPLY_WATCH_PROPERTY];
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+/**
+ * The task's reply watch (`REPLY_WATCH_PROPERTY`), or null when it does not
+ * settle itself on an answer. Only an object counts: Stalwart keeps a member
+ * set to null as null.
+ */
+export function replyWatch(task: Partial<Pick<CalendarTask, "relatedTo">>): ReplyWatch | null {
+  for (const [key, relation] of Object.entries(task.relatedTo ?? {})) {
+    if (relation?.relation && !relation.relation.parent) continue;
+    const value = (relation as unknown as Record<string, unknown> | null)?.[REPLY_WATCH_PROPERTY];
+    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+    if ((value as ReplyWatchValue).off === true) continue;
+    const messageId = bareMessageId(key);
+    if (!messageId) continue;
+    const v = value as Record<string, unknown>;
+    return {
+      key,
+      messageId,
+      reminder: parseDate(v.reminder),
+      acknowledged: typeof v.acknowledged === "string" ? v.acknowledged : null,
+      answeredAt: typeof v.answeredAt === "string" ? v.answeredAt : null,
+    };
+  }
+  return null;
+}
+
+/** The patch path of the reply watch kept on `key`, or of one of its members. */
+export function replyWatchPath(key: string, member?: keyof ReplyWatchValue): string {
+  return patchPath("relatedTo", key, REPLY_WATCH_PROPERTY, ...(member ? [member] : []));
+}
+
+/** Whether a follow-up settles itself when an answer comes (`replyWatch`). */
+export function settlesOnReply(task: Partial<Pick<CalendarTask, "relatedTo">>): boolean {
+  return replyWatch(task) !== null;
+}
+
+// ---------------------------------------------------------------------------
+// Looking for the answer
+// ---------------------------------------------------------------------------
 
 /** A mail of the flagged mail's thread, with the properties the check reads. */
 export interface ThreadMail {
@@ -94,7 +217,7 @@ export function findReply(input: FindReplyInput): ThreadMail | null {
 
 /** Whether a task is one whose thread the check looks at: open, the user's own, a mail's, settling on an answer. */
 export function watchesForReply(task: CalendarTask): ReplyWatch | null {
-  if (task.isShared || !isOpenFollowUp(task) || isRecurringTask(task)) return null;
+  if (task.isShared || !isOpenTask(task) || isRecurringTask(task)) return null;
   return replyWatch(task);
 }
 
@@ -131,23 +254,4 @@ export function replyChecksDue(
     if (lastPushMs !== null && lastPushMs > last && nowMs - last >= PUSH_RECHECK_MS) return true;
     return nowMs - last >= RECHECK_MS;
   });
-}
-
-/**
- * The patch that completes a task an answer settled: completed as Mark
- * Complete does (`completedTaskPatch`), the answer's time kept in the watch,
- * and `note` ("Answer received on …", in the user's language) added as a line
- * of its own below the task's note, which stays as it was. An HTML note is
- * left alone (it belongs to the client that wrote it).
- */
-export function answeredTaskPatch(task: CalendarTask, watch: ReplyWatch, answeredAt: string, note: string, now: Date): TaskPatch {
-  const patch: TaskPatch = {
-    ...completedTaskPatch(task, now),
-    [replyWatchPath(watch.key, "answeredAt") as `relatedTo/${string}`]: answeredAt,
-  };
-  if (!isHtmlNote(task) && note.trim()) {
-    const before = (task.description ?? "").trimEnd();
-    patch.description = before ? `${before}\n${note.trim()}` : note.trim();
-  }
-  return patch;
 }

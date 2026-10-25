@@ -2,12 +2,9 @@ import type { TaskPerson } from "@/lib/group-follow-ups";
 import { perStoreEpoch } from "@/lib/store-epoch";
 import { dayOfIso, isoDay, parseDate } from "@/lib/task-dates";
 import {
-  NO_ANSWER_CHOICES,
-  scheduleNoAnswer,
   type FollowUpDetails,
-  type NoAnswerChoice,
-  type WorkingTime,
 } from "@/lib/follow-ups";
+import { NO_ANSWER_CHOICES, scheduleNoAnswer, type NoAnswerChoice, type WorkingTime } from "@/lib/follow-up-schedule";
 
 /**
  * "⚑ Follow up" in the composer (plan 037 decision 10): what the user chose

@@ -3,18 +3,15 @@ import { applyPatchObject } from '../jmap/patch-object';
 import {
   FOLLOW_UP_ALERT_ID,
   FOLLOW_UP_MAIL_ALERT_ID,
-  REPLY_WATCH_ALERT_ID,
-  REPLY_WATCH_PROPERTY,
   buildFollowUpTask,
   editFollowUpTask,
   followUpReminder,
   hasFollowUpMailAlert,
   otherFollowUpAlerts,
-  replyWatch,
   rescheduleFollowUpTask,
-  settlesOnReply,
   type FollowUpTaskInput,
 } from '../follow-ups';
+import { REPLY_WATCH_ALERT_ID, REPLY_WATCH_PROPERTY, replyWatch, settlesOnReply } from '@/lib/follow-up-replies';
 import {
   completedTaskPatch,
   dismissTaskReminder,

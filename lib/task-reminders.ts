@@ -3,20 +3,15 @@ import { buildAlertKey, computeTaskFireTime } from "@/lib/calendar-alerts";
 import { applyPatchObject, patchPath } from "@/lib/jmap/patch-object";
 import { utcDateTime } from "@/lib/task-dates";
 import {
-  DEFAULT_WORKING_TIME,
-  atHour,
+  FOLLOW_UP_MAIL_ALERT_ID,
   followUpDueDay,
   followUpReminderAlert,
-  isOpenFollowUp,
-  isRecurringTask,
-  FOLLOW_UP_MAIL_ALERT_ID,
-  REPLY_WATCH_ALERT_ID,
   hasFollowUpMailAlert,
-  replyWatch,
-  replyWatchPath,
-  scheduleFollowUp,
-  type WorkingTime,
+  isHtmlNote,
 } from "@/lib/follow-ups";
+import { isOpenTask, isRecurringTask } from "@/lib/calendar-tasks";
+import { REPLY_WATCH_ALERT_ID, replyWatch, replyWatchPath, type ReplyWatch } from "@/lib/follow-up-replies";
+import { atHour, DEFAULT_WORKING_TIME, scheduleFollowUp, type WorkingTime } from "@/lib/follow-up-schedule";
 import { isGroupFollowUpTask, isTaskForMe } from "@/lib/group-follow-ups";
 
 /**
@@ -152,7 +147,7 @@ export function dueTaskReminders(
 ): TaskReminder[] {
   const reminders: TaskReminder[] = [];
   for (const task of tasks) {
-    if (!isOpenFollowUp(task) || !isReminderWindowTask(task, scope)) continue;
+    if (!isOpenTask(task) || !isReminderWindowTask(task, scope)) continue;
     const alertIds: string[] = [];
     let fireTimeMs = -Infinity;
     for (const [alertId, alert] of Object.entries(task.alerts ?? {})) {
@@ -372,4 +367,23 @@ export function snoozeTimes(
     if (wall) times.push({ choice, at: fromDisplay(wall) });
   }
   return times;
+}
+
+/**
+ * The patch that completes a task an answer settled: completed as Mark
+ * Complete does (`completedTaskPatch`), the answer's time kept in the watch,
+ * and `note` ("Answer received on …", in the user's language) added as a line
+ * of its own below the task's note, which stays as it was. An HTML note is
+ * left alone (it belongs to the client that wrote it).
+ */
+export function answeredTaskPatch(task: CalendarTask, watch: ReplyWatch, answeredAt: string, note: string, now: Date): TaskPatch {
+  const patch: TaskPatch = {
+    ...completedTaskPatch(task, now),
+    [replyWatchPath(watch.key, "answeredAt") as `relatedTo/${string}`]: answeredAt,
+  };
+  if (!isHtmlNote(task) && note.trim()) {
+    const before = (task.description ?? "").trimEnd();
+    patch.description = before ? `${before}\n${note.trim()}` : note.trim();
+  }
+  return patch;
 }

@@ -37,18 +37,16 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 import { displayNow, fromDisplayDate, toDisplayDate } from "@/lib/timezone";
 import {
-  FOLLOW_UP_CHOICES,
-  dueDistance,
   followUpAction,
   followUpActionKey,
   followUpNote,
   followUpDueDay,
   followUpReminder,
   followUpState,
-  scheduleFollowUp,
-  settlesOnReply,
   type FollowUpState,
 } from "@/lib/follow-ups";
+import { settlesOnReply } from "@/lib/follow-up-replies";
+import { dueDistance, FOLLOW_UP_CHOICES, scheduleFollowUp } from "@/lib/follow-up-schedule";
 import type { CalendarTask, Email } from "@/lib/jmap/types";
 
 const DAY_FORMAT = { weekday: "short", day: "2-digit", month: "2-digit" } as const;
