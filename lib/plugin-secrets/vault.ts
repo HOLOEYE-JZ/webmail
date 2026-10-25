@@ -20,6 +20,8 @@ export interface StoredCredential {
   label: string;
   username?: string;
   secret?: string;
+  /** The server made `secret` as this app password on the user's mail server. */
+  appPasswordId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -132,7 +134,7 @@ export function putUserCredential(
   user: VaultUser,
   pluginId: string,
   credentialId: string,
-  input: { origin: string; inject: CredentialInject; label: string; username?: string; secret?: string },
+  input: { origin: string; inject: CredentialInject; label: string; username?: string; secret?: string; appPasswordId?: string },
 ): Promise<void> {
   return serialize(user, async () => {
     const data = await load(user);
@@ -149,6 +151,7 @@ export function putUserCredential(
         label: input.label,
         ...(input.username ? { username: input.username } : {}),
         ...((input.secret ?? keepSecret) ? { secret: input.secret ?? keepSecret } : {}),
+        ...(input.appPasswordId ? { appPasswordId: input.appPasswordId } : {}),
         createdAt: existing?.createdAt ?? now,
         updatedAt: now,
       },
@@ -168,7 +171,8 @@ export function setUserCredentialSecret(
   return serialize(user, async () => {
     const data = await load(user);
     const existing = data[pluginId]?.[credentialId];
-    if (!existing) return false;
+    // An app password the server made stays the one it made: it revokes that one.
+    if (!existing || existing.appPasswordId) return false;
     data[pluginId][credentialId] = {
       ...existing,
       secret,
@@ -180,17 +184,26 @@ export function setUserCredentialSecret(
   });
 }
 
-/** Remove one credential, or all of a plugin's when credentialId is omitted. */
-export function deleteUserCredentials(user: VaultUser, pluginId: string, credentialId?: string): Promise<void> {
+/**
+ * Remove one credential, or all of a plugin's when credentialId is omitted.
+ * Returns what was removed, so the caller can revoke what the server made.
+ */
+export function deleteUserCredentials(user: VaultUser, pluginId: string, credentialId?: string): Promise<StoredCredential[]> {
   return serialize(user, async () => {
     const data = await load(user);
-    if (!data[pluginId]) return;
+    if (!data[pluginId]) return [];
+    let removed: StoredCredential[];
     if (credentialId) {
+      const one = data[pluginId][credentialId];
+      if (!one) return [];
+      removed = [one];
       delete data[pluginId][credentialId];
       if (Object.keys(data[pluginId]).length === 0) delete data[pluginId];
     } else {
+      removed = Object.values(data[pluginId]);
       delete data[pluginId];
     }
     await save(user, data);
+    return removed;
   });
 }
