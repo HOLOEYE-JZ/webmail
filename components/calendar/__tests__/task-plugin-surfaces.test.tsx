@@ -2,7 +2,7 @@ import { render, screen, fireEvent, act, cleanup } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { TaskModal } from '../task-modal';
 import { TaskToolbar } from '../task-toolbar';
-import { taskList } from '@/lib/task-list';
+import { filterTasksForList } from '../task-list-view';
 import { resetActions, setActionDispatcher, setPluginActions } from '@/lib/plugin-sandbox/actions';
 import { clearSlotOffers, framePropsOf, offerSlots } from '@/components/plugins/__tests__/fake-slot-offer';
 import type { Calendar, CalendarTask } from '@/lib/jmap/types';
@@ -104,11 +104,7 @@ describe('task-list-actions', () => {
       makeTask('other-cal', { calendarIds: { 'cal-2': true } }),
       makeTask('soon', { due: '2030-01-01' }),
     ];
-    const listed = (showCompleted: boolean) => taskList({
-      tasks, scope: 'all', filter: 'all', showCompleted, now: new Date(2029, 11, 1),
-      mine: new Set(), groupLists: [], selectedCalendarIds: ['cal-1'],
-    }).flatMap((section) => section.tasks.map((t) => t.id));
-    expect(listed(false)).toEqual(['soon', 'later']);
-    expect(listed(true)).toEqual(['soon', 'later', 'done']);
+    expect(filterTasksForList(tasks, ['cal-1'], 'all', false).map((t) => t.id)).toEqual(['soon', 'later']);
+    expect(filterTasksForList(tasks, ['cal-1'], 'all', true).map((t) => t.id)).toEqual(['soon', 'later', 'done']);
   });
 });
