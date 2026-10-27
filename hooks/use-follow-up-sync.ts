@@ -144,11 +144,13 @@ export async function locateFollowUpMail(client: IJMAPClient, task: CalendarTask
 
 /**
  * Where the mail of a task shown in the task dialog is; null for a task
- * without one, or whose mail lies in an account the login does not reach.
+ * without one, or whose mail lies in an account the login does not reach,
+ * and while follow-ups are off.
  */
 export function useFollowUpMail(task: CalendarTask | null | undefined): FollowUpMailState | null {
   const client = useAuthStore((s) => s.client);
-  const ref = task && !task.isShared ? followUpMailRef(task) : null;
+  const enabled = useFollowUpsEnabled();
+  const ref = enabled && task && !task.isShared ? followUpMailRef(task) : null;
   // The user's own mail, or a group mailbox's the login reaches.
   const ownMail = !!ref && reachesMailAccount(client, ref.accountId);
   const [state, setState] = useState<{ taskId: string; mail: FollowUpMailState } | null>(null);

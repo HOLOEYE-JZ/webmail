@@ -1268,6 +1268,10 @@
         "open_label": "Pro-Oberfläche öffnen",
         "back_to_standard": "Zurück zum Standard"
       },
+      "follow_ups_experimental": {
+        "label": "Nachverfolgung (experimentell)",
+        "description": "Mails zur Nachverfolgung kennzeichnen, mit Fälligkeit und Erinnerung, als Aufgaben in Ihrem Kalender. Benötigt Kalenderaufgaben. Aus: nichts davon wird angezeigt und keine Nachverfolgung geschrieben."
+      },
       "cross_unread": {
         "label": "Alle Konten: Ungelesen",
         "description": "Zeigt in der Sektion „All accounts“ einen Eintrag mit ungelesenen Mails über alle Konten und Ordner außer Junk, Gesendet, Archiv, Papierkorb und Entwürfe."

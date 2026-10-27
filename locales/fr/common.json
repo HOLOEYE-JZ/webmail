@@ -1268,6 +1268,10 @@
         "open_label": "Ouvrir l'interface Pro",
         "back_to_standard": "Retour au standard"
       },
+      "follow_ups_experimental": {
+        "label": "Suivi (expérimental)",
+        "description": "Marquez des e-mails pour suivi avec une échéance et un rappel, enregistrés comme tâches dans votre calendrier. Nécessite les tâches du calendrier. Désactivé, rien ne s'affiche et aucun suivi n'est écrit."
+      },
       "cross_unread": {
         "label": "Tous les comptes : Non lus",
         "description": "Affiche une entrée dans la section Tous les comptes répertoriant les messages non lus de tous les comptes, couvrant tous les dossiers sauf indésirables, envoyés, archives, corbeille et brouillons."

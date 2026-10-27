@@ -88,6 +88,7 @@ import {
   archiveActionSearchPaths,
 } from '@/lib/settings-search';
 import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
+import { useFollowUpsEnabled } from '@/hooks/use-follow-ups';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
@@ -331,7 +332,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // Admin-pinned apps are searchable too - users can't add them, but they're listed.
   const sidebarAppsList = useResolvedSidebarApps();
   const proInterface = useSettingsStore((s) => s.proInterface);
-  const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
+  const followUpsEnabled = useFollowUpsEnabled();
 
   // When set, the settings panel is scoped to a shared/group account: a reduced
   // tab list and a "Managing: <name>" header. null = the user's own account.
@@ -647,7 +648,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     { id: 'reading', label: t('tabs.reading'), icon: tabIcons.reading, group: 'mail' },
     { id: 'composing', label: t('tabs.composing'), icon: tabIcons.composing, group: 'mail' },
     // Follow-ups are tasks: shown while the user keeps tasks on a calendar server.
-    ...(supportsCalendar && enableCalendarTasks ? [{ id: 'follow_ups' as Tab, label: t('tabs.follow_ups'), icon: tabIcons.follow_ups, group: 'mail' as TabGroup }] : []),
+    ...(followUpsEnabled ? [{ id: 'follow_ups' as Tab, label: t('tabs.follow_ups'), icon: tabIcons.follow_ups, group: 'mail' as TabGroup }] : []),
     { id: 'organize', label: isFeatureEnabled('customKeywordsEnabled') ? t('tabs.organize') : t('tabs.folders'), icon: tabIcons.organize, group: 'mail' },
     ...(supportsSieve ? [{ id: 'filters' as Tab, label: t('tabs.filters'), icon: tabIcons.filters, group: 'mail' as TabGroup }] : []),
     ...(supportsVacation ? [{ id: 'vacation' as Tab, label: t('tabs.vacation'), icon: tabIcons.vacation, group: 'mail' as TabGroup }] : []),

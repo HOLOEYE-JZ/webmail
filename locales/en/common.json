@@ -1271,6 +1271,10 @@
         "open_label": "Open Pro Interface",
         "back_to_standard": "Back to standard"
       },
+      "follow_ups_experimental": {
+        "label": "Follow-ups (Experimental)",
+        "description": "Flag mail for follow-up with a due day and a reminder, kept as tasks in your calendar. Needs calendar tasks. Off, nothing of it shows and no follow-up is written."
+      },
       "cross_unread": {
         "label": "Unread",
         "description": "Show an Unread entry in the Unified Mailbox listing unread mail across the selected folders."

@@ -27,6 +27,7 @@ export function seedDemoPreferences(): void {
   const settings = useSettingsStore.getState();
   settings.updateSetting('emailKeywords', DEMO_KEYWORDS);
   settings.updateSetting('enableCalendarTasks', true);
+  settings.updateSetting('enableFollowUps', true);
   settings.updateSetting('enableUnifiedMailbox', true);
   settings.updateSetting('unifiedCrossAccount', true);
   settings.updateSetting('includeGroupInUnified', true);

@@ -10,6 +10,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { hiddenSharedMailIds, setSharedMailAccountHidden } from '@/lib/shared-mail-visibility';
+import { IS_LITE } from '@/lib/lite';
 
 const MAIL_LAYOUT_PREVIEW_ROWS = [
   { sender: 'Alice', subject: 'Quarterly roadmap', preview: 'The draft is ready for review.', selected: false },
@@ -451,10 +452,13 @@ export function MultipleAccountsSection() {
   );
 }
 
-/** Experimental: the Pro interface. Advanced, since it swaps the whole shell. */
+/**
+ * Experimental: the Pro interface, advanced since it swaps the whole shell;
+ * follow-ups (hooks/use-follow-ups.ts), not in Lite.
+ */
 export function ExperimentalSection() {
   const t = useTranslations('settings.appearance');
-  const { proInterface, updateSetting } = useSettingsStore();
+  const { proInterface, enableFollowUps, updateSetting } = useSettingsStore();
   return (
     <SettingsSection id="experimental" title={t('sections.experimental')} advanced>
       <SettingItem label={t('pro_interface.label')} description={t('pro_interface.description')} advanced>
@@ -464,6 +468,15 @@ export function ExperimentalSection() {
           testId="setting-pro-interface"
         />
       </SettingItem>
+      {!IS_LITE && (
+        <SettingItem label={t('follow_ups_experimental.label')} description={t('follow_ups_experimental.description')} advanced>
+          <ToggleSwitch
+            checked={enableFollowUps}
+            onChange={(v) => updateSetting('enableFollowUps', v)}
+            testId="setting-follow-ups"
+          />
+        </SettingItem>
+      )}
     </SettingsSection>
   );
 }

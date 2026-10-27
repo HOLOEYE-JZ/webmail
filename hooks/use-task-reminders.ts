@@ -12,6 +12,7 @@ import { useTaskStore } from "@/stores/task-store";
 import { useProTabStore } from "@/stores/pro-tab-store";
 import { useToastStore } from "@/stores/toast-store";
 import { playNotificationSound } from "@/lib/notification-sound";
+import { IS_LITE } from "@/lib/lite";
 import { groupMailAccountOf } from "@/lib/deep-links";
 import { followMessageLink } from "@/lib/deep-link-handoff";
 import { dueTaskReminders, type TaskReminder } from "@/lib/task-reminders";
@@ -109,13 +110,18 @@ export function openReminderMail(
   fallback.navigate(followMessageLink(emailId, mailAccountId));
 }
 
-/** Whether reminders are shown at all: calendar notifications and tasks on, signed in. */
+/**
+ * Whether the reminders window shows at all: follow-ups (it comes with them)
+ * and calendar notifications and tasks on, signed in. Else tasks' reminders
+ * are toasts (useCalendarAlerts).
+ */
 function useRemindersEnabled(): boolean {
   const notifications = useSettingsStore((s) => s.calendarNotificationsEnabled);
+  const followUpsOn = useSettingsStore((s) => s.enableFollowUps) && !IS_LITE;
   const tasksOn = useSettingsStore((s) => s.enableCalendarTasks);
   const supportsCalendar = useCalendarStore((s) => s.supportsCalendar);
   const signedIn = useAuthStore((s) => s.isAuthenticated);
-  return notifications && tasksOn && supportsCalendar && signedIn;
+  return notifications && followUpsOn && tasksOn && supportsCalendar && signedIn;
 }
 
 const NO_REMINDERS: TaskReminder[] = [];

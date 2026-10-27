@@ -1268,6 +1268,10 @@
         "open_label": "Abrir interfaz Pro",
         "back_to_standard": "Volver al estándar"
       },
+      "follow_ups_experimental": {
+        "label": "Seguimiento (experimental)",
+        "description": "Marca correos para seguimiento con fecha de vencimiento y recordatorio, guardados como tareas en tu calendario. Requiere las tareas del calendario. Desactivado, no se muestra nada ni se escribe ningún seguimiento."
+      },
       "cross_unread": {
         "label": "Todas las cuentas: No leído",
         "description": "Muestra una entrada en la sección Todas las cuentas con el correo no leído de todas las cuentas, abarcando todas las carpetas excepto spam, enviados, archivo, papelera y borradores."

@@ -1271,6 +1271,10 @@
         "open_label": "Pro felület megnyitása",
         "back_to_standard": "Vissza a szabványoshoz"
       },
+      "follow_ups_experimental": {
+        "label": "Nyomon követés (Kísérleti)",
+        "description": "Jelölje meg a leveleket nyomon követésre határidővel és emlékeztetővel, feladatként a naptárában. Naptárfeladatok szükségesek. Kikapcsolva semmi sem jelenik meg belőle, és nem íródik nyomon követés."
+      },
       "cross_unread": {
         "label": "Összes fiók: Olvasatlan",
         "description": "Megjelenít egy bejegyzést az Összes fiók szakaszban, amely az összes fiók olvasatlan leveleit listázza, a levélszemét, elküldött, archívum, kuka és piszkozatok mappák kivételével minden mappára kiterjedően."

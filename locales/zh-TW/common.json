@@ -1271,6 +1271,10 @@
         "open_label": "開啟 Pro 介面",
         "back_to_standard": "返回標準介面"
       },
+      "follow_ups_experimental": {
+        "label": "待處理（實驗性）",
+        "description": "為郵件設定含到期日與提醒的待處理標記，並以工作形式存放在行事曆中。需要啟用行事曆工作。關閉時不會顯示任何相關內容，也不會寫入待處理項目。"
+      },
       "cross_unread": {
         "label": "未讀",
         "description": "在整合信箱顯示「未讀」項目，列出所選信件匣中的未讀郵件。"

@@ -574,6 +574,11 @@ interface SettingsState {
   showTasksOnCalendar: boolean;
 
   // Follow-ups
+  /**
+   * Experimental: follow-up flags backed by tasks. Off, nothing of them shows
+   * and no follow-up task or flag is written (hooks/use-follow-ups.ts).
+   */
+  enableFollowUps: boolean;
   /** The follow-up dialog's action menu: own actions, order, which are shown (lib/follow-up-menu.ts). */
   followUpMenu: FollowUpMenuSetting;
   /** The ref of the action a new follow-up starts with. */
@@ -883,6 +888,7 @@ const DEFAULT_SETTINGS = {
   showTasksOnCalendar: true,
 
   // Follow-ups
+  enableFollowUps: false,
   followUpMenu: EMPTY_FOLLOW_UP_MENU,
   followUpDefaultAction: DEFAULT_FOLLOW_UP_ACTION,
   followUpMailReminder: false,
@@ -1243,6 +1249,7 @@ export const useSettingsStore = create<SettingsState>()(
           calendarInvitationParsingEnabled: state.calendarInvitationParsingEnabled,
           enableCalendarTasks: state.enableCalendarTasks,
           showTasksOnCalendar: state.showTasksOnCalendar,
+          enableFollowUps: state.enableFollowUps,
           followUpMenu: state.followUpMenu,
           followUpDefaultAction: state.followUpDefaultAction,
           followUpMailReminder: state.followUpMailReminder,

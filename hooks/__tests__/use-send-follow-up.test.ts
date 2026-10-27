@@ -81,7 +81,7 @@ beforeEach(() => {
   useToastStore.setState({ toasts: [] });
   client = makeClient();
   useAuthStore.setState({ isAuthenticated: true, client: asClient(), activeAccountId: 'login', username: 'me@example.com', identities: [] });
-  useSettingsStore.setState({ enableCalendarTasks: true });
+  useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true });
   useCalendarStore.setState({ supportsCalendar: true, calendars, participantIdentities: [] });
   useTaskStore.setState({ tasks: [] });
   useEmailStore.setState({ emails: [], selectedEmail: null });
@@ -187,13 +187,16 @@ describe('followUpSentMail', () => {
 describe('useSendFollowUp', () => {
   const result = { scheduled: false, emailId: 'S1', emailSubmissionId: 'sub', emailAccountId: 'acc', messageId: 'abc@example.com' };
 
-  it('nothing without a choice, with tasks off, or for another login\'s mail', () => {
+  it('nothing without a choice, with tasks or follow-ups off, or for another login\'s mail', () => {
     const { result: hook } = renderHook(() => useSendFollowUp());
     expect(hook.current(result, {})).toBeUndefined();
     expect(hook.current(result, { followUp: { choice: 'week' }, localAccountId: 'other-login' })).toBeUndefined();
     act(() => useSettingsStore.setState({ enableCalendarTasks: false }));
     const off = renderHook(() => useSendFollowUp());
     expect(off.result.current(result, { followUp: { choice: 'week' } })).toBeUndefined();
+    act(() => useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: false }));
+    const switchedOff = renderHook(() => useSendFollowUp());
+    expect(switchedOff.result.current(result, { followUp: { choice: 'week' } })).toBeUndefined();
   });
 
   it('writes when it runs, and keeps the choice of a send that can be taken back', async () => {

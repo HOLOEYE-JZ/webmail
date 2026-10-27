@@ -17,6 +17,7 @@ import { isFilterEmpty } from "@/lib/jmap/search-utils";
 import { isAllFoldersSearchScope } from "@/lib/search-scope-folders";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { debug } from "@/lib/debug";
+import { IS_LITE } from "@/lib/lite";
 import { normalizeAction } from "@/lib/follow-up-actions";
 import { perStoreEpoch } from "@/lib/store-epoch";
 import { completedTaskPatch, type TaskPatch } from "@/lib/task-reminders";
@@ -45,11 +46,15 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { updateAnyTask, useGroupFollowUpIndex, useGroupTaskList } from "./use-group-follow-ups";
 import type { GroupTaskList } from "@/lib/group-follow-ups";
 
-/** Whether the user can keep follow-ups at all: tasks on, a calendar server. */
+/**
+ * Whether the user keeps follow-ups at all: the experimental switch and tasks
+ * on, a calendar server, not Lite. Off, nothing of them shows or is written.
+ */
 export function useFollowUpsEnabled(): boolean {
+  const switchedOn = useSettingsStore((s) => s.enableFollowUps);
   const tasksOn = useSettingsStore((s) => s.enableCalendarTasks);
   const supportsCalendar = useCalendarStore((s) => s.supportsCalendar);
-  return tasksOn && supportsCalendar;
+  return !IS_LITE && switchedOn && tasksOn && supportsCalendar;
 }
 
 /**

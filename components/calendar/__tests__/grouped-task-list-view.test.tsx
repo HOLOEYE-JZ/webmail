@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TaskListView } from '../task-list-view';
+import { GroupedTaskListView } from '../grouped-task-list-view';
 import { TaskToolbar } from '../task-toolbar';
 import { useTaskList } from '@/hooks/use-task-list';
 import { useFollowUpDialog } from '@/stores/follow-up-dialog-store';
@@ -122,7 +122,7 @@ function Harness() {
         onScopeChange={useTaskStore.getState().setListScope}
         groupLists={list.groupLists.map((l) => ({ accountId: l.accountId, name: l.name }))}
       />
-      <TaskListView sections={list.sections} calendars={[...ownCalendars, groupCalendar]} onSelectTask={onSelectTask} />
+      <GroupedTaskListView sections={list.sections} calendars={[...ownCalendars, groupCalendar]} onSelectTask={onSelectTask} />
     </>
   );
 }
@@ -140,7 +140,7 @@ beforeEach(() => {
     isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login',
     username: 'me@example.com', identities: [{ id: 'i', name: 'Mia', email: 'me@example.com', mayDelete: false }],
   });
-  useSettingsStore.setState({ enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1, timeFormat: '24h' });
+  useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1, timeFormat: '24h' });
   useCalendarStore.setState({ supportsCalendar: true, calendars: [...ownCalendars, groupCalendar], participantIdentities: [] });
   usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: [] } });
   useEmailStore.setState({ emails: [], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null });

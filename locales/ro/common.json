@@ -1271,6 +1271,10 @@
         "open_label": "Interfața Open Pro",
         "back_to_standard": "Înapoi la standard"
       },
+      "follow_ups_experimental": {
+        "label": "Urmărire (experimentală)",
+        "description": "Marcați e-mailurile pentru urmărire cu termen și memento, păstrate ca sarcini în calendar. Necesită sarcinile calendarului. Dezactivat, nu se afișează nimic și nu se scrie nicio urmărire."
+      },
       "cross_unread": {
         "label": "Toate conturile: Necitite",
         "description": "Afișează în secțiunea Toate conturile o intrare cu poșta necitită din toate conturile, în toate folderele cu excepția spam, trimise, arhivă, coș și ciorne."

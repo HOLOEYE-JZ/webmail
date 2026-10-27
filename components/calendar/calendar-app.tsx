@@ -25,7 +25,8 @@ import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
 import { CalendarWeekView } from "@/components/calendar/calendar-week-view";
 import { CalendarDayView } from "@/components/calendar/calendar-day-view";
 import { CalendarAgendaView } from "@/components/calendar/calendar-agenda-view";
-import { TaskListView } from "@/components/calendar/task-list-view";
+import { TaskListView, filterTasksForList } from "@/components/calendar/task-list-view";
+import { GroupedTaskListView } from "@/components/calendar/grouped-task-list-view";
 import { CalendarLoadErrorNotice } from "@/components/calendar/calendar-load-error-notice";
 import { TaskToolbar } from "@/components/calendar/task-toolbar";
 import { TaskModal } from "@/components/calendar/task-modal";
@@ -1420,10 +1421,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     return filtered;
   }, [events, selectedCalendarIds, showBirthdayCalendar, birthdayEvents]);
 
-  // The task list, grouped by due day; plugin buttons in its toolbar act on the tasks it shows.
+  // With follow-ups on, the task list is grouped by due day (useTaskList).
   const taskList = useTaskList(selectedCalendarIds);
   const followUpsEnabled = useFollowUpsEnabled();
-  const listedTaskIds = taskList.ids;
+  // The tasks the task list shows; plugin buttons in its toolbar act on them.
+  const plainListedTaskIds = useMemo(
+    () => filterTasksForList(taskStore.tasks, selectedCalendarIds, taskStore.filter, taskStore.showCompleted).map((task) => task.id),
+    [taskStore.tasks, selectedCalendarIds, taskStore.filter, taskStore.showCompleted],
+  );
+  const listedTaskIds = followUpsEnabled ? taskList.ids : plainListedTaskIds;
   const taskScopeLists = useMemo(
     () => taskList.groupLists.map((l) => ({ accountId: l.accountId, name: l.name })),
     [taskList.groupLists],
@@ -1629,17 +1635,35 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 onScopeChange={taskStore.setListScope}
                 groupLists={taskScopeLists}
               />
-              <TaskListView
-                sections={taskList.sections}
-                calendars={displayCalendars}
-                onSelectTask={openEditTaskModal}
-                selectedTaskId={taskStore.selectedTaskId}
-                onQuickCreate={(title) => {
-                  if (client) {
-                    taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [calendars[0]?.id ?? ""]: true } });
-                  }
-                }}
-              />
+              {followUpsEnabled ? (
+                <GroupedTaskListView
+                  sections={taskList.sections}
+                  calendars={displayCalendars}
+                  onSelectTask={openEditTaskModal}
+                  selectedTaskId={taskStore.selectedTaskId}
+                  onQuickCreate={(title) => {
+                    if (client) {
+                      taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [calendars[0]?.id ?? ""]: true } });
+                    }
+                  }}
+                />
+              ) : (
+                <TaskListView
+                  tasks={taskStore.tasks}
+                  calendars={displayCalendars}
+                  selectedCalendarIds={selectedCalendarIds}
+                  filter={taskStore.filter}
+                  showCompleted={taskStore.showCompleted}
+                  onSelectTask={openEditTaskModal}
+                  onToggleComplete={handleToggleTaskComplete}
+                  selectedTaskId={taskStore.selectedTaskId}
+                  onQuickCreate={(title) => {
+                    if (client) {
+                      taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [calendars[0]?.id ?? ""]: true } });
+                    }
+                  }}
+                />
+              )}
             </div>
           );
       }

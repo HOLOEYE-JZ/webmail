@@ -102,7 +102,7 @@ vi.mock('@/stores/settings-store', () => {
     signatureSeparatorEnabled: true,
     requestReadReceiptDefault: false,
     // With follow-ups on, the composer offers "Follow up".
-    enableCalendarTasks: true,
+    enableCalendarTasks: true, enableFollowUps: true,
     calendarWorkingDays: [1, 2, 3, 4, 5],
     firstDayOfWeek: 1,
     addTrustedSender: () => {},

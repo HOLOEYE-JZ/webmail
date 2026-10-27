@@ -1268,6 +1268,10 @@
         "open_label": "Pro Arayüzü Aç",
         "back_to_standard": "Standarda dön"
       },
+      "follow_ups_experimental": {
+        "label": "Takip et (Deneysel)",
+        "description": "E-postaları son tarih ve hatırlatıcıyla takip için işaretleyin; takviminizde görev olarak saklanır. Takvim görevleri gerekir. Kapalıyken hiçbiri görünmez ve takip yazılmaz."
+      },
       "cross_unread": {
         "label": "Tüm hesaplar: Okunmamış",
         "description": "Tüm hesaplar bölümünde, tüm hesaplardaki okunmamış postaları listeleyen bir giriş gösterir; önemsiz, gönderilmiş, arşiv, çöp ve taslaklar dışındaki tüm klasörleri kapsar."

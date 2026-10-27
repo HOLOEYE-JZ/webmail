@@ -1271,6 +1271,10 @@
         "open_label": "Ava Pro liides",
         "back_to_standard": "Tagasi standardliidesesse"
       },
+      "follow_ups_experimental": {
+        "label": "Järelkontroll (eksperimentaalne)",
+        "description": "Märgi kirjad järelkontrolliks tähtaja ja meeldetuletusega, salvestatuna ülesannetena sinu kalendris. Vajab kalendriülesandeid. Välja lülitatuna ei näidata midagi ega kirjutata ühtegi järelkontrolli."
+      },
       "cross_unread": {
         "label": "Lugemata",
         "description": "Kuva ühendatud postkastis kirje Lugemata, mis loetleb valitud kaustade lugemata kirjad."

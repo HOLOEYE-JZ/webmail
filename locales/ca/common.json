@@ -1271,6 +1271,10 @@
         "open_label": "Obre la interfície Pro",
         "back_to_standard": "Torna a l'estàndard"
       },
+      "follow_ups_experimental": {
+        "label": "Seguiment (experimental)",
+        "description": "Marca correus per fer-ne el seguiment amb una data de venciment i un recordatori, desats com a tasques al calendari. Cal tenir les tasques del calendari activades. Desactivat, no se'n mostra res ni s'escriu cap seguiment."
+      },
       "cross_unread": {
         "label": "No llegits",
         "description": "Mostra una entrada de No llegits a la bústia unificada amb el correu no llegit de les carpetes seleccionades."

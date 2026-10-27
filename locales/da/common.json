@@ -1271,6 +1271,10 @@
         "open_label": "Åbn Pro-grænsefladen",
         "back_to_standard": "Tilbage til standard"
       },
+      "follow_ups_experimental": {
+        "label": "Opfølgning (eksperimentel)",
+        "description": "Markér mails til opfølgning med en forfaldsdag og en påmindelse, gemt som opgaver i din kalender. Kræver kalenderopgaver. Slået fra vises intet af det, og der skrives ingen opfølgning."
+      },
       "cross_unread": {
         "label": "Alle konti: Ulæste",
         "description": "Viser en post i sektionen Alle konti med ulæst post fra alle konti, på tværs af alle mapper undtagen spam, sendt, arkiv, papirkurv og kladder."

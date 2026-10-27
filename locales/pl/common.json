@@ -1268,6 +1268,10 @@
         "open_label": "Otwórz interfejs Pro",
         "back_to_standard": "Powrót do standardu"
       },
+      "follow_ups_experimental": {
+        "label": "Monituj (eksperymentalny)",
+        "description": "Oznaczaj wiadomości do monitowania z terminem i przypomnieniem, zapisywane jako zadania w kalendarzu. Wymaga zadań kalendarza. Po wyłączeniu nic z tego nie jest wyświetlane ani zapisywane."
+      },
       "cross_unread": {
         "label": "Wszystkie konta: Nieprzeczytane",
         "description": "Pokazuje pozycję w sekcji Wszystkie konta z nieprzeczytaną pocztą ze wszystkich kont, obejmującą wszystkie foldery oprócz spamu, wysłanych, archiwum, kosza i roboczych."

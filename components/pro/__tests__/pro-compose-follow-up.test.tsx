@@ -78,7 +78,7 @@ beforeEach(() => {
   resetSentFollowUps();
   client = makeClient();
   useAuthStore.setState({ isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login', username: 'me@example.com', identities: [] });
-  useSettingsStore.setState({ enableCalendarTasks: true, calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
+  useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true, calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
   useCalendarStore.setState({ supportsCalendar: true, calendars });
   useTaskStore.setState({ tasks: [] });
   useGroupTasks.setState({ lists: [], tasks: [] });

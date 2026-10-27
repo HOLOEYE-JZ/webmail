@@ -1271,6 +1271,10 @@
         "open_label": "Otvoriť Pro rozhranie",
         "back_to_standard": "Späť na štandardné"
       },
+      "follow_ups_experimental": {
+        "label": "Spracovať (experimentálne)",
+        "description": "Označte e-maily na spracovanie s termínom a pripomenutím, uložené ako úlohy v kalendári. Vyžaduje úlohy kalendára. Vypnuté: nič z toho sa nezobrazí a nič sa nezapíše."
+      },
       "cross_unread": {
         "label": "Všetky účty: Neprečítané",
         "description": "Zobraziť položku v sekcii Všetky účty so zoznamom neprečítanej pošty zo všetkých účtov."

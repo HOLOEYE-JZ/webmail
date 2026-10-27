@@ -1,33 +1,23 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
-import { format, isSameDay, startOfDay } from "date-fns";
-import { toDisplayDate } from "@/lib/timezone";
-import { Bell, Check, Flag, ListTodo, Mail, Plus, Repeat, Users } from "@/components/icons";
+import { format, parseISO, isBefore, isTomorrow } from "date-fns";
+import { displayNow, isDisplayToday } from "@/lib/timezone";
+import { Check, Flag, CalendarDays, ListTodo, Plus } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { CalendarTask, Calendar } from "@/lib/jmap/types";
-import { useAuthStore } from "@/stores/auth-store";
+import type { TaskViewFilter } from "@/stores/task-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useRouter } from "@/i18n/navigation";
-import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
-import { useFollowUpFormat, useGroupPeopleText } from "@/components/email/follow-up";
-import { useDisplayNow } from "@/hooks/use-clock";
-import { groupListOfTask, useMyAddresses } from "@/hooks/use-group-follow-ups";
-import { useGroupTasks } from "@/stores/group-task-store";
-import { openReminderMail } from "@/hooks/use-task-reminders";
-import { openListedTask, opensMail, toggleListedTask } from "@/hooks/use-task-list";
-import { followUpMailRef, followUpMailSummary, followUpNote, followUpReminder } from "@/lib/follow-ups";
-import { isRecurringTask } from "@/lib/calendar-tasks";
-import { isTaskForMe } from "@/lib/group-follow-ups";
-import { taskListDue, type TaskListGroup, type TaskListSection } from "@/lib/task-list";
 
 interface TaskListViewProps {
-  /** The list's sections (hooks/use-task-list.ts), in order. */
-  sections: TaskListSection[];
+  tasks: CalendarTask[];
   calendars: Calendar[];
-  /** Opens a task in the task editor. */
+  selectedCalendarIds: string[];
+  filter: TaskViewFilter;
+  showCompleted: boolean;
   onSelectTask: (task: CalendarTask) => void;
+  onToggleComplete: (task: CalendarTask) => void;
   selectedTaskId?: string | null;
   onQuickCreate?: (title: string) => void;
 }
@@ -39,59 +29,141 @@ function getTaskPriorityIcon(priority: number) {
   return null;
 }
 
-const GROUP_KEYS: Record<TaskListGroup, string> = {
-  overdue: "overdue",
-  today: "today",
-  tomorrow: "tomorrow",
-  "this-week": "this_week",
-  later: "later",
-  "no-date": "no_date",
-  done: "done",
-};
+function getDueDateLabel(due: string, showWithoutTime: boolean, t: ReturnType<typeof useTranslations>, timeFormat: string): { label: string; className: string } {
+  const dueDate = parseISO(due);
+  const overdue = isBefore(dueDate, displayNow()) && !isDisplayToday(dueDate);
 
-/**
- * The task list, grouped by when a task is due: overdue, today, tomorrow,
- * this week, later, without a date, done (lib/task-list.ts). A follow-up on
- * a mail shows its sender and subject and opens the mail; a group mailbox's
- * task whom it is for; a reminder its time beside the due day.
- */
+  if (isDisplayToday(dueDate)) {
+    return {
+      label: t("tasks.due_today"),
+      className: "text-blue-600 dark:text-blue-400",
+    };
+  }
+  if (isTomorrow(dueDate)) {
+    return {
+      label: t("tasks.due_tomorrow"),
+      className: "text-muted-foreground",
+    };
+  }
+  if (overdue) {
+    return {
+      label: t("tasks.overdue"),
+      className: "text-red-600 dark:text-red-400",
+    };
+  }
+
+  const formatted = showWithoutTime
+    ? format(dueDate, "MMM d")
+    : format(dueDate, timeFormat === "12h" ? "MMM d, h:mm a" : "MMM d, HH:mm");
+
+  return {
+    label: formatted,
+    className: "text-muted-foreground",
+  };
+}
+
+/** The tasks the list shows, in its order: filtered by calendar and status. */
+export function filterTasksForList(
+  tasks: CalendarTask[],
+  selectedCalendarIds: string[],
+  filter: TaskViewFilter,
+  showCompleted: boolean,
+): CalendarTask[] {
+  let result = tasks.filter(task => {
+    const calIds = Object.keys(task.calendarIds);
+    return calIds.some(id => selectedCalendarIds.includes(id));
+  });
+
+  if (!showCompleted) {
+    result = result.filter(task => task.progress !== "completed" && task.progress !== "cancelled");
+  }
+
+  switch (filter) {
+    case "pending":
+      result = result.filter(task => task.progress === "needs-action" || task.progress === "in-process");
+      break;
+    case "completed":
+      result = result.filter(task => task.progress === "completed");
+      break;
+    case "overdue":
+      result = result.filter(task => {
+        if (!task.due || task.progress === "completed" || task.progress === "cancelled") return false;
+        return isBefore(parseISO(task.due), displayNow()) && !isDisplayToday(parseISO(task.due));
+      });
+      break;
+  }
+
+  // Sort: overdue first, then by due date (no due date last), then by priority
+  result.sort((a, b) => {
+    // Completed tasks at the bottom
+    if (a.progress === "completed" && b.progress !== "completed") return 1;
+    if (a.progress !== "completed" && b.progress === "completed") return -1;
+
+    // Tasks with due dates before those without
+    if (a.due && !b.due) return -1;
+    if (!a.due && b.due) return 1;
+    if (a.due && b.due) {
+      const dateCompare = new Date(a.due).getTime() - new Date(b.due).getTime();
+      if (dateCompare !== 0) return dateCompare;
+    }
+
+    // Higher priority first (lower number = higher priority, but 0 = no priority goes last)
+    const aPri = a.priority || 10;
+    const bPri = b.priority || 10;
+    return aPri - bPri;
+  });
+
+  return result;
+}
+
 export function TaskListView({
-  sections,
+  tasks,
   calendars,
+  selectedCalendarIds,
+  filter,
+  showCompleted,
   onSelectTask,
+  onToggleComplete,
   selectedTaskId,
   onQuickCreate,
 }: TaskListViewProps) {
   const t = useTranslations("calendar");
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
   const [quickAddTitle, setQuickAddTitle] = useState("");
-  // Whom a group's task is for: read once for all rows (the directory).
-  const people = useGroupPeopleText();
 
-  const quickAdd = onQuickCreate && (
-    <div className="px-4 py-2 border-b border-border">
-      <div className="flex items-center gap-2">
-        <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-        <input
-          type="text"
-          value={quickAddTitle}
-          onChange={(e) => setQuickAddTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && quickAddTitle.trim()) {
-              onQuickCreate(quickAddTitle.trim());
-              setQuickAddTitle("");
-            }
-          }}
-          placeholder={t("tasks.quick_add_placeholder")}
-          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-        />
-      </div>
-    </div>
+  const filteredTasks = useMemo(
+    () => filterTasksForList(tasks, selectedCalendarIds, filter, showCompleted),
+    [tasks, selectedCalendarIds, filter, showCompleted],
   );
 
-  if (sections.length === 0) {
+  const handleToggle = useCallback((e: React.MouseEvent, task: CalendarTask) => {
+    e.stopPropagation();
+    onToggleComplete(task);
+  }, [onToggleComplete]);
+
+  if (filteredTasks.length === 0) {
     return (
       <div className="flex flex-col flex-1">
-        {quickAdd}
+        {onQuickCreate && (
+          <div className="px-4 py-2 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <input
+                type="text"
+                value={quickAddTitle}
+                onChange={(e) => setQuickAddTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && quickAddTitle.trim()) {
+                    onQuickCreate(quickAddTitle.trim());
+                    setQuickAddTitle("");
+                  }
+                }}
+                placeholder={t("tasks.quick_add_placeholder")}
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
+        )}
         <div className="flex flex-col items-center justify-center flex-1 text-muted-foreground py-12">
           <ListTodo className="h-12 w-12 mb-3 opacity-30" />
           <p className="text-sm">{t("tasks.no_tasks")}</p>
@@ -102,183 +174,86 @@ export function TaskListView({
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {quickAdd}
-      {sections.map(({ group, tasks }) => (
-        <section key={group} data-testid={`task-group-${group}`} aria-labelledby={`task-group-heading-${group}`}>
-          <h3
-            id={`task-group-heading-${group}`}
-            className={cn(
-              "flex items-baseline gap-1.5 px-4 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider",
-              group === "overdue" ? "text-destructive" : "text-muted-foreground",
-            )}
-          >
-            <span>{t(`tasks.groups.${GROUP_KEYS[group]}`)}</span>
-            <span className="font-normal">{tasks.length}</span>
-          </h3>
-          <div className="divide-y divide-border">
-            {tasks.map((task) => (
-              <TaskListItem
-                key={task.id}
-                task={task}
-                group={group}
-                calendars={calendars}
-                selected={selectedTaskId === task.id}
-                onEdit={onSelectTask}
-                people={people}
-              />
-            ))}
+      {onQuickCreate && (
+        <div className="px-4 py-2 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <input
+              type="text"
+              value={quickAddTitle}
+              onChange={(e) => setQuickAddTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && quickAddTitle.trim()) {
+                  onQuickCreate(quickAddTitle.trim());
+                  setQuickAddTitle("");
+                }
+              }}
+              placeholder={t("tasks.quick_add_placeholder")}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
           </div>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-function TaskListItem({ task, group, calendars, selected, onEdit, people }: {
-  task: CalendarTask;
-  group: TaskListGroup;
-  calendars: Calendar[];
-  selected: boolean;
-  onEdit: (task: CalendarTask) => void;
-  people: ReturnType<typeof useGroupPeopleText>;
-}) {
-  const t = useTranslations("calendar");
-  const tFollowUp = useTranslations("follow_up");
-  const fmt = useFollowUpFormat();
-  const mine = useMyAddresses();
-  const client = useAuthStore((s) => s.client);
-  const router = useRouter();
-  const proShell = useProInterfaceActive();
-  const lists = useGroupTasks((s) => s.lists);
-  const now = useDisplayNow();
-  const timeFormat = useSettingsStore((s) => s.timeFormat);
-  const [busy, setBusy] = useState(false);
-
-  const cal = calendars.find((c) => task.calendarIds[c.id]);
-  const done = group === "done";
-  const groupList = task.isShared ? groupListOfTask(task, lists) : null;
-  const mail = opensMail(task) ? followUpMailRef(task) : null;
-  const summary = mail ? followUpMailSummary(task) : null;
-  const subject = summary?.subject || tFollowUp("no_subject");
-  const title = mail ? fmt.action(task) ?? tFollowUp("bar_action") : task.title?.trim() || t("tasks.no_title");
-  const sub = mail ? [summary?.sender, subject].filter(Boolean).join(" · ") : followUpNote(task);
-  // The due date-time (a repeating task's next one), a wall time as the task gives it.
-  const dueAt = done ? null : taskListDue(task, now);
-  const dueTime = dueAt && task.showWithoutTime === false ? format(dueAt, timeFormat === "12h" ? "h:mm a" : "HH:mm") : null;
-  const dueDay = group === "overdue"
-    ? fmt.due(task, now)
-    : dueAt && group !== "today" && group !== "tomorrow" ? fmt.day(startOfDay(dueAt)) : null;
-  const when = [dueDay, dueTime].filter(Boolean).join(", ") || null;
-  // A group task's reminder is its owner's alone.
-  const reminderAt = !done && (!task.isShared || isTaskForMe(task, mine)) ? followUpReminder(task) : null;
-  const reminder = reminderAt
-    ? (isSameDay(toDisplayDate(reminderAt), now) ? fmt.time(reminderAt) : fmt.reminder(reminderAt, now))
-    : null;
-  const who = groupList ? people(task) : null;
-
-  const open = useCallback(() => {
-    void openListedTask(client, task, {
-      edit: onEdit,
-      openMail: (emailId, mailAccountId) => openReminderMail(emailId, mailAccountId, {
-        proShell,
-        navigate: (path) => router.push(path as never),
-        title: subject,
-      }),
-      mailGone: tFollowUp("mail_gone"),
-    });
-  }, [client, task, onEdit, proShell, router, subject, tFollowUp]);
-
-  const toggle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!client || busy) return;
-    setBusy(true);
-    await toggleListedTask(client, task, { failed: tFollowUp("failed"), flagFailed: tFollowUp("flag_failed") });
-    setBusy(false);
-  };
-
-  return (
-    <div
-      data-testid="task-item"
-      data-task={task.id}
-      onClick={open}
-      title={mail ? tFollowUp("open_mail") : t("tasks.edit")}
-      className={cn(
-        "flex items-start gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors",
-        selected && "bg-muted",
+        </div>
       )}
-    >
-      {/* Checkbox */}
-      <button
-        type="button"
-        data-testid="task-toggle"
-        onClick={(e) => void toggle(e)}
-        disabled={busy}
-        className={cn(
-          "mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-          done
-            ? "bg-success border-success text-success-foreground"
-            : "border-muted-foreground/40 hover:border-primary"
-        )}
-        aria-label={done ? t("tasks.mark_incomplete") : t("tasks.mark_complete")}
-      >
-        {done && <Check className="h-3 w-3" />}
-      </button>
+      <div className="divide-y divide-border">
+        {filteredTasks.map(task => {
+          const cal = calendars.find(c => task.calendarIds[c.id]);
+          const isCompleted = task.progress === "completed";
+          const priorityIcon = getTaskPriorityIcon(task.priority);
+          const dueDateInfo = task.due ? getDueDateLabel(task.due, task.showWithoutTime, t, timeFormat) : null;
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span
-            data-testid="task-title"
-            className={cn("min-w-0 flex-1 text-sm font-medium truncate", done && "line-through text-muted-foreground")}
-          >
-            {title}
-          </span>
-          {getTaskPriorityIcon(task.priority)}
-          {who && groupList && (
-            <span
-              data-testid="task-group-person"
-              title={[tFollowUp("group.list_of", { group: groupList.name }), who.by && `${who.forWhom} ${who.by}`].filter(Boolean).join(" · ")}
-              className="inline-flex max-w-[10rem] shrink-0 items-center gap-1 truncate rounded-full bg-sky-500/10 px-2 py-0.5 text-xs text-sky-700 dark:text-sky-300"
+          return (
+            <div
+              key={task.id}
+              onClick={() => onSelectTask(task)}
+              className={cn(
+                "flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors",
+                selectedTaskId === task.id && "bg-muted",
+              )}
             >
-              <Users className="h-3 w-3 shrink-0" aria-label={tFollowUp("group.list_of", { group: groupList.name })} />
-              <span className="truncate">{who.short}</span>
-            </span>
-          )}
-          {isRecurringTask(task) && (
-            <span title={t("tasks.repeats")} className="shrink-0 text-muted-foreground">
-              <Repeat className="h-3.5 w-3.5" aria-label={t("tasks.repeats")} />
-            </span>
-          )}
-          {when && (
-            <span
-              data-testid="task-due"
-              className={cn("shrink-0 text-xs", group === "overdue" ? "text-destructive font-medium" : "text-muted-foreground")}
-            >
-              {when}
-            </span>
-          )}
-          {reminder && (
-            <span data-testid="task-reminder" className="inline-flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
-              <Bell className="h-3 w-3" aria-label={tFollowUp("reminder_label")} />
-              {reminder}
-            </span>
-          )}
-        </div>
+              {/* Checkbox */}
+              <button
+                onClick={(e) => handleToggle(e, task)}
+                className={cn(
+                  "mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                  isCompleted
+                    ? "bg-success border-success text-success-foreground"
+                    : "border-muted-foreground/40 hover:border-primary"
+                )}
+                aria-label={isCompleted ? t("tasks.mark_incomplete") : t("tasks.mark_complete")}
+              >
+                {isCompleted && <Check className="h-3 w-3" />}
+              </button>
 
-        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-          {sub && (
-            <span data-testid="task-sub" className="flex min-w-0 flex-1 items-center gap-1">
-              {mail && <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />}
-              <span className="truncate">{sub}</span>
-            </span>
-          )}
-          {cal && (
-            <span className="flex min-w-0 shrink-0 items-center gap-1">
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cal.color || "#3b82f6" }} />
-              <span className="truncate">{groupList?.name ?? cal.name}</span>
-            </span>
-          )}
-        </div>
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn(
+                    "text-sm font-medium truncate",
+                    isCompleted && "line-through text-muted-foreground"
+                  )}>
+                    {task.title || t("tasks.no_title")}
+                  </span>
+                  {priorityIcon}
+                </div>
+
+                <div className="flex items-center gap-2 mt-0.5">
+                  {dueDateInfo && (
+                    <span className={cn("text-xs flex items-center gap-1", dueDateInfo.className)}>
+                      <CalendarDays className="h-3 w-3" />
+                      {dueDateInfo.label}
+                    </span>
+                  )}
+                  {cal && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cal.color || "#3b82f6" }} />
+                      {cal.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

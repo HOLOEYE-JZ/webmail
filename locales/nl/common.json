@@ -1268,6 +1268,10 @@
         "open_label": "Pro-interface openen",
         "back_to_standard": "Terug naar standaard"
       },
+      "follow_ups_experimental": {
+        "label": "Opvolgen (experimenteel)",
+        "description": "Markeer e-mails om op te volgen met een vervaldatum en een herinnering, bewaard als taken in je agenda. Vereist agendataken. Uit: er wordt niets van getoond en geen opvolging geschreven."
+      },
       "cross_unread": {
         "label": "Alle accounts: Ongelezen",
         "description": "Toont een item in de sectie Alle accounts met ongelezen e-mail van alle accounts, in alle mappen behalve ongewenst, verzonden, archief, prullenbak en concepten."

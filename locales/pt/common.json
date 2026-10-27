@@ -1268,6 +1268,10 @@
         "open_label": "Abrir interface Pro",
         "back_to_standard": "Voltar ao padrão"
       },
+      "follow_ups_experimental": {
+        "label": "Acompanhamento (experimental)",
+        "description": "Marque e-mails para acompanhamento com data de vencimento e lembrete, guardados como tarefas no seu calendário. Requer as tarefas do calendário. Desativado, nada disto é mostrado e nenhum acompanhamento é gravado."
+      },
       "cross_unread": {
         "label": "Todas as contas: Não lido",
         "description": "Mostra uma entrada na seção Todas as contas listando o correio não lido de todas as contas, abrangendo todas as pastas exceto spam, enviados, arquivo, lixeira e rascunhos."

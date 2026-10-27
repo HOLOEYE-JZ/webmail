@@ -2,6 +2,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { TaskModal } from '../task-modal';
 import { useAuthStore } from '@/stores/auth-store';
+import { useCalendarStore } from '@/stores/calendar-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { buildFollowUpTask } from '@/lib/follow-ups';
 import type { CalendarTask, Calendar } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
@@ -34,6 +36,8 @@ let getEmailFields: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   push.mockReset();
+  useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true });
+  useCalendarStore.setState({ supportsCalendar: true });
   getEmailFields = vi.fn(async () => [{ id: 'M1' }]);
   useAuthStore.setState({
     client: {
@@ -46,6 +50,16 @@ beforeEach(() => {
 });
 
 describe('TaskModal follow-up mail', () => {
+  it('names no mail while follow-ups are off', async () => {
+    useSettingsStore.setState({ enableFollowUps: false });
+    render(<TaskModal task={task} calendars={calendars} onSave={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.getByDisplayValue('Follow up: Samples returned')).toBeTruthy();
+    // Long enough for the lookup the dialog makes with follow-ups on.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByTestId('task-mail')).toBeNull();
+    expect(getEmailFields).not.toHaveBeenCalled();
+  });
+
   it('offers to open the mail while it is there', async () => {
     render(<TaskModal task={task} calendars={calendars} onSave={vi.fn()} onClose={vi.fn()} />);
     await waitFor(() => expect(screen.getByTestId('task-open-mail')).toBeTruthy());

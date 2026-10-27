@@ -88,7 +88,7 @@ beforeEach(() => {
   client.updateCalendarTask.mockClear();
   useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
   useAuthStore.setState({ client: client as unknown as IJMAPClient, activeAccountId: 'login' });
-  useSettingsStore.setState({ enableCalendarTasks: true, showPreview: false, interfaceLayout: 'default', hoverActions: [] });
+  useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true, showPreview: false, interfaceLayout: 'default', hoverActions: [] });
   useCalendarStore.setState({ supportsCalendar: true, calendars: [] });
   useTaskStore.setState({ tasks: [followUp('M2')] });
   useEmailStore.setState({ emails: mails, selectedEmailKeys: new Set<string>(), selectedMailbox: 'inbox', mailboxes: [], viewingAccountId: null });

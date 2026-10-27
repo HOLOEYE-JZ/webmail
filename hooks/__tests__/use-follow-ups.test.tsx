@@ -61,7 +61,7 @@ beforeEach(() => {
   useToastStore.setState({ toasts: [] });
   client = makeClient();
   useAuthStore.setState({ isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login' });
-  useSettingsStore.setState({ enableCalendarTasks: true });
+  useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true });
   useCalendarStore.setState({ supportsCalendar: true, calendars });
   useTaskStore.setState({ tasks: [] });
   useEmailStore.setState({ emails: [mail], selectedEmail: null, mailboxes: [], selectedMailbox: 'inbox', viewingAccountId: null, searchQuery: '', searchMailboxId: '' });
@@ -117,7 +117,7 @@ describe('useFollowUp', () => {
     expect(flagged()).toBe(true);
   });
 
-  it('offers nothing for a mail of a shared account the login does not reach, or with tasks off', () => {
+  it('offers nothing for a mail of a shared account the login does not reach, or with tasks or follow-ups off', () => {
     useEmailStore.setState({ mailboxes: [{ id: 'shared:x', isShared: true, accountId: 'shared' } as never], selectedMailbox: 'shared:x' });
     const shared = renderHook(() => useFollowUp({ ...mail, mailboxIds: { 'shared:x': true } }));
     expect(shared.result.current.available).toBe(false);
@@ -127,6 +127,11 @@ describe('useFollowUp', () => {
     useSettingsStore.setState({ enableCalendarTasks: false });
     const off = renderHook(() => useFollowUp(mail));
     expect(off.result.current.available).toBe(false);
+    off.unmount();
+
+    useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: false });
+    const switchedOff = renderHook(() => useFollowUp(mail));
+    expect(switchedOff.result.current.available).toBe(false);
   });
 
   it('writes no $flagged when a plugin refuses the star, for a listed mail', async () => {

@@ -1271,6 +1271,10 @@
         "open_label": "Åpne Pro-grensesnittet",
         "back_to_standard": "Tilbake til standardgrensesnittet"
       },
+      "follow_ups_experimental": {
+        "label": "Oppfølging (eksperimentelt)",
+        "description": "Merk e-post for oppfølging med forfallsdag og påminnelse, lagret som oppgaver i kalenderen. Krever kalenderoppgaver. Slått av vises ingenting av det, og ingen oppfølging skrives."
+      },
       "cross_unread": {
         "label": "Ulest",
         "description": "Vis Ulest i den samlede postkassen, med ulest e-post fra de valgte mappene."

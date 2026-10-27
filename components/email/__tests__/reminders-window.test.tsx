@@ -104,7 +104,7 @@ beforeEach(() => {
   setReminderMailOpener(null);
   useAuthStore.setState({ isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login' });
   useSettingsStore.setState({
-    enableCalendarTasks: true, calendarNotificationsEnabled: true, calendarNotificationSound: false,
+    enableCalendarTasks: true, enableFollowUps: true, calendarNotificationsEnabled: true, calendarNotificationSound: false,
     timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1,
   });
   useCalendarStore.setState({ supportsCalendar: true, calendars, events: [] });
@@ -318,6 +318,14 @@ describe('the reminders window', () => {
     await act(async () => {});
     expect(screen.queryByTestId('reminders-window')).toBeNull();
   });
+
+  it('is not shown with follow-ups switched off', async () => {
+    useSettingsStore.setState({ enableFollowUps: false });
+    useTaskStore.setState({ tasks: [reminder('r1', 'Order toner', ago(5))] });
+    renderWindow();
+    await act(async () => {});
+    expect(screen.queryByTestId('reminders-window')).toBeNull();
+  });
 });
 
 describe('the toasts of task alerts', () => {
@@ -331,6 +339,18 @@ describe('the toasts of task alerts', () => {
     renderHook(() => useCalendarAlerts());
     await waitFor(() => expect(useToastStore.getState().toasts).toHaveLength(1));
     expect(useToastStore.getState().toasts[0].title).toBe('Group task');
+  });
+
+  it('toast the user\'s own tasks too while follow-ups are switched off', async () => {
+    useSettingsStore.setState({ enableFollowUps: false });
+    useTaskStore.setState({
+      tasks: [
+        reminder('own', 'Order toner', ago(1)),
+        reminder('shared', 'Group task', ago(1), { isShared: true }),
+      ],
+    });
+    renderHook(() => useCalendarAlerts());
+    await waitFor(() => expect(useToastStore.getState().toasts).toHaveLength(2));
   });
 });
 

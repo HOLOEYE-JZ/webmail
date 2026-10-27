@@ -1268,6 +1268,10 @@
         "open_label": "Apri interfaccia Pro",
         "back_to_standard": "Torna allo standard"
       },
+      "follow_ups_experimental": {
+        "label": "Completamento (sperimentale)",
+        "description": "Contrassegna i messaggi per il completamento con una scadenza e un promemoria, salvati come attività nel calendario. Richiede le attività del calendario. Disattivato, non viene mostrato nulla e non viene scritto alcun completamento."
+      },
       "cross_unread": {
         "label": "Tutti gli account: Non letti",
         "description": "Mostra una voce nella sezione Tutti gli account che elenca la posta non letta di tutti gli account, in tutte le cartelle tranne posta indesiderata, inviata, archivio, cestino e bozze."

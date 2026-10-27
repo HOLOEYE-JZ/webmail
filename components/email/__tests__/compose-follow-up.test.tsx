@@ -63,7 +63,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
   useAuthStore.setState({ isAuthenticated: true, activeAccountId: 'login', username: 'me@example.com', identities: [] });
-  useSettingsStore.setState({ enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
+  useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
   useCalendarStore.setState({ supportsCalendar: true, calendars, participantIdentities: [] });
   usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: [] } });
   useEmailStore.setState({ mailboxes: [] });
@@ -157,8 +157,14 @@ describe('ComposeFollowUp', () => {
     expect(screen.getByTestId('follow-up-kept').textContent).toContain('group.kept_colleague');
   });
 
-  it('shows nothing while follow-ups are off', () => {
+  it('shows nothing while tasks are off', () => {
     useSettingsStore.setState({ enableCalendarTasks: false });
+    render(<Row client={makeClient()} onChange={vi.fn()} />);
+    expect(screen.queryByTestId('composer-follow-up')).toBeNull();
+  });
+
+  it('shows nothing while follow-ups are switched off', () => {
+    useSettingsStore.setState({ enableFollowUps: false });
     render(<Row client={makeClient()} onChange={vi.fn()} />);
     expect(screen.queryByTestId('composer-follow-up')).toBeNull();
   });

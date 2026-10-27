@@ -1064,7 +1064,7 @@ export function EmailComposer({
   const composerAccountId = currentIdentityParts.localAccountId ?? activeAccountId ?? undefined;
   // "Follow up" is kept for a mail of the active login only, as every follow-up (hooks/use-follow-ups.ts).
   const followUpAllowed = !!composerAccountId && composerAccountId === activeAccountIdNow;
-  const tasksOn = useSettingsStore((state) => state.enableCalendarTasks);
+  const followUpsOn = useSettingsStore((state) => state.enableCalendarTasks && state.enableFollowUps);
   const setFollowUp = useCallback((value: SendFollowUp | null) => {
     setFollowUpState(value);
     followUpRef.current = value;
@@ -4432,7 +4432,7 @@ export function EmailComposer({
           </div>
         )}
 
-        {followUpAllowed && tasksOn && (
+        {followUpAllowed && followUpsOn && (
           <React.Suspense fallback={null}>
           <ComposeFollowUp
             value={followUp}

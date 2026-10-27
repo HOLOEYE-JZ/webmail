@@ -128,7 +128,7 @@ beforeEach(() => {
   client = makeClient();
   useAuthStore.setState({ isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login' });
   useSettingsStore.setState({
-    enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1,
+    enableCalendarTasks: true, enableFollowUps: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1,
     followUpMenu: EMPTY_FOLLOW_UP_MENU, followUpDefaultAction: DEFAULT_FOLLOW_UP_ACTION, followUpMailReminder: false,
   });
   router.push.mockClear();

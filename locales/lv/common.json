@@ -1268,6 +1268,10 @@
         "open_label": "Atvērt Pro saskarni",
         "back_to_standard": "Atpakaļ uz standartu"
       },
+      "follow_ups_experimental": {
+        "label": "Turpmākā darbība (eksperimentāla)",
+        "description": "Atzīmējiet vēstules turpmākai darbībai ar termiņu un atgādinājumu, saglabātas kā uzdevumi jūsu kalendārā. Nepieciešami kalendāra uzdevumi. Izslēgts — nekas no tā netiek rādīts un nekas netiek ierakstīts."
+      },
       "cross_unread": {
         "label": "Visi konti: Nelasītie",
         "description": "Rāda ierakstu sadaļā “Visi konti”, kas uzskaita nelasītās vēstules no visiem kontiem, aptverot visas mapes, izņemot mēstules, nosūtītās, arhīvu, miskasti un melnrakstus."

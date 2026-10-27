@@ -112,7 +112,7 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
   client = makeClient();
   useAuthStore.setState({ isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login' });
-  useSettingsStore.setState({ enableCalendarTasks: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
+  useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true, timeZone: 'auto', calendarWorkingDays: [1, 2, 3, 4, 5], firstDayOfWeek: 1 });
   useCalendarStore.setState({ supportsCalendar: true, calendars });
   usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: [] } });
   useTaskStore.setState({ tasks: [] });
@@ -589,6 +589,13 @@ describe('useDueTaskCount', () => {
 
   it('is 0 while tasks are off', () => {
     useSettingsStore.setState({ enableCalendarTasks: false });
+    useTaskStore.setState({ tasks: [reminder('r1', 'a', day(26))] });
+    const { result } = renderHook(() => useDueTaskCount());
+    expect(result.current).toBe(0);
+  });
+
+  it('is 0 while follow-ups are switched off', () => {
+    useSettingsStore.setState({ enableFollowUps: false });
     useTaskStore.setState({ tasks: [reminder('r1', 'a', day(26))] });
     const { result } = renderHook(() => useDueTaskCount());
     expect(result.current).toBe(0);

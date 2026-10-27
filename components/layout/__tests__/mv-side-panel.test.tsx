@@ -102,7 +102,7 @@ describe('MvSidePanel Tasks', () => {
     };
     useAuthStore.setState({ isAuthenticated: true, client: client as unknown as IJMAPClient, activeAccountId: 'login' });
     useCalendarStore.setState({ supportsCalendar: true, calendars, events: [] } as never);
-    useSettingsStore.setState({ enableCalendarTasks: true, timeZone: 'auto', firstDayOfWeek: 1 } as never);
+    useSettingsStore.setState({ enableCalendarTasks: true, enableFollowUps: true, timeZone: 'auto', firstDayOfWeek: 1 } as never);
     usePolicyStore.setState({ policy: { ...DEFAULT_POLICY, followUpActions: [] } });
     useTaskStore.setState({ tasks: [] });
   });
@@ -135,6 +135,15 @@ describe('MvSidePanel Tasks', () => {
     expect(within(screen.getByTestId('upcoming-group-no-date')).getByTestId('upcoming-group-head').getAttribute('aria-expanded')).toBe('false');
     // Its one way into the task list is the panel's foot, not the header.
     expect(within(panel).getAllByRole('link').map((a) => a.getAttribute('data-testid'))).toEqual(['upcoming-open-list']);
+  });
+
+  it('keeps the plain tasks panel while follow-ups are switched off', () => {
+    useSettingsStore.setState({ enableFollowUps: false });
+    useTaskStore.setState({ tasks: [reminder('r1', 'Check the dunning run', day(26))] });
+    const panel = openTasks();
+    expect(within(panel).queryByTestId('upcoming-item')).toBeNull();
+    expect(panel.querySelectorAll('[data-mv-panel-task]')).toHaveLength(1);
+    expect(within(panel).getByRole('link', { name: 'mv_open_full' })).toBeTruthy();
   });
 
   it('adds a task due today from its line, into the task list', async () => {

@@ -1268,6 +1268,10 @@
         "open_label": "Otevřít Pro rozhraní",
         "back_to_standard": "Zpět na standard"
       },
+      "follow_ups_experimental": {
+        "label": "Zpracovat (experimentální)",
+        "description": "Označte e-maily ke zpracování s termínem a připomenutím, uložené jako úkoly v kalendáři. Vyžaduje úkoly kalendáře. Vypnuto: nic z toho se nezobrazí a nic se nezapíše."
+      },
       "cross_unread": {
         "label": "Všechny účty: Nepřečtené",
         "description": "Zobrazí v sekci Všechny účty položku s nepřečtenou poštou ze všech účtů, napříč všemi složkami kromě spamu, odeslané, archivu, koše a konceptů."
