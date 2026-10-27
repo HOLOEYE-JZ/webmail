@@ -10,6 +10,9 @@ import { useTaskStore } from '@/stores/task-store';
 import { useCalendarNotificationStore } from '@/stores/calendar-notification-store';
 import { useToastStore } from '@/stores/toast-store';
 import { getPendingAlerts, getPendingTaskAlerts, getNextAlertFireTime, buildAlertKey } from '@/lib/calendar-alerts';
+import { isToastlessTask } from '@/lib/task-reminders';
+import { useGroupReminderScope } from '@/hooks/use-group-follow-ups';
+import { IS_LITE } from '@/lib/lite';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { getPathPrefix } from '@/lib/browser-navigation';
 import type { CalendarEvent } from '@/lib/jmap/types';
@@ -30,6 +33,9 @@ export function useCalendarAlerts() {
   const { acknowledgedAlerts, acknowledgeAlert, cleanupStaleAlerts } = useCalendarNotificationStore();
   const addToast = useToastStore((s) => s.addToast);
   const t = useTranslations('calendar.notifications');
+  const groupScope = useGroupReminderScope();
+  // With follow-ups on, the reminders window takes the user's own tasks (useTaskReminders).
+  const followUpsOn = useSettingsStore((s) => s.enableFollowUps) && !IS_LITE;
   const locale = useLocale();
 
   const lastProactiveFetchRef = useRef<number>(0);
@@ -100,9 +106,12 @@ export function useCalendarAlerts() {
         });
       }
 
-      // Task alerts
+      // Task alerts. With follow-ups on, the user's own tasks, and a shared
+      // list's for the user, go to the reminders window (useTaskReminders); a
+      // shared or repeating one is toasted here, unless it names someone else
+      // as whom it is for.
       if (enableCalendarTasks && storeTasks.length > 0) {
-        const pendingTaskAlerts = getPendingTaskAlerts(storeTasks, calendars, acknowledgedKeys, now);
+        const pendingTaskAlerts = getPendingTaskAlerts(storeTasks, calendars, acknowledgedKeys, now, followUpsOn ? (task) => isToastlessTask(task, groupScope) : undefined);
         for (const taskAlert of pendingTaskAlerts) {
           const key = buildAlertKey(taskAlert.taskId, taskAlert.alertId, taskAlert.fireTimeMs);
           if (shownKeysRef.current.has(key)) continue;
@@ -135,7 +144,7 @@ export function useCalendarAlerts() {
   }, [
     calendarNotificationsEnabled, calendarNotificationSound, notificationSoundChoice,
     isAuthenticated, events, calendars, acknowledgedAlerts,
-    acknowledgeAlert, addToast, t, locale, enableCalendarTasks, storeTasks,
+    acknowledgeAlert, addToast, t, locale, enableCalendarTasks, storeTasks, groupScope, followUpsOn,
   ]);
   checkAlertsRef.current = checkAlerts;
 
