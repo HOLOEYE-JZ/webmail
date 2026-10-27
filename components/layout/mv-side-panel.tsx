@@ -25,6 +25,8 @@ import { getTimedEventBoundsForDay } from "@/lib/calendar-utils";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { formatDateTime, cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
+import { TasksPanel as UpcomingTasksPanel, type OpenTaskMail } from "@/components/calendar/tasks-panel";
+import { useFollowUpsEnabled } from "@/hooks/use-follow-ups";
 import type { CalendarEvent } from "@/lib/jmap/types";
 
 export type MvSidePanelId = "calendar" | "tasks" | "contacts";
@@ -36,8 +38,12 @@ const HOUR_PX = 48;
  * that Gmail has, each opening a narrow panel next to the mail - today's
  * calendar, the task list, the address book - without leaving the inbox.
  */
-export function MvSidePanel() {
+export function MvSidePanel({ onOpenMail }: {
+  /** Opens a task's mail (a follow-up's) in the mail view beside the panel. */
+  onOpenMail?: OpenTaskMail;
+} = {}) {
   const t = useTranslations("sidebar");
+  const followUpsEnabled = useFollowUpsEnabled();
   const client = useAuthStore((s) => s.client);
   const supportsCalendar = useCalendarStore((s) => s.supportsCalendar);
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled("calendarEnabled"));
@@ -68,7 +74,13 @@ export function MvSidePanel() {
           aria-label={buttons.find((b) => b.id === active)?.label}
         >
           {active === "calendar" && <CalendarPanel onClose={() => setOpen(null)} />}
-          {active === "tasks" && <TasksPanel onClose={() => setOpen(null)} />}
+          {active === "tasks" && (followUpsEnabled && onOpenMail ? (
+            <>
+              {/* No "open in full": the panel's foot is its one way into the task list. */}
+              <PanelHeader title={t("mv_tasks")} onClose={() => setOpen(null)} />
+              <UpcomingTasksPanel onOpenMail={onOpenMail} />
+            </>
+          ) : <TasksPanel onClose={() => setOpen(null)} />)}
           {active === "contacts" && <ContactsPanel onClose={() => setOpen(null)} />}
         </aside>
       )}
@@ -102,7 +114,8 @@ export function MvSidePanel() {
 function PanelHeader({ title, subtitle, href, onClose, children }: {
   title: string;
   subtitle?: React.ReactNode;
-  href: string;
+  /** Where "open in full" goes; none: no such link. */
+  href?: string;
   onClose: () => void;
   children?: React.ReactNode;
 }) {
@@ -115,14 +128,16 @@ function PanelHeader({ title, subtitle, href, onClose, children }: {
         {subtitle && <div className="text-sm font-medium text-primary">{subtitle}</div>}
       </div>
       {children}
-      <Link
-        href={href}
-        className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-        title={t("mv_open_full")}
-        aria-label={t("mv_open_full")}
-      >
-        <ExternalLink className="h-[18px] w-[18px]" />
-      </Link>
+      {href && (
+        <Link
+          href={href}
+          className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+          title={t("mv_open_full")}
+          aria-label={t("mv_open_full")}
+        >
+          <ExternalLink className="h-[18px] w-[18px]" />
+        </Link>
+      )}
       <button
         type="button"
         onClick={onClose}

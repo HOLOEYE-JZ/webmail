@@ -63,7 +63,8 @@ import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
 import { findNextUnreadIndex } from "@/lib/next-unread-email";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
-import { useFollowUpTasks } from "@/hooks/use-follow-ups";
+import { useFollowUpTasks, useFollowUpsEnabled } from "@/hooks/use-follow-ups";
+import { TasksSidebar, useTasksPanelOpen } from "@/components/calendar/tasks-panel";
 import { ownsReminderMails, useReminderMailOpener } from "@/hooks/use-task-reminders";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { usePromptDialog } from "@/hooks/use-prompt-dialog";
@@ -120,7 +121,7 @@ import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
 import { findDraftIdentityId, findReplyIdentityId, resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { buildReplyRecipients, isSelfSent } from "@/lib/reply-recipients";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
-import { Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine, CheckSquare, Square, AlertTriangle, ArrowLeft } from "@/components/icons";
+import { Filter, ChevronDown, X, Paperclip, Star, Mail, MailOpen, RotateCcw, PenSquare, PenLine, CheckSquare, Square, AlertTriangle, ArrowLeft, ListTodo } from "@/components/icons";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { useDocumentTitle } from "@/hooks/use-document-title";
@@ -220,6 +221,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
   // The task list, so rows and reader know which mails have a follow-up.
   useFollowUpTasks();
+  const followUpsEnabled = useFollowUpsEnabled();
+  // The tasks panel beside the mail list in the default layout, open until closed (per browser).
+  const [tasksPanelOpen, setTasksPanelOpen] = useTasksPanelOpen();
   const t = useTranslations();
   const tCommon = useTranslations('common');
   const appName = productName(useConfig().appName);
@@ -5003,6 +5007,25 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   >
                     <RotateCcw className={cn("w-4 h-4", isManualRefreshing && "animate-spin")} />
                   </button>
+                  {/* The tasks panel ("Upcoming for me") beside the mail, shown or hidden */}
+                  {followUpsEnabled && !isMobile && !isTablet && !isEmbedded && (
+                    <button
+                      type="button"
+                      data-testid="upcoming-toggle"
+                      onClick={() => setTasksPanelOpen(!tasksPanelOpen)}
+                      aria-pressed={tasksPanelOpen}
+                      className={cn(
+                        "flex-shrink-0 p-2 rounded-md transition-colors",
+                        tasksPanelOpen
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      )}
+                      title={t('follow_up.upcoming.title')}
+                      aria-label={t('follow_up.upcoming.title')}
+                    >
+                      <ListTodo className="w-4 h-4" />
+                    </button>
+                  )}
                   {/* Plugin buttons (top-bar-actions). On phones they sit in
                       the header's overflow menu instead (MobileHeader). */}
                   {!isMobile && (
@@ -5616,9 +5639,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             />
           )}
         </div>
+        {/* The tasks panel ("Upcoming for me", as Outlook's To-Do bar): the
+            user's open tasks by due day, beside the mail. Desktop only;
+            Mountain View shows the same panel from its side panel's icon. */}
+        {followUpsEnabled && tasksPanelOpen && !isMobile && !isTablet && !isEmbedded && !mvShell && !inlineApp && !fullscreenReading && (
+          <TasksSidebar onClose={() => setTasksPanelOpen(false)} onOpenMail={openTaskMail} />
+        )}
         {/* Mountain View: Gmail's side panel - calendar, tasks and contacts
             next to the mail, with their icons down the right edge. */}
-        {mvShell && !inlineApp && !fullscreenReading && <MvSidePanel />}
+        {mvShell && !inlineApp && !fullscreenReading && <MvSidePanel onOpenMail={openTaskMail} />}
         </div>
 
         {/* Keyboard Shortcuts Modal */}

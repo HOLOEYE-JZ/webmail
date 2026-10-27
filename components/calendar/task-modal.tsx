@@ -4,13 +4,18 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Trash2, CalendarDays, Bell, Flag } from "@/components/icons";
+import { X, Trash2, CalendarDays, Bell, Flag, Mail } from "@/components/icons";
 import { format, parseISO } from "date-fns";
 
 import type { CalendarTask, Calendar, CalendarEventAlert } from "@/lib/jmap/types";
 import { withOwnAlertIds } from "@/lib/calendar-alerts";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { taskToView } from "@/lib/plugin-projection";
+import { followUpMailRef, followUpMailSummary, isOtherAccountMail } from "@/lib/follow-ups";
+import { useFollowUpMail } from "@/hooks/use-follow-up-sync";
+import { followMessageLink } from "@/lib/deep-link-handoff";
+import { useAuthStore } from "@/stores/auth-store";
+import { useRouter } from "@/i18n/navigation";
 
 interface TaskModalProps {
   task?: CalendarTask | null;
@@ -50,7 +55,22 @@ export function TaskModal({
   isMobile: _isMobile,
 }: TaskModalProps) {
   const t = useTranslations("calendar");
+  const tFollowUp = useTranslations("follow_up");
+  const router = useRouter();
   const isEdit = !!task;
+  // A follow-up on a mail links to it: the mail found by its id (a moved one
+  // keeps it) or its Message-ID, or named as gone with what the task kept of
+  // it. For a mail of the user's own account or of a group mailbox the login
+  // reaches; the link names the group's account, so its mail opens there.
+  const followUpMail = useFollowUpMail(task);
+  const followUpMailId = followUpMail && (followUpMail.kind === "present" || followUpMail.kind === "unknown")
+    ? followUpMail.emailId
+    : null;
+  const primaryAccountId = useAuthStore((s) => s.client?.getAccountId() ?? "");
+  const followUpRef = task ? followUpMailRef(task) : null;
+  const followUpMailAccount = isOtherAccountMail(followUpRef, primaryAccountId) ? followUpRef?.accountId ?? null : null;
+  const followUpMailSummaryOf = task && followUpMail ? followUpMailSummary(task) : null;
+  const followUpMailText = [followUpMailSummaryOf?.sender, followUpMailSummaryOf?.subject].filter(Boolean).join(" · ");
   const titleRef = useRef<HTMLInputElement>(null);
   // task-detail-section: the saved task, for an existing task only.
   const pluginTaskProps = useMemo(() => (task ? { task: taskToView(task) } : null), [task]);
@@ -194,6 +214,29 @@ export function TaskModal({
           placeholder={t("tasks.title_placeholder")}
           className="text-base font-medium"
         />
+
+        {followUpMail && (
+          <div data-testid="task-mail" data-mail={followUpMail.kind} className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
+            {followUpMail.kind === "gone" && (
+              <span className="text-destructive">{tFollowUp("mail_gone")}</span>
+            )}
+            {followUpMailText && <span className="min-w-0 truncate text-muted-foreground">{followUpMailText}</span>}
+            {followUpMailId && (
+              <button
+                type="button"
+                data-testid="task-open-mail"
+                onClick={() => {
+                  onClose();
+                  router.push(followMessageLink(followUpMailId, followUpMailAccount) as never);
+                }}
+                className="text-primary hover:underline"
+              >
+                {tFollowUp("open_mail")}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Description */}
         <textarea
