@@ -12,6 +12,23 @@ export { cn } from "./cn";
  * `https://user:pass@host/path` → `https://host/path`. Falls back to
  * regex stripping if URL parsing fails.
  */
+/**
+ * `compute(list, key)`, kept per list object and key: every caller asking for
+ * the same list (a new array after each change) and key shares one result.
+ */
+export function memoByArray<T, V>(compute: (list: T[], key: string) => V): (list: T[], key: string) => V {
+  const cache = new WeakMap<T[], Map<string, V>>();
+  return (list, key) => {
+    let byKey = cache.get(list);
+    if (!byKey) {
+      byKey = new Map();
+      cache.set(list, byKey);
+    }
+    if (!byKey.has(key)) byKey.set(key, compute(list, key));
+    return byKey.get(key) as V;
+  };
+}
+
 export function redactUrlCredentials(rawUrl: string): string {
   try {
     const parsed = new URL(rawUrl);

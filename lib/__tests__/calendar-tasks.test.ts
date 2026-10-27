@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { filterTasksByCalendars, groupTasksByDueDay, taskDueDayKey } from '../calendar-tasks';
-import type { CalendarTask } from '@/lib/jmap/types';
+import { defaultTaskCalendar, filterTasksByCalendars, followUpCalendars, groupTasksByDueDay, taskDueDayKey } from '../calendar-tasks';
+import type { Calendar, CalendarTask } from '@/lib/jmap/types';
 
 // #1107: the month, week and day views place tasks on their due day and
 // hide tasks from calendars switched off in the sidebar.
@@ -82,5 +82,22 @@ describe('groupTasksByDueDay', () => {
   it('is empty for no tasks', () => {
     expect(groupTasksByDueDay(undefined).size).toBe(0);
     expect(groupTasksByDueDay([]).size).toBe(0);
+  });
+});
+
+const cal = (id: string, over: Partial<Calendar> = {}) => ({ id, name: id, ...over }) as Calendar;
+
+describe('the calendars tasks go into', () => {
+  it('takes the task list, else the default calendar, else the first', () => {
+    expect(defaultTaskCalendar([cal('a'), cal('b', { isDefault: true }), cal('t', { isTasksOnly: true })])?.id).toBe('t');
+    expect(defaultTaskCalendar([cal('a'), cal('b', { isDefault: true })])?.id).toBe('b');
+    expect(defaultTaskCalendar([cal('a'), cal('b')])?.id).toBe('a');
+    expect(defaultTaskCalendar([])).toBeUndefined();
+  });
+
+  it('keeps follow-ups in the user\'s own task list and default calendar, never a shared one', () => {
+    const calendars = [cal('shared', { isShared: true, isTasksOnly: true }), cal('events', { isDefault: true }), cal('tasks', { isTasksOnly: true })];
+    expect(followUpCalendars(calendars).map((c) => c.id)).toEqual(['tasks', 'events']);
+    expect(followUpCalendars([cal('events', { isDefault: true })]).map((c) => c.id)).toEqual(['events']);
   });
 });

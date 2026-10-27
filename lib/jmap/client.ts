@@ -22,9 +22,10 @@ import { SchedulingDeniedError } from "./scheduling-error";
 import { jmapError, jmapErrorFailedIds, jmapErrorType, jmapSetError, type JmapError, type JmapErrorInfo } from "./jmap-error";
 import { isServerSetKeyword } from "./server-keywords";
 import { PrincipalsRequestError } from "./principals-error";
-import { RescheduleRestoredError } from "./reschedule-error";
+import { RescheduleRestoredError, RescheduleUnscheduledError, markUnscheduled, leftUnscheduled } from "./reschedule-error";
+import { applyPatchObject } from "./patch-object";
 
-export { SchedulingDeniedError, RescheduleRestoredError };
+export { SchedulingDeniedError, RescheduleRestoredError, RescheduleUnscheduledError, leftUnscheduled };
 import { acceptedFileName, fileNameRulesFrom, type FileNameRules } from "@/lib/file-name-rules";
 import { folderDepthError, partialCopyError } from "@/lib/file-errors";
 import { mediaTypeEssence, OCTET_STREAM } from "@/lib/media-type";
@@ -661,6 +662,9 @@ const CALENDAR_TASK_PROPERTIES = [
   'useDefaultAlerts',
   'alerts',
   'relatedTo',
+  'links',
+  'participants',
+  'organizerCalendarAddress',
   'percentComplete',  // Task-only per RFC 8984 §5.2.4 - used in detection heuristic
 ] as const;
 
@@ -4723,6 +4727,8 @@ export class JMAPClient implements IJMAPClient {
     const normalizedReferences = references?.map(stripMessageIdBrackets).filter(Boolean);
 
     const sanitizedFromName = sanitizeIdentityDisplayName(fromName);
+    // Returned with the result, so a follow-up on the sent copy can name it.
+    const outgoingMessageId = generateMessageId(fromEmail || this.username);
     // Always create a new email with the final body content
     const emailCreate: Record<string, unknown> = {
       from: [{ ...(sanitizedFromName ? { name: sanitizedFromName } : {}), email: fromEmail || this.username }],
@@ -4734,7 +4740,7 @@ export class JMAPClient implements IJMAPClient {
       cc: cc?.length ? cc.map(parseRecipientString) : undefined,
       bcc: bcc?.length ? bcc.map(parseRecipientString) : undefined,
       subject,
-      messageId: [generateMessageId(fromEmail || this.username)],
+      messageId: [outgoingMessageId],
       inReplyTo: normalizedInReplyTo?.length ? normalizedInReplyTo : undefined,
       references: normalizedReferences?.length ? normalizedReferences : undefined,
       keywords: { "$seen": true, "$draft": true },
@@ -5036,9 +5042,10 @@ export class JMAPClient implements IJMAPClient {
     // Some recipients refused: the others get the message, the caller says
     // who doesn't.
     const rejectedRecipientsResult = rejected.length ? rejected : undefined;
+    const sent = { emailAccountId: targetAccountId, messageId: outgoingMessageId };
     return delayedUntil
-      ? { scheduled: true, emailId: createdEmailId, emailSubmissionId, sendAt: serverSendAt, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult }
-      : { scheduled: false, emailId: createdEmailId, emailSubmissionId, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult };
+      ? { scheduled: true, emailId: createdEmailId, emailSubmissionId, sendAt: serverSendAt, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult, ...sent }
+      : { scheduled: false, emailId: createdEmailId, emailSubmissionId, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult, ...sent };
   }
 
   /**
@@ -8853,9 +8860,21 @@ export class JMAPClient implements IJMAPClient {
    */
   async getCalendarTasks(calendarIds?: string[], targetAccountId?: string): Promise<CalendarTask[]> {
     if (targetAccountId) return this.getAccountCalendarTasks(calendarIds, targetAccountId);
+    return (await this.getCalendarTaskList(calendarIds)).tasks;
+  }
 
+  /**
+   * As `getCalendarTasks`, and whether every account asked was read in full.
+   * The own account failing fails the whole list; a shared account that
+   * fails leaves its tasks out and `complete` false, so a caller can tell
+   * "no such task" from "not read" (follow-ups delete only on a complete
+   * list). Accounts skipped because they refused calendar access before hold
+   * only shared tasks and do not count.
+   */
+  async getCalendarTaskList(calendarIds?: string[]): Promise<{ tasks: CalendarTask[]; complete: boolean }> {
     const primaryId = this.getCalendarsAccountId();
     const tasks: CalendarTask[] = [];
+    let complete = true;
     for (const accountId of this.getCalendarCapableAccountIds()) {
       if (accountId !== primaryId && this.calendarAccessDenied.has(accountId)) continue;
       let accountCalendarIds: string[] | undefined;
@@ -8866,10 +8885,17 @@ export class JMAPClient implements IJMAPClient {
           .map((parts) => parts.id);
         if (accountCalendarIds.length === 0) continue;
       }
-      const accountTasks = await this.getAccountCalendarTasks(accountCalendarIds, accountId);
+      let accountTasks: CalendarTask[];
+      try {
+        accountTasks = await this.getAccountCalendarTasks(accountCalendarIds, accountId);
+      } catch (error) {
+        if (accountId === primaryId) throw error;
+        complete = false;
+        continue;
+      }
       tasks.push(...accountTasks.map((task) => this.namespaceCalendarTask(task, accountId)));
     }
-    return tasks;
+    return { tasks, complete };
   }
 
   private async getAccountCalendarTasks(calendarIds: string[] | undefined, accountId: string): Promise<CalendarTask[]> {
@@ -9070,7 +9096,9 @@ export class JMAPClient implements IJMAPClient {
 
     // Drop what the server sets itself; keep the uid so it stays the same task.
     const { id: _id, created: _cr, updated: _up, sequence: _sq, isDraft: _idr, isOrigin: _io, baseEventId: _be, blobId: _bl, utcStart: _us, utcEnd: _ue, ...rest } = original as Record<string, unknown>;
-    const created = await this.createCalendarTask({ ...rest, ...patch } as Partial<CalendarTask>, destAccountId);
+    // The patch may name members by path ("alerts/<id>/acknowledged"): applied
+    // to the original, not copied in as keys of their own.
+    const created = await this.createCalendarTask(applyPatchObject(rest, patch) as Partial<CalendarTask>, destAccountId);
     await this.deleteCalendarEvent(source.id, false, source.accountId);
     return created.id;
   }
@@ -11214,8 +11242,8 @@ export class JMAPClient implements IJMAPClient {
           console.error('Failed to move the message back to Drafts after reschedule failure:', draftError);
         }
       }
-      if (error instanceof RecipientsRejectedError || error instanceof SubmissionQuotaError) throw error;
-      throw new Error(`Reschedule failed and the message is no longer scheduled: ${message}`);
+      if (error instanceof RecipientsRejectedError || error instanceof SubmissionQuotaError) throw markUnscheduled(error);
+      throw new RescheduleUnscheduledError(`Reschedule failed and the message is no longer scheduled: ${message}`);
     }
     const rejected = rejectedRecipients(replacement.deliveryStatus).rejected;
     const finalSendAt = replacement.sendAt || await this.getEmailSubmissionSendAt(replacement.id, submissionAccountId);

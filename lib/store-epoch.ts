@@ -14,3 +14,21 @@ export function currentStoreEpoch(): number {
 export function bumpStoreEpoch(): void {
   epoch++;
 }
+
+/**
+ * State kept for the accounts on screen (what the user did this session, by
+ * ids that only mean something in those accounts): `make` gives it, and it
+ * is made afresh at the first use after a switch or a sign-out. Returns the
+ * getter.
+ */
+export function perStoreEpoch<T>(make: () => T): () => T {
+  let value = make();
+  let madeAt = epoch;
+  return () => {
+    if (madeAt !== epoch) {
+      value = make();
+      madeAt = epoch;
+    }
+    return value;
+  };
+}

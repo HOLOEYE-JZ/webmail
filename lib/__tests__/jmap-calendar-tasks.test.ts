@@ -232,7 +232,12 @@ describe('JMAPClient tasks in shared calendars (#1204)', () => {
   const serverTasks: Record<string, Record<string, unknown>[]> = {
     'acct-1': [{ id: 'own-1', '@type': 'Task', uid: 'uid-own', title: 'Mine', progress: 'needs-action', calendarIds: { 'cal-1': true }, created: '2026-10-01T00:00:00Z', isDraft: false, isOrigin: true, locations: { l1: { '@type': 'Location', name: 'Desk' } } },
       // Saved by a client that sent a bare date: Stalwart echoes it as such.
-      { id: 'own-2', '@type': 'Task', uid: 'uid-due', title: 'Dated', progress: 'needs-action', calendarIds: { 'cal-1': true }, due: wire.allDayTaskDue[0].jmapAfter.due, showWithoutTime: true }],
+      { id: 'own-2', '@type': 'Task', uid: 'uid-due', title: 'Dated', progress: 'needs-action', calendarIds: { 'cal-1': true }, due: wire.allDayTaskDue[0].jmapAfter.due, showWithoutTime: true },
+      { id: 'own-3', '@type': 'Task', uid: 'uid-alerts', title: 'Reminded', progress: 'needs-action', calendarIds: { 'cal-1': true },
+        alerts: {
+          a: { '@type': 'Alert', trigger: { '@type': 'AbsoluteTrigger', when: '2026-10-20T08:00:00Z' }, action: 'display', acknowledged: null },
+          b: { '@type': 'Alert', trigger: { '@type': 'AbsoluteTrigger', when: '2026-10-20T08:00:00Z' }, action: 'email' },
+        } }],
     'acct-2': [{ id: 'shared-1', '@type': 'Task', uid: 'uid-shared', title: 'Theirs', progress: 'needs-action', calendarIds: { 'cal-s': true } }],
   };
 
@@ -305,6 +310,23 @@ describe('JMAPClient tasks in shared calendars (#1204)', () => {
     const due = (create?.args.create as Record<string, Record<string, unknown>>)['new-task'].due as string;
     expect(due).toBe('2026-10-14T00:00:00');
     expect(stalwartKeepsDue(due)).toBe(true);
+  });
+
+  it('moving a task to another account applies a patch that names members by path', async () => {
+    await client.updateCalendarTask('own-3', {
+      calendarIds: { 'acct-2:cal-s': true },
+      progress: 'completed',
+      'alerts/a/acknowledged': '2026-10-21T09:00:00Z',
+      'alerts/b': null,
+    } as Partial<CalendarTask>);
+
+    const create = sentCalls.find((c) => c.method === 'CalendarEvent/set' && c.args.create);
+    const payload = (create?.args.create as Record<string, Record<string, unknown>>)['new-task'];
+    expect(Object.keys(payload).filter((key) => key.includes('/'))).toEqual([]);
+    expect(payload.alerts).toEqual({
+      a: { '@type': 'Alert', trigger: { '@type': 'AbsoluteTrigger', when: '2026-10-20T08:00:00Z' }, action: 'display', acknowledged: '2026-10-21T09:00:00Z' },
+    });
+    expect(payload.progress).toBe('completed');
   });
 
   it('updates a shared task in place in its own account with real ids', async () => {

@@ -123,6 +123,14 @@ export interface SendEmailResult {
    */
   submissionAccountId?: string;
   /**
+   * JMAP account the sent copy (`emailId`) lies in: the one owning the From
+   * identity, a group mailbox's for a group identity. Not always the
+   * submission account.
+   */
+  emailAccountId?: string;
+  /** The Message-ID the sent mail carries, without angle brackets. */
+  messageId?: string;
+  /**
    * Set when the submission succeeded but a post-send step was rejected
    * (the implicit onSuccessUpdateEmail filing patch, or destroying the
    * old draft). The mail left the server - callers should warn, not fail.
@@ -862,6 +870,8 @@ export interface CalendarTask {
   uid: string;
   title: string;
   description: string;
+  /** "text/plain" (the default) or "text/html", as the server gives it. */
+  descriptionContentType?: string | null;
   due: string | null;
   start: string | null;
   duration: string | null;
@@ -881,6 +891,11 @@ export interface CalendarTask {
   useDefaultAlerts?: boolean;
   alerts: Record<string, CalendarEventAlert> | null;
   relatedTo: Record<string, CalendarRelation> | null;
+  links?: Record<string, CalendarLink> | null;
+  /** Whom the task is for (an owner participant), in a group's task list. */
+  participants?: Record<string, CalendarParticipant> | null;
+  /** Set by the server to whoever wrote the task first. */
+  organizerCalendarAddress?: string | null;
   // Client-only, set on tasks from a shared calendar account. Their `id` and
   // `calendarIds` are namespaced `accountId:id` like shared events.
   originalId?: string;
