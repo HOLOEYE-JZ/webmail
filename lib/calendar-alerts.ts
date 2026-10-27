@@ -347,16 +347,23 @@ export function computeTaskFireTime(
   return baseTime + offsetMs;
 }
 
+/**
+ * The task alerts to toast: fired within the last ten minutes, not
+ * acknowledged. `skip` leaves out the tasks whose reminders something else
+ * shows (the reminders window, lib/task-reminders.ts).
+ */
 export function getPendingTaskAlerts(
   tasks: CalendarTask[],
   calendars: Calendar[],
   acknowledgedKeys: Set<string>,
-  now: number
+  now: number,
+  skip?: (task: CalendarTask) => boolean
 ): PendingTaskAlert[] {
   const pending: PendingTaskAlert[] = [];
 
   for (const task of tasks) {
     if (!task.alerts) continue;
+    if (skip?.(task)) continue;
     if (task.progress === 'completed' || task.progress === 'cancelled') continue;
 
     const calendar = calendars.find(c => c.id === Object.keys(task.calendarIds)[0]) ?? null;

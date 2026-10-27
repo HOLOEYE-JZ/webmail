@@ -14,6 +14,7 @@ import { generateAccountId } from '@/lib/account-utils';
 import { subscriptionOwnerFor } from '@/lib/calendar-subscription-sync';
 import type { FolderCountMode } from '@/lib/folder-counts';
 import { orderForMailbox, sanitizeSortLevels, type MessageListOrderScope, type SortLevel } from '@/lib/message-list-order';
+import { DEFAULT_FOLLOW_UP_ACTION, EMPTY_FOLLOW_UP_MENU, sanitizeFollowUpMenu, type FollowUpMenuSetting } from '@/lib/follow-up-menu';
 import {
   DEFAULT_SUB_ADDRESS_DELIMITER,
   isValidSubAddressDelimiter,
@@ -572,6 +573,19 @@ interface SettingsState {
   enableCalendarTasks: boolean;
   showTasksOnCalendar: boolean;
 
+  // Follow-ups
+  /**
+   * Experimental: follow-up flags backed by tasks. Off, nothing of them shows
+   * and no follow-up task or flag is written (hooks/use-follow-ups.ts).
+   */
+  enableFollowUps: boolean;
+  /** The follow-up dialog's action menu: own actions, order, which are shown (lib/follow-up-menu.ts). */
+  followUpMenu: FollowUpMenuSetting;
+  /** The ref of the action a new follow-up starts with. */
+  followUpDefaultAction: string;
+  /** Whether a new follow-up's reminder also comes as a mail. */
+  followUpMailReminder: boolean;
+
   // Contact Birthday Calendar
   showBirthdayCalendar: boolean;
   birthdayCalendarColor: string;
@@ -872,6 +886,12 @@ const DEFAULT_SETTINGS = {
   // Calendar Tasks
   enableCalendarTasks: false,
   showTasksOnCalendar: true,
+
+  // Follow-ups
+  enableFollowUps: false,
+  followUpMenu: EMPTY_FOLLOW_UP_MENU,
+  followUpDefaultAction: DEFAULT_FOLLOW_UP_ACTION,
+  followUpMailReminder: false,
 
   // Contact Birthday Calendar
   showBirthdayCalendar: false,
@@ -1229,6 +1249,10 @@ export const useSettingsStore = create<SettingsState>()(
           calendarInvitationParsingEnabled: state.calendarInvitationParsingEnabled,
           enableCalendarTasks: state.enableCalendarTasks,
           showTasksOnCalendar: state.showTasksOnCalendar,
+          enableFollowUps: state.enableFollowUps,
+          followUpMenu: state.followUpMenu,
+          followUpDefaultAction: state.followUpDefaultAction,
+          followUpMailReminder: state.followUpMailReminder,
           showBirthdayCalendar: state.showBirthdayCalendar,
           birthdayCalendarColor: state.birthdayCalendarColor,
           sharedCalendarColors: state.sharedCalendarColors,
@@ -1411,6 +1435,10 @@ export const useSettingsStore = create<SettingsState>()(
               }
               if (key === 'notificationMutes') {
                 put(key, { notificationMutes: normalizeNotificationMutes(settings[key]) });
+                return;
+              }
+              if (key === 'followUpMenu') {
+                put(key, { followUpMenu: sanitizeFollowUpMenu(settings[key]) });
                 return;
               }
               // The list order is sent to the server as a sort array, so an

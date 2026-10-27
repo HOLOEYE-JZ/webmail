@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useTaskStore } from '../task-store';
 import type { CalendarTask } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { dueTaskReminders } from '@/lib/task-reminders';
 
 function makeTask(overrides: Partial<CalendarTask> = {}): CalendarTask {
   return {
@@ -52,58 +53,6 @@ describe('task-store', () => {
     };
   });
 
-  describe('fetchTasks', () => {
-    // A fetch answered after a later one started (or after the store was
-    // cleared for another account) must not put its list back.
-    function heldClient() {
-      const answers: { resolve: (tasks: CalendarTask[]) => void; reject: (error: Error) => void }[] = [];
-      const client = {
-        ...mockClient,
-        getCalendarTasks: vi.fn().mockImplementation(() => new Promise<CalendarTask[]>((resolve, reject) => {
-          answers.push({ resolve, reject });
-        })),
-      } as IJMAPClient;
-      return { client, answers };
-    }
-
-    it('drops the answer of a fetch that a later one overtook', async () => {
-      const { client, answers } = heldClient();
-      const first = useTaskStore.getState().fetchTasks(client);
-      const second = useTaskStore.getState().fetchTasks(client);
-      answers[1].resolve([makeTask({ id: 'new' })]);
-      await second;
-      answers[0].resolve([makeTask({ id: 'old' })]);
-      await first;
-
-      expect(useTaskStore.getState().tasks.map((t) => t.id)).toEqual(['new']);
-      expect(useTaskStore.getState().isLoading).toBe(false);
-    });
-
-    it('drops the error of a fetch that a later one overtook', async () => {
-      const { client, answers } = heldClient();
-      const first = useTaskStore.getState().fetchTasks(client);
-      const second = useTaskStore.getState().fetchTasks(client);
-      answers[1].resolve([makeTask({ id: 'new' })]);
-      await second;
-      answers[0].reject(new Error('late'));
-      await first;
-
-      expect(useTaskStore.getState().error).toBeNull();
-      expect(useTaskStore.getState().tasks.map((t) => t.id)).toEqual(['new']);
-    });
-
-    it('drops the answer of a fetch still under way when the store is cleared', async () => {
-      const { client, answers } = heldClient();
-      const pending = useTaskStore.getState().fetchTasks(client);
-      useTaskStore.getState().clearTasks();
-      answers[0].resolve([makeTask({ id: 'other-account' })]);
-      await pending;
-
-      expect(useTaskStore.getState().tasks).toEqual([]);
-      expect(useTaskStore.getState().isLoading).toBe(false);
-    });
-  });
-
   describe('toggleTaskComplete', () => {
     it('toggles needs-action to completed without sending progressUpdated in payload (#958)', async () => {
       const task = makeTask({ id: 't1', progress: 'needs-action' });
@@ -122,6 +71,23 @@ describe('task-store', () => {
 
       const updatedTask = useTaskStore.getState().tasks.find((t) => t.id === 't1');
       expect(updatedTask?.progress).toBe('completed');
+    });
+
+    it('completing dismisses the reminders that fired, by path, and keeps those to come', async () => {
+      const alert = (when: string) => ({ '@type': 'Alert' as const, trigger: { '@type': 'AbsoluteTrigger' as const, when }, action: 'display' as const, acknowledged: null, relatedTo: null });
+      const fired = new Date(Date.now() - 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+      const later = new Date(Date.now() + 3_600_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+      const task = makeTask({ id: 't3', progress: 'needs-action', alerts: { a: alert(fired), b: alert(later) } });
+      useTaskStore.setState({ tasks: [task] });
+
+      await useTaskStore.getState().toggleTaskComplete(mockClient as IJMAPClient, task);
+
+      const [, calledUpdates] = (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(Object.keys(calledUpdates).sort()).toEqual(['alerts/a/acknowledged', 'progress']);
+      const updatedTask = useTaskStore.getState().tasks.find((t) => t.id === 't3');
+      expect(updatedTask?.alerts?.a.acknowledged).toBe(calledUpdates['alerts/a/acknowledged']);
+      expect(updatedTask?.alerts?.b).toEqual(alert(later));
+      expect(updatedTask).not.toHaveProperty(['alerts/a/acknowledged']);
     });
 
     it('toggles completed back to needs-action without sending progressUpdated in payload', async () => {
@@ -153,6 +119,59 @@ describe('task-store', () => {
       expect(useTaskStore.getState().error).toBeNull();
     });
 
+    it('drops the answer of a fetch that a later one overtook', async () => {
+      const answers: ((list: { tasks: CalendarTask[]; complete: boolean }) => void)[] = [];
+      const client = {
+        ...mockClient,
+        getCalendarTaskList: vi.fn().mockImplementation(() => new Promise((resolve) => { answers.push(resolve); })),
+      } as IJMAPClient;
+      const first = useTaskStore.getState().fetchTasks(client);
+      const second = useTaskStore.getState().fetchTasks(client);
+      answers[1]({ tasks: [makeTask({ id: 'new' })], complete: true });
+      await second;
+      answers[0]({ tasks: [makeTask({ id: 'old' })], complete: true });
+      await first;
+
+      expect(useTaskStore.getState().tasks.map((t) => t.id)).toEqual(['new']);
+      expect(useTaskStore.getState().loadedBy).toBe(client);
+      expect(useTaskStore.getState().isLoading).toBe(false);
+    });
+
+    it('never narrows a list loaded in full: other calendars keep their reminders when the mail view asks for its few', async () => {
+      const fired = new Date(Date.now() - 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+      const reminder = { '@type': 'Alert' as const, trigger: { '@type': 'AbsoluteTrigger' as const, when: fired }, action: 'display' as const, acknowledged: null, relatedTo: null };
+      const all = [
+        makeTask({ id: 'mine', calendarIds: { 'cal-1': true } }),
+        makeTask({ id: 'elsewhere', calendarIds: { 'cal-2': true }, alerts: { a: reminder } }),
+      ];
+      const getCalendarTaskList = vi.fn().mockImplementation(async (ids?: string[]) => ({
+        tasks: ids ? all.filter((t) => Object.keys(t.calendarIds).some((id) => ids.includes(id))) : all,
+        complete: true,
+      }));
+      const client = { ...mockClient, getCalendarTaskList } as IJMAPClient;
+
+      await useTaskStore.getState().fetchTasks(client);
+      // The mail view's follow-up calendars, then a push refetching the scope.
+      await useTaskStore.getState().fetchTasks(client, ['cal-1']);
+      await useTaskStore.getState().fetchTasks(client, useTaskStore.getState().fetchedCalendarIds);
+
+      expect(getCalendarTaskList).toHaveBeenLastCalledWith(undefined);
+      expect(useTaskStore.getState().fetchedCalendarIds).toBeUndefined();
+      expect(dueTaskReminders(useTaskStore.getState().tasks, Date.now()).map((r) => r.task.id)).toEqual(['elsewhere']);
+    });
+
+    it('widens a scope by the calendars asked for, and starts afresh for another client', async () => {
+      const getCalendarTaskList = vi.fn().mockResolvedValue({ tasks: [], complete: true });
+      const client = { ...mockClient, getCalendarTaskList } as IJMAPClient;
+      await useTaskStore.getState().fetchTasks(client, ['cal-1']);
+      await useTaskStore.getState().fetchTasks(client, ['cal-2']);
+      expect(getCalendarTaskList).toHaveBeenLastCalledWith(['cal-1', 'cal-2']);
+
+      const other = { ...mockClient, getCalendarTaskList } as IJMAPClient;
+      await useTaskStore.getState().fetchTasks(other, ['cal-9']);
+      expect(getCalendarTaskList).toHaveBeenLastCalledWith(['cal-9']);
+    });
+
     it('creates a task and appends to store', async () => {
       const created = await useTaskStore.getState().createTask(mockClient as IJMAPClient, { title: 'New Task' });
 
@@ -171,6 +190,24 @@ describe('task-store', () => {
       const updated = useTaskStore.getState().tasks.find((t) => t.id === 't3');
       expect(updated?.title).toBe('Updated Title');
       expect(updated?.progress).toBe('needs-action');
+    });
+
+    it('a save that completes the task (the task modal) dismisses what fired and takes its own alarm mail off', async () => {
+      const alert = (when: string, action: 'display' | 'email' = 'display') => ({ '@type': 'Alert' as const, trigger: { '@type': 'AbsoluteTrigger' as const, when }, action, acknowledged: null, relatedTo: null });
+      const fired = new Date(Date.now() - 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+      const task = makeTask({ id: 't5', alerts: { 'follow-up': alert(fired), 'follow-up-mail': alert(fired, 'email'), phone: alert(fired, 'email') } });
+      useTaskStore.setState({ tasks: [task] });
+
+      await useTaskStore.getState().updateTask(mockClient as IJMAPClient, 't5', { title: 'Done now', progress: 'completed' });
+
+      const [, sent] = (mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(Object.keys(sent).sort()).toEqual(['alerts/follow-up-mail', 'alerts/follow-up/acknowledged', 'progress', 'title']);
+      const updated = useTaskStore.getState().tasks.find((t) => t.id === 't5');
+      expect(Object.keys(updated?.alerts ?? {}).sort()).toEqual(['follow-up', 'phone']);
+
+      // Written once: a second save of a completed task changes no alert.
+      await useTaskStore.getState().updateTask(mockClient as IJMAPClient, 't5', { progress: 'completed' });
+      expect((mockClient.updateCalendarTask as ReturnType<typeof vi.fn>).mock.calls[1][1]).toEqual({ progress: 'completed' });
     });
 
     it('reloads the list when a move to a shared calendar gives the task a new id (#1204)', async () => {

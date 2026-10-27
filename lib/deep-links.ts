@@ -251,6 +251,26 @@ export function buildMailPath(state: MailLinkState, mailboxes: Mailbox[] = []): 
 }
 
 /**
+ * The query parameter follow-ups' task links named the mail's JMAP account
+ * with before they wrote `owner`. Tasks on the server keep such links, so it
+ * is read as `owner` is (`messageLinkOwner`).
+ */
+export const LEGACY_MAIL_ACCOUNT_PARAM = 'mailAccount';
+
+/** The JMAP account a message link's query names: `owner`, or the legacy `mailAccount`. */
+export function messageLinkOwner(search: URLSearchParams | undefined): string | undefined {
+  return search?.get('owner') || search?.get(LEGACY_MAIL_ACCOUNT_PARAM) || undefined;
+}
+
+/**
+ * A link to one message that keeps working outside the app's state, as a
+ * task's link to the mail it follows up: the message and its JMAP account.
+ */
+export function buildMailMessageLink(emailId: string, mailAccountId?: string | null): string {
+  return buildMailPath({ mailboxId: null, emailId, threadId: null, ownerAccountId: mailAccountId });
+}
+
+/**
  * Whether a real browser path (any mount or locale prefix) opens a folder
  * link, `/mail/folder/<ref>`. Read before the shell renders, when only the
  * address bar can tell a reload of a folder from a plain visit to the app.
@@ -282,7 +302,7 @@ export function parseMailPath(
   if (kind && value) {
     const id = decodeSegment(value);
     if (id) {
-      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId };
+      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId: messageLinkOwner(search) };
       if (kind === 'thread') return { kind: 'thread', id, accountId, slot, ownerAccountId };
       if (kind === 'folder') return { kind: 'folder', ref: id, accountId, slot };
     }

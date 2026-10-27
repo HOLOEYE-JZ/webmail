@@ -105,6 +105,23 @@ describe('create, update and delete', () => {
     expect(after.mock.calls[0][0]).toMatchObject({ id: 't1', title: 'Renamed' });
   });
 
+  it('shows plugins whole properties, as before, when the change is written by path', async () => {
+    const alert = (when: string) => ({ '@type': 'Alert' as const, trigger: { '@type': 'AbsoluteTrigger' as const, when }, action: 'display' as const, acknowledged: null, relatedTo: null });
+    const fired = new Date(Date.now() - 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+    const later = new Date(Date.now() + 3_600_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+    useTaskStore.setState({ tasks: [makeTask({ alerts: { a: alert(fired), b: alert(later) } })] });
+    const before = vi.fn(() => true);
+    taskHooks.onBeforeTaskUpdate.register('t', before);
+
+    await useTaskStore.getState().updateTask(client, 't1', { progress: 'completed' });
+
+    // The server gets the alert's member by path, so another change to the task is kept.
+    expect(Object.keys(vi.mocked(client.updateCalendarTask).mock.calls[0][1]).sort()).toEqual(['alerts/a/acknowledged', 'progress']);
+    const { patch } = (before.mock.calls[0] as unknown as [{ patch: Record<string, unknown> }])[0];
+    expect(Object.keys(patch).sort()).toEqual(['alerts', 'progress']);
+    expect(patch.alerts).toEqual({ a: { ...alert(fired), acknowledged: expect.any(String) }, b: alert(later) });
+  });
+
   it('leaves the task alone when a plugin says no', async () => {
     useTaskStore.setState({ tasks: [makeTask()] });
     taskHooks.onBeforeTaskUpdate.register('t', () => false);

@@ -61,6 +61,8 @@ type PendingUndoSend = {
    *  was sent from a shared identity (#874). Distinct from localAccountId,
    *  which selects *which login's client* to talk to. */
   submissionAccountId?: string;
+  /** JMAP account the sent copy lies in (SendEmailResult.emailAccountId). */
+  emailAccountId?: string;
 };
 
 /** Drop the matching emails from a key-based selection. */
@@ -2853,6 +2855,25 @@ async function pluginSearchResultIds(query: string, filters: unknown, emails: Em
     .slice(0, MAX_PLUGIN_SEARCH_IDS);
 }
 
+/** A star the user toggled in the app, after it was written. */
+export interface StarToggled {
+  email: Email;
+  starred: boolean;
+}
+
+const starToggleListeners = new Set<(change: StarToggled) => void>();
+
+/**
+ * Hears every star the user toggles in the app (list, reader, keyboard, tabs),
+ * after the write; not the flags written elsewhere. Follow-ups use it: taking
+ * the star off a mail with an open follow-up completes the follow-up.
+ * Returns the unsubscribe.
+ */
+export function onStarToggled(listener: (change: StarToggled) => void): () => void {
+  starToggleListeners.add(listener);
+  return () => { starToggleListeners.delete(listener); };
+}
+
 /**
  * Plugins' results for the search that is running (onProvideSearchResults).
  * Asked beside the search, not before its list is shown: a slow plugin never
@@ -3918,6 +3939,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
               sendAt: result.sendAt,
               isSmime: false,
               submissionAccountId: result.submissionAccountId,
+              emailAccountId: result.emailAccountId,
               // Cross-account send: undo/send-now must talk to the account that
               // holds the submission, not the active one (#461).
               localAccountId: options?.localAccountId,
@@ -5040,6 +5062,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         ),
       }));
       void emailHooks.onEmailStarToggle.emit({ emailIds: [emailId], starred: !isFlagged });
+      for (const listener of starToggleListeners) {
+        try {
+          listener({ email, starred: !isFlagged });
+        } catch (error) {
+          console.error('Star toggle listener failed:', error);
+        }
+      }
       refillAfterKeywordChange(get, client, ['$flagged']);
     } catch (error) {
       set({
@@ -6216,8 +6245,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           // Refresh tasks when calendar events change (e.g. task created via CalDAV)
           const { useTaskStore } = await import('./task-store');
           const taskStore = useTaskStore.getState();
-          if (taskStore.tasks.length > 0 || calendarStore.viewMode === 'tasks') {
+          if (calendarStore.viewMode === 'tasks') {
             taskStore.fetchTasks(client);
+          } else if (taskStore.tasks.length > 0) {
+            // The scope the tasks were loaded with: all, or the mail view's
+            // follow-up calendars.
+            taskStore.fetchTasks(client, taskStore.fetchedCalendarIds);
           }
         }
       }

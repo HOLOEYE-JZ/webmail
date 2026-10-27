@@ -4,6 +4,9 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { debug } from '@/lib/debug';
 import { taskHooks } from '@/lib/plugin-hooks';
 import { taskToView } from '@/lib/plugin-projection';
+import { applyPatchObject, patchedProperties } from '@/lib/jmap/patch-object';
+import { completedTaskPatch, withCompletion } from '@/lib/task-reminders';
+import type { TaskListScope } from '@/lib/task-list';
 
 export type TaskViewFilter = 'all' | 'pending' | 'completed' | 'overdue';
 
@@ -18,12 +21,32 @@ interface TaskStore {
   selectedTaskId: string | null;
   filter: TaskViewFilter;
   showCompleted: boolean;
+  /**
+   * Which tasks the task list shows: the calendars shown, the user's, or a
+   * group mailbox's list (lib/task-list.ts). A filter of what is loaded.
+   */
+  listScope: TaskListScope;
   isLoading: boolean;
   error: string | null;
+  /**
+   * The calendars the last fetch read, or undefined for all of them (not to
+   * be confused with `listScope`, which tasks the list shows). A push
+   * refetches the same calendars, so the mail view's few (follow-ups) do not
+   * turn into a reload of every account's calendars. A fetch never narrows
+   * them for the same client: asked for fewer, it reads these too.
+   */
+  fetchedCalendarIds: string[] | undefined;
+  /**
+   * The client whose fetch the list holds, null while none has finished, the
+   * last one could not read every task, or another fetch is under way. Only
+   * then does a task missing from the list mean that it was deleted.
+   */
+  loadedBy: IJMAPClient | null;
   setTasks: (tasks: CalendarTask[]) => void;
   setSelectedTaskId: (id: string | null) => void;
   setFilter: (filter: TaskViewFilter) => void;
   setShowCompleted: (show: boolean) => void;
+  setListScope: (scope: TaskListScope) => void;
   fetchTasks: (client: IJMAPClient, calendarIds?: string[]) => Promise<void>;
   /** Resolves to null when a plugin stopped the create. */
   createTask: (client: IJMAPClient, task: Partial<CalendarTask>) => Promise<CalendarTask | null>;
@@ -37,14 +60,30 @@ interface TaskStore {
 // Each fetch gets a number: only the latest one's answer is kept, so an
 // answer that comes late never puts an older list back.
 let latestFetch = 0;
+// The client `fetchedCalendarIds` were fetched for, null before any fetch.
+let fetchedFor: IJMAPClient | null = null;
+
+/**
+ * The calendars a fetch reads: never fewer than the list holds already for
+ * the same client, so a view that needs a few (the mail view's follow-ups)
+ * does not drop the tasks of the others, whose reminders would then stop.
+ * Undefined is every calendar.
+ */
+function widenedScope(held: string[] | undefined, asked: string[] | undefined): string[] | undefined {
+  if (!asked?.length || !held) return undefined;
+  return [...new Set([...held, ...asked])];
+}
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
   selectedTaskId: null,
   filter: 'all',
   showCompleted: false,
+  listScope: 'all',
   isLoading: false,
   error: null,
+  fetchedCalendarIds: undefined,
+  loadedBy: null,
   setTasks: (tasks) => set({ tasks }),
   setSelectedTaskId: (id) => set({ selectedTaskId: id }),
   setFilter: (filter) => {
@@ -57,14 +96,22 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     set({ showCompleted: show });
     void taskHooks.onTaskFilterChange.emit({ filter: get().filter, showCompleted: show });
   },
+  setListScope: (listScope) => set({ listScope }),
 
   fetchTasks: async (client, calendarIds) => {
     debug.log('tasks', 'TaskStore/fetchTasks start', { calendarIds: calendarIds || 'all' });
+    const asked = calendarIds?.length ? [...calendarIds] : undefined;
+    const ids = fetchedFor === client ? widenedScope(get().fetchedCalendarIds, asked) : asked;
+    fetchedFor = client;
     const fetch = ++latestFetch;
     const stillCurrent = () => fetch === latestFetch;
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, fetchedCalendarIds: ids, loadedBy: null });
     try {
-      const tasks = await client.getCalendarTasks(calendarIds);
+      // Only a list read in full counts as loaded: follow-ups take a task
+      // missing from it for deleted.
+      const { tasks, complete } = client.getCalendarTaskList
+        ? await client.getCalendarTaskList(ids)
+        : { tasks: await client.getCalendarTasks(ids), complete: false };
       // A fetch started later decides the list.
       if (!stillCurrent()) return;
       debug.log('tasks', 'TaskStore/fetchTasks received', tasks.length, 'tasks');
@@ -75,7 +122,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           showWithoutTime: t.showWithoutTime, calendarIds: t.calendarIds,
         });
       });
-      set({ tasks, isLoading: false });
+      set({ tasks, isLoading: false, loadedBy: complete ? client : null });
       if (taskHooks.onTasksLoaded.size > 0) void taskHooks.onTasksLoaded.emit(tasks.map(taskToView));
     } catch (error) {
       debug.error('TaskStore/fetchTasks failed', error);
@@ -93,21 +140,28 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     return created;
   },
 
-  updateTask: async (client, id, updates) => {
-    if (!(await taskHooks.onBeforeTaskUpdate.intercept({ taskId: id, patch: updates }))) return false;
+  updateTask: async (client, id, patch) => {
     const before = get().tasks.find(t => t.id === id);
+    // Completed from any form (the task modal too): its fired reminders
+    // dismissed and its alarm mail taken off, as Mark Complete does.
+    const updates = withCompletion(before, patch, new Date());
+    // Plugins read the patch as whole properties, as before paths were
+    // written: a member changed by path shows as its property after the change.
+    const pluginPatch = patchedProperties(before ?? { id }, updates);
+    if (!(await taskHooks.onBeforeTaskUpdate.intercept({ taskId: id, patch: pluginPatch }))) return false;
     const newId = await client.updateCalendarTask(id, updates);
     if (newId && newId !== id) {
       // Moved into a calendar of another account: the server recreated it
       // under a new id, so reload rather than patch the old entry. (#1204)
       set({ selectedTaskId: get().selectedTaskId === id ? newId : get().selectedTaskId });
-      await get().fetchTasks(client);
+      await get().fetchTasks(client, get().fetchedCalendarIds);
       const moved = get().tasks.find(t => t.id === newId)
-        ?? ({ ...before, ...updates, id: newId } as CalendarTask);
+        ?? ({ ...applyPatchObject(before ?? {}, updates), id: newId } as CalendarTask);
       void taskHooks.onTaskUpdate.emit(taskToView(moved));
       return true;
     }
-    const updated = { ...(before ?? { id }), ...updates, updated: new Date().toISOString() } as CalendarTask;
+    // `updates` may name members by path (`alerts/<id>/acknowledged`).
+    const updated = { ...applyPatchObject(before ?? { id }, updates), updated: new Date().toISOString() } as CalendarTask;
     set({
       tasks: get().tasks.map(t => t.id === id ? updated : t),
     });
@@ -129,12 +183,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   toggleTaskComplete: async (client, task) => {
     const newProgress = task.progress === 'completed' ? 'needs-action' : 'completed';
-    const updates: Partial<CalendarTask> = {
-      progress: newProgress,
-    };
+    // Completing dismisses the reminders that have fired, as Outlook's Mark
+    // Complete: reopened, the task does not remind of them again.
+    const updates: Partial<CalendarTask> = newProgress === 'completed'
+      ? completedTaskPatch(task, new Date())
+      : { progress: newProgress };
     await client.updateCalendarTask(task.id, updates);
     set({
-      tasks: get().tasks.map(t => t.id === task.id ? { ...t, ...updates, updated: new Date().toISOString() } : t),
+      tasks: get().tasks.map(t => t.id === task.id ? { ...applyPatchObject(t, updates), updated: new Date().toISOString() } : t),
     });
     // A toggle is reported as onTaskToggleComplete only, not also as
     // onTaskUpdate, so a plugin that listens to both sees each change once.
@@ -143,6 +199,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   clearTasks: () => {
     latestFetch += 1;
-    set({ tasks: [], selectedTaskId: null, error: null, isLoading: false });
+    fetchedFor = null;
+    set({ tasks: [], selectedTaskId: null, error: null, isLoading: false, fetchedCalendarIds: undefined, loadedBy: null });
   },
 }));
