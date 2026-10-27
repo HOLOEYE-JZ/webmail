@@ -229,7 +229,7 @@ describe('the dialog in the group\'s list', () => {
 
     const written = client.createCalendarTask.mock.calls[0][0];
     expect(written.calendarIds).toEqual({ 'grp:b': true });
-    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?mailAccount=grp$/);
+    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?owner=grp$/);
     expect(written.participants?.for).toMatchObject({
       calendarAddress: 'mailto:anna@example.com',
       roles: { owner: true },

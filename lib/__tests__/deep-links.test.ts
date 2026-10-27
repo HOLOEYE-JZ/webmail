@@ -207,12 +207,19 @@ describe('mail paths', () => {
     });
   });
 
-  it('names the JMAP account of a message link apart from the login', () => {
+  it('names the JMAP account of a message link apart from the login, as `owner`', () => {
     expect(buildMailMessageLink('m/1')).toBe('/mail/message/m%2F1');
-    expect(buildMailMessageLink('m1', 'acc:1')).toBe('/mail/message/m1?mailAccount=acc%3A1');
+    expect(buildMailMessageLink('m1', 'acc:1')).toBe('/mail/message/m1?owner=acc%3A1');
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('account=login&owner=acc'))).toEqual({
+      kind: 'message', id: 'm1', accountId: 'login', ownerAccountId: 'acc',
+    });
+  });
+
+  it('still reads the account of an older follow-up link, `mailAccount`; `owner` first', () => {
     expect(parseMailPath(['message', 'm1'], new URLSearchParams('account=login&mailAccount=acc'))).toEqual({
       kind: 'message', id: 'm1', accountId: 'login', ownerAccountId: 'acc',
     });
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('owner=new&mailAccount=old'))).toMatchObject({ ownerAccountId: 'new' });
   });
 
   it('reads the login slot a push notification names', () => {

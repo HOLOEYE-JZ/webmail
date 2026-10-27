@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, startOfDay } from "date-fns";
 import type { CalendarEventAlert, CalendarLink, CalendarTask } from "@/lib/jmap/types";
-import { MAIL_ACCOUNT_PARAM } from "@/lib/deep-links";
+import { messageLinkOwner } from "@/lib/deep-links";
 import { patchPath } from "@/lib/jmap/patch-object";
 import { FOLLOW_UP_ACTIONS, normalizeAction, type FollowUpActionKey } from "@/lib/follow-up-actions";
 import { FOLLOW_UP_ACTION_NAMES, FOLLOW_UP_NO_SUBJECT } from "@/lib/follow-up-action-names";
@@ -612,7 +612,7 @@ export function followUpMailRef(task: Pick<CalendarTask, "links">): FollowUpMail
     }
     const match = MAIL_MESSAGE_PATH.exec(url.pathname);
     if (!match) continue;
-    return { emailId: decoded(match[1]), accountId: url.searchParams.get(MAIL_ACCOUNT_PARAM) || null };
+    return { emailId: decoded(match[1]), accountId: messageLinkOwner(url.searchParams) ?? null };
   }
   return null;
 }

@@ -93,12 +93,13 @@ export function openReminderMail(
   }
   if (fallback.proShell) {
     // A group mailbox's mail is fetched in its account through the active login.
-    const client = useAuthStore.getState().client;
+    const { client, activeAccountId } = useAuthStore.getState();
     const groupAccountId = client ? groupMailAccountOf(mailAccountId, client) : undefined;
+    const loginId = groupAccountId ? activeAccountId ?? undefined : undefined;
     useProTabStore.getState().openEmailTab(
       {
         accountId: mailAccountId ?? "",
-        ...(groupAccountId ? { mailAccountId: groupAccountId } : {}),
+        ...(loginId ? { clientAccountId: loginId } : {}),
         emailId,
         mailboxId: null,
         title: fallback.title,

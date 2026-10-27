@@ -243,7 +243,7 @@ describe('the reminders window', () => {
     await waitFor(() => expect(rows()).toHaveLength(2));
 
     fireEvent.doubleClick(rows()[0]);
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/mail/message/M1?mailAccount=acc'));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/mail/message/M1?owner=acc'));
 
     const opener = vi.fn();
     setReminderMailOpener(opener);
@@ -281,7 +281,7 @@ describe('the reminders window', () => {
     await waitFor(() => expect(rows()).toHaveLength(1));
     fireEvent.click(screen.getByTestId('reminders-open'));
     await waitFor(() => expect(openEmailTab).toHaveBeenCalledWith(
-      { accountId: 'grp', mailAccountId: 'grp', emailId: 'M1', mailboxId: null, title: 'Offer 4711' }, { reuseReader: true },
+      { accountId: 'grp', clientAccountId: 'login', emailId: 'M1', mailboxId: null, title: 'Offer 4711' }, { reuseReader: true },
     ));
     openEmailTab.mockRestore();
   });

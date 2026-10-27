@@ -134,7 +134,7 @@ describe('followUpSentMail', () => {
       due: '2026-10-29T00:00:00',
       alerts: null,
     });
-    expect(task.links?.mail.href).toMatch(/\/mail\/message\/S1\?mailAccount=acc$/);
+    expect(task.links?.mail.href).toMatch(/\/mail\/message\/S1\?owner=acc$/);
     const relation = task.relatedTo?.['<abc@example.com>'] as unknown as Record<string, { reminder: string }>;
     expect(new Date(relation[REPLY_WATCH_PROPERTY].reminder)).toEqual(new Date(2026, 9, 29, 8, 0));
     expect(client.toggleStar).toHaveBeenCalledWith('S1', true, 'acc');
@@ -145,7 +145,7 @@ describe('followUpSentMail', () => {
     await followUpSentMail(asClient(), { emailId: 'S1', accountId: 'grp', messageId: 'abc@example.com' }, { choice: 'week' }, MONDAY, DEFAULT_WORKING_TIME, text, [0]);
     const task = client.createCalendarTask.mock.calls[0][0];
     expect(task.calendarIds).toEqual({ tasks: true });
-    expect(task.links?.mail.href).toMatch(/\?mailAccount=grp$/);
+    expect(task.links?.mail.href).toMatch(/\?owner=grp$/);
     expect(task.due).toBe('2026-11-02T00:00:00');
     expect(client.toggleStar).not.toHaveBeenCalled();
   });

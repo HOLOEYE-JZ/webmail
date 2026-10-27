@@ -720,7 +720,7 @@ describe('a group mailbox\'s mail ("only me")', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     const written = client.createCalendarTask.mock.calls[0][0];
     expect(written.calendarIds).toEqual({ tasks: true });
-    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?mailAccount=grp$/);
+    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?owner=grp$/);
     expect(written.alerts?.['follow-up-mail']?.action).toBe('email');
     expect(client.toggleStar).not.toHaveBeenCalled();
     expect(useEmailStore.getState().emails[0].keywords.$flagged).toBeUndefined();

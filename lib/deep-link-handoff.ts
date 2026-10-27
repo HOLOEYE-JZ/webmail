@@ -113,7 +113,7 @@ const followedMessageAccounts = new Map<string, string>();
  * follow-up task's "Open mail" from the calendar), its JMAP account kept
  * here as well. On a client-side navigation the mail view renders before the
  * router writes the new address and rewrites it before it opens the link, so
- * it never reads `?mailAccount=` itself; it takes the account from here.
+ * it never reads `?owner=` itself; it takes the account from here.
  */
 export function followMessageLink(emailId: string, mailAccountId?: string | null): string {
   if (mailAccountId) followedMessageAccounts.set(emailId, mailAccountId);

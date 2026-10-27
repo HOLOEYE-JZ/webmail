@@ -101,7 +101,7 @@ describe('deep-link handoff', () => {
 
 describe('message links the app follows itself', () => {
   it('keeps the account a link names for the mail view, once', () => {
-    expect(followMessageLink('M1', 'grp')).toBe('/mail/message/M1?mailAccount=grp');
+    expect(followMessageLink('M1', 'grp')).toBe('/mail/message/M1?owner=grp');
     expect(takeFollowedMessageAccount('M1')).toBe('grp');
     expect(takeFollowedMessageAccount('M1')).toBeUndefined();
   });

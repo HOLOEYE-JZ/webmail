@@ -517,13 +517,11 @@ export function ProEmailTabBody({ tabId, data }: ProEmailTabBodyProps) {
   // Messages opened out of a shared/group folder must be fetched with the
   // owner's accountId - fetchEmailContent's fallback derives it from the
   // globally selected mailbox, which is unrelated to this tab.
-  // A permalink naming a group mailbox's account (a follow-up's link) has no
-  // folder: it names the owner itself.
   const ownerAccountId = useMemo(() => {
-    if (!data.mailboxId) return data.mailAccountId;
+    if (!data.mailboxId) return undefined;
     const mb = mailboxes.find((m) => m.id === data.mailboxId);
     return mb?.isShared ? mb.accountId : undefined;
-  }, [mailboxes, data.mailboxId, data.mailAccountId]);
+  }, [mailboxes, data.mailboxId]);
 
   // A message opened with its login (a list row, a search hit of another
   // login) is fetched through that login's client, targeting the owner

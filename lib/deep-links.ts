@@ -251,20 +251,23 @@ export function buildMailPath(state: MailLinkState, mailboxes: Mailbox[] = []): 
 }
 
 /**
- * The query parameter naming the JMAP account a message link's mail lives in,
- * as follow-ups' task links write it. `account` already names the login
- * (AccountEntry.id), and one login reaches several JMAP accounts (shared and
- * group mailboxes). Read as `owner` is (MailDeepLink.ownerAccountId).
+ * The query parameter follow-ups' task links named the mail's JMAP account
+ * with before they wrote `owner`. Tasks on the server keep such links, so it
+ * is read as `owner` is (`messageLinkOwner`).
  */
-export const MAIL_ACCOUNT_PARAM = 'mailAccount';
+export const LEGACY_MAIL_ACCOUNT_PARAM = 'mailAccount';
+
+/** The JMAP account a message link's query names: `owner`, or the legacy `mailAccount`. */
+export function messageLinkOwner(search: URLSearchParams | undefined): string | undefined {
+  return search?.get('owner') || search?.get(LEGACY_MAIL_ACCOUNT_PARAM) || undefined;
+}
 
 /**
  * A link to one message that keeps working outside the app's state, as a
  * task's link to the mail it follows up: the message and its JMAP account.
  */
 export function buildMailMessageLink(emailId: string, mailAccountId?: string | null): string {
-  const path = `/mail/message/${encodeSegment(emailId)}`;
-  return mailAccountId ? `${path}?${MAIL_ACCOUNT_PARAM}=${encodeURIComponent(mailAccountId)}` : path;
+  return buildMailPath({ mailboxId: null, emailId, threadId: null, ownerAccountId: mailAccountId });
 }
 
 /**
@@ -384,13 +387,11 @@ export function parseMailPath(
   const fullscreen = search?.get('view') === 'fullscreen' || undefined;
   const ownerAccountId = search?.get('owner') || undefined;
   const [kind, value] = segments;
-  // A follow-up's link to its mail names the account as `?mailAccount=`.
-  const messageOwnerAccountId = ownerAccountId ?? (search?.get(MAIL_ACCOUNT_PARAM) || undefined);
 
   if (kind && value) {
     const id = decodeSegment(value);
     if (id) {
-      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId: messageOwnerAccountId };
+      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId: messageLinkOwner(search) };
       if (kind === 'thread') return { kind: 'thread', id, accountId, slot, ownerAccountId };
       if (kind === 'folder') return { kind: 'folder', ref: id, accountId, slot };
     }

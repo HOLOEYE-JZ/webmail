@@ -1744,8 +1744,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
 
     if (link.kind === 'message') {
-      // A link naming a shared or group mailbox's JMAP account (`?owner=`,
-      // or `?mailAccount=` as a follow-up's task writes it) opens the mail
+      // A link naming a shared or group mailbox's JMAP account (`?owner=`, or
+      // `?mailAccount=` as older follow-up tasks hold it) opens the mail
       // there: its ids mean nothing in the login's own account (#1351). Only
       // an account the login reaches. A link the app followed itself hands its
       // account over, since on a client-side navigation this view never sees
@@ -1763,9 +1763,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (isEmbedded) {
         // A shared account's message is fetched from that account through
         // the active login (#1351).
+        const loginId = groupAccountId ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
         useProTabStore.getState().openEmailTab({
-          accountId: '',
-          ...(groupAccountId ? { mailAccountId: groupAccountId } : {}),
+          accountId: groupAccountId ?? '',
+          ...(loginId ? { clientAccountId: loginId } : {}),
           emailId: link.id,
           mailboxId: null,
           title: t('common.loading'),

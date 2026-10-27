@@ -265,6 +265,10 @@ describe('followUpMailRef', () => {
     expect(followUpMailRef({ links: mailLink('/mail/message/M1') })).toEqual({ emailId: 'M1', accountId: null });
   });
 
+  it('reads the account as `owner`, as links are written now', () => {
+    expect(followUpMailRef({ links: mailLink('https://host/mail/message/M1?owner=grp') })).toEqual({ emailId: 'M1', accountId: 'grp' });
+  });
+
   it('is null for a task without a mail link', () => {
     expect(followUpMailRef({ links: null })).toBeNull();
     expect(followUpMailRef({ links: mailLink('https://host/mail/message/M1', null) })).toBeNull();

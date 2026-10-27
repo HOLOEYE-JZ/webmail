@@ -84,7 +84,7 @@ describe('TaskModal follow-up mail', () => {
     expect(getEmailFields).toHaveBeenCalledWith(['M1'], ['id'], 'grp');
     fireEvent.click(screen.getByTestId('task-open-mail'));
     expect(onClose).toHaveBeenCalled();
-    expect(push).toHaveBeenCalledWith('/mail/message/M1?mailAccount=grp');
+    expect(push).toHaveBeenCalledWith('/mail/message/M1?owner=grp');
   });
 
   it('opens the own mail by its plain link', async () => {

@@ -86,7 +86,7 @@ describe('useFollowUp', () => {
     });
     expect(written.links?.mail).toMatchObject({ rel: 'describedby' });
     // The link names the mail's JMAP account (plan: a group mailbox's mail needs it).
-    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?mailAccount=acc$/);
+    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?owner=acc$/);
     expect(typeof written.due).toBe('string');
     expect(result.current.task?.id).toBe('task-1');
     expect(flagged()).toBe(true);
@@ -209,7 +209,7 @@ describe('useFollowUp on a group mailbox\'s mail ("only me")', () => {
     await act(() => result.current.quickClick());
     const written = client.createCalendarTask.mock.calls[0][0];
     expect(written.calendarIds).toEqual({ tasks: true });
-    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?mailAccount=grp$/);
+    expect(written.links?.mail.href).toMatch(/\/mail\/message\/M1\?owner=grp$/);
     // Its Message-ID read in the group's account.
     expect(client.getEmailFields).toHaveBeenCalledWith(['M1'], ['messageId'], 'grp');
     expect(result.current.task?.id).toBe('task-1');
