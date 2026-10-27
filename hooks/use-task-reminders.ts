@@ -13,7 +13,7 @@ import { useProTabStore } from "@/stores/pro-tab-store";
 import { useToastStore } from "@/stores/toast-store";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { IS_LITE } from "@/lib/lite";
-import { groupMailAccountOf } from "@/lib/deep-links";
+import { groupMailAccountOf } from "@/lib/group-mail-links";
 import { followMessageLink } from "@/lib/deep-link-handoff";
 import { dueTaskReminders, type TaskReminder } from "@/lib/task-reminders";
 import { followUpMailRef, followUpMailSummary, followUpNote } from "@/lib/follow-ups";

@@ -5,6 +5,7 @@ import {
   DIRECTORY_RETRY_MS,
   findGroupTaskLists,
   PUSH_DEBOUNCE_MS,
+  groupTasksPushed,
   refreshGroupTasksFor,
   useGroupTasks,
 } from '@/stores/group-task-store';
@@ -124,6 +125,24 @@ describe('the group task lists', () => {
       await vi.advanceTimersByTimeAsync(PUSH_DEBOUNCE_MS);
       expect(client.getCalendarTaskList).not.toHaveBeenCalled();
       for (let i = 0; i < 5; i++) refreshGroupTasksFor(client as unknown as IJMAPClient, ['grp']);
+      await vi.advanceTimersByTimeAsync(PUSH_DEBOUNCE_MS);
+      expect(client.getCalendarTaskList).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('groupTasksPushed', () => {
+  it('reads the lists again for a push naming a group\'s calendar events, not for the own account\'s', async () => {
+    await useGroupTasks.getState().refresh(client as unknown as IJMAPClient);
+    client.getCalendarTaskList.mockClear();
+    vi.useFakeTimers();
+    try {
+      groupTasksPushed({ '@type': 'StateChange', changed: { me: { CalendarEvent: 's1', Email: 's2' } } }, client as unknown as IJMAPClient);
+      await vi.advanceTimersByTimeAsync(PUSH_DEBOUNCE_MS);
+      expect(client.getCalendarTaskList).not.toHaveBeenCalled();
+      groupTasksPushed({ '@type': 'StateChange', changed: { grp: { CalendarEvent: 's3' } } }, client as unknown as IJMAPClient);
       await vi.advanceTimersByTimeAsync(PUSH_DEBOUNCE_MS);
       expect(client.getCalendarTaskList).toHaveBeenCalledTimes(1);
     } finally {

@@ -5,7 +5,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { onStarToggled, useEmailStore } from "@/stores/email-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
-import { reachesMailAccount } from "@/lib/deep-links";
+import { reachesMailAccount } from "@/lib/group-mail-links";
 import { stripMessageIdBrackets } from "@/lib/email-threading";
 import { perStoreEpoch } from "@/lib/store-epoch";
 import { completedTaskPatch } from "@/lib/task-reminders";

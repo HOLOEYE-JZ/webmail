@@ -3985,7 +3985,7 @@ export function EmailViewer({
           email={email}
           showLabel={showToolbarLabels}
           data-overflow-item
-          data-overflow-priority="5"
+          data-overflow-priority="4.5"
           className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
         />
         {/* Delete */}
@@ -4001,7 +4001,7 @@ export function EmailViewer({
         </Button>
         {/* Move to folder */}
         {moveTree.length > 0 && onMoveToMailbox && (
-          <div ref={moveMenuRef} data-overflow-item data-overflow-priority="6" className={cn("relative", mvViewer && "order-6")}>
+          <div ref={moveMenuRef} data-overflow-item data-overflow-priority="5" className={cn("relative", mvViewer && "order-6")}>
             <Button
               ref={moveButtonRef}
               variant="ghost"
@@ -4062,7 +4062,7 @@ export function EmailViewer({
           </div>
         )}
         {/* Tag Picker - hidden on mobile, overflows to More menu */}
-        <div data-overflow-item data-overflow-priority="7" className={cn("hidden sm:flex items-center", mvViewer && "order-7")}>
+        <div data-overflow-item data-overflow-priority="6" className={cn("hidden sm:flex items-center", mvViewer && "order-7")}>
         {!mvViewer && <div className="w-px h-5 bg-border mx-0.5" />}
         <div ref={tagMenuRef} className="relative">
           <button
@@ -4094,7 +4094,7 @@ export function EmailViewer({
             size="sm"
             onClick={isInJunkFolder ? onUndoSpam : onMarkAsSpam}
             data-overflow-item
-            data-overflow-priority="8"
+            data-overflow-priority="7"
             className={cn(
               "flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0",
               mvViewer
@@ -4124,7 +4124,7 @@ export function EmailViewer({
           size="sm"
           onClick={() => onMarkAsRead?.(email.id, isUnread)}
           data-overflow-item
-          data-overflow-priority="9"
+          data-overflow-priority="8"
           className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-5")}
           title={isUnread ? t('mark_read') : t('mark_unread')}
         >
@@ -4145,7 +4145,7 @@ export function EmailViewer({
           size="sm"
           onClick={handlePrint}
           data-overflow-item
-          data-overflow-priority="10"
+          data-overflow-priority="9"
           className="hidden sm:inline-flex h-8 gap-1.5"
           title={t('print')}
         >
@@ -4160,7 +4160,7 @@ export function EmailViewer({
           size="sm"
           onClick={() => setShowSourceModal(true)}
           data-overflow-item
-          data-overflow-priority="11"
+          data-overflow-priority="10"
           className={cn("hidden sm:inline-flex h-8 gap-1.5", mvViewer && "order-8")}
           title={t('view_source')}
         >
@@ -4176,7 +4176,7 @@ export function EmailViewer({
           size="sm"
           onClick={() => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev)}
           data-overflow-item
-          data-overflow-priority="12"
+          data-overflow-priority="11"
           className={cn("hidden sm:inline-flex h-8 gap-1.5", mvViewer && "order-8")}
           title={isDark ? t('view_in_light_mode') : t('view_in_dark_mode')}
           disabled={!effectiveEmailContent.isHtml}
@@ -4279,12 +4279,12 @@ export function EmailViewer({
                 email={email}
                 anchor={() => moreButtonRef.current}
                 onOpen={() => { setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(5) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4.5) ? "" : "sm:hidden")}
                 iconClassName="w-4 h-4"
               />
               {/* Overflow: move to folder - submenu */}
               {moveTree.length > 0 && onMoveToMailbox && (
-                <div className={cn("relative", hiddenPriorities.has(6) ? "" : "sm:hidden")}
+                <div className={cn("relative", hiddenPriorities.has(5) ? "" : "sm:hidden")}
                   onMouseEnter={() => setMoreMenuSub('move')}
                   onMouseLeave={() => setMoreMenuSub(null)}
                 >
@@ -4357,7 +4357,7 @@ export function EmailViewer({
               )}
               {/* Overflow: tag - submenu */}
               {(emailKeywords.length > 0 || currentTagIds.length > 0) && (
-                <div className={cn("relative", hiddenPriorities.has(7) ? "" : "sm:hidden")}
+                <div className={cn("relative", hiddenPriorities.has(6) ? "" : "sm:hidden")}
                   onMouseEnter={() => setMoreMenuSub('tag')}
                   onMouseLeave={() => setMoreMenuSub(null)}
                 >
@@ -4424,7 +4424,7 @@ export function EmailViewer({
                 <button
                   role="menuitem"
                   onClick={() => { (isInJunkFolder ? onUndoSpam : onMarkAsSpam)?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(8) ? "" : "sm:hidden")}
+                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(7) ? "" : "sm:hidden")}
                 >
                   {isInJunkFolder ? (
                     <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -4438,7 +4438,7 @@ export function EmailViewer({
               <button
                 role="menuitem"
                 onClick={() => { onMarkAsRead?.(email.id, isUnread); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(9) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(8) ? "" : "sm:hidden")}
               >
                 {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
                 {isUnread ? t('mark_read') : t('mark_unread')}
@@ -4447,7 +4447,7 @@ export function EmailViewer({
               <button
                 role="menuitem"
                 onClick={() => { handlePrint(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(10) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(9) ? "" : "sm:hidden")}
               >
                 <Printer className="w-4 h-4" />
                 {t('print')}
@@ -4456,7 +4456,7 @@ export function EmailViewer({
               <button
                 role="menuitem"
                 onClick={() => { setShowSourceModal(true); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(10) ? "" : "sm:hidden")}
               >
                 <Code className="w-4 h-4" />
                 {t('view_source')}
@@ -4466,7 +4466,7 @@ export function EmailViewer({
                 <button
                   role="menuitem"
                   onClick={() => { setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev); setMoreMenuOpen(false); setMoreMenuSub(null); }}
-                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(12) ? "" : "sm:hidden")}
+                  className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(11) ? "" : "sm:hidden")}
                 >
                   {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                   {isDark ? t('view_in_light_mode') : t('view_in_dark_mode')}
@@ -4667,7 +4667,7 @@ export function EmailViewer({
                 {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
               </button>
               {/* Follow up, once the toolbar has no room for its button */}
-              {hiddenPriorities.has(5) && (
+              {hiddenPriorities.has(4.5) && (
                 <FollowUpMenuEntry
                   email={email}
                   anchor={() => moreButtonRef.current}

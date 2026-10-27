@@ -12,8 +12,7 @@ import type {
 } from '../plugin-types';
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRecurrenceRule, CalendarTask } from '../jmap/types';
 import type { IJMAPClient } from '../jmap/client-interface';
-import { ensureCalendars, useCalendarStore } from '@/stores/calendar-store';
-import { defaultTaskCalendar } from '@/lib/calendar-tasks';
+import { useCalendarStore } from '@/stores/calendar-store';
 import { useTaskStore } from '@/stores/task-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { eventToView, taskToView } from '../plugin-projection';
@@ -178,6 +177,14 @@ function buildTiming(
 
 // ─── Calendars ────────────────────────────────────────────────
 
+/** The store's calendars, loaded first when the calendar was never opened. */
+async function ensureCalendars(client: IJMAPClient): Promise<Calendar[]> {
+  if (useCalendarStore.getState().calendars.length === 0) {
+    await useCalendarStore.getState().fetchCalendars(client);
+  }
+  return useCalendarStore.getState().calendars;
+}
+
 function calendarToView(calendar: Calendar): CalendarView {
   return {
     id: calendar.id,
@@ -202,7 +209,7 @@ async function pickCalendar(
     return id;
   }
   const choice = forTasks
-    ? defaultTaskCalendar(calendars)
+    ? calendars.find((c) => c.isTasksOnly) ?? calendars.find((c) => c.isDefault) ?? calendars[0]
     : calendars.find((c) => c.isDefault && !c.isTasksOnly) ?? calendars.find((c) => !c.isTasksOnly);
   if (!choice) throw new Error(`${method}: there is no calendar to put it in`);
   return choice.id;

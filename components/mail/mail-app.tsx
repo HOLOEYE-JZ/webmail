@@ -157,12 +157,10 @@ import {
   buildMailPath,
   isFolderLinkOpen,
   parseMailPath,
-  groupMailFolder,
-  groupMailAsListed,
-  messageLinkAccount,
   resolveFolderRef,
   type MailDeepLink,
 } from "@/lib/deep-links";
+import { groupMailFolder, groupMailAsListed, messageLinkAccount } from "@/lib/group-mail-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink, takeFollowedMessageAccount } from "@/lib/deep-link-handoff";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import type { QuoteHeader } from "@/lib/plugin-types";

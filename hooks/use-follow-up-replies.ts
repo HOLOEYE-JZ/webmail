@@ -7,7 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useTaskStore } from "@/stores/task-store";
 import { debug } from "@/lib/debug";
-import { reachesMailAccount } from "@/lib/deep-links";
+import { reachesMailAccount } from "@/lib/group-mail-links";
 import { perStoreEpoch } from "@/lib/store-epoch";
 import { answeredTaskPatch, dueTaskReminders } from "@/lib/task-reminders";
 import { followUpMailRef } from "@/lib/follow-ups";

@@ -132,7 +132,10 @@ describe('the reader\'s follow-up button', () => {
     const archive = Number(screen.getByTitle('tooltips.archive').dataset.overflowPriority);
     const priorities = Array.from(toolbar().querySelectorAll<HTMLElement>('[data-overflow-item]'))
       .map((item) => Number(item.dataset.overflowPriority));
-    expect(Number(button.dataset.overflowPriority)).toBe(archive + 1);
+    // Right after Archive's: it goes into the menu just before Archive does.
+    const own = Number(button.dataset.overflowPriority);
+    expect(own).toBeGreaterThan(archive);
+    expect(priorities.filter((p) => p > archive && p < own)).toEqual([]);
     expect(new Set(priorities).size).toBe(priorities.length);
   });
 

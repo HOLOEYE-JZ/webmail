@@ -2,11 +2,11 @@ import { create } from "zustand";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { debug } from "@/lib/debug";
-import { reachesMailAccount } from "@/lib/deep-links";
+import { reachesMailAccount } from "@/lib/group-mail-links";
 import { cachedPrincipals } from "@/lib/jmap/principal-cache";
 import { applyPatchObject } from "@/lib/jmap/patch-object";
 import { groupTaskList, isGroupAccount, keptGroupTasks, type GroupTaskList } from "@/lib/group-follow-ups";
-import type { Calendar, CalendarTask } from "@/lib/jmap/types";
+import type { Calendar, CalendarTask, StateChange } from "@/lib/jmap/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 
 /**
@@ -139,4 +139,20 @@ export function refreshGroupTasksFor(client: IJMAPClient, changedAccountIds: rea
   const state = useGroupTasks.getState();
   if (state.loadedBy !== client) return;
   if (state.lists.some((l) => changedAccountIds.includes(l.accountId))) scheduleGroupRefresh(client, PUSH_DEBOUNCE_MS);
+}
+
+/**
+ * A push of the login on screen: a group mailbox's task list changed, so its
+ * follow-ups at the mails and its reminders for the user are read again; a
+ * changed list (its shares) reloads the calendars, which reload the lists.
+ */
+export function groupTasksPushed(change: StateChange, client: IJMAPClient): void {
+  const own = client.getAccountId();
+  const others = Object.entries(change.changed).filter(([id, c]) => id !== own && (c?.CalendarEvent || c?.Calendar));
+  if (others.length === 0) return;
+  if (others.some(([, c]) => c?.Calendar)) {
+    const calendarStore = useCalendarStore.getState();
+    if (calendarStore.supportsCalendar) void calendarStore.fetchCalendars(client);
+  }
+  refreshGroupTasksFor(client, others.map(([id]) => id));
 }

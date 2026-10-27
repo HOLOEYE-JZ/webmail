@@ -6255,21 +6255,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         }
       }
 
-      // A group mailbox's task list changed: its follow-ups at the
-      // mails and its reminders for the user are read again; a changed list
-      // (its shares) reloads the calendars, which reload the lists.
-      const otherCalendarAccounts = Object.entries(change.changed)
-        .filter(([id, c]) => id !== accountId && (c?.CalendarEvent || c?.Calendar))
-        .map(([id]) => id);
-      if (otherCalendarAccounts.length > 0) {
-        const { refreshGroupTasksFor } = await import('./group-task-store');
-        if (Object.entries(change.changed).some(([id, c]) => id !== accountId && c?.Calendar)) {
-          const calendarStore = useCalendarStore.getState();
-          if (calendarStore.supportsCalendar) void calendarStore.fetchCalendars(client);
-        }
-        refreshGroupTasksFor(client, otherCalendarAccounts);
-      }
-
       // Someone changed this user's access to one of their collections
       // (RFC 9670 ShareNotification): pull the notifications, the toaster
       // shows them and refreshes the affected list.

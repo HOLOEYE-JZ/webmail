@@ -11,7 +11,7 @@ import { useTaskStore } from "@/stores/task-store";
 import { toast } from "@/stores/toast-store";
 import { displayNow } from "@/lib/timezone";
 import { debug } from "@/lib/debug";
-import { reachesMailAccount } from "@/lib/deep-links";
+import { reachesMailAccount } from "@/lib/group-mail-links";
 import { normalizeAction } from "@/lib/follow-up-actions";
 import {
   buildReminderTask,

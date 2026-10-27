@@ -9,7 +9,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useTaskStore } from "@/stores/task-store";
-import { useGroupTasks } from "@/stores/group-task-store";
+import { groupTasksPushed, useGroupTasks } from "@/stores/group-task-store";
+import { subscribePushStateChanges } from "@/lib/push-events";
 import { memoByArray } from "@/lib/utils";
 import { normalizeAction } from "@/lib/follow-up-actions";
 import { cachedPrincipals } from "@/lib/jmap/principal-cache";
@@ -52,7 +53,8 @@ function listsKey(calendars: readonly Calendar[]): string {
 
 /**
  * Loads the group lists and their tasks wherever the app opens (a reminder
- * for the user may stand in one), and again when the calendars change.
+ * for the user may stand in one), and again when the calendars change or a
+ * push names a group's calendars.
  * Mounted once.
  */
 export function useGroupTasksLoaded(): void {
@@ -74,6 +76,14 @@ export function useGroupTasksLoaded(): void {
     }
     void useGroupTasks.getState().refresh(client);
   }, [enabled, client, key]);
+
+  // The login on screen's pushes, on every page (lib/push-events.ts).
+  useEffect(() => {
+    if (!enabled || !client) return;
+    return subscribePushStateChanges((change, pushed, role) => {
+      if (role === 'active') groupTasksPushed(change, pushed);
+    });
+  }, [enabled, client]);
 }
 
 // ---------------------------------------------------------------------------
