@@ -392,7 +392,7 @@ export function NavigationRail({
                     className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-red-500 text-white px-1"
                     title={item.badgeLabel}
                   >
-                    <span aria-hidden={item.badgeLabel ? true : undefined}>{item.badge > 99 ? "99+" : item.badge}</span>
+                    <span aria-hidden="true">{item.badge > 99 ? "99+" : item.badge}</span>
                     {item.badgeLabel && <span className="sr-only">{item.badgeLabel}</span>}
                   </span>
                 )}
@@ -598,6 +598,7 @@ export function NavigationRail({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
               aria-current={isActive ? "page" : undefined}
+              aria-label={t(item.labelKey)}
               title={collapsed ? t(item.labelKey) : undefined}
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
@@ -612,7 +613,7 @@ export function NavigationRail({
                   title={item.badgeLabel}
                   data-testid={`nav-badge-${item.id}`}
                 >
-                  <span aria-hidden={item.badgeLabel ? true : undefined}>{item.badge > 99 ? "99+" : item.badge}</span>
+                  <span aria-hidden="true">{item.badge > 99 ? "99+" : item.badge}</span>
                   {item.badgeLabel && <span className="sr-only">{item.badgeLabel}</span>}
                 </span>
               )}

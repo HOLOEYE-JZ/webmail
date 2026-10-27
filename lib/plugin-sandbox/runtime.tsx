@@ -18,7 +18,6 @@
 
 import { useEffect } from 'react';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom/client';
 import * as ReactJSXRuntime from 'react/jsx-runtime';
 import type {
   HostToSandbox,
@@ -29,7 +28,7 @@ import type {
   RegionalSnapshot,
 } from './protocol';
 import { themeSnapshotToCSS, type ThemeSnapshot } from './host-theme';
-import { pluginUiKit, SlotPropsContext } from './ui-kit';
+import { backgroundReactDom, backgroundUiKit } from './ui-kit/background-kit';
 import { initFloatingDropdownBridge, dispatchFloatingDropdownEvent } from './ui-kit/floating-dropdown-bridge';
 import { interpolate, lookup, textDirection, type LocaleTables } from './plugin-i18n';
 import { isFillableSlot, isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
@@ -86,6 +85,18 @@ let currentRegional: RegionalSnapshot = {
 };
 
 const localeListeners = new Set<(locale: string) => void>();
+
+// The plugin's strings. The host sends only the tables of the current locale
+// chain (plugin-i18n tablesFor) and the next ones with each locale-change.
+let localeTables: LocaleTables = {};
+
+/** Add the tables a locale-change brought; strings the plugin added itself win. */
+function mergeLocaleTables(next: LocaleTables | undefined): void {
+  if (!next) return;
+  for (const [locale, table] of Object.entries(next)) {
+    localeTables[locale] = { ...table, ...(localeTables[locale] ?? {}) };
+  }
+}
 function currentLocale(): string {
   return (globalThis as unknown as { __PLUGIN_LOCALE__?: string }).__PLUGIN_LOCALE__ || 'en';
 }
@@ -351,7 +362,7 @@ interface PluginKeywordCounts {
 
 function buildPluginApi(manifest: PluginManifest) {
   applySettings({ ...manifest.settings });
-  const localeTables: LocaleTables = JSON.parse(JSON.stringify(manifest.locales ?? {}));
+  localeTables = JSON.parse(JSON.stringify(manifest.locales ?? {}));
   return {
     plugin: {
       id: manifest.id,
@@ -632,9 +643,11 @@ function buildPluginApi(manifest: PluginManifest) {
       /**
        * One message with its plain text, headers and source, or null when
        * there is none with that id. Any message of the account, not only the
-       * open one.
+       * open one. Ids repeat across accounts: pass the view's `accountId` to
+       * name the message of that account.
        */
-      get: (emailId: string) => callApi('email.get', [emailId]) as Promise<EmailReadView | null>,
+      get: (emailId: string, accountId?: string) =>
+        callApi('email.get', [emailId, accountId]) as Promise<EmailReadView | null>,
       /**
        * Move messages (at most 100) into a folder of the account, like the
        * user would; the move hooks run. 20 moves a minute. Needs email:write.
@@ -662,13 +675,13 @@ function buildPluginApi(manifest: PluginManifest) {
        * 25 MB). `blobId` must be one of that message's attachments, e.g.
        * from an `attachment-actions` slot or onAttachmentDownload.
        */
-      getAttachment: (emailId: string, blobId: string) =>
-        callApi('email.getAttachment', [emailId, blobId], NETWORK_API_TIMEOUT_MS) as Promise<{
+      getAttachment: (emailId: string, blobId: string, accountId?: string) =>
+        callApi('email.getAttachment', [emailId, blobId, accountId], NETWORK_API_TIMEOUT_MS) as Promise<{
           name: string; type: string; size: number; data: ArrayBuffer;
         }>,
       /** The full RFC 5322 source of a message, to save as .eml (email:blob-read, at most 25 MB). */
-      getRaw: (emailId: string) =>
-        callApi('email.getRaw', [emailId], NETWORK_API_TIMEOUT_MS) as Promise<ArrayBuffer>,
+      getRaw: (emailId: string, accountId?: string) =>
+        callApi('email.getRaw', [emailId, accountId], NETWORK_API_TIMEOUT_MS) as Promise<ArrayBuffer>,
       setKeyword: (emailId: string, keyword: string, accountId?: string) =>
         callApi('email.setKeyword', [emailId, keyword, accountId]) as Promise<void>,
       removeKeyword: (emailId: string, keyword: string, accountId?: string) =>
@@ -944,27 +957,51 @@ function buildPluginApi(manifest: PluginManifest) {
  * The host injects the per-plugin API as `@plugin-host`, so plugin code can
  * `const api = require('@plugin-host')` in both background and slot modes.
  */
-export function makePluginRequire(api: ReturnType<typeof buildPluginApi> | null): (name: string) => unknown {
+export function makePluginRequire(api: ReturnType<typeof buildPluginApi> | null, renderer: Renderer | null = null): (name: string) => unknown {
+  const reactDom = renderer?.ReactDOM ?? backgroundReactDom;
   const known: Record<string, unknown> = {
     'react': React,
-    'react-dom': ReactDOM,
-    'react-dom/client': ReactDOM,
+    'react-dom': reactDom,
+    'react-dom/client': reactDom,
     'react/jsx-runtime': ReactJSXRuntime,
     'react/jsx-dev-runtime': ReactJSXRuntime,
   };
   if (api) known['@plugin-host'] = api;
   // The app's controls (lib/plugin-sandbox/ui-kit), so plugins draw the same
-  // buttons, fields and lists as the app without bundling their own.
-  known['@plugin-host/ui'] = pluginUiKit;
+  // buttons, fields and lists as the app without bundling their own. In a
+  // background frame, stand-ins with the same names.
+  known['@plugin-host/ui'] = renderer?.kit ?? backgroundUiKit;
   return (name: string) => {
     if (Object.prototype.hasOwnProperty.call(known, name)) return known[name];
     throw new Error(`Plugin sandbox: module "${name}" is not available. Externalise it in your bundler or ship it bundled.`);
   };
 }
 
-function evaluateBundle(code: string, api: ReturnType<typeof buildPluginApi> | null): PluginExports {
+// ─── Renderer (slot frames only) ─────────────────────────────
+
+/**
+ * React DOM and the UI kit. Only slot frames draw, so only they load these
+ * (a separate chunk, ~350 kB to parse); a background frame gets React and
+ * stand-ins. The host marks slot frames in their URL (?frame=slot) so the
+ * load starts with the document, not after init.
+ */
+export interface Renderer {
+  ReactDOM: typeof import('react-dom/client');
+  kit: unknown;
+  SlotPropsContext: React.Context<Record<string, unknown>>;
+}
+
+let rendererPromise: Promise<Renderer> | null = null;
+
+export function loadRenderer(): Promise<Renderer> {
+  rendererPromise ??= import('./slot-renderer')
+    .then((m) => ({ ReactDOM: m.ReactDOM, kit: m.pluginUiKit, SlotPropsContext: m.SlotPropsContext }));
+  return rendererPromise;
+}
+
+function evaluateBundle(code: string, api: ReturnType<typeof buildPluginApi> | null, renderer: Renderer | null = null): PluginExports {
   const mod: { exports: PluginExports } = { exports: {} };
-  const requireShim = makePluginRequire(api);
+  const requireShim = makePluginRequire(api, renderer);
   let fn: (...args: unknown[]) => void;
   try {
     fn = new Function(
@@ -975,7 +1012,7 @@ function evaluateBundle(code: string, api: ReturnType<typeof buildPluginApi> | n
     throw new Error(`Bundle parse error: ${(err as Error).message}`);
   }
   try {
-    fn(mod, mod.exports, requireShim, React, ReactDOM, ReactJSXRuntime, console);
+    fn(mod, mod.exports, requireShim, React, renderer?.ReactDOM ?? backgroundReactDom, ReactJSXRuntime, console);
   } catch (err) {
     throw new Error(`Bundle evaluation threw: ${(err as Error).message}`);
   }
@@ -1044,13 +1081,15 @@ async function bootBackground(payload: BackgroundInit): Promise<void> {
   sendToHost({ type: 'init-done', hooks: hookNames, slots: slotInfo, shortcuts: shortcutInfo });
 }
 
-function bootSlot(payload: SlotInit): void {
+async function bootSlot(payload: SlotInit): Promise<void> {
   // Replay the host theme before first paint so the slot never flashes the UA
   // default serif font or a light-on-light/dark mismatch.
   applyHostTheme(payload.theme);
 
+  const renderer = await loadRenderer();
+  const { SlotPropsContext } = renderer;
   const api = buildPluginApi(payload.manifest);
-  const exports = evaluateBundle(payload.code, api);
+  const exports = evaluateBundle(payload.code, api, renderer);
   pluginExports = exports;
   slotName = payload.slot;
 
@@ -1062,7 +1101,9 @@ function bootSlot(payload: SlotInit): void {
   const rootEl = document.getElementById('plugin-sandbox-root');
   if (!rootEl) throw new Error('Sandbox root element missing');
 
-  let currentProps = decodeCallbacks(payload.extraProps) as Record<string, unknown>;
+  // Props the host pushed while the renderer was loading replace the init ones.
+  let currentProps = decodeCallbacks(propsBeforeBoot ?? payload.extraProps) as Record<string, unknown>;
+  propsBeforeBoot = null;
   const Component = slotDef.component;
   const inline = isInlineSlot(payload.slot);
   // Filling its panel: the document is as tall as the frame and the slot's
@@ -1135,13 +1176,15 @@ function bootSlot(payload: SlotInit): void {
       React.createElement(SlotPropsContext.Provider, { value: props }, React.createElement(Component, props)));
   };
 
-  const reactRoot = ReactDOM.createRoot(rootEl);
+  const reactRoot = renderer.ReactDOM.createRoot(rootEl);
   reactRoot.render(React.createElement(SlotShell));
   sendToHost({ type: 'init-done', hooks: [], slots: [], shortcuts: [] });
 }
 
 // Populated by bootSlot - receives `props-update` messages.
 let slotPropsUpdater: ((next: Record<string, unknown>) => void) | null = null;
+/** The last props-update that arrived before bootSlot was ready for it. */
+let propsBeforeBoot: Record<string, unknown> | null = null;
 
 async function handleInit(payload: InitPayload): Promise<void> {
   if (bootDone) return;
@@ -1154,7 +1197,7 @@ async function handleInit(payload: InitPayload): Promise<void> {
     if (payload.mode === 'background') {
       await bootBackground(payload);
     } else {
-      bootSlot(payload);
+      await bootSlot(payload);
     }
   } catch (err) {
     sendToHost({ type: 'init-error', error: (err as Error).message ?? String(err) });
@@ -1231,11 +1274,15 @@ function handleHostMessage(ev: MessageEvent): void {
     }
 
     case 'locale-change':
+      mergeLocaleTables(msg.locales);
       applyLocale(msg.locale, msg.regional);
       break;
 
     case 'theme-change':
       applyHostTheme(msg.theme);
+      // The host switches the iframe element's color-scheme on this, not
+      // before: while the two differ the browser paints an opaque canvas.
+      sendToHost({ type: 'theme-applied', dark: msg.theme.dark === true });
       break;
 
     case 'settings-change':
@@ -1243,7 +1290,8 @@ function handleHostMessage(ev: MessageEvent): void {
       break;
 
     case 'props-update':
-      slotPropsUpdater?.(msg.props ?? {});
+      if (slotPropsUpdater) slotPropsUpdater(msg.props ?? {});
+      else if (mode === 'slot') propsBeforeBoot = msg.props ?? {};
       break;
 
     case 'stream-chunk': {
@@ -1280,33 +1328,42 @@ function handleHostMessage(ev: MessageEvent): void {
   }
 }
 
-// ─── React entry ─────────────────────────────────────────────
+// ─── Entry ───────────────────────────────────────────────────
 
+/**
+ * Bind to the host and tell it the frame is ready. The sandbox document
+ * (sandbox-document.ts) runs this from its script, next to an existing
+ * #plugin-sandbox-root. Returns the teardown.
+ */
+export function startSandboxRuntime(): () => void {
+  // Not framed by a same-origin host: stay inert. No listener, no ping -
+  // nothing a window.open()-ing site could talk to.
+  const host = resolveHost();
+  if (!host) return () => {};
+  if (new URLSearchParams(window.location.search).get('frame') === 'slot') void loadRenderer();
+  parentWindow = host.window;
+  parentOrigin = host.origin;
+  initFloatingDropdownBridge(
+    (msg) => sendToHost(msg),
+    () => !!parentWindow,
+  );
+  window.addEventListener('message', handleHostMessage);
+  // Initial ping, targeted at the host origin so it can only land on the
+  // page that framed us. Guard at module scope so React strict mode's
+  // double-invoke doesn't re-post (and so a re-post can't race with the
+  // parent's init reply).
+  if (!readyPosted) {
+    readyPosted = true;
+    sendToHost({ type: 'sandbox-ready' });
+  }
+  return () => {
+    window.removeEventListener('message', handleHostMessage);
+  };
+}
+
+/** The runtime as a React component, for tests that render it. */
 export function SandboxRuntime(): React.JSX.Element {
-  useEffect(() => {
-    // Not framed by a same-origin host: stay inert. No listener, no ping -
-    // nothing a window.open()-ing site could talk to.
-    const host = resolveHost();
-    if (!host) return;
-    parentWindow = host.window;
-    parentOrigin = host.origin;
-    initFloatingDropdownBridge(
-      (msg) => sendToHost(msg),
-      () => !!parentWindow,
-    );
-    window.addEventListener('message', handleHostMessage);
-    // Initial ping, targeted at the host origin so it can only land on the
-    // page that framed us. Guard at module scope so React strict mode's
-    // double-invoke doesn't re-post (and so a re-post can't race with the
-    // parent's init reply).
-    if (!readyPosted) {
-      readyPosted = true;
-      sendToHost({ type: 'sandbox-ready' });
-    }
-    return () => {
-      window.removeEventListener('message', handleHostMessage);
-    };
-  }, []);
+  useEffect(() => startSandboxRuntime(), []);
   return <div id="plugin-sandbox-root" />;
 }
 

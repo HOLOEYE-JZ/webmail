@@ -3,11 +3,11 @@
 
 import { cancelConnectFor, forgetCredentials } from '@/lib/plugin-sandbox/connect-dialog';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
 import type { InstalledPlugin, PluginStatus, PluginTier } from '@/lib/plugin-types';
 import { pluginStorage } from '@/lib/plugin-storage';
 import { extractPlugin } from '@/lib/plugin-validator';
-import { loadPlugin, deactivatePlugin, setPluginStoreAccessor, setupAutoDisable, setSandboxLocale } from '@/lib/plugin-loader';
+import { loadPlugin, deactivatePlugin, setPluginStoreAccessor, setupAutoDisable, setSandboxLocale, forgetSlotOffers } from '@/lib/plugin-loader';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
@@ -22,9 +22,11 @@ import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
 import { coerceSetting, effectiveSettings } from '@/lib/plugin-settings';
 import { usePolicyStore } from '@/stores/policy-store';
 import { apiFetch } from '@/lib/browser-navigation';
+import { fetchServerPluginList } from '@/lib/server-plugin-list';
 import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
 import type { Permission } from '@/lib/plugin-types';
 import { IS_LITE } from '@/lib/lite';
+import { onFullSignOut } from '@/lib/sign-out-cleanup';
 
 let pluginInitializationPromise: Promise<void> | null = null;
 // One-time guard so we attach the locale and regional subscriptions only once.
@@ -60,6 +62,66 @@ interface PluginStoreState {
 
   // Init
   initializePlugins: () => Promise<void>;
+}
+
+// ─── Persistence ─────────────────────────────────────────────
+
+/** How long a change waits before it is written, so a burst becomes one write. */
+export const PLUGIN_PERSIST_DELAY_MS = 250;
+
+/**
+ * localStorage for the plugin list, written once per burst of changes and
+ * only when the stored text changes. The list carries every plugin's locale
+ * tables (about 1 MB with a dozen plugins), and the stock storage serialized
+ * and wrote all of it on every set(): start-up, one status change per plugin,
+ * wrote 13 MB and blocked the page for ~400 ms. Status is not even persisted
+ * (partialize resets it), so most of those writes stored the same text again.
+ * Pending changes are written when the page is hidden or unloaded.
+ */
+function batchedLocalStorage<S>(): PersistStorage<S> {
+  let pending: { name: string; value: StorageValue<S> } | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const written = new Map<string, string>();
+
+  const flush = () => {
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (!pending) return;
+    const { name, value } = pending;
+    pending = null;
+    try {
+      const text = JSON.stringify(value);
+      if (written.get(name) === text) return;
+      localStorage.setItem(name, text);
+      written.set(name, text);
+    } catch {
+      // Storage full or blocked: the list is still in memory for this page.
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flush();
+    });
+  }
+
+  return {
+    getItem: (name) => {
+      const text = localStorage.getItem(name);
+      if (text === null) return null;
+      written.set(name, text);
+      return JSON.parse(text) as StorageValue<S>;
+    },
+    setItem: (name, value) => {
+      pending = { name, value };
+      if (!timer) timer = setTimeout(flush, PLUGIN_PERSIST_DELAY_MS);
+    },
+    removeItem: (name) => {
+      if (pending?.name === name) pending = null;
+      written.delete(name);
+      localStorage.removeItem(name);
+    },
+  };
 }
 
 // ─── Store ───────────────────────────────────────────────────
@@ -256,7 +318,11 @@ export const usePluginStore = create<PluginStoreState>()(
         if (get().initialized) return;
 
         if (pluginInitializationPromise) {
-          await pluginInitializationPromise;
+          const joined = pluginInitializationPromise;
+          await joined;
+          // The run this joined may have ended signed out (it started before
+          // the sign-in); then this call starts the plugins itself.
+          if (!get().initialized && pluginInitializationPromise !== joined) await get().initializePlugins();
           return;
         }
 
@@ -301,8 +367,12 @@ export const usePluginStore = create<PluginStoreState>()(
             });
           }
 
-          // Sync server-managed plugins before loading
-          await syncServerPlugins(get, set);
+          // Sync server-managed plugins before loading. The mail view starts
+          // this on mount, before the user has signed in; marking the store
+          // initialized then left every plugin off after the sign-in until
+          // the next page load. Stay uninitialized so the call that follows
+          // the sign-in (plugin-app-events) starts them.
+          if (await syncServerPlugins(get, set) === 'signed-out') return;
 
           // Load all enabled plugins in parallel. Sequential `await` made one
           // hung/slow plugin block every subsequent one; loadSandboxedPlugin
@@ -326,6 +396,7 @@ export const usePluginStore = create<PluginStoreState>()(
     }),
     {
       name: 'plugin-storage',
+      storage: batchedLocalStorage(),
       partialize: (state) => ({
         plugins: state.plugins.map(p => ({
           ...p,
@@ -355,6 +426,7 @@ export const usePluginStore = create<PluginStoreState>()(
 function removePluginData(id: string): void {
   deactivatePlugin(id);
   removeAllPluginHooks(id);
+  forgetSlotOffers(id);
   void pluginStorage.deleteCode(id).catch(() => {});
   void pluginStorage.deletePreview(id).catch(() => {});
   // Accounts the user connected for it live on the server (this mail account's).
@@ -502,13 +574,14 @@ function markServerManagedPlugins(plugins: InstalledPlugin[]): InstalledPlugin[]
 async function syncServerPlugins(
   get: () => PluginStoreState,
   set: (partial: Partial<PluginStoreState> | ((state: PluginStoreState) => Partial<PluginStoreState>)) => void,
-): Promise<void> {
+): Promise<'signed-out' | void> {
   try {
-    const res = await apiFetch('/api/plugins');
+    const res = await fetchServerPluginList();
+    if (res.status === 401) return 'signed-out';
     if (!res.ok) return;
 
-    const data: { plugins: ServerPluginInfo[] } = await res.json();
-    if (!data.plugins || !Array.isArray(data.plugins)) return;
+    const data = res.data as { plugins: ServerPluginInfo[] };
+    if (!data?.plugins || !Array.isArray(data.plugins)) return;
 
     const serverPlugins = data.plugins;
     const serverPluginIds = new Set(serverPlugins.map(p => p.id));
@@ -516,16 +589,60 @@ async function syncServerPlugins(
     // Track which plugins came from the server (so we can clean up stale ones)
     const prevServerIds = getServerManagedPluginIds();
 
-    // Install or update server plugins that are missing/outdated locally
-    for (const sp of serverPlugins) {
+    // Which bundles this browser has, in one IndexedDB request. The loop used
+    // to read every bundle in full, one plugin after another, only to see
+    // whether it was there; with a dozen plugins that held up the start by
+    // most of a second. A storage error counts as "none cached" (#636).
+    const cachedIds = new Set(await pluginStorage.codeIds().catch(() => [] as string[]));
+
+    // Install or update server plugins that are missing/outdated locally.
+    // Downloads run side by side; the store is updated afterwards in the
+    // server's order, so the list keeps that order.
+    const outcomes = await Promise.all(serverPlugins.map(async (sp) => {
       const local = get().plugins.find(p => p.id === sp.id);
 
       if (!local) {
         // New server plugin - download bundle and install.
         const code = await downloadPluginBundle(sp.id, sp.bundleHash, sp.tier);
-        if (!code) continue;
+        if (!code) return null;
         await cacheManagedBundle(sp.id, code);
+        return { sp, isNew: true, needsBundle: true };
+      }
 
+      // Existing plugin. Re-download the bundle only when the code actually
+      // changed or the local copy is gone, but ALWAYS re-derive server-owned
+      // metadata from one place (serverMeta) so no passthrough field is
+      // silently dropped on a metadata-only change. Only write when something
+      // differs, to avoid a needless persist/re-render on every sync.
+      //
+      // The record (persisted store) and the bundle (IndexedDB) have separate
+      // lifetimes: the bundle can be evicted, cleared, or never have been
+      // written in this browser while the record says everything is current.
+      // The loader used to strand such plugins on "No bundle in storage" with
+      // no way for a non-admin to recover (#636); a missing local copy is
+      // treated exactly like a changed one instead.
+      const needsBundle =
+        !cachedIds.has(sp.id) ||
+        local.version !== sp.version ||
+        // bundleHash mismatch covers re-uploads of the same version with new
+        // code; a falsy local hash (older installs) also forces a refresh so
+        // we capture the hash on the next sync.
+        (!!sp.bundleHash && local.bundleHash !== sp.bundleHash);
+
+      if (needsBundle) {
+        const code = await downloadPluginBundle(sp.id, sp.bundleHash, sp.tier);
+        if (!code) return null;
+        await cacheManagedBundle(sp.id, code);
+      }
+      return { sp, isNew: false, needsBundle };
+    }));
+
+    for (const outcome of outcomes) {
+      if (!outcome) continue;
+      const { sp, isNew, needsBundle } = outcome;
+      const local = get().plugins.find(p => p.id === sp.id);
+
+      if (isNew || !local) {
         const plugin: InstalledPlugin = {
           id: sp.id,
           type: sp.type as InstalledPlugin['type'],
@@ -541,35 +658,6 @@ async function syncServerPlugins(
             : { plugins: [...state.plugins, plugin] },
         );
         continue;
-      }
-
-      // Existing plugin. Re-download the bundle only when the code actually
-      // changed or the local copy is gone, but ALWAYS re-derive server-owned
-      // metadata from one place (serverMeta) so no passthrough field is
-      // silently dropped on a metadata-only change. Only write when something
-      // differs, to avoid a needless persist/re-render on every sync.
-      //
-      // The record (persisted store) and the bundle (IndexedDB) have separate
-      // lifetimes: the bundle can be evicted, cleared, or never have been
-      // written in this browser while the record says everything is current.
-      // The loader used to strand such plugins on "No bundle in storage" with
-      // no way for a non-admin to recover (#636); a missing local copy is
-      // treated exactly like a changed one instead.
-      const hasLocalBundle = await pluginStorage.getCode(sp.id)
-        .then((code) => !!code)
-        .catch(() => false);
-      const needsBundle =
-        !hasLocalBundle ||
-        local.version !== sp.version ||
-        // bundleHash mismatch covers re-uploads of the same version with new
-        // code; a falsy local hash (older installs) also forces a refresh so
-        // we capture the hash on the next sync.
-        (!!sp.bundleHash && local.bundleHash !== sp.bundleHash);
-
-      if (needsBundle) {
-        const code = await downloadPluginBundle(sp.id, sp.bundleHash, sp.tier);
-        if (!code) continue;
-        await cacheManagedBundle(sp.id, code);
       }
 
       // Force-enable in the same pass when the server flips it on, so the user
@@ -731,4 +819,22 @@ usePluginStore.subscribe((state, prev) => {
     const next = effectiveSettings(plugin);
     forEachInstance(plugin.id, (instance) => instance.setSettings(next));
   }
+});
+
+// A plugin the user installed runs on that user's consent and settings. Once
+// everyone has signed out, the next person at this browser must be asked
+// again: the code stays, the grants and settings go, and it is left off.
+// The admin's plugins are the admin's choice and stay as they are.
+onFullSignOut(() => {
+  const { plugins } = usePluginStore.getState();
+  for (const plugin of plugins) {
+    if (!plugin.managed && plugin.enabled) deactivatePlugin(plugin.id);
+  }
+  usePluginStore.setState({
+    plugins: plugins.map((plugin) => {
+      if (plugin.managed) return plugin;
+      const { grantedPermissions: _granted, ...rest } = plugin;
+      return { ...rest, enabled: false, status: 'disabled' as PluginStatus, error: undefined, settings: {} };
+    }),
+  });
 });

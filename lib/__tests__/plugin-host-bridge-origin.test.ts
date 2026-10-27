@@ -20,6 +20,12 @@ function post(source: Window | null, origin: string, data: unknown) {
 }
 
 const instances: Array<{ destroy(): void }> = [];
+
+/** The frame answers init: its hooks and slots are in place. */
+function booted<T extends { iframe: HTMLIFrameElement }>(inst: T): T {
+  post(inst.iframe.contentWindow, 'null', { type: 'init-done', hooks: [], slots: [], shortcuts: [] });
+  return inst;
+}
 afterEach(() => {
   for (const i of instances.splice(0)) i.destroy();
   vi.clearAllMocks();
@@ -131,7 +137,7 @@ describe('slot sizing', () => {
 
 describe('shouldShow context', () => {
   it('leaves host callbacks out instead of failing to post them', async () => {
-    const inst = createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' });
+    const inst = booted(createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' }));
     instances.push(inst);
     const sent = vi.spyOn(inst.iframe.contentWindow!, 'postMessage');
 
@@ -144,7 +150,7 @@ describe('shouldShow context', () => {
 
 describe('host bookkeeping', () => {
   it('fails a hook call whose arguments cannot be sent, without keeping it pending', async () => {
-    const inst = createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' });
+    const inst = booted(createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' }));
     instances.push(inst);
     vi.spyOn(inst.iframe.contentWindow!, 'postMessage').mockImplementation(() => { throw new DOMException('no clone', 'DataCloneError'); });
 
@@ -204,24 +210,73 @@ describe('plugin frame permissions', () => {
 });
 
 describe('plugin frame color scheme', () => {
-  // A frame whose document says dark while the iframe element says light gets
-  // an opaque white canvas from the browser: dark text tokens on white.
-  it('gives the iframe element the color-scheme the frame declares, at start and on a theme change', () => {
+  // A frame whose document says dark while the iframe element says light (or
+  // the other way round) gets an opaque canvas from the browser: a white
+  // panel in a dark page.
+  function slot() {
+    const inst = createSlotInstance({
+      plugin: plugin(), slot: 'plugin-dialog', code: '', locale: 'en', tier: 'untrusted', extraProps: {},
+      hostContainer: document.body, onResize: () => {},
+    });
+    instances.push(inst);
+    return inst;
+  }
+
+  it('starts with the color-scheme of the theme the frame boots with', async () => {
     document.documentElement.classList.add('dark');
     try {
-      const inst = createSlotInstance({
-        plugin: plugin(), slot: 'plugin-dialog', code: '', locale: 'en', tier: 'untrusted', extraProps: {},
-        hostContainer: document.body, onResize: () => {},
-      });
-      instances.push(inst);
-      expect(inst.iframe.style.colorScheme).toBe('dark');
-      inst.setTheme({ dark: false, fontFamily: 'sans-serif', vars: {} });
-      expect(inst.iframe.style.colorScheme).toBe('light');
-      inst.setTheme({ dark: true, fontFamily: 'sans-serif', vars: {} });
-      expect(inst.iframe.style.colorScheme).toBe('dark');
+      expect(slot().iframe.style.colorScheme).toBe('dark');
     } finally {
       document.documentElement.classList.remove('dark');
+      // Let the page-theme watcher settle before the next test's frames.
+      await new Promise((r) => setTimeout(r, 50));
     }
+  });
+
+  it('keeps a slot frame hidden until it has booted with the theme', () => {
+    // Before init the document (about:blank, then the bare sandbox page)
+    // declares no color-scheme, so a dark-theme panel showed white.
+    const inst = slot();
+    expect(inst.iframe.style.visibility).toBe('hidden');
+    post(inst.iframe.contentWindow, 'null', { type: 'sandbox-ready' });
+    expect(inst.iframe.style.visibility).toBe('hidden');
+    post(inst.iframe.contentWindow, 'null', { type: 'init-done', hooks: [], slots: [], shortcuts: [] });
+    expect(inst.iframe.style.visibility).toBe('');
+  });
+
+  it('does not hide background frames', () => {
+    const inst = createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' });
+    instances.push(inst);
+    expect(inst.iframe.style.visibility).toBe('');
+  });
+
+  it('boots with a theme that changed before the frame was ready', async () => {
+    const inst = slot();
+    const sent: unknown[] = [];
+    vi.spyOn(inst.iframe.contentWindow!, 'postMessage').mockImplementation((msg: unknown) => { sent.push(msg); });
+    inst.setTheme({ dark: true, fontFamily: 'sans-serif', vars: {} });
+    expect(inst.iframe.style.colorScheme).toBe('dark');
+
+    post(inst.iframe.contentWindow, 'null', { type: 'sandbox-ready' });
+    await new Promise((r) => setTimeout(r, 0));
+    const init = sent.find((m) => (m as { type: string }).type === 'init') as { payload: { theme: { dark: boolean } } };
+    expect(init.payload.theme.dark).toBe(true);
+    expect(sent.some((m) => (m as { type: string }).type === 'theme-change')).toBe(false);
+  });
+
+  it('switches the element only once the frame has applied a theme change', async () => {
+    const inst = slot();
+    vi.spyOn(inst.iframe.contentWindow!, 'postMessage').mockImplementation(() => {});
+    post(inst.iframe.contentWindow, 'null', { type: 'sandbox-ready' });
+    await new Promise((r) => setTimeout(r, 0));
+    post(inst.iframe.contentWindow, 'null', { type: 'init-done', hooks: [], slots: [], shortcuts: [] });
+    expect(inst.iframe.style.colorScheme).toBe('light');
+
+    inst.setTheme({ dark: true, fontFamily: 'sans-serif', vars: {} });
+    // The frame's document is still light: a dark element now means white.
+    expect(inst.iframe.style.colorScheme).toBe('light');
+    post(inst.iframe.contentWindow, 'null', { type: 'theme-applied', dark: true });
+    expect(inst.iframe.style.colorScheme).toBe('dark');
   });
 });
 
@@ -245,5 +300,83 @@ describe('plugin frames follow the page theme', () => {
       await new Promise((r) => setTimeout(r, 50));
     }
     expect(inst.iframe.style.colorScheme).toBe('light');
+  });
+});
+
+describe('plugin translations in frames', () => {
+  const locales = {
+    en: { hello: 'Hello' },
+    de: { hello: 'Hallo' },
+    fr: { hello: 'Bonjour' },
+    ja: { hello: 'こんにちは' },
+  };
+
+  it('sends a frame only the tables of its locale, and the next ones with a locale change', async () => {
+    const inst = createSlotInstance({
+      plugin: { ...plugin(), locales }, slot: 'plugin-dialog', code: '', locale: 'de', tier: 'untrusted', extraProps: {},
+      hostContainer: document.body, onResize: () => {},
+    });
+    instances.push(inst);
+    const sent: Array<Record<string, unknown>> = [];
+    vi.spyOn(inst.iframe.contentWindow!, 'postMessage').mockImplementation((msg: unknown) => { sent.push(msg as Record<string, unknown>); });
+    post(inst.iframe.contentWindow, 'null', { type: 'sandbox-ready' });
+    await new Promise((r) => setTimeout(r, 0));
+
+    const init = sent.find((m) => m.type === 'init') as { payload: { manifest: { locales: Record<string, unknown> } } };
+    expect(Object.keys(init.payload.manifest.locales).sort()).toEqual(['de', 'en']);
+
+    inst.setLocale('fr');
+    const change = sent.find((m) => m.type === 'locale-change') as { locale: string; locales: Record<string, unknown> };
+    expect(change.locale).toBe('fr');
+    expect(change.locales).toEqual({ fr: { hello: 'Bonjour' }, en: { hello: 'Hello' } });
+  });
+
+  it('does the same for background frames', async () => {
+    const inst = createBackgroundInstance({ plugin: { ...plugin(), locales }, code: '', locale: 'ja', tier: 'untrusted' });
+    instances.push(inst);
+    const sent: Array<Record<string, unknown>> = [];
+    vi.spyOn(inst.iframe.contentWindow!, 'postMessage').mockImplementation((msg: unknown) => { sent.push(msg as Record<string, unknown>); });
+    post(inst.iframe.contentWindow, 'null', { type: 'sandbox-ready' });
+    await new Promise((r) => setTimeout(r, 0));
+
+    const init = sent.find((m) => m.type === 'init') as { payload: { manifest: { locales: Record<string, unknown> } } };
+    expect(Object.keys(init.payload.manifest.locales).sort()).toEqual(['en', 'ja']);
+  });
+});
+
+describe('calls before the background frame has booted', () => {
+  // A plugin offering the slots remembered from its last start is in the
+  // registry while its frame boots; a message posted before init is lost.
+  it('holds shouldShow and hook calls until init-done', async () => {
+    const inst = createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' });
+    instances.push(inst);
+    const sent: Array<{ type: string; id?: string }> = [];
+    vi.spyOn(inst.iframe.contentWindow!, 'postMessage').mockImplementation((m: unknown) => { sent.push(m as { type: string }); });
+
+    const show = inst.evaluateShouldShow('email-banner', {});
+    const hook = inst.invokeHook('onAction', [{ actionId: 'x' }]);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(sent.filter((m) => m.type === 'slot-should-show' || m.type === 'hook-invoke')).toEqual([]);
+
+    booted(inst);
+    await new Promise((r) => setTimeout(r, 0));
+    const ask = sent.find((m) => m.type === 'slot-should-show')!;
+    const call = sent.find((m) => m.type === 'hook-invoke')!;
+    post(inst.iframe.contentWindow, 'null', { type: 'slot-should-show-result', id: ask.id, show: true });
+    post(inst.iframe.contentWindow, 'null', { type: 'hook-result', id: call.id, ok: true, result: 'done' });
+    await expect(show).resolves.toBe(true);
+    await expect(hook).resolves.toBe('done');
+  });
+
+  it('gives up on them when the frame is destroyed first', async () => {
+    const inst = createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' });
+    const show = inst.evaluateShouldShow('email-banner', {});
+    const hook = inst.invokeHook('onAction', []);
+    inst.destroy();
+
+    await expect(show).resolves.toBe(false);
+    await expect(hook).rejects.toThrow(/destroyed/);
+    await expect(inst.initPromise).rejects.toThrow(/destroyed/);
+    expect(inst.closed).toBe(true);
   });
 });

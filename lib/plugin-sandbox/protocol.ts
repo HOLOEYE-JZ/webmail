@@ -156,6 +156,13 @@ export interface HookResultMsg {
   error?: string;
 }
 
+/**
+ * A slot frame has applied a theme-change. The host sets the iframe element's
+ * color-scheme only now, so element and document never disagree (see
+ * SandboxInstance.setTheme).
+ */
+export interface ThemeAppliedMsg { type: 'theme-applied'; dark: boolean; }
+
 export interface SlotResizeMsg {
   type: 'slot-resize';
   height: number;
@@ -219,6 +226,7 @@ export type SandboxToHost =
   | CallbackInvokeMsg
   | HookResultMsg
   | SlotResizeMsg
+  | ThemeAppliedMsg
   | SlotShouldShowResultMsg
   | FloatingDropdownOpenMsg
   | FloatingDropdownUpdateMsg
@@ -247,6 +255,8 @@ export interface LocaleChangeMsg {
   type: 'locale-change';
   locale: string;
   regional?: RegionalSnapshot;
+  /** The plugin's tables for the new locale (init carries only the current ones). */
+  locales?: Record<string, Record<string, string>>;
 }
 
 /** Host → sandbox: the resolved theme changed; re-inject the slot's theme CSS. */
@@ -315,6 +325,6 @@ export const SANDBOX_PATH = '/plugin-sandbox';
  * Path used for the privileged (same-origin) sandbox iframe `src`. A distinct
  * route so the iframe gets `allow-same-origin` (real WebCrypto + IndexedDB)
  * while keeping the same CSP relaxations as the untrusted sandbox. Matched in
- * `proxy.ts`. Renders the identical `SandboxRuntime`.
+ * `proxy.ts`. Serves the same document (sandbox-document.ts).
  */
 export const SANDBOX_PRIVILEGED_PATH = '/plugin-sandbox-privileged';

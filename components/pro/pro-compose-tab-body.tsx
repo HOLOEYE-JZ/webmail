@@ -12,6 +12,7 @@ import { toast } from "@/stores/toast-store";
 import { useProTabStore, registerProTabCloseInterceptor, type ProComposeTabData } from "@/stores/pro-tab-store";
 import { debug } from "@/lib/debug";
 import { threadKeyFor } from "@/lib/thread-utils";
+import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { announceSent } from "@/lib/plugin-after-send";
 import { useSendFollowUp } from "@/hooks/use-send-follow-up";
 
@@ -58,7 +59,8 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
   const followUpSent = useSendFollowUp();
 
   const handleSend = useCallback(async (sendData: Parameters<NonNullable<React.ComponentProps<typeof EmailComposer>['onSend']>>[0]) => {
-    if (!client) return;
+    // Nothing is sent: the composer keeps what only goes once the mail is out.
+    if (!client) return false;
     // The Pro From dropdown lists identities from every connected account, so
     // the chosen identity may belong to a different account than the active
     // one. Submit through that account's own client - the identity id is only
@@ -93,27 +95,35 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
         { localAccountId: sendData.localAccountId, draftAccountId: sendData.draftAccountId },
       );
       submitted = true;
-      announceSent(result, sendData, followUpSent(result, sendData), { undoHold: sendData.undoHold });
-
-      if (result.scheduled) {
-        await handleScheduledSendCreated();
-        return;
+      if (result.rejectedRecipients?.length) {
+        // As in the inline composer: nothing else would say who never gets it.
+        toast.warning(t('email_composer.recipients_partly_refused', {
+          recipients: formatRejectedRecipients(result.rejectedRecipients),
+        }));
       }
+      announceSent(result, sendData, followUpSent(result, sendData), { undoHold: sendData.undoHold });
 
       // Mark the original message as $answered / $forwarded so the standard
       // viewer and list reflect the action (same behaviour as inline compose).
+      // Before the scheduled return: with a send delay every send is a held
+      // submission, and the flag was never set. (#985)
       if (data.sourceEmailId && (data.mode === 'reply' || data.mode === 'replyAll')) {
         try {
-          await useEmailStore.getState().markEmailKeyword(client, data.sourceEmailId, '$answered');
+          await useEmailStore.getState().markEmailKeyword(client, data.sourceEmailId, '$answered', data.sourceEmailSource ?? undefined);
         } catch (e) {
           debug.error('Failed to set $answered keyword:', e);
         }
       } else if (data.sourceEmailId && data.mode === 'forward') {
         try {
-          await useEmailStore.getState().markEmailKeyword(client, data.sourceEmailId, '$forwarded');
+          await useEmailStore.getState().markEmailKeyword(client, data.sourceEmailId, '$forwarded', data.sourceEmailSource ?? undefined);
         } catch (e) {
           debug.error('Failed to set $forwarded keyword:', e);
         }
+      }
+
+      if (result.scheduled) {
+        await handleScheduledSendCreated();
+        return;
       }
 
       // Refresh the currently-active mail list so the new sent message /
@@ -143,7 +153,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
       if (!submitted) throw error;
       toast.error(t('notifications.error_sending'));
     }
-  }, [client, sendEmail, closeTab, data.sourceEmailId, data.mode, t, handleScheduledSendCreated, refreshCurrentMailbox, followUpSent]);
+  }, [client, sendEmail, closeTab, data.sourceEmailId, data.sourceEmailSource, data.mode, t, handleScheduledSendCreated, refreshCurrentMailbox, followUpSent]);
 
   const handleClose = useCallback(() => {
     closeTab(tabIdRef.current);
@@ -163,17 +173,24 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     });
   }, [closeTab]);
 
-  const handleDiscardDraft = useCallback(async (draftId: string, draftAccountId?: string, localAccountId?: string) => {
+  const handleDiscardDraft = useCallback(async (draftId: string, draft?: { accountId?: string; localAccountId?: string }) => {
     if (!client) return;
-    const draftClient = localAccountId
-      ? (useAuthStore.getState().getClientForAccount(localAccountId) ?? client)
+    // Same routing as the inline composer's discard: the login the draft was
+    // saved with, and the account it lives in (see ComposerDraftData), never
+    // another login once that one is gone.
+    const draftClient = draft?.localAccountId
+      ? useAuthStore.getState().getClientForAccount(draft.localAccountId)
       : client;
+    if (!draftClient) {
+      toast.error(t('email_composer.discard_signed_out'));
+      return;
+    }
     try {
-      await draftClient.deleteEmail(draftId, draftAccountId);
+      await draftClient.deleteEmail(draftId, draft?.accountId);
     } catch (error) {
       console.error('Failed to discard draft:', error);
     }
-  }, [client]);
+  }, [client, t]);
 
   const handleSaveState = useCallback((state: ComposerDraftData) => {
     updateComposeDraft(tabIdRef.current, state);

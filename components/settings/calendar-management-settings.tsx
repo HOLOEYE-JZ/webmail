@@ -36,6 +36,23 @@ function CalendarColorPicker({
   allowCustom?: boolean;
 }) {
   const selectedIsPreset = CALENDAR_COLORS.includes(value);
+  const customRef = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { onChangeRef.current = onChange; });
+  // Take the custom color when the system dialog confirms it (`change`), not
+  // at every step (`input`, React's onChange): the first step closed the
+  // calendar menu around the picker and saved a color the user passed by
+  // (#1366).
+  useEffect(() => {
+    const input = customRef.current;
+    if (!input) return;
+    const commit = () => onChangeRef.current(input.value);
+    input.addEventListener('change', commit);
+    return () => input.removeEventListener('change', commit);
+  }, [allowCustom]);
+  useEffect(() => {
+    if (customRef.current) customRef.current.value = value || "#3b82f6";
+  }, [value]);
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -62,9 +79,9 @@ function CalendarColorPicker({
           title="Custom color"
         >
           <input
+            ref={customRef}
             type="color"
-            value={value || "#3b82f6"}
-            onChange={(e) => onChange(e.target.value)}
+            defaultValue={value || "#3b82f6"}
             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
           />
           {(selectedIsPreset || !value) && (
@@ -342,7 +359,8 @@ export function CalendarManagementSettings() {
         setDiscoveredCalDavUrls(next);
       })
       .catch(() => {
-        const fallbackWellKnown = new URL('/.well-known/caldav', serverUrl).toString();
+        // Below the server address, which may carry a path (https://host/stalwart).
+        const fallbackWellKnown = `${serverUrl.replace(/\/+$/, '')}/.well-known/caldav`;
         setDiscoveredCalDavUrls({});
         setWellKnownCalDavUrl(fallbackWellKnown);
       });
@@ -415,11 +433,21 @@ export function CalendarManagementSettings() {
     }
   };
 
-  const handleUpdate = async (calendarId: string, data: { name: string; color: string }) => {
+  const handleUpdate = async (
+    calendarId: string,
+    data: { name: string; color: string },
+    shownColor: string,
+  ) => {
     if (!client) return;
     setIsLoading(true);
     try {
-      await updateCalendar(client, calendarId, { name: data.name, color: data.color });
+      // The colour only when the user changed it: Stalwart 1.0 accepts only
+      // #rgb, #rrggbb or a CSS colour name, so sending back one another
+      // client stored (an 8-digit hex from Apple Calendar) failed the rename.
+      await updateCalendar(client, calendarId, {
+        name: data.name,
+        ...(data.color !== shownColor ? { color: data.color } : {}),
+      });
       setEditingId(null);
       toast.success(t('calendar_updated'));
     } catch {
@@ -547,7 +575,7 @@ export function CalendarManagementSettings() {
               <CalendarEditForm
                 key={cal.id}
                 initial={{ name: cal.name, color }}
-                onSave={(data) => handleUpdate(cal.id, data)}
+                onSave={(data) => handleUpdate(cal.id, data, color)}
                 onCancel={() => setEditingId(null)}
                 isLoading={isLoading}
               />

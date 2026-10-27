@@ -4,9 +4,9 @@ import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCal
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { emailExportFilename, attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_EMAIL_TEMPLATE, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
-import { applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
+import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
-import { collectReferencedCids, isEmbeddedInBody, normalizeCid } from "@/lib/attachment-visibility";
+import { collectReferencedCids, isEmbeddedInBody, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
@@ -105,11 +105,13 @@ import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useUIStore } from "@/stores/ui-store";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { toast } from "@/stores/toast-store";
+import { rescheduleFailureToast, sendFailureMessage } from "@/lib/send-failure-message";
+import { SubmissionQuotaError } from "@/lib/jmap/client";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
-import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, emailWriteSource, emailLinkSource, type EmailBlobContext } from "@/stores/email-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
@@ -166,7 +168,11 @@ interface EmailViewerProps {
   onDelete?: () => void;
   onArchive?: () => void;
   onToggleStar?: () => void;
-  onMarkAsRead?: (emailId: string, read: boolean) => void;
+  /**
+   * `automatic` is the mark-as-read on opening a message. A refusal of that
+   * (a read-only shared folder) is not the user's doing and needs no notice.
+   */
+  onMarkAsRead?: (emailId: string, read: boolean, opts?: { automatic?: boolean }) => void;
   onSetTag?: (emailId: string, tagId: string | null) => void;
   onDownloadAttachment?: (blobId: string, name: string, type?: string, forceDownload?: boolean, source?: EmailBlobContext) => void;
   onQuickReply?: (body: string) => Promise<void>;
@@ -207,7 +213,7 @@ interface EmailViewerProps {
   onShowShortcuts?: () => void;
   onEditDraft?: () => void;
   onCancelScheduledForEdit?: () => void;
-  onRescheduleScheduled?: (delayedUntil: string) => void;
+  onRescheduleScheduled?: (delayedUntil: string) => void | Promise<void>;
   onCompose?: () => void;
   /**
    * Fullscreen reading toggle (standard interface only - Pro email tabs are
@@ -1079,6 +1085,7 @@ export function EmailViewer({
   const tContextMenu = useTranslations('context_menu');
   const copyLink = useCopyLink();
   const tWelcome = useTranslations('welcome');
+  const quickReplyEnabled = useSettingsStore((state) => state.quickReplyEnabled);
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
   const messageSpacing = useSettingsStore((state) => state.messageSpacing);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);
@@ -1274,7 +1281,15 @@ export function EmailViewer({
       ? undefined
       : identities.find(i => i.email && recipientAddresses.includes(i.email.toLowerCase()));
 
-    await sendClient.sendEmail(fields.to, fields.subject ?? '', fields.body ?? '', undefined, undefined, fromIdentity?.id, fromIdentity?.email, undefined, fromIdentity?.name);
+    try {
+      await sendClient.sendEmail(fields.to, fields.subject ?? '', fields.body ?? '', undefined, undefined, fromIdentity?.id, fromIdentity?.email, undefined, fromIdentity?.name);
+    } catch (error) {
+      // The banner only says the unsubscribe did not work. A full submission
+      // quota gets the same explanation as in the composer: retrying will
+      // not help until records are freed or the limit is raised.
+      if (error instanceof SubmissionQuotaError) toast.error(sendFailureMessage(error, tComposer));
+      throw error;
+    }
   };
   const promptForRescheduleDelayedUntil = useCallback((): string | null => {
     const value = window.prompt(t('reschedule_prompt'));
@@ -1299,6 +1314,21 @@ export function EmailViewer({
     }
     return new Date(time).toISOString();
   }, [client, t, tComposer]);
+  // "Send now" and "Reschedule" submit a replacement and cancel the original;
+  // either can fail (a full submission quota, the mail already gone), and the
+  // failure used to end up as an unhandled rejection nobody saw.
+  const scheduledSendAt = email?.scheduledSendAt;
+  const rescheduleScheduled = useCallback(async (delayedUntil: string) => {
+    try {
+      await onRescheduleScheduled?.(delayedUntil);
+    } catch (error) {
+      console.error('Failed to reschedule the scheduled send:', error);
+      const { title, message } = rescheduleFailureToast(
+        error, t, tComposer, scheduledSendAt ? formatDateTime(scheduledSendAt, timeFormat) : undefined,
+      );
+      toast.error(title, message ? { message } : undefined);
+    }
+  }, [onRescheduleScheduled, t, tComposer, scheduledSendAt, timeFormat]);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const { startTour } = useTour();
   const [showFullHeaders, setShowFullHeaders] = useState(false);
@@ -1349,6 +1379,8 @@ export function EmailViewer({
       setIsQuickReplyFocused(false);
     } catch (error) {
       console.error("Failed to send quick reply:", error);
+      // The text stays in the box, so say why it did not go out.
+      toast.error(sendFailureMessage(error, tComposer));
     } finally {
       setIsSendingQuickReply(false);
     }
@@ -1917,14 +1949,14 @@ export function EmailViewer({
     // Instant mark
     if (markAsReadDelay === 0) {
       autoMarkedEmailRef.current = email.id;
-      onMarkAsRead(email.id, true);
+      onMarkAsRead(email.id, true, { automatic: true });
       return;
     }
 
     // Delayed mark
     const timeout = setTimeout(() => {
       autoMarkedEmailRef.current = email.id;
-      onMarkAsRead(email.id, true);
+      onMarkAsRead(email.id, true, { automatic: true });
     }, markAsReadDelay);
 
     return () => clearTimeout(timeout);
@@ -2277,8 +2309,9 @@ export function EmailViewer({
           } else {
             URL.revokeObjectURL(objectUrl);
           }
-        } catch {
-          // Failed to fetch inline image, will show placeholder
+        } catch (err) {
+          // The image shows as the placeholder; say why, or the failure is invisible.
+          console.warn(`Failed to fetch inline image cid:${cidValue}:`, err);
         }
       }));
       if (!cancelled) {
@@ -2462,12 +2495,7 @@ export function EmailViewer({
         // Replace cid: references with authenticated blob URLs (fetched via useEffect)
         // This prevents browser auth dialogs that occur when loading raw JMAP download URLs
         if (email.attachments) {
-          htmlContent = htmlContent.replace(
-            /\bcid:([^"'\s)]+)/gi,
-            (_match, cidRef) => {
-              return cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-            }
-          );
+          htmlContent = rewriteCidReferences(htmlContent, cidBlobUrls, TRANSPARENT_BLOCKED_PIXEL);
         }
 
         // Sanitize (no dark mode color transforms - emails render true-to-life
@@ -2564,13 +2592,7 @@ export function EmailViewer({
       };
     };
     if (pluginRenderedHtml) {
-      const htmlWithCidUrls = pluginRenderedHtml.replace(
-        /\bcid:([^"'\s)]+)/gi,
-        (_match, cidRef) => {
-          return cidBlobUrls[cidRef] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-        }
-      );
-      return renderHtml(htmlWithCidUrls);
+      return renderHtml(rewriteCidReferences(pluginRenderedHtml, cidBlobUrls, TRANSPARENT_BLOCKED_PIXEL));
     }
     if (pluginRenderedText) {
       return { html: plainToHtml(pluginRenderedText), isHtml: false, hasStyleTag: false, externalBlocked: false };
@@ -3397,6 +3419,10 @@ export function EmailViewer({
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+    // A link in the message that navigates the popup itself (no target, a
+    // non-web scheme) would hand the sender's page an opener to redirect
+    // the webmail tab with. We write the document through our own handle.
+    printWindow.opener = null;
 
     // The popup is an about:blank document of the app, so it carries the
     // app's CSP (img-src https:), not the message iframe's strict one. Add
@@ -3510,6 +3536,8 @@ export function EmailViewer({
 
   const sendReadReceiptNow = useCallback(async (automatic: boolean) => {
     if (!client || !email || !readReceiptRequestedBy || !receiptIdentity) return;
+    // Taken now: another folder may be open once the receipt is out.
+    const source = blobSource ?? emailWriteSource(email, client);
     const { rawId } = stripCrossAccountIdentityPrefix(receiptIdentity.id);
     try {
       await client.sendReadReceipt({
@@ -3524,35 +3552,50 @@ export function EmailViewer({
         subject: t('read_receipt.mdn_subject', { subject: email.subject || '' }),
         humanText: t('read_receipt.mdn_body', { recipient: receiptIdentity.email }),
       });
-      await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent');
     } catch (err) {
       // Surface the failure instead of silently resetting the banner so we can
       // see which step (upload / import / submission) failed.
       console.error('Read-receipt (MDN) send failed:', err);
       toast.error(t('read_receipt.send_failed'), {
-        message: err instanceof Error ? err.message : String(err),
+        message: sendFailureMessage(err, tComposer),
       });
       throw err;
     }
-  }, [client, email, readReceiptRequestedBy, receiptIdentity, t]);
+    // The receipt is out. Failing to flag that must not read as a failed
+    // send, nor let the "always" mode send it again.
+    try {
+      await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', source);
+    } catch (err) {
+      console.error('Read receipt sent, but setting $MDNSent failed:', err);
+      setMdnHandledLocally(true);
+    }
+  }, [client, email, blobSource, readReceiptRequestedBy, receiptIdentity, t, tComposer]);
 
   const ignoreReadReceipt = useCallback(async () => {
     setMdnHandledLocally(true);
     if (client && email) {
       // $MDNSent is the RFC 3503 flag every IMAP/JMAP client honours, so the
       // request is suppressed everywhere - not just locally.
-      try { await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent'); } catch { /* best effort */ }
+      try { await useEmailStore.getState().markEmailKeyword(client, email.id, '$mdnsent', blobSource ?? emailWriteSource(email, client)); } catch { /* best effort */ }
     }
-  }, [client, email]);
+  }, [client, email, blobSource]);
 
-  // "always" mode: auto-send the MDN once when the message is opened.
+  // "always" mode: auto-send the MDN once when the message is opened. A
+  // failure is not retried while the message stays open: the attempt itself
+  // changes Sent (the receipt is imported, then taken back out), every change
+  // hands the viewer a new `email`, and clearing the guard on failure made
+  // that one more attempt and error toast per refresh - without end once the
+  // submission quota is full. Opening the message again retries.
   const autoMdnRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (autoMdnRef.current !== email?.id) autoMdnRef.current = null;
+  }, [email?.id]);
   useEffect(() => {
     if (readReceiptResponse !== 'always') return;
     if (!shouldOfferReadReceipt || !email) return;
     if (autoMdnRef.current === email.id) return;
     autoMdnRef.current = email.id;
-    sendReadReceiptNow(true).catch(() => { autoMdnRef.current = null; });
+    sendReadReceiptNow(true).catch(() => { /* reported by sendReadReceiptNow */ });
     // email is already captured via email?.id and sendReadReceiptNow (which
     // depends on `email`); the autoMdnRef guard prevents a double send.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3830,7 +3873,7 @@ export function EmailViewer({
             <Button
               variant="default"
               size="sm"
-              onClick={() => onRescheduleScheduled?.(new Date(Date.now() + 1000).toISOString())}
+              onClick={() => void rescheduleScheduled(new Date(Date.now() + 1000).toISOString())}
               className="sm:flex sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
               title={t('send_now')}
             >
@@ -3842,7 +3885,7 @@ export function EmailViewer({
               size="sm"
               onClick={() => {
                 const delayedUntil = promptForRescheduleDelayedUntil();
-                if (delayedUntil) onRescheduleScheduled?.(delayedUntil);
+                if (delayedUntil) void rescheduleScheduled(delayedUntil);
               }}
               className="hidden sm:flex sm:h-8 sm:gap-1.5 sm:py-0"
               title={t('reschedule_send')}
@@ -4435,7 +4478,7 @@ export function EmailViewer({
                 <button
                   role="menuitem"
                   onClick={() => {
-                    void copyLink(buildMailPath({ mailboxId: null, emailId: email.id, threadId: null }));
+                    void copyLink(buildMailPath({ mailboxId: null, emailId: email.id, threadId: null, ...emailLinkSource(email) }));
                     setMoreMenuOpen(false);
                     setMoreMenuSub(null);
                   }}
@@ -5768,7 +5811,7 @@ export function EmailViewer({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onRescheduleScheduled?.(new Date(Date.now() + 1000).toISOString())}
+                      onClick={() => void rescheduleScheduled(new Date(Date.now() + 1000).toISOString())}
                       className="gap-1.5"
                     >
                       <Send className="w-3.5 h-3.5" />
@@ -5779,7 +5822,7 @@ export function EmailViewer({
                       variant="outline"
                       onClick={() => {
                         const delayedUntil = promptForRescheduleDelayedUntil();
-                        if (delayedUntil) onRescheduleScheduled?.(delayedUntil);
+                        if (delayedUntil) void rescheduleScheduled(delayedUntil);
                       }}
                       className="gap-1.5"
                     >
@@ -6367,7 +6410,7 @@ export function EmailViewer({
           )}
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {!mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {quickReplyEnabled && !mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar

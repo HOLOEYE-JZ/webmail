@@ -271,12 +271,18 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
           return { methodResponses: [[method, { list: [{ id: 'identity-1', email: 'user@example.com' }] }, '0']] };
         }
         if (method === 'EmailSubmission/get') {
-          return { methodResponses: [[method, { list: [{ id: 'sub-old', sendAt: originalSendAt, envelope: { rcptTo: [{ email: 'rcpt@example.com' }] } }] }, '0']] };
+          // Only the properties asked for, as the servers answer.
+          const wanted = (args.properties as string[] | undefined) ?? ['identityId', 'sendAt', 'envelope'];
+          const record: Record<string, unknown> = { id: 'sub-old', identityId: 'identity-1', sendAt: originalSendAt, envelope: { rcptTo: [{ email: 'rcpt@example.com' }] } };
+          return { methodResponses: [[method, { list: [Object.fromEntries(Object.entries(record).filter(([key]) => key === 'id' || wanted.includes(key)))] }, '0']] };
         }
         if (method === 'EmailSubmission/set' && args.update) {
           return opts.cancel === 'fail'
             ? { methodResponses: [[method, { notUpdated: { 'sub-old': { type: 'cannotUnsend' } } }, '0']] }
             : { methodResponses: [[method, { updated: { 'sub-old': null } }, '0']] };
+        }
+        if (method === 'EmailSubmission/set' && args.destroy) {
+          return { methodResponses: [[method, { destroyed: args.destroy }, '0']] };
         }
         if (method === 'EmailSubmission/set' && args.create) {
           const outcome = opts.creates[createCount++];
@@ -290,7 +296,8 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
         }
         throw new Error(`unexpected call ${method}`);
       });
-    const submissionSets = () => calls.filter(c => c.method === 'EmailSubmission/set');
+    // Without the destroy of a canceled record.
+    const submissionSets = () => calls.filter(c => c.method === 'EmailSubmission/set' && !c.args.destroy);
     return { calls, submissionSets };
   }
 
@@ -311,6 +318,21 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
     // onSuccessUpdateEmail at cancel, the cancel just put it back in Drafts.
     expect(create.onSuccessUpdateEmail?.['#replacement']).toEqual({ mailboxIds: { 'mb-sent': true }, 'keywords/$draft': null });
     expect(result).toMatchObject({ scheduled: true, emailSubmissionId: 'sub-new-1' });
+  });
+
+  // The undo toast's "Send now" passes the composer's identity, an id in the
+  // login's own account. A group identity's message is submitted in the group
+  // account, where that id names nothing (Stalwart 1.0: "Identity not found")
+  // or another identity, and the message dropped out of the schedule.
+  it('submits the replacement with the identity of the original submission', async () => {
+    const client = createClient();
+    const { calls, submissionSets } = scriptServer(client, { creates: ['ok'] });
+
+    await client.rescheduleEmailSubmission('sub-old', 'email-1', 'own-identity-of-group-address', inTenMinutes());
+
+    const create = submissionSets().find(c => c.args.create)?.args.create as Record<string, { identityId: string }>;
+    expect(create.replacement.identityId).toBe('identity-1');
+    expect(calls.find(c => c.method === 'Identity/get')?.args.ids).toEqual(['identity-1']);
   });
 
   it('changes nothing when the original cannot be canceled', async () => {
@@ -425,5 +447,35 @@ describe('JMAPClient post-send mailbox filing', () => {
     expect(Object.keys(capturedUpdate!).some(key => key.startsWith('mailboxIds/'))).toBe(false);
     expect(capturedUpdate!.mailboxIds).toEqual({ '0': true });
     expect(capturedUpdate!['keywords/$draft']).toBe(true);
+  });
+
+  // Mail sent from a group identity lives in the group's account (Stalwart 1.0
+  // and 0.16.23 alike), and ids repeat across accounts: restoring it in the own
+  // account moved an unrelated message there into Drafts.
+  it('restoreEmailToDraft updates the message in the account it was sent from', async () => {
+    const client = createClient();
+    const calls: Array<Record<string, unknown>> = [];
+    vi.spyOn(client as unknown as { request: JMAPClient['request'] }, 'request')
+      .mockImplementation(async (methodCalls) => {
+        calls.push(methodCalls[0][1] as Record<string, unknown>);
+        return { methodResponses: [['Email/set', { updated: { eaaaaab: null } }, '0']] };
+      });
+
+    await client.restoreEmailToDraft('eaaaaab', 'd', 'e', 'c');
+    await client.restoreEmailToDraft('eaaaaab', 'd', 'e');
+
+    expect(calls.map(call => call.accountId)).toEqual(['c', 'account-1']);
+    expect(calls[0].update).toEqual({ eaaaaab: { mailboxIds: { d: true }, 'keywords/$draft': true, 'keywords/$seen': true } });
+  });
+
+  it('restoreEmailToDraft fails when the server refuses the call or the message', async () => {
+    const client = createClient();
+    const request = vi.spyOn(client as unknown as { request: JMAPClient['request'] }, 'request');
+    // The whole call refused, e.g. access to the group account taken away.
+    request.mockResolvedValueOnce({ methodResponses: [['error', { type: 'forbidden', description: 'You do not have access to account c' }, '0']] });
+    request.mockResolvedValueOnce({ methodResponses: [['Email/set', { notUpdated: { eaaaaab: { type: 'notFound' } } }, '0']] });
+
+    await expect(client.restoreEmailToDraft('eaaaaab', 'd', 'e', 'c')).rejects.toMatchObject({ jmapType: 'forbidden' });
+    await expect(client.restoreEmailToDraft('eaaaaab', 'd', 'e', 'c')).rejects.toMatchObject({ jmapType: 'notFound', jmapSetError: true });
   });
 });

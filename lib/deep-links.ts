@@ -137,13 +137,22 @@ const ALIASED_ROLES = new Set(['inbox', 'sent', 'drafts', 'trash', 'archive', 'j
  */
 export type MailDeepLink =
   | { kind: 'folder'; ref: string; accountId?: string; slot?: number }
-  | { kind: 'message'; id: string; accountId?: string; slot?: number; fullscreen?: boolean; mailAccountId?: string }
-  | { kind: 'thread'; id: string; accountId?: string; slot?: number };
+  | { kind: 'message'; id: string; accountId?: string; slot?: number; fullscreen?: boolean; ownerAccountId?: string }
+  | { kind: 'thread'; id: string; accountId?: string; slot?: number; ownerAccountId?: string };
 
 export interface MailLinkState {
   mailboxId: string | null;
   emailId: string | null;
   threadId: string | null;
+  /**
+   * The JMAP account a linked message or conversation lives in, when it is not
+   * the login's own: email ids repeat across accounts (#1351).
+   */
+  ownerAccountId?: string | null;
+  /** The login (AccountEntry.id) reaching it, when not the active one. */
+  loginId?: string | null;
+  /** Open a message link alone, without sidebar and list. */
+  fullscreen?: boolean;
 }
 
 /**
@@ -227,16 +236,25 @@ export function isFolderLinkOpen(mailboxId: string, view: OpenFolderView): boole
  * thread is what the user is looking at.
  */
 export function buildMailPath(state: MailLinkState, mailboxes: Mailbox[] = []): string {
-  if (state.threadId) return `/mail/thread/${encodeSegment(state.threadId)}`;
-  if (state.emailId) return `/mail/message/${encodeSegment(state.emailId)}`;
+  const query = (fullscreen: boolean) => {
+    const params = new URLSearchParams();
+    if (state.loginId) params.set('account', state.loginId);
+    if (state.ownerAccountId) params.set('owner', state.ownerAccountId);
+    if (fullscreen) params.set('view', 'fullscreen');
+    const qs = params.toString();
+    return qs ? `?${qs}` : '';
+  };
+  if (state.threadId) return `/mail/thread/${encodeSegment(state.threadId)}${query(false)}`;
+  if (state.emailId) return `/mail/message/${encodeSegment(state.emailId)}${query(!!state.fullscreen)}`;
   if (state.mailboxId) return `/mail/folder/${encodeSegment(buildFolderRef(state.mailboxId, mailboxes))}`;
   return '/mail';
 }
 
 /**
- * The query parameter naming the JMAP account a message link's mail lives in.
- * `account` already names the login (AccountEntry.id), and one login reaches
- * several JMAP accounts (shared and group mailboxes).
+ * The query parameter naming the JMAP account a message link's mail lives in,
+ * as follow-ups' task links write it. `account` already names the login
+ * (AccountEntry.id), and one login reaches several JMAP accounts (shared and
+ * group mailboxes). Read as `owner` is (MailDeepLink.ownerAccountId).
  */
 export const MAIL_ACCOUNT_PARAM = 'mailAccount';
 
@@ -364,16 +382,16 @@ export function parseMailPath(
   // a mail dragged out into a new browser tab opens as. The Pro shell always
   // opens message links as fullscreen email tabs and ignores the flag.
   const fullscreen = search?.get('view') === 'fullscreen' || undefined;
+  const ownerAccountId = search?.get('owner') || undefined;
   const [kind, value] = segments;
+  // A follow-up's link to its mail names the account as `?mailAccount=`.
+  const messageOwnerAccountId = ownerAccountId ?? (search?.get(MAIL_ACCOUNT_PARAM) || undefined);
 
   if (kind && value) {
     const id = decodeSegment(value);
     if (id) {
-      if (kind === 'message') {
-        const mailAccountId = search?.get(MAIL_ACCOUNT_PARAM) || undefined;
-        return { kind: 'message', id, accountId, slot, fullscreen, ...(mailAccountId ? { mailAccountId } : {}) };
-      }
-      if (kind === 'thread') return { kind: 'thread', id, accountId, slot };
+      if (kind === 'message') return { kind: 'message', id, accountId, slot, fullscreen, ownerAccountId: messageOwnerAccountId };
+      if (kind === 'thread') return { kind: 'thread', id, accountId, slot, ownerAccountId };
       if (kind === 'folder') return { kind: 'folder', ref: id, accountId, slot };
     }
   }
@@ -533,6 +551,12 @@ export interface FilesDeepLink {
   path: string;
   /** File name to preview once the folder has loaded, if the link named one. */
   preview?: string;
+  /**
+   * A node of a drive shared with the user, or a page of such a drive, by the
+   * id the Files store lists it under ("<owner>:<id>"). It has no path under
+   * the user's own root; the Files app opens where it is listed instead.
+   */
+  shared?: string;
 }
 
 export function buildFilesPath(currentPath: string, preview?: string | null): string {
@@ -541,14 +565,25 @@ export function buildFilesPath(currentPath: string, preview?: string | null): st
   return preview ? `${base}?preview=${encodeURIComponent(preview)}` : base;
 }
 
+/** The query of a link into a shared drive (see FilesDeepLink.shared), leading `?` included. */
+export function sharedFilesSearch(id: string, preview?: string | null): string {
+  const query = `?shared=${encodeURIComponent(id)}`;
+  return preview ? `${query}&preview=${encodeURIComponent(preview)}` : query;
+}
+
+export function buildSharedFilesPath(id: string, preview?: string | null): string {
+  return `/files${sharedFilesSearch(id, preview)}`;
+}
+
 export function parseFilesPath(
   segments: string[] = [],
   search?: URLSearchParams,
 ): FilesDeepLink | null {
   const parts = segments.map(decodeSegment).filter(Boolean);
   const preview = search?.get('preview') ?? undefined;
-  if (parts.length === 0 && !preview) return null;
-  return { path: `/${parts.join('/')}`, preview };
+  const shared = search?.get('shared') || undefined;
+  if (parts.length === 0 && !preview && !shared) return null;
+  return { path: `/${parts.join('/')}`, preview, ...(shared ? { shared } : {}) };
 }
 
 // ---------------------------------------------------------------------------

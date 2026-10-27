@@ -3,6 +3,7 @@ import { useEmailStore } from '../email-store';
 import { useAuthStore } from '../auth-store';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { jmapError } from '@/lib/jmap/jmap-error';
 
 // Regression coverage for keyword writes (tags, $pinned, $answered/$forwarded,
 // $mdnsent) performed while viewing a shared/group mailbox DIRECTLY from the
@@ -116,6 +117,19 @@ describe('non-unified shared-folder keyword routing', () => {
     );
   });
 
+  it('setEmailKeywords keeps the old tags when Stalwart 1.0 refuses the keyword', async () => {
+    // What batchUpdateKeywords throws for a `notUpdated` entry on 1.0 (0.16
+    // accepts the write and cuts the keyword to 128 characters instead).
+    const refusal = jmapError('Failed to update keywords: Keywords cannot be longer than 128 bytes.', {
+      type: 'invalidProperties', properties: ['keywords'],
+    });
+    vi.mocked(activeClient.batchUpdateKeywords).mockRejectedValueOnce(refusal);
+
+    await expect(useEmailStore.getState().setEmailKeywords(activeClient, 'e1', { [`$label:${'x'.repeat(130)}`]: true }))
+      .rejects.toBe(refusal);
+    expect(useEmailStore.getState().emails.find(e => e.id === 'e1')?.keywords).toEqual({});
+  });
+
   it('writes only the keywords that change, not the whole set from the row', async () => {
     // The row is stale: another client has since marked the mail read. A
     // whole-map write from this row would clear $seen again.
@@ -152,6 +166,26 @@ describe('non-unified shared-folder keyword routing', () => {
     await useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$answered');
 
     expect(activeClient.setKeyword).toHaveBeenCalledWith('e1', '$answered', 'owner-x');
+  });
+
+  it('markEmailKeyword writes to the login and account the reply started from, not a namesake in the open folder', async () => {
+    // The reply was written to the group's e1; by the time it is sent the
+    // own Inbox is open, and the own account has an e1 too.
+    useEmailStore.setState({
+      selectedMailbox: 'a-inbox',
+      emails: [makeEmail({ id: 'e1', mailboxIds: { 'a-inbox': true } })],
+    } as never);
+
+    await useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$answered', { clientAccountId: 'account-a', accountId: 'owner-x' });
+
+    expect(activeClient.setKeyword).toHaveBeenCalledWith('e1', '$answered', 'owner-x');
+  });
+
+  it('markEmailKeyword writes nothing when the login the reply started from is gone', async () => {
+    await expect(useEmailStore.getState().markEmailKeyword(activeClient, 'e1', '$answered', { clientAccountId: 'account-b', accountId: 'owner-x' }))
+      .rejects.toThrow('Not connected');
+
+    expect(activeClient.setKeyword).not.toHaveBeenCalled();
   });
 
   it('routes a keyword write for an email that is only the selected email', async () => {

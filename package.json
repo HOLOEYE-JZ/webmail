@@ -1,6 +1,6 @@
 {
   "name": "bulwark-webmail",
-  "version": "1.17.2",
+  "version": "1.18.0",
   "description": "Bulwark Webmail - a modern webmail client built for Stalwart Mail Server",
   "author": "Bulwark Mail <dev@bulwarkmail.org>",
   "license": "AGPL-3.0-only",
@@ -22,8 +22,8 @@
     "typescript"
   ],
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "node scripts/build-plugin-sandbox.mjs --watch -- next dev --turbopack",
+    "build": "node scripts/build-plugin-sandbox.mjs && next build --turbopack",
     "build:lite": "node scripts/lite/build.mjs",
     "lite:serve": "node scripts/lite/serve.mjs out 4173",
     "test:lite-smoke": "playwright test -c scripts/lite/smoke/playwright.config.ts",
@@ -76,7 +76,7 @@
     "react-dom": "^19.2.5",
     "sharp": "^0.35.4",
     "tailwind-merge": "^3.4.0",
-    "undici": "^7.29.1",
+    "undici": "^7.30.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

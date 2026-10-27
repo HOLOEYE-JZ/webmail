@@ -16,6 +16,7 @@ import { snapshotHostTheme, type ThemeSnapshot } from './host-theme';
 import { effectiveSettings } from '../plugin-settings';
 import { clampSlotHeight, clampSlotWidth, isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
 import { resolveDateLocale } from '../utils';
+import { tablesFor } from './plugin-i18n';
 import { getEffectiveTimeZone } from '../timezone';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { useSettingsStore, type DateLocale } from '@/stores/settings-store';
@@ -289,6 +290,8 @@ export class SandboxInstance {
   private rejectInit!: (err: Error) => void;
   private listener: (ev: MessageEvent) => void;
   private destroyed = false;
+  /** The frame has answered init-done: its hooks and slots are in place. */
+  private initialized = false;
 
   private pendingHookInvokes = new Map<string, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
   private pendingShouldShow = new Map<string, (show: boolean) => void>();
@@ -325,6 +328,8 @@ export class SandboxInstance {
       this.resolveInit = res;
       this.rejectInit = rej;
     });
+    // Nobody waits on a slot frame's init; its rejection is not an error.
+    this.initPromise.catch(() => {});
 
     this.iframe = document.createElement('iframe');
     // Privileged tier: same-origin in BOTH dev and prod so the iframe gets real
@@ -350,9 +355,17 @@ export class SandboxInstance {
     this.iframe.style.border = 'none';
     // The frame's document declares the theme's color-scheme (themeSnapshotToCSS).
     // When the iframe element's own color-scheme differs, the browser paints
-    // an opaque canvas behind the frame (white in a dark theme), so the two
-    // are always set together.
-    if (initPayload.mode === 'slot') this.iframe.style.colorScheme = initPayload.theme.dark ? 'dark' : 'light';
+    // an opaque canvas behind the frame (white in a dark theme). Until init,
+    // the document is about:blank and then the bare sandbox page, neither of
+    // which declares one, so a dark-theme panel showed white for the ~0.5 s a
+    // frame takes to boot. The frame stays hidden until init-done: by then it
+    // has applied the theme, and it has nothing to show any earlier. Later
+    // theme changes switch the element when the frame confirms them
+    // (theme-applied).
+    if (initPayload.mode === 'slot') {
+      this.iframe.style.colorScheme = initPayload.theme.dark ? 'dark' : 'light';
+      this.iframe.style.visibility = 'hidden';
+    }
     this.iframe.style.display = 'block';
     if (initPayload.mode === 'background') {
       this.iframe.style.position = 'absolute';
@@ -379,7 +392,10 @@ export class SandboxInstance {
     // "/plugin-sandbox" would hit the origin root and 404, breaking plugins.
     // Privileged plugins load the same-origin route so the CSP/allow-same-origin
     // pairing is consistent.
-    this.iframe.src = withBasePath(this.privileged ? SANDBOX_PRIVILEGED_PATH : SANDBOX_PATH);
+    // ?frame=slot: the document then loads React DOM and the UI kit with the
+    // runtime; a background frame never needs them (sandbox-document.ts).
+    this.iframe.src = withBasePath(this.privileged ? SANDBOX_PRIVILEGED_PATH : SANDBOX_PATH)
+      + (initPayload.mode === 'slot' ? '?frame=slot' : '');
 
     this.listener = (ev) => this.onMessage(ev);
     window.addEventListener('message', this.listener);
@@ -442,10 +458,19 @@ export class SandboxInstance {
         return;
 
       case 'init-done':
+        this.initialized = true;
+        if (this.mode === 'slot') this.iframe.style.visibility = '';
         this.resolveInit({ hooks: msg.hooks, slots: msg.slots, shortcuts: msg.shortcuts ?? [] });
         return;
 
+      case 'theme-applied':
+        if (this.mode === 'slot') this.iframe.style.colorScheme = msg.dark === true ? 'dark' : 'light';
+        return;
+
       case 'init-error':
+        // The loader reports a background frame's failure; nobody waits on a
+        // slot frame's init, so say it here or it fails without a trace.
+        if (this.mode === 'slot') console.error(`[plugin-sandbox] "${this.pluginId}" slot failed to start: ${msg.error}`);
         this.rejectInit(new Error(msg.error));
         return;
 
@@ -532,6 +557,10 @@ export class SandboxInstance {
   /** Dispatch a hook handler inside the sandbox; resolves with its return value. */
   invokeHook(hookName: string, args: unknown[]): Promise<unknown> {
     if (this.destroyed) return Promise.reject(new Error('sandbox destroyed'));
+    // A plugin offering remembered slots is in the registry before its frame
+    // has booted; a click on one of its actions waits for it (a message
+    // posted before init is lost).
+    if (!this.initialized) return this.initPromise.then(() => this.invokeHook(hookName, args));
     const id = uid();
     const p = new Promise<unknown>((resolve, reject) => {
       // The bus gives up on a slow handler, but the entry used to stay here
@@ -557,6 +586,9 @@ export class SandboxInstance {
   /** Ask the background instance whether a slot should mount for this context. */
   evaluateShouldShow(slot: SlotName, context: unknown): Promise<boolean> {
     if (this.destroyed) return Promise.resolve(false);
+    if (!this.initialized) {
+      return this.initPromise.then(() => this.evaluateShouldShow(slot, context), () => false);
+    }
     const id = uid();
     const p = new Promise<boolean>((resolve) => {
       this.pendingShouldShow.set(id, resolve);
@@ -581,13 +613,27 @@ export class SandboxInstance {
 
   setLocale(locale: string, regional?: RegionalSnapshot): void {
     if (this.destroyed) return;
-    this.send({ type: 'locale-change', locale, regional: regional ?? snapshotRegionalSettings(locale) });
+    this.send({
+      type: 'locale-change',
+      locale,
+      regional: regional ?? snapshotRegionalSettings(locale),
+      locales: tablesFor(this.plugin.locales, locale),
+    });
   }
 
   /** Push a new resolved theme so the slot iframe re-injects its theme CSS. */
   setTheme(theme: ThemeSnapshot): void {
     if (this.destroyed) return;
-    this.iframe.style.colorScheme = theme.dark ? 'dark' : 'light';
+    // Before init the frame is not listening yet and the message was lost,
+    // so it booted with the theme of the moment it was created.
+    if (this.pendingInit?.mode === 'slot') {
+      this.pendingInit.theme = theme;
+      this.iframe.style.colorScheme = theme.dark ? 'dark' : 'light';
+      return;
+    }
+    // The element's color-scheme follows when the frame has applied the
+    // theme (theme-applied). Switching it first left a light document in a
+    // dark element for a frame or two: a white flash on every switch to dark.
     this.send({ type: 'theme-change', theme });
   }
 
@@ -621,9 +667,16 @@ export class SandboxInstance {
     this.send(msg);
   }
 
+  /** True once destroy() ran. */
+  get closed(): boolean {
+    return this.destroyed;
+  }
+
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    // Whoever waits for init (the loader, calls held back below) stops waiting.
+    this.rejectInit(new Error('sandbox destroyed'));
     liveInstances.delete(this);
     window.removeEventListener('message', this.listener);
     this.iframe.remove();
@@ -676,7 +729,7 @@ export function createBackgroundInstance(opts: BackgroundOptions): SandboxInstan
       version: opts.plugin.version,
       permissions: opts.plugin.permissions,
       settings: effectiveSettings(opts.plugin),
-      locales: opts.plugin.locales,
+      locales: tablesFor(opts.plugin.locales, opts.locale),
       httpOrigins: opts.plugin.httpOrigins,
     },
     code: opts.code,
@@ -703,7 +756,7 @@ export function createSlotInstance(opts: SlotOptions): SandboxInstance {
       version: opts.plugin.version,
       permissions: opts.plugin.permissions,
       settings: effectiveSettings(opts.plugin),
-      locales: opts.plugin.locales,
+      locales: tablesFor(opts.plugin.locales, opts.locale),
       httpOrigins: opts.plugin.httpOrigins,
     },
     extraProps: opts.extraProps,

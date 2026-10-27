@@ -11,6 +11,7 @@ import type {
 } from '@/lib/plugin-types';
 import type { EmailTemplate } from '@/lib/template-types';
 import { generateEmailSource } from '@/lib/email-source';
+import { isServerSetKeyword } from '@/lib/jmap/server-keywords';
 
 // Resolve a message's plain-text body from its JMAP body parts. Plugins that
 // translate or scan content need the real body, not just the short `preview`
@@ -46,9 +47,14 @@ function plainTextFromEmail(email: Email): string {
   return (email.preview || '').trim();
 }
 
-export function emailToReadView(email: Email): EmailReadView {
+/**
+ * `accountId` names the JMAP account the message is in; rows of merged views
+ * carry it, others only the caller knows (see EmailReadView.accountId).
+ */
+export function emailToReadView(email: Email, accountId = email.sourceAccountId): EmailReadView {
   return {
     id: email.id,
+    ...(accountId ? { accountId } : {}),
     threadId: email.threadId,
     mailboxIds: Object.keys(email.mailboxIds || {}).filter(k => email.mailboxIds[k]),
     from: (email.from || []).map(a => ({ name: a.name || '', email: a.email })),
@@ -72,7 +78,8 @@ export function emailToReadView(email: Email): EmailReadView {
     text: plainTextFromEmail(email),
     headers: email.headers,
     source: generateEmailSource(email),
-    keywords: Object.keys(email.keywords || {}).filter(k => email.keywords[k]),
+    // Stalwart 1.0's attachment keywords are what `hasAttachment` says.
+    keywords: Object.keys(email.keywords || {}).filter(k => email.keywords[k] && !isServerSetKeyword(k)),
     auth: email.authenticationResults,
   };
 }
@@ -81,9 +88,10 @@ const trueKeys = (rec?: Record<string, boolean> | null): string[] =>
   Object.keys(rec || {}).filter((k) => rec?.[k]);
 
 /** Headers and flags of a message, without the body (see EmailSummary). */
-export function emailSummary(email: Email): EmailSummary {
+export function emailSummary(email: Email, accountId = email.sourceAccountId): EmailSummary {
   return {
     id: email.id,
+    ...(accountId ? { accountId } : {}),
     threadId: email.threadId,
     mailboxIds: trueKeys(email.mailboxIds),
     from: (email.from || []).map((a) => ({ name: a.name || '', email: a.email })),

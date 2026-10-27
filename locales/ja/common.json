@@ -244,6 +244,11 @@
     "show_on_mobile": "モバイルで表示"
   },
   "email_list": {
+    "sections": {
+      "unread": "未読",
+      "everything_else": "その他すべて",
+      "unread_empty": "受信トレイのメッセージをすべて読みました。"
+    },
     "columns": {
       "from": "差出人",
       "to": "宛先",
@@ -535,6 +540,8 @@
       "authentication_missing_info": "この招待には検証済みのメール認証がありません。不審な点があれば主催者に詳細を確認してください。",
       "sender_mismatch_info": "この招待は {sender} から送信されましたが、カレンダーデータ上の主催者は {organizer} です。",
       "sender_mismatch_unverified_info": "この招待は {sender} から送信されましたが、カレンダーデータ上の主催者は {organizer} であり、メッセージも検証できませんでした。",
+      "attendee_mismatch_info": "この返信は {sender} から送信されましたが、カレンダーデータ上で返信している参加者は {attendee} です。",
+      "attendee_mismatch_unverified_info": "この返信は {sender} から送信されましたが、カレンダーデータ上で返信している参加者は {attendee} であり、メッセージも検証できませんでした。",
       "organizer_role": "あなたがこのイベントの主催者です",
       "your_response": "あなたの返答: {status}",
       "response_needed": "返答が必要です",
@@ -604,6 +611,7 @@
     "scheduled_send_created": "メールを送信予約しました",
     "sending_in": "{seconds} 秒後に送信",
     "undo_send_failed": "取り消せませんでした。メッセージはすでに送信された可能性があります。",
+    "undo_send_signed_out": "取り消せませんでした: メッセージを送信したアカウントはサインアウトされています。",
     "cancel_scheduled_send": "送信をキャンセル",
     "reschedule_send": "再予約",
     "cancel_and_edit": "キャンセルして編集",
@@ -612,6 +620,14 @@
     "scheduled_actions_only": "予約済みビューでは予約アクションのみ利用できます",
     "undo_send_scheduled": "メッセージは送信予約されています",
     "undo_send": "送信を取り消す",
+    "send_cancelled_restore_failed": "送信はキャンセルされましたが、メッセージを下書きに戻せませんでした。メッセージは送信済みに残っています。",
+    "send_cancelled_remove_failed": "送信はキャンセルされましたが、未送信のメッセージを送信済みから削除できませんでした。",
+    "cancel_scheduled_failed": "予約送信をキャンセルできませんでした",
+    "still_scheduled_at": "メッセージは引き続き {date} に送信予定です。",
+    "still_scheduled": "メッセージは引き続き送信予定です。",
+    "already_sent": "このメッセージはすでに送信されています。",
+    "no_longer_scheduled": "このメッセージはもう送信予定ではありません。",
+    "reschedule_recipients_refused": "何も変更されていません: サーバーが {recipients} を拒否しました。",
     "contact_sidebar": {
       "title": "連絡先",
       "close": "サイドバーを閉じる",
@@ -680,6 +696,7 @@
     "saving": "保存中...",
     "draft_saved": "下書きを保存しました",
     "save_failed": "保存に失敗しました",
+    "discard_signed_out": "下書きは削除されませんでした: 保存先のアカウントはサインアウトされています。下書きはそのアカウントの下書きフォルダーに残ります。",
     "to_placeholder": "受信者のメールアドレス",
     "cc_placeholder": "CC受信者",
     "bcc_placeholder": "BCC受信者",
@@ -754,6 +771,10 @@
     "smime_unlock_button": "ロック解除",
     "smime_passphrase_placeholder": "S/MIME パスフレーズ",
     "send_timeout": "サーバーが応答しなくなりました。再送信する前に送信済みフォルダーを確認してください。メッセージはすでに送信されている可能性があります。",
+    "submission_quota": "このアカウントの送信済みメッセージの記録がサーバー上に多すぎます。Bulwark は削除できる記録を削除しました。この状態が続く場合は、メール送信数の上限を引き上げるよう管理者に依頼してください。",
+    "submission_limit": "上限に達したため、サーバーがメッセージの送信を拒否しました: {reason}",
+    "recipients_refused": "送信されませんでした: サーバーが {recipients} を拒否しました。",
+    "recipients_partly_refused": "サーバーが {recipients} を拒否しました。他の宛先にはメッセージが届きます。",
     "send_offline": "オフラインのようです。メッセージはそのまま残っています。オンラインに戻ったら再送信してください。",
     "formatting": "書式",
     "send_recipients_rejected": "送信されませんでした。サーバーがすべての宛先を拒否しました。",
@@ -1400,7 +1421,10 @@
         "revoke": "取り消す",
         "confirm_revoke_title": "このデバイスを取り消しますか？",
         "confirm_revoke_message": "すぐにバックグラウンド通知の受信を停止します。そのデバイスでプッシュを再度有効にすると、あらためて登録されます。",
-        "confirm_revoke_message_this": "このデバイスはすぐにバックグラウンド通知の受信を停止します。"
+        "confirm_revoke_message_this": "このデバイスはすぐにバックグラウンド通知の受信を停止します。",
+        "shared_mailboxes_no_push": "他のユーザーから共有されたメールボックスでは、バックグラウンド通知は送信されません。",
+        "error_forbidden": "メールサーバーは、このアカウントのバックグラウンド通知を許可していません。",
+        "error_over_quota": "このアカウントはメールサーバー上のプッシュ登録が多すぎます（上限は通常 15 件）。通知設定で使用していないデバイスを取り消してから、もう一度お試しください。"
       }
     },
     "language_region": {
@@ -1450,6 +1474,12 @@
       }
     },
     "email_behavior": {
+      "inbox_type": {
+        "label": "受信トレイの種類",
+        "description": "「未読を先頭」では、未読の最新25件を受信トレイの他のメールの上のセクションに表示します",
+        "default": "デフォルト",
+        "unread_first": "未読を先頭"
+      },
       "clear_search_on_folder_change": {
         "label": "フォルダー切り替え時に検索をクリア",
         "description": "フォルダー（受信トレイ、送信済みなど）をクリックすると、有効な検索をクリアしてそのフォルダーを表示します。オフの場合、検索は保持され、切り替え先のフォルダーで再実行されます。"
@@ -1531,6 +1561,10 @@
       "plain_text_mode": {
         "label": "プレーンテキストのみ",
         "description": "リッチテキストエディターを無効にし、返信や転送を含むすべてのメールをプレーンテキストのみで送信します"
+      },
+      "quick_reply": {
+        "label": "クイック返信",
+        "description": "メッセージの下にクイック返信欄を表示します。"
       },
       "auto_select_reply_identity": {
         "label": "返信元アドレスを自動選択",
@@ -1786,6 +1820,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",
@@ -2384,6 +2422,7 @@
       "validation_empty_name": "ルール名は必須です",
       "validation_empty_conditions": "値を持つ条件が少なくとも1つ必要です",
       "validation_empty_actions": "少なくとも1つのアクションが必要です",
+      "validation_header_name": "ヘッダー名に使用できるのは英字（A-Z）、数字、ハイフン、アンダースコアのみです",
       "templates_section": "テンプレートから作成",
       "template_newsletters": "ニュースレターをフォルダに移動",
       "template_receipts": "領収書を自動アーカイブ",
@@ -3163,7 +3202,8 @@
     },
     "export": {
       "title": "連絡先をエクスポート",
-      "success": "{count, plural, other {#件の連絡先をエクスポートしました}}"
+      "success": "{count, plural, other {#件の連絡先をエクスポートしました}}",
+      "exporting": "エクスポート中..."
     },
     "bulk": {
       "selected": "{count, plural, other {#件選択中}}",
@@ -3307,8 +3347,11 @@
         "free": "空き",
         "busy": "予定あり",
         "tentative": "仮",
+        "no_busy_times": "共有された予定あり時間はありません",
         "unknown": "このサーバーのユーザーではありません",
-        "checking": "確認中…"
+        "error": "確認できませんでした",
+        "checking": "確認中…",
+        "unavailable_on_server": "このサーバーでは空き時間情報を利用できません"
       },
       "title": "参加者",
       "add": "参加者を追加",
@@ -3330,6 +3373,7 @@
       "you_organizer": "あなたは主催者です",
       "you_attendee": "あなたは参加者です",
       "no_participants": "参加者なし",
+      "limit_warning": "参加者が主催者を含めて{max, plural, other {#人}}を超えています。サーバーがこの予定の保存を拒否する可能性があります。管理者が上限を引き上げることができます。",
       "count": "{count}人の参加者"
     },
     "recurrence": {
@@ -3494,6 +3538,7 @@
       "save_without_invitations": "招待状なしで保存",
       "rsvp_updated": "回答を更新しました",
       "rsvp_error": "回答の更新に失敗しました",
+      "participant_limit": "サーバーでは1件の予定につき参加者は主催者を含めて{max, plural, other {#人}}までのため、この変更は拒否されました。管理者が上限を引き上げることができます。",
       "event_duplicated": "予定を複製しました",
       "event_error": "予定の保存に失敗しました",
       "task_due": "タスクの期限です",
@@ -3503,7 +3548,10 @@
     },
     "status": {
       "loading_calendars": "カレンダーを読み込み中...",
-      "loading_events": "予定を読み込み中..."
+      "loading_events": "予定を読み込み中...",
+      "events_load_failed": "予定を読み込めませんでした。カレンダーが最新でない可能性があります。",
+      "tasks_load_failed": "タスクを読み込めませんでした。一覧が最新でない可能性があります。",
+      "retry": "再試行"
     },
     "quick_create": {
       "placeholder": "新しい予定のタイトル",
@@ -3812,6 +3860,8 @@
     "new_name": "新しい名前",
     "name_forbidden_chars": "サーバーでは名前に次の文字を使用できません: {chars}",
     "name_reserved": "この名前はサーバーで予約されています。",
+    "name_control_chars": "名前に制御文字は使用できません。",
+    "name_too_long": "この名前はサーバーには長すぎます。",
     "delete": "削除",
     "delete_confirm_title": "リソースを削除",
     "delete_confirm_message": "\"{name}\"を削除してもよろしいですか？この操作は元に戻せません。",
@@ -3822,11 +3872,21 @@
     "type": "種類",
     "folder": "フォルダー",
     "file": "ファイル",
+    "symlink": "シンボリックリンク",
+    "parent_directory": "親ディレクトリ",
+    "breadcrumb_root": "ホーム",
     "uploading": "アップロード中...",
     "upload_success": "{count, plural, other {#件のファイルをアップロードしました}}",
     "upload_canceled": "アップロードをキャンセルしました",
     "upload_canceled_partial": "キャンセル前に{count, plural, other {#件のファイル}}がアップロードされました",
     "upload_error": "ファイルのアップロードに失敗しました",
+    "upload_failed": "{count, plural, other {#件のファイルをアップロードできませんでした}}",
+    "error_over_quota": "ファイルまたはフォルダーの上限に達しました。いくつか削除してから、もう一度お試しください。",
+    "error_too_deep": "フォルダーをこれ以上深く入れ子にすることはできません。",
+    "error_invalid_name": "サーバーはこの名前を受け付けません。",
+    "error_forbidden": "ここでこの操作を行う権限がありません。",
+    "error_too_large": "このファイルはサーバーには大きすぎます。",
+    "error_partial_copy": "コピーの一部は削除されずに残っています。",
     "create_folder_success": "フォルダーを作成しました",
     "create_folder_error": "フォルダーの作成に失敗しました",
     "delete_success": "正常に削除しました",
@@ -3865,6 +3925,7 @@
     "shared": "Shared",
     "shared_with_me": "Shared with me",
     "shared_by": "Shared by {name}",
+    "shared_files_from": "{name} からのファイル",
     "create_file_success": "ファイルを作成しました",
     "create_file_error": "ファイルの作成に失敗しました",
     "favorites": "お気に入り",
@@ -4094,8 +4155,12 @@
     "loading_principals": "ユーザーを読み込み中…",
     "no_principals": "他のユーザーまたはグループは見つかりません。",
     "no_match": "一致する項目がありません。",
+    "directory_restricted": "お使いのサーバーではユーザーディレクトリの参照が許可されていないため、所属グループと、あなたと共有しているユーザーのみが表示されます。管理者は Stalwart の共有設定でディレクトリクエリを有効にできます。",
+    "directory_not_browsable": "お使いのサーバーでは、ユーザーディレクトリを参照できません。",
+    "directory_failed": "ユーザーとグループの一覧を読み込めませんでした。",
     "remove": "アクセス権を削除",
     "group": "グループ",
+    "unknown_user": "不明なユーザー",
     "share_added": "アクセス権を付与しました",
     "share_updated": "アクセス権を更新しました",
     "share_removed": "アクセス権を削除しました",

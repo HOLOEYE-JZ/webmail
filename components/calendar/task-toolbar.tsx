@@ -80,7 +80,8 @@ export function TaskToolbar({
   );
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 border-b border-border flex-wrap">
+    // The scope row wraps the toolbar onto two lines: then it is padded, not one row high.
+    <div className={cn("flex items-center gap-2 px-4 border-b border-border flex-wrap", scope && onScopeChange ? "py-2" : "min-h-14 box-content")}>
       {scope && onScopeChange && (
         <div role="group" aria-label={t("tasks.scope_label")} className="flex w-full flex-wrap items-center gap-1.5 pb-1">
           {TASK_LIST_SCOPES.map((value) => scopeButton(value, t(`tasks.${SCOPE_KEYS[value]}`)))}

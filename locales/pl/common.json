@@ -244,6 +244,11 @@
     "show_on_mobile": "Pokaż na telefonie"
   },
   "email_list": {
+    "sections": {
+      "unread": "Nieprzeczytane",
+      "everything_else": "Wszystkie pozostałe",
+      "unread_empty": "Przeczytano wszystkie wiadomości w odebranych."
+    },
     "columns": {
       "from": "Od",
       "to": "Do",
@@ -537,6 +542,8 @@
       "authentication_missing_info": "To zaproszenie nie zawiera zweryfikowanego uwierzytelniania poczty. Potwierdź szczegóły z organizatorem, jeśli cokolwiek wygląda nietypowo.",
       "sender_mismatch_info": "To zaproszenie zostało wysłane z {sender}, podczas gdy organizator w danych kalendarza to {organizer}.",
       "sender_mismatch_unverified_info": "To zaproszenie zostało wysłane z {sender}, podczas gdy organizator w danych kalendarza to {organizer}, a wiadomość nie mogła zostać zweryfikowana.",
+      "attendee_mismatch_info": "Ta odpowiedź została wysłana z {sender}, podczas gdy odpowiadający uczestnik w danych kalendarza to {attendee}.",
+      "attendee_mismatch_unverified_info": "Ta odpowiedź została wysłana z {sender}, podczas gdy odpowiadający uczestnik w danych kalendarza to {attendee}, a wiadomość nie mogła zostać zweryfikowana.",
       "organizer_role": "Jesteś organizatorem tego wydarzenia",
       "your_response": "Twoja odpowiedź: {status}",
       "response_needed": "Wymaga odpowiedzi",
@@ -604,6 +611,7 @@
     "scheduled_send_created": "E-mail zaplanowany do wysłania",
     "sending_in": "Wysyłka za {seconds} s",
     "undo_send_failed": "Nie udało się cofnąć. Wiadomość mogła już zostać wysłana.",
+    "undo_send_signed_out": "Nie można cofnąć: konto, z którego wysłano wiadomość, nie jest już zalogowane.",
     "cancel_scheduled_send": "Anuluj wysyłkę",
     "reschedule_send": "Przełóż",
     "cancel_and_edit": "Anuluj i edytuj",
@@ -612,6 +620,14 @@
     "scheduled_actions_only": "Widok Zaplanowane obsługuje tylko akcje planowania",
     "undo_send_scheduled": "Wiadomość zaplanowana do wysłania",
     "undo_send": "Cofnij wysyłkę",
+    "send_cancelled_restore_failed": "Wysyłka została anulowana, ale nie udało się przenieść wiadomości z powrotem do Szkiców. Nadal jest w Wysłanych.",
+    "send_cancelled_remove_failed": "Wysyłka została anulowana, ale nie udało się usunąć niewysłanej wiadomości z Wysłanych.",
+    "cancel_scheduled_failed": "Nie udało się anulować zaplanowanej wysyłki",
+    "still_scheduled_at": "Wiadomość jest nadal zaplanowana na {date}.",
+    "still_scheduled": "Wiadomość jest nadal zaplanowana.",
+    "already_sent": "Ta wiadomość została już wysłana.",
+    "no_longer_scheduled": "Ta wiadomość nie jest już zaplanowana.",
+    "reschedule_recipients_refused": "Nic nie zostało zmienione: serwer odrzucił {recipients}.",
     "contact_sidebar": {
       "title": "Kontakt",
       "close": "Zamknij panel boczny",
@@ -680,6 +696,7 @@
     "saving": "Zapisywanie...",
     "draft_saved": "Szkic zapisany",
     "save_failed": "Nie udało się zapisać",
+    "discard_signed_out": "Wersja robocza nie została usunięta: konto, w którym ją zapisano, nie jest już zalogowane. Pozostaje w wersjach roboczych tego konta.",
     "to_placeholder": "Adresy e-mail odbiorców",
     "cc_placeholder": "Odbiorcy DW",
     "bcc_placeholder": "Odbiorcy UDW",
@@ -747,6 +764,10 @@
     "show_less": "Pokaż mniej",
     "send_failed": "Nie udało się wysłać wiadomości",
     "send_timeout": "Serwer przestał odpowiadać. Przed ponownym wysłaniem sprawdź folder Wysłane — wiadomość mogła już zostać wysłana.",
+    "submission_quota": "Serwer przechowuje zbyt wiele rekordów wysłanych wiadomości dla tego konta. Bulwark usunął te, które mógł; jeśli to się powtarza, poproś administratora o podniesienie limitu wysyłek e-mail.",
+    "submission_limit": "Serwer odmówił wysłania wiadomości, ponieważ osiągnięto limit: {reason}",
+    "recipients_refused": "Nie wysłano: serwer odrzucił {recipients}.",
+    "recipients_partly_refused": "Serwer odrzucił {recipients}. Pozostali odbiorcy otrzymają wiadomość.",
     "send_offline": "Wygląda na to, że jesteś offline. Wiadomość nadal tu jest, wyślij ją ponownie po odzyskaniu połączenia.",
     "formatting": "Formatowanie",
     "send_recipients_rejected": "Nie wysłano – serwer odrzucił wszystkich odbiorców.",
@@ -1400,7 +1421,10 @@
         "revoke": "Unieważnij",
         "confirm_revoke_title": "Unieważnić to urządzenie?",
         "confirm_revoke_message": "Natychmiast przestanie odbierać powiadomienia w tle. Ponowne włączenie push na tym urządzeniu zarejestruje je od nowa.",
-        "confirm_revoke_message_this": "To urządzenie natychmiast przestanie odbierać powiadomienia w tle."
+        "confirm_revoke_message_this": "To urządzenie natychmiast przestanie odbierać powiadomienia w tle.",
+        "shared_mailboxes_no_push": "Skrzynki pocztowe udostępnione ci przez innych nie wysyłają powiadomień w tle.",
+        "error_forbidden": "Serwer poczty nie zezwala na powiadomienia w tle dla tego konta.",
+        "error_over_quota": "To konto ma zbyt wiele rejestracji push na serwerze poczty (limit wynosi zwykle 15). Unieważnij nieużywane urządzenia w ustawieniach powiadomień i spróbuj ponownie."
       }
     },
     "language_region": {
@@ -1450,6 +1474,12 @@
       }
     },
     "email_behavior": {
+      "inbox_type": {
+        "label": "Typ skrzynki odbiorczej",
+        "description": "„Najpierw nieprzeczytane” pokazuje 25 najnowszych nieprzeczytanych wiadomości w sekcji nad resztą skrzynki",
+        "default": "Domyślny",
+        "unread_first": "Najpierw nieprzeczytane"
+      },
       "clear_search_on_folder_change": {
         "label": "Czyść wyszukiwanie przy zmianie folderu",
         "description": "Kliknięcie folderu (Odebrane, Wysłane…) czyści aktywne wyszukiwanie i otwiera ten folder. Gdy wyłączone, wyszukiwanie pozostaje i jest ponawiane w wybranym folderze."
@@ -1540,6 +1570,10 @@
       "plain_text_mode": {
         "label": "Tylko zwykły tekst",
         "description": "Wyłącz edytor tekstu sformatowanego i wysyłaj wszystkie wiadomości e-mail tylko jako zwykły tekst, w tym odpowiedzi i przekazywanie dalej"
+      },
+      "quick_reply": {
+        "label": "Szybka odpowiedź",
+        "description": "Pokazuj pole szybkiej odpowiedzi pod wiadomościami."
       },
       "auto_select_reply_identity": {
         "label": "Automatycznie wybieraj adres odpowiedzi",
@@ -1786,6 +1820,10 @@
         "signed_in": "Signed in to {count, plural, one {# account} other {# accounts}} with the saved password.",
         "sign_in_failed": "{count, plural, one {# saved password was} other {# saved passwords were}} refused: sign in to those accounts from the account list.",
         "deleted": "Saved list deleted.",
+        "prompt_title": "Restore your other accounts?",
+        "prompt_description": "A list of accounts is saved for {account}. Enter its backup password to add them to this browser, or do it later from Settings.",
+        "prompt_not_now": "Not now",
+        "prompt_done": "Done",
         "errors": {
           "mismatch": "The passwords do not match.",
           "password_length": "Use at least 10 characters.",
@@ -2384,6 +2422,7 @@
       "validation_empty_name": "Nazwa reguły jest wymagana",
       "validation_empty_conditions": "Wymagany jest co najmniej jeden warunek z wartością",
       "validation_empty_actions": "Wymagana jest co najmniej jedna akcja",
+      "validation_header_name": "Nazwy nagłówków mogą zawierać tylko litery A-Z, cyfry, łączniki i podkreślenia",
       "templates_section": "Rozpocznij od szablonu",
       "template_newsletters": "Przenieś newslettery do folderu",
       "template_receipts": "Automatycznie archiwizuj rachunki",
@@ -3163,7 +3202,8 @@
     },
     "export": {
       "title": "Eksportuj kontakty",
-      "success": "{count, plural, one {Wyeksportowano 1 kontakt} other {Wyeksportowano # kontaktów}}"
+      "success": "{count, plural, one {Wyeksportowano 1 kontakt} other {Wyeksportowano # kontaktów}}",
+      "exporting": "Eksportowanie..."
     },
     "bulk": {
       "selected": "{count, plural, one {1 zaznaczony} other {# zaznaczonych}}",
@@ -3307,8 +3347,11 @@
         "free": "Dostępny",
         "busy": "Zajęty",
         "tentative": "Wstępnie",
+        "no_busy_times": "Brak udostępnionych zajętych terminów",
         "unknown": "Nie jest użytkownikiem tego serwera",
-        "checking": "Sprawdzanie…"
+        "error": "Nie udało się sprawdzić",
+        "checking": "Sprawdzanie…",
+        "unavailable_on_server": "Informacje wolny/zajęty nie są dostępne na tym serwerze"
       },
       "title": "Uczestnicy",
       "add": "Dodaj uczestnika",
@@ -3330,6 +3373,7 @@
       "you_organizer": "Jesteś organizatorem",
       "you_attendee": "Jesteś uczestnikiem",
       "no_participants": "Brak uczestników",
+      "limit_warning": "Ponad {max, plural, one {# uczestnika} few {# uczestników} many {# uczestników} other {# uczestnika}} łącznie z organizatorem: serwer może odmówić zapisania tego wydarzenia. Administrator może zwiększyć limit.",
       "count": "{count, plural, one {# uczestnik} other {# uczestników}}"
     },
     "recurrence": {
@@ -3494,6 +3538,7 @@
       "save_without_invitations": "Zapisz bez zaproszeń",
       "rsvp_updated": "Odpowiedź zaktualizowano",
       "rsvp_error": "Nie udało się zaktualizować odpowiedzi",
+      "participant_limit": "Serwer pozwala na maksymalnie {max, plural, one {# uczestnika} few {# uczestników} many {# uczestników} other {# uczestnika}} wydarzenia łącznie z organizatorem, więc odrzucił tę zmianę. Administrator może zwiększyć limit.",
       "event_duplicated": "Wydarzenie zduplikowano",
       "event_error": "Nie udało się zapisać wydarzenia",
       "task_due": "Termin zadania",
@@ -3503,7 +3548,10 @@
     },
     "status": {
       "loading_calendars": "Ładowanie kalendarzy...",
-      "loading_events": "Ładowanie wydarzeń..."
+      "loading_events": "Ładowanie wydarzeń...",
+      "events_load_failed": "Nie udało się wczytać wydarzeń. Kalendarz może być nieaktualny.",
+      "tasks_load_failed": "Nie udało się wczytać zadań. Lista może być nieaktualna.",
+      "retry": "Spróbuj ponownie"
     },
     "quick_create": {
       "placeholder": "Tytuł nowego wydarzenia",
@@ -3812,6 +3860,8 @@
     "new_name": "Nowa nazwa",
     "name_forbidden_chars": "Serwer nie zezwala na te znaki w nazwach: {chars}",
     "name_reserved": "Ta nazwa jest zarezerwowana na serwerze.",
+    "name_control_chars": "Nazwy nie mogą zawierać znaków sterujących.",
+    "name_too_long": "Ta nazwa jest zbyt długa dla serwera.",
     "delete": "Usuń",
     "delete_confirm_title": "Usuń zasób",
     "delete_confirm_message": "Czy na pewno chcesz usunąć \"{name}\"? Tej operacji nie można cofnąć.",
@@ -3822,11 +3872,21 @@
     "type": "Typ",
     "folder": "Folder",
     "file": "Plik",
+    "symlink": "Dowiązanie symboliczne",
+    "parent_directory": "Katalog nadrzędny",
+    "breadcrumb_root": "Strona główna",
     "uploading": "Przesyłanie...",
     "upload_success": "{count, plural, one {Przesłano 1 plik} other {Przesłano # plików}}",
     "upload_canceled": "Anulowano przesyłanie",
     "upload_canceled_partial": "{count, plural, one {Przed anulowaniem przesłano 1 plik} few {Przed anulowaniem przesłano # pliki} many {Przed anulowaniem przesłano # plików} other {Przed anulowaniem przesłano # pliku}}",
     "upload_error": "Nie udało się przesłać pliku",
+    "upload_failed": "{count, plural, one {Nie udało się przesłać 1 pliku} few {Nie udało się przesłać # plików} many {Nie udało się przesłać # plików} other {Nie udało się przesłać # pliku}}",
+    "error_over_quota": "Osiągnięto limit plików lub folderów. Usuń niektóre i spróbuj ponownie.",
+    "error_too_deep": "Foldery nie mogą być zagnieżdżone tak głęboko.",
+    "error_invalid_name": "Serwer nie akceptuje tej nazwy.",
+    "error_forbidden": "Nie masz tutaj uprawnień do wykonania tej czynności.",
+    "error_too_large": "Ten plik jest zbyt duży dla serwera.",
+    "error_partial_copy": "Część kopii pozostała na miejscu.",
     "create_folder_success": "Folder utworzono",
     "create_folder_error": "Nie udało się utworzyć folderu",
     "delete_success": "Usunięto pomyślnie",
@@ -3865,6 +3925,7 @@
     "shared": "Shared",
     "shared_with_me": "Shared with me",
     "shared_by": "Shared by {name}",
+    "shared_files_from": "Pliki od {name}",
     "create_file_success": "Plik utworzono",
     "create_file_error": "Nie udało się utworzyć pliku",
     "favorites": "Ulubione",
@@ -4094,8 +4155,12 @@
     "loading_principals": "Ładowanie użytkowników…",
     "no_principals": "Nie znaleziono innych użytkowników ani grup.",
     "no_match": "Brak wyników.",
+    "directory_restricted": "Twój serwer nie pozwala przeglądać katalogu użytkowników, dlatego widoczne są tylko Twoje grupy i osoby, które coś Ci udostępniły. Administrator może włączyć zapytania do katalogu w ustawieniach udostępniania Stalwart.",
+    "directory_not_browsable": "Twój serwer nie pozwala Ci przeglądać katalogu użytkowników.",
+    "directory_failed": "Nie udało się wczytać listy użytkowników i grup.",
     "remove": "Usuń dostęp",
     "group": "Grupa",
+    "unknown_user": "Nieznany użytkownik",
     "share_added": "Dostęp przyznany",
     "share_updated": "Dostęp zaktualizowany",
     "share_removed": "Dostęp usunięty",

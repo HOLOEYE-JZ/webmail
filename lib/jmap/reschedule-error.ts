@@ -21,3 +21,20 @@ export class RescheduleUnscheduledError extends Error {
     this.name = 'RescheduleUnscheduledError';
   }
 }
+
+const unscheduledErrors = new WeakSet<object>();
+
+/**
+ * Marks an error a reschedule rethrows as it is (a refused recipient, a used
+ * up quota) after the message stopped being scheduled.
+ */
+export function markUnscheduled<E extends Error>(error: E): E {
+  unscheduledErrors.add(error);
+  return error;
+}
+
+/** Whether a failed reschedule left the message unscheduled, back in Drafts. */
+export function leftUnscheduled(error: unknown): boolean {
+  return error instanceof RescheduleUnscheduledError
+    || (typeof error === 'object' && error !== null && unscheduledErrors.has(error));
+}

@@ -31,6 +31,7 @@ import { apiFetch, getPathPrefix, withBasePath } from '../browser-navigation';
 import { createOAuthState } from '../plugin-oauth';
 import { reportUploadProgress } from '../upload-progress';
 import { DEFAULT_KEYWORD_SCAN_LIMIT } from '../jmap/client';
+import { isServerSetKeyword } from '../jmap/server-keywords';
 import { suggestKeywordColor } from '../keyword-discovery';
 import { MAX_KEYWORD_LENGTH } from '../keyword-nesting';
 import { KEYWORD_PREFIX } from '../thread-utils';
@@ -874,10 +875,17 @@ async function doJmapImportRaw(
   copy.set(view);
   const blob = new Blob([copy.buffer], { type: 'message/rfc822' });
 
+  // Stalwart 1.0 sets the attachment keyword an imported message deserves and
+  // keeps any other it is given: a `$hasattachment` from the plugin would make
+  // `hasAttachment` true for a message without attachments.
+  const keywords = opts?.keywords
+    ? Object.fromEntries(Object.entries(opts.keywords).filter(([keyword]) => !isServerSetKeyword(keyword)))
+    : undefined;
+
   return client.importRawEmail(
     blob,
     mailboxIds,
-    opts?.keywords,
+    keywords,
     opts?.accountId,
   );
 }
@@ -1288,6 +1296,11 @@ function assertPluginKeyword(keyword: unknown): string {
   if (typeof keyword !== 'string' || !PLUGIN_KEYWORD_RE.test(keyword)) {
     throw new Error(`Invalid JMAP keyword "${String(keyword)}"`);
   }
+  // Stalwart 1.0 derives hasAttachment from these; adding or removing one
+  // would misreport the message.
+  if (isServerSetKeyword(keyword)) {
+    throw new Error(`JMAP keyword "${keyword}" is set by the server`);
+  }
   return keyword;
 }
 
@@ -1640,7 +1653,13 @@ async function doJmapGetKeywords(value?: unknown) {
 }
 
 async function doKeywordsDiscover(value?: unknown) {
-  return requireClient().discoverKeywords(keywordDiscoveryOptions(value, 'keywords.discover'));
+  const scan = await requireClient().discoverKeywords(keywordDiscoveryOptions(value, 'keywords.discover'));
+  // Stalwart 1.0 puts an attachment keyword on every message. Nobody applied
+  // it, and the plugin keyword API refuses to set or remove it.
+  return {
+    ...scan,
+    keywords: Object.fromEntries(Object.entries(scan.keywords).filter(([keyword]) => !isServerSetKeyword(keyword))),
+  };
 }
 
 async function doKeywordsRefreshCounts(): Promise<Record<string, { total: number; unread: number }>> {
@@ -2153,12 +2172,12 @@ export async function dispatchApiCall(
     case 'vacation.get': return doVacationGet();
     case 'vacation.set': return doVacationSet(args[0]);
 
-    case 'email.get': return doEmailGet(args[0]);
+    case 'email.get': return doEmailGet(args[0], args[1]);
     case 'email.list': return doEmailList(args[0]);
     case 'email.search': return doEmailSearch(args[0]);
     case 'mailboxes.list': return doMailboxesList();
-    case 'email.getAttachment': return doEmailGetAttachment(args[0], args[1]);
-    case 'email.getRaw': return doEmailGetRaw(args[0]);
+    case 'email.getAttachment': return doEmailGetAttachment(args[0], args[1], args[2]);
+    case 'email.getRaw': return doEmailGetRaw(args[0], args[1]);
     case 'email.move': return doEmailMove(plugin.id, args[0], args[1]);
     case 'email.archive': return doEmailArchive(plugin.id, args[0]);
 

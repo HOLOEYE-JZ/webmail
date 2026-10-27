@@ -244,6 +244,11 @@
     "show_on_mobile": "Auf Mobilgerät anzeigen"
   },
   "email_list": {
+    "sections": {
+      "unread": "Ungelesen",
+      "everything_else": "Alles andere",
+      "unread_empty": "Du hast alle Nachrichten im Posteingang gelesen."
+    },
     "columns": {
       "from": "Von",
       "to": "An",
@@ -535,6 +540,8 @@
       "authentication_missing_info": "Diese Einladung enthält keine verifizierte Mail-Authentifizierung. Bestätigen Sie die Details mit dem Organisator, wenn etwas ungewöhnlich wirkt.",
       "sender_mismatch_info": "Diese Einladung wurde von {sender} gesendet, während der in den Kalenderdaten angegebene Organisator {organizer} ist.",
       "sender_mismatch_unverified_info": "Diese Einladung wurde von {sender} gesendet, während der in den Kalenderdaten angegebene Organisator {organizer} ist, und die Nachricht konnte nicht verifiziert werden.",
+      "attendee_mismatch_info": "Diese Antwort wurde von {sender} gesendet, während der antwortende Teilnehmer in den Kalenderdaten {attendee} ist.",
+      "attendee_mismatch_unverified_info": "Diese Antwort wurde von {sender} gesendet, während der antwortende Teilnehmer in den Kalenderdaten {attendee} ist, und die Nachricht konnte nicht verifiziert werden.",
       "organizer_role": "Sie organisieren dieses Ereignis",
       "your_response": "Ihre Antwort: {status}",
       "response_needed": "Antwort ausstehend",
@@ -604,6 +611,7 @@
     "scheduled_send_created": "E-Mail wurde zum Senden geplant",
     "sending_in": "Wird in {seconds} s gesendet",
     "undo_send_failed": "Rückgängig machen nicht möglich. Die Nachricht ist vielleicht schon gesendet.",
+    "undo_send_signed_out": "Rückgängig machen nicht möglich: Das Konto, von dem die Nachricht gesendet wurde, ist nicht mehr angemeldet.",
     "cancel_scheduled_send": "Senden abbrechen",
     "reschedule_send": "Neu planen",
     "cancel_and_edit": "Abbrechen und bearbeiten",
@@ -612,6 +620,14 @@
     "scheduled_actions_only": "Die Geplant-Ansicht unterstützt nur Planungsaktionen",
     "undo_send_scheduled": "Nachricht ist zum Senden geplant",
     "undo_send": "Senden rückgängig",
+    "send_cancelled_restore_failed": "Das Senden wurde abgebrochen, aber die Nachricht konnte nicht zurück in die Entwürfe gelegt werden. Sie liegt noch im Ordner „Gesendet“.",
+    "send_cancelled_remove_failed": "Das Senden wurde abgebrochen, aber die nicht gesendete Nachricht konnte nicht aus dem Ordner „Gesendet“ entfernt werden.",
+    "cancel_scheduled_failed": "Das geplante Senden konnte nicht abgebrochen werden",
+    "still_scheduled_at": "Die Nachricht ist weiterhin für {date} geplant.",
+    "still_scheduled": "Die Nachricht ist weiterhin geplant.",
+    "already_sent": "Diese Nachricht wurde bereits gesendet.",
+    "no_longer_scheduled": "Diese Nachricht ist nicht mehr geplant.",
+    "reschedule_recipients_refused": "Nichts wurde geändert: Der Server hat {recipients} abgelehnt.",
     "contact_sidebar": {
       "title": "Kontakt",
       "close": "Seitenleiste schließen",
@@ -680,6 +696,7 @@
     "saving": "Wird gespeichert...",
     "draft_saved": "Entwurf gespeichert",
     "save_failed": "Speichern fehlgeschlagen",
+    "discard_signed_out": "Der Entwurf wurde nicht gelöscht: Das Konto, in dem er gespeichert ist, ist nicht mehr angemeldet. Er bleibt in dessen Entwürfen.",
     "to_placeholder": "E-Mail-Adressen der Empfänger",
     "cc_placeholder": "CC-Empfänger",
     "bcc_placeholder": "BCC-Empfänger",
@@ -754,6 +771,10 @@
     "smime_unlock_button": "Entsperren",
     "smime_passphrase_placeholder": "S/MIME-Passphrase",
     "send_timeout": "Der Server antwortet nicht mehr. Prüfen Sie den Ordner „Gesendet“, bevor Sie erneut senden – die Nachricht wurde möglicherweise bereits verschickt.",
+    "submission_quota": "Der Server hat für dieses Konto zu viele Einträge zu gesendeten Nachrichten. Bulwark hat entfernt, was möglich war; wenn das weiterhin vorkommt, bitten Sie Ihren Administrator, das Limit für E-Mail-Übermittlungen zu erhöhen.",
+    "submission_limit": "Der Server hat das Senden abgelehnt, weil ein Limit erreicht ist: {reason}",
+    "recipients_refused": "Nicht gesendet: Der Server hat {recipients} abgelehnt.",
+    "recipients_partly_refused": "Der Server hat {recipients} abgelehnt. Die anderen Empfänger erhalten die Nachricht.",
     "send_offline": "Sie scheinen offline zu sein. Die Nachricht ist noch da, senden Sie sie erneut, sobald Sie wieder online sind.",
     "formatting": "Formatierung",
     "send_recipients_rejected": "Nicht gesendet – der Server hat alle Empfänger abgelehnt.",
@@ -1400,7 +1421,10 @@
         "revoke": "Widerrufen",
         "confirm_revoke_title": "Dieses Gerät widerrufen?",
         "confirm_revoke_message": "Es empfängt sofort keine Hintergrundbenachrichtigungen mehr. Wird Push auf diesem Gerät erneut aktiviert, wird es neu registriert.",
-        "confirm_revoke_message_this": "Dieses Gerät empfängt sofort keine Hintergrundbenachrichtigungen mehr."
+        "confirm_revoke_message_this": "Dieses Gerät empfängt sofort keine Hintergrundbenachrichtigungen mehr.",
+        "shared_mailboxes_no_push": "Postfächer, die andere mit Ihnen teilen, senden keine Hintergrundbenachrichtigungen.",
+        "error_forbidden": "Der Mailserver erlaubt für dieses Konto keine Hintergrundbenachrichtigungen.",
+        "error_over_quota": "Für dieses Konto gibt es auf dem Mailserver zu viele Push-Registrierungen (meist sind 15 erlaubt). Widerrufen Sie Geräte, die Sie nicht mehr nutzen, in den Benachrichtigungseinstellungen und versuchen Sie es erneut."
       }
     },
     "language_region": {
@@ -1450,6 +1474,12 @@
       }
     },
     "email_behavior": {
+      "inbox_type": {
+        "label": "Posteingangstyp",
+        "description": "„Ungelesene zuerst“ zeigt deine 25 neuesten ungelesenen Nachrichten in einem eigenen Abschnitt über dem restlichen Posteingang",
+        "default": "Standard",
+        "unread_first": "Ungelesene zuerst"
+      },
       "clear_search_on_folder_change": {
         "label": "Suche beim Ordnerwechsel löschen",
         "description": "Ein Klick auf einen Ordner (Posteingang, Gesendet …) löscht die aktive Suche und zeigt den Ordner. Ist die Option aus, bleibt die Suche bestehen und wird im neuen Ordner erneut ausgeführt."
@@ -1540,6 +1570,10 @@
       "plain_text_mode": {
         "label": "Nur Klartext",
         "description": "Rich-Text-Editor deaktivieren und alle E-Mails nur als Klartext senden, einschließlich Antworten und Weiterleitungen"
+      },
+      "quick_reply": {
+        "label": "Schnellantwort",
+        "description": "Das Feld für die Schnellantwort unter Nachrichten anzeigen."
       },
       "auto_select_reply_identity": {
         "label": "Antwortadresse automatisch wählen",
@@ -1786,6 +1820,10 @@
         "signed_in": "Bei {count, plural, one {# Konto} other {# Konten}} mit dem gespeicherten Passwort angemeldet.",
         "sign_in_failed": "{count, plural, one {# gespeichertes Passwort wurde} other {# gespeicherte Passwörter wurden}} abgelehnt: Melden Sie sich bei diesen Konten über die Kontoliste an.",
         "deleted": "Gespeicherte Liste gelöscht.",
+        "prompt_title": "Weitere Konten wiederherstellen?",
+        "prompt_description": "Für {account} ist eine Kontenliste gespeichert. Geben Sie das Backup-Passwort ein, um die Konten in diesem Browser hinzuzufügen, oder tun Sie es später in den Einstellungen.",
+        "prompt_not_now": "Nicht jetzt",
+        "prompt_done": "Fertig",
         "errors": {
           "mismatch": "Die Passwörter stimmen nicht überein.",
           "password_length": "Verwenden Sie mindestens 10 Zeichen.",
@@ -2384,6 +2422,7 @@
       "validation_empty_name": "Regelname ist erforderlich",
       "validation_empty_conditions": "Mindestens eine Bedingung mit einem Wert ist erforderlich",
       "validation_empty_actions": "Mindestens eine Aktion ist erforderlich",
+      "validation_header_name": "Header-Namen dürfen nur die Buchstaben A-Z, Ziffern, Bindestriche und Unterstriche enthalten",
       "templates_section": "Von Vorlage starten",
       "template_newsletters": "Newsletter in Ordner verschieben",
       "template_receipts": "Quittungen automatisch archivieren",
@@ -3163,7 +3202,8 @@
     },
     "export": {
       "title": "Kontakte exportieren",
-      "success": "{count, plural, one {1 Kontakt exportiert} other {# Kontakte exportiert}}"
+      "success": "{count, plural, one {1 Kontakt exportiert} other {# Kontakte exportiert}}",
+      "exporting": "Wird exportiert..."
     },
     "bulk": {
       "selected": "{count, plural, one {1 ausgewählt} other {# ausgewählt}}",
@@ -3307,8 +3347,11 @@
         "free": "Verfügbar",
         "busy": "Beschäftigt",
         "tentative": "Vorläufig",
+        "no_busy_times": "Keine belegten Zeiten freigegeben",
         "unknown": "Kein Benutzer auf diesem Server",
-        "checking": "Wird geprüft…"
+        "error": "Konnte nicht geprüft werden",
+        "checking": "Wird geprüft…",
+        "unavailable_on_server": "Frei/Belegt-Informationen sind auf diesem Server nicht verfügbar"
       },
       "title": "Teilnehmer",
       "add": "Teilnehmer hinzufügen",
@@ -3330,6 +3373,7 @@
       "you_organizer": "Sie sind der Organisator",
       "you_attendee": "Sie sind ein Teilnehmer",
       "no_participants": "Keine Teilnehmer",
+      "limit_warning": "Mehr als {max, plural, one {# Teilnehmer} other {# Teilnehmer}}, den Organisator mitgezählt: Der Server lehnt das Speichern dieses Termins möglicherweise ab. Ihr Administrator kann das Limit erhöhen.",
       "count": "{count, plural, one {# Teilnehmer} other {# Teilnehmer}}"
     },
     "recurrence": {
@@ -3494,6 +3538,7 @@
       "save_without_invitations": "Ohne Einladungen speichern",
       "rsvp_updated": "Antwort aktualisiert",
       "rsvp_error": "Antwort konnte nicht aktualisiert werden",
+      "participant_limit": "Der Server erlaubt höchstens {max, plural, one {# Teilnehmer} other {# Teilnehmer}} pro Termin, den Organisator mitgezählt, und hat die Änderung deshalb abgelehnt. Ihr Administrator kann das Limit erhöhen.",
       "event_duplicated": "Termin dupliziert",
       "event_error": "Termin konnte nicht gespeichert werden",
       "task_due": "Aufgabe fällig",
@@ -3503,7 +3548,10 @@
     },
     "status": {
       "loading_calendars": "Kalender werden geladen...",
-      "loading_events": "Termine werden geladen..."
+      "loading_events": "Termine werden geladen...",
+      "events_load_failed": "Termine konnten nicht geladen werden. Der Kalender ist möglicherweise nicht aktuell.",
+      "tasks_load_failed": "Aufgaben konnten nicht geladen werden. Die Liste ist möglicherweise nicht aktuell.",
+      "retry": "Erneut versuchen"
     },
     "quick_create": {
       "placeholder": "Titel des neuen Termins",
@@ -3812,6 +3860,8 @@
     "new_name": "Neuer Name",
     "name_forbidden_chars": "Diese Zeichen sind in Namen auf dem Server nicht erlaubt: {chars}",
     "name_reserved": "Dieser Name ist auf dem Server reserviert.",
+    "name_control_chars": "Namen dürfen keine Steuerzeichen enthalten.",
+    "name_too_long": "Dieser Name ist für den Server zu lang.",
     "delete": "Löschen",
     "delete_confirm_title": "Ressource löschen",
     "delete_confirm_message": "Möchten Sie \"{name}\" wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
@@ -3822,11 +3872,21 @@
     "type": "Typ",
     "folder": "Ordner",
     "file": "Datei",
+    "symlink": "Symbolischer Link",
+    "parent_directory": "Übergeordnetes Verzeichnis",
+    "breadcrumb_root": "Startseite",
     "uploading": "Wird hochgeladen...",
     "upload_success": "{count, plural, one {1 Datei hochgeladen} other {# Dateien hochgeladen}}",
     "upload_canceled": "Hochladen abgebrochen",
     "upload_canceled_partial": "{count, plural, one {1 Datei wurde} other {# Dateien wurden}} vor dem Abbrechen hochgeladen",
     "upload_error": "Datei konnte nicht hochgeladen werden",
+    "upload_failed": "{count, plural, one {1 Datei konnte nicht hochgeladen werden} other {# Dateien konnten nicht hochgeladen werden}}",
+    "error_over_quota": "Die Höchstzahl an Dateien oder Ordnern ist erreicht. Löschen Sie einige und versuchen Sie es erneut.",
+    "error_too_deep": "Ordner lassen sich nicht so tief verschachteln.",
+    "error_invalid_name": "Der Server akzeptiert diesen Namen nicht.",
+    "error_forbidden": "Dazu fehlt Ihnen hier die Berechtigung.",
+    "error_too_large": "Diese Datei ist für den Server zu groß.",
+    "error_partial_copy": "Ein Teil der Kopie wurde nicht entfernt.",
     "create_folder_success": "Ordner erstellt",
     "create_folder_error": "Ordner konnte nicht erstellt werden",
     "delete_success": "Erfolgreich gelöscht",
@@ -3865,6 +3925,7 @@
     "shared": "Geteilt",
     "shared_with_me": "Mit mir geteilt",
     "shared_by": "Von {name} geteilt",
+    "shared_files_from": "Dateien von {name}",
     "create_file_success": "Datei erstellt",
     "create_file_error": "Datei konnte nicht erstellt werden",
     "favorites": "Favoriten",
@@ -4094,8 +4155,12 @@
     "loading_principals": "Benutzer werden geladen…",
     "no_principals": "Keine weiteren Benutzer oder Gruppen gefunden.",
     "no_match": "Keine Treffer.",
+    "directory_restricted": "Ihr Server erlaubt kein Durchsuchen seines Benutzerverzeichnisses, daher werden nur Ihre Gruppen und Personen aufgeführt, die etwas mit Ihnen geteilt haben. Ein Administrator kann Verzeichnisabfragen in den Freigabeeinstellungen von Stalwart aktivieren.",
+    "directory_not_browsable": "Ihr Server erlaubt Ihnen nicht, sein Benutzerverzeichnis zu durchsuchen.",
+    "directory_failed": "Die Liste der Benutzer und Gruppen konnte nicht geladen werden.",
     "remove": "Zugriff entfernen",
     "group": "Gruppe",
+    "unknown_user": "Unbekannter Benutzer",
     "share_added": "Zugriff erteilt",
     "share_updated": "Zugriff aktualisiert",
     "share_removed": "Zugriff entfernt",

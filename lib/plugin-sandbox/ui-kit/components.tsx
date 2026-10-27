@@ -15,7 +15,7 @@
 // against.
 
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/cn';
 import { Button as AppButton } from '@/components/ui/button';
 import { Input as AppInput } from '@/components/ui/input';
 import { getFileIconByName, getFolderIcon } from '@/components/files/file-icons';
@@ -709,7 +709,7 @@ export function Switch({ checked, onChange, disabled = false, label, id }: { che
       disabled={disabled}
       onClick={() => onChange?.(!checked)}
       className={cn(
-        'bk relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'bk relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         checked ? 'bg-primary' : 'bg-muted',
         disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
       )}

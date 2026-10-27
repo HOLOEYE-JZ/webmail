@@ -102,19 +102,26 @@ function UnreadDot({ besideAvatar }: { besideAvatar: boolean }) {
 }
 
 /** The chip row under a row's preview: the verification code, then the attachments. */
-function RowChips({ email, loadAttachments, onOpenAttachment }: {
+function RowChips({ email, loadAttachments, onOpenAttachment, mountainView, mvRow }: {
   email: Email;
   loadAttachments?: LoadListAttachments;
   onOpenAttachment?: (attachment: Attachment) => void;
+  /** Gmail's pill chips. */
+  mountainView?: boolean;
+  /** A one-line Mountain View row: the chips start under the subject, as in Gmail. */
+  mvRow?: boolean;
 }) {
+  const variant = mountainView || mvRow ? "mountain-view" : "default";
   const code = useListVerificationCode(email);
-  const leading = code ? <VerificationCodeChip code={code} /> : undefined;
+  const leading = code ? <VerificationCodeChip code={code} variant={variant} /> : undefined;
+  // The sender column is w-32 (lg:w-40) and the row line has gap-3 after it.
+  const className = cn(variant === "mountain-view" ? "mt-2" : "mt-1.5", mvRow && "mt-1 pb-2.5 ps-[8.75rem] lg:ps-[10.75rem]");
   // Most rows have no attachment: no loader for them, nor an empty chip row.
   const mayHaveAttachments = email.hasAttachment || (email.attachments?.length ?? 0) > 0;
   if (onOpenAttachment && mayHaveAttachments) {
-    return <ListAttachmentChips email={email} load={loadAttachments} onOpen={onOpenAttachment} leading={leading} className="mt-1.5" />;
+    return <ListAttachmentChips email={email} load={loadAttachments} onOpen={onOpenAttachment} leading={leading} variant={variant} max={variant === "mountain-view" ? 3 : 2} className={className} />;
   }
-  return leading ? <div className="mt-1.5 flex">{leading}</div> : null;
+  return leading ? <div className={cn("flex", className)}>{leading}</div> : null;
 }
 
 /**
@@ -294,7 +301,8 @@ function ThreadCountPill({ count, hasUnread, title }: { count: number; hasUnread
 interface ThreadListItemProps {
   thread: ThreadGroup;
   isExpanded: boolean;
-  selectedEmailId?: string;
+  /** emailKeyFor of the open message: ids repeat across accounts. */
+  selectedEmailKey?: string;
   isLoading?: boolean;
   expandedEmails?: Email[];
   onToggleExpand: () => void;
@@ -744,7 +752,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                 </div>
               </div>
               {mvRow && (
-                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} />
+                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mvRow />
               )}
               </>
             ) : (
@@ -870,7 +878,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     )}
                   </div>
                 )}
-                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} />
+                <RowChips email={email} loadAttachments={loadAttachments} onOpenAttachment={onOpenAttachment} mountainView={mvMobileRow} />
               </>
             )}
           </div>
@@ -904,7 +912,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     loadAttachments,
     thread,
     isExpanded,
-    selectedEmailId,
+    selectedEmailKey,
     isLoading = false,
     expandedEmails,
     onToggleExpand,
@@ -1018,8 +1026,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const rowTint = accountRowTint
       ?? ((tintListRowsByTag && tagIds[0]) ? tagColor(tagIds[0]).rowTint : null);
 
-    const isSelected = selectedEmailId === latestEmail.id ||
-      thread.emails.some(e => e.id === selectedEmailId);
+    const isSelected = selectedEmailKey === emailKeyFor(latestEmail) ||
+      thread.emails.some(e => emailKeyFor(e) === selectedEmailKey);
 
     const isChecked = thread.emails.some(e => selectedEmailKeys.has(emailKeyFor(e)));
     // The conversation's follow-up: on the newest mail that has one, else
@@ -1031,7 +1039,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
         <SingleEmailItem
           ref={ref}
           email={latestEmail}
-          selected={selectedEmailId === latestEmail.id}
+          selected={selectedEmailKey === emailKeyFor(latestEmail)}
           onClick={() => onEmailSelect(latestEmail)}
           onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(latestEmail) : undefined}
           onPrefetch={onPrefetch ? () => onPrefetch(latestEmail) : undefined}
@@ -1405,6 +1413,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     email={latestEmail}
                     loadAttachments={loadAttachments}
                     onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
+                    mvRow
                   />
                 )}
                 </>
@@ -1538,6 +1547,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     email={latestEmail}
                     loadAttachments={loadAttachments}
                     onOpenAttachment={onOpenAttachment ? (a) => onOpenAttachment(latestEmail, a) : undefined}
+                    mountainView={mvMobileRow}
                   />
                 </>
               )}
@@ -1576,7 +1586,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                 <ThreadEmailItem
                   key={email.id}
                   email={email}
-                  selected={email.id === selectedEmailId}
+                  selected={emailKeyFor(email) === selectedEmailKey}
                   isLast={index === emailsToShow.length - 1}
                   onClick={() => onEmailSelect(email)}
                   onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(email) : undefined}
@@ -1618,11 +1628,11 @@ function isSameThread(a: ThreadGroup, b: ThreadGroup): boolean {
 
 /** The open message, if this row draws it; otherwise none of the row's business. */
 function openMessageWithin(props: ThreadListItemProps): string | undefined {
-  const id = props.selectedEmailId;
-  if (!id) return undefined;
-  const drawn = props.thread.emails.some((email) => email.id === id)
-    || (props.expandedEmails?.some((email) => email.id === id) ?? false);
-  return drawn ? id : undefined;
+  const key = props.selectedEmailKey;
+  if (!key) return undefined;
+  const drawn = props.thread.emails.some((email) => emailKeyFor(email) === key)
+    || (props.expandedEmails?.some((email) => emailKeyFor(email) === key) ?? false);
+  return drawn ? key : undefined;
 }
 
 /** Props equality for MemoizedThreadListItem. */
@@ -1631,7 +1641,7 @@ export function areThreadRowPropsEqual(prev: ThreadListItemProps, next: ThreadLi
   for (const key of keys) {
     if (key === 'thread') {
       if (!isSameThread(prev.thread, next.thread)) return false;
-    } else if (key === 'selectedEmailId') {
+    } else if (key === 'selectedEmailKey') {
       if (openMessageWithin(prev) !== openMessageWithin(next)) return false;
     } else if (!Object.is(prev[key], next[key])) {
       return false;

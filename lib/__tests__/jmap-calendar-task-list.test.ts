@@ -3,13 +3,15 @@ import { JMAPClient } from '../jmap/client';
 
 // getCalendarTaskList says whether every task was read: follow-ups take a
 // task missing from a complete list for deleted, so a list read only in part
-// must not pass for complete. getCalendarTasks keeps its behaviour.
+// must not pass for complete. The own account failing fails the list, as
+// getCalendarTasks does; a shared account failing only makes it incomplete.
 
-function makeSession() {
+function makeSession(withShared = false) {
   return {
     capabilities: { 'urn:ietf:params:jmap:core': {}, 'urn:ietf:params:jmap:calendars': {} },
     accounts: {
       'acct-1': { name: 'test', isPersonal: true, accountCapabilities: { 'urn:ietf:params:jmap:calendars': {} } },
+      ...(withShared ? { grp: { name: 'Sales', isPersonal: false, accountCapabilities: { 'urn:ietf:params:jmap:calendars': {} } } } : {}),
     },
     primaryAccounts: { 'urn:ietf:params:jmap:mail': 'acct-1', 'urn:ietf:params:jmap:calendars': 'acct-1' },
     apiUrl: 'https://mail.example.com/jmap/api',
@@ -26,10 +28,12 @@ type Answer = 'ok' | 'error' | 'throw';
 let client: JMAPClient;
 let query: Answer;
 let get: Answer[];
+let sharedQuery: Answer;
 
 beforeEach(() => {
   query = 'ok';
   get = [];
+  sharedQuery = 'ok';
   client = new JMAPClient('https://mail.example.com', 'test', 'pass');
   const c = client as unknown as Record<string, unknown>;
   c.session = makeSession();
@@ -44,7 +48,7 @@ beforeEach(() => {
     let answer: Answer = 'ok';
     let response: [string, Record<string, unknown>, string];
     if (method === 'CalendarEvent/query') {
-      answer = query;
+      answer = args.accountId === 'grp' ? sharedQuery : query;
       response = ['CalendarEvent/query', { ids: ['t1', 't2'] }, tag];
     } else {
       answer = get.shift() ?? 'ok';
@@ -68,24 +72,30 @@ describe('JMAPClient.getCalendarTaskList', () => {
     expect(list.tasks.map((t) => t.id)).toEqual(['t1', 't2']);
   });
 
-  it('is not complete when the query fails', async () => {
+  it('fails when the query of the own account fails', async () => {
     query = 'error';
-    expect(await client.getCalendarTaskList()).toEqual({ tasks: [], complete: false });
-    expect(await client.getCalendarTasks()).toEqual([]);
+    await expect(client.getCalendarTaskList()).rejects.toThrow();
+    await expect(client.getCalendarTasks()).rejects.toThrow();
   });
 
-  it('is not complete when a get batch fails, keeping the tasks it read', async () => {
+  it('fails when a get batch of the own account fails', async () => {
     get = ['ok', 'error'];
-    const list = await client.getCalendarTaskList();
-    expect(list.complete).toBe(false);
-    expect(list.tasks.map((t) => t.id)).toEqual(['t1']);
+    await expect(client.getCalendarTaskList()).rejects.toThrow();
   });
 
-  it('is not complete when the server cannot be reached', async () => {
+  it('fails when the server cannot be reached', async () => {
     // The client retries a failed request; it keeps failing.
     get = Array(20).fill('throw');
-    expect(await client.getCalendarTaskList()).toEqual({ tasks: [], complete: false });
-    get = Array(20).fill('throw');
-    expect(await client.getCalendarTasks()).toEqual([]);
+    await expect(client.getCalendarTaskList()).rejects.toThrow();
+  });
+
+  it('is not complete when a shared account fails, keeping the own tasks', async () => {
+    const c = client as unknown as Record<string, unknown>;
+    c.session = makeSession(true);
+    c.accounts = makeSession(true).accounts;
+    sharedQuery = 'error';
+    const list = await client.getCalendarTaskList();
+    expect(list.complete).toBe(false);
+    expect(list.tasks.map((t) => t.id)).toEqual(['t1', 't2']);
   });
 });

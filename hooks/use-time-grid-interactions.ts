@@ -1,11 +1,12 @@
 import { useState, useCallback, useRef, type PointerEvent, type DragEvent } from "react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
-import { formatIsoInTimeZone } from "@/lib/calendar-utils";
+import { formatIsoInTimeZone, getEventStartDate } from "@/lib/calendar-utils";
 import { fromDisplayDate, getEffectiveTimeZone } from "@/lib/timezone";
+import { movedEventUpdates } from "@/lib/calendar-participants";
 import type { Calendar } from "@/lib/jmap/types";
 
 interface DragCreateState {
@@ -46,6 +47,10 @@ interface UseTimeGridInteractionsOptions {
     created: string;
     error: string;
   };
+  /** The message for a refused move or resize, `fallback` when there is nothing more to say. */
+  describeError?: (error: unknown, fallback: string) => string;
+  /** The user's calendar addresses: moving an event they organize asks its attendees again. */
+  currentUserEmails?: string[];
   isMobile?: boolean;
   /**
    * The minutes from midnight at the top and bottom of the grid, when it
@@ -56,11 +61,20 @@ interface UseTimeGridInteractionsOptions {
   gridEndMinutes?: number;
 }
 
+/** `date` moved by `minutes` on the local clock, not by elapsed time. */
+function addWallClockMinutes(date: Date, minutes: number): Date {
+  const shifted = new Date(date);
+  shifted.setMinutes(shifted.getMinutes() + minutes);
+  return shifted;
+}
+
 export function useTimeGridInteractions({
   hourHeight,
   calendars,
   onCreateRange,
   errorMessages,
+  describeError,
+  currentUserEmails,
   isMobile,
   gridStartMinutes = 0,
   gridEndMinutes = 1440,
@@ -230,13 +244,6 @@ export function useTimeGridInteractions({
       return;
     }
 
-    const hours = Math.floor(newDurationMinutes / 60);
-    const mins = newDurationMinutes % 60;
-    let dur = "PT";
-    if (hours > 0) dur += `${hours}H`;
-    if (mins > 0) dur += `${mins}M`;
-    if (dur === "PT") dur = "PT0M";
-
     const client = useAuthStore.getState().client;
     if (!client) {
       setResizeVisual(null);
@@ -246,22 +253,36 @@ export function useTimeGridInteractions({
 
     try {
       const event = useCalendarStore.getState().events.find(ev => ev.id === resize.eventId);
-      const hasParticipants = event?.participants && Object.keys(event.participants).length > 0;
-      const updates: { start?: string; duration: string } = { duration: dur };
-      if (startChanged && event?.start) {
-        // Shift the event's floating `start` wall-clock by the delta (preserves event.timeZone).
-        const deltaMinutes = newStartMinutes - resize.originalStartMinutes;
-        const shifted = new Date(parseISO(event.start).getTime() + deltaMinutes * 60000);
-        updates.start = format(shifted, "yyyy-MM-dd'T'HH:mm:ss");
+      let durationMinutes = newDurationMinutes;
+      let start: string | undefined;
+      if (event?.start) {
+        // The grid counts wall-clock minutes. Move the edges by clock time
+        // and measure the duration between the real instants, so a resize
+        // across a DST change lands where the edge was dropped (#1348).
+        const newStart = addWallClockMinutes(getEventStartDate(event), newStartMinutes - resize.originalStartMinutes);
+        const newEnd = addWallClockMinutes(newStart, newDurationMinutes);
+        const startInstant = fromDisplayDate(newStart);
+        durationMinutes = Math.round((fromDisplayDate(newEnd).getTime() - startInstant.getTime()) / 60000);
+        // Emit `start` in the event's own timeZone, as a drop does.
+        if (startChanged) start = formatIsoInTimeZone(startInstant, event.timeZone || getEffectiveTimeZone());
       }
-      await useCalendarStore.getState().updateEvent(client, resize.eventId, updates, hasParticipants || undefined);
+      const hours = Math.floor(durationMinutes / 60);
+      const mins = durationMinutes % 60;
+      let dur = "PT";
+      if (hours > 0) dur += `${hours}H`;
+      if (mins > 0) dur += `${mins}M`;
+      if (dur === "PT") dur = "PT0M";
+      const updates: { start?: string; duration: string } = { duration: dur };
+      if (start) updates.start = start;
+      const moved = movedEventUpdates(event, updates, currentUserEmails ?? []);
+      await useCalendarStore.getState().updateEvent(client, resize.eventId, moved.updates, moved.sendSchedulingMessages);
     } catch (error) {
       debug.error("Failed to resize event:", resize.eventId, error);
-      toast.error(errorMessages.resize);
+      toast.error(describeError ? describeError(error, errorMessages.resize) : errorMessages.resize);
     } finally {
       setResizeVisual(null);
     }
-  }, [computeResize, errorMessages.resize]);
+  }, [computeResize, errorMessages.resize, describeError, currentUserEmails]);
 
   // --- Click / Double-click / Quick-create ---
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -388,12 +409,12 @@ export function useTimeGridInteractions({
         toast.error(errorMessages.move);
         return;
       }
-      const hasParticipants = event?.participants && Object.keys(event.participants).length > 0;
-      await useCalendarStore.getState().updateEvent(client, data.eventId, { start: newStartISO }, hasParticipants || undefined);
-    } catch {
-      toast.error(errorMessages.move);
+      const moved = movedEventUpdates(event, { start: newStartISO }, currentUserEmails ?? []);
+      await useCalendarStore.getState().updateEvent(client, data.eventId, moved.updates, moved.sendSchedulingMessages);
+    } catch (error) {
+      toast.error(describeError ? describeError(error, errorMessages.move) : errorMessages.move);
     }
-  }, [snapDragMinutes, errorMessages.move]);
+  }, [snapDragMinutes, errorMessages.move, describeError, currentUserEmails]);
 
   return {
     dragCreate,
