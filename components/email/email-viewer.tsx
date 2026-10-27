@@ -117,6 +117,7 @@ import { EmailIdentityBadge } from "./email-identity-badge";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
 import { CalendarInvitationBanner } from "./calendar-invitation-banner";
 import { ReadReceiptBanner } from "./read-receipt-banner";
+import { FollowUpInfoBar, FollowUpMenuEntry, FollowUpToolbarButton } from "./follow-up";
 import { stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useTour } from "@/components/tour/tour-provider";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
@@ -3979,6 +3980,14 @@ export function EmailViewer({
             {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('archive')}</span>}
           </Button>
         )}
+        {/* Follow up: where Archive stands, beside it while that is offered. */}
+        <FollowUpToolbarButton
+          email={email}
+          showLabel={showToolbarLabels}
+          data-overflow-item
+          data-overflow-priority="4.5"
+          className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
+        />
         {/* Delete */}
         <Button
           variant="ghost"
@@ -4265,6 +4274,14 @@ export function EmailViewer({
                   {t('archive')}
                 </button>
               )}
+              {/* Overflow: follow up, the popover under the More button */}
+              <FollowUpMenuEntry
+                email={email}
+                anchor={() => moreButtonRef.current}
+                onOpen={() => { setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className={cn("w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2", hiddenPriorities.has(4.5) ? "" : "sm:hidden")}
+                iconClassName="w-4 h-4"
+              />
               {/* Overflow: move to folder - submenu */}
               {moveTree.length > 0 && onMoveToMailbox && (
                 <div className={cn("relative", hiddenPriorities.has(5) ? "" : "sm:hidden")}
@@ -4649,6 +4666,16 @@ export function EmailViewer({
                 <Star className={cn("w-5 h-5", isStarred && "fill-yellow-400 text-yellow-400")} />
                 {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
               </button>
+              {/* Follow up, once the toolbar has no room for its button */}
+              {hiddenPriorities.has(4.5) && (
+                <FollowUpMenuEntry
+                  email={email}
+                  anchor={() => moreButtonRef.current}
+                  onOpen={() => setMoreMenuOpen(false)}
+                  className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+                  iconClassName="w-5 h-5"
+                />
+              )}
               {/* Move to folder (opens sub-view). The toolbar's own Move button
                   is the first thing dropped when the toolbar runs out of room,
                   and on mobile the overflow has nowhere else to go - without
@@ -5942,6 +5969,8 @@ export function EmailViewer({
             </div>
           </div>
         )}
+
+        <FollowUpInfoBar email={email} />
 
         <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
 

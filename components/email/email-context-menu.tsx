@@ -41,6 +41,7 @@ import {
   MessagesSquare,
   Copy,
   Search,
+  Flag,
 } from "@/components/icons";
 import { buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
@@ -51,6 +52,8 @@ import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
 import { RulesContextSubMenu } from "./rules-menu";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
+import { useFollowUp } from "@/hooks/use-follow-ups";
+import { useFollowUpPopover } from "@/stores/follow-up-popover-store";
 
 interface Position {
   x: number;
@@ -201,6 +204,8 @@ export function EmailContextMenu({
   const tEmailViewer = useTranslations("email_viewer");
   const tDeepLink = useTranslations("deep_link");
   const copyLink = useCopyLink();
+  const followUp = useFollowUp(email);
+  const tFollowUp = useTranslations("follow_up");
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
   const isPinned = email.keywords?.['$pinned'] === true;
@@ -474,6 +479,19 @@ export function EmailContextMenu({
         )}
     </>
   );
+  const followUpItem = (
+    <>
+        {/* Follow up: a task with a due day and a reminder, mirrored as the star; set in its popover, opened where the menu was */}
+        {!showBatchActions && followUp.available && (
+          <ContextMenuItem
+            icon={Flag}
+            label={tFollowUp("menu_entry")}
+            testId="ctx-follow-up"
+            onClick={() => handleAction(() => useFollowUpPopover.getState().openAt(email, position))}
+          />
+        )}
+    </>
+  );
   const pinItem = (
     <>
         {/* Pin/Unpin - only for single email; pinned mails float to the top of the list */}
@@ -624,6 +642,7 @@ export function EmailContextMenu({
           {copyItem}
           <ContextMenuSeparator />
           {starItem}
+          {followUpItem}
           {pinItem}
           {spamBlock}
           {findBlock}
@@ -642,6 +661,7 @@ export function EmailContextMenu({
           {copyItem}
           {rulesItem}
           {starItem}
+          {followUpItem}
           {pinItem}
           {tagItem}
           {spamBlock}

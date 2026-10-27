@@ -177,10 +177,19 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       const source = accountId || clientOverride
         ? { client, accountId: accountId ?? client.getAccountId() }
         : resolveEmailBlobContext(ref ?? null, client);
+      // Fetched in a named account (or through another login's client), the
+      // mail is stamped with both, so what reads its account later (the
+      // follow-up, the flag) never takes it for the active login's own mail.
+      const auth = useAuthStore.getState();
+      const loginId = client === auth.client
+        ? auth.activeAccountId ?? undefined
+        : Array.from(auth.getAllConnectedClients?.() ?? []).find(([, c]) => c === client)?.[0];
       load = {
         emailId, clientOverride, accountId, blobSource: source, applied: false,
         promise: accountId || clientOverride
-          ? client.getEmail(emailId, source.accountId)
+          ? client.getEmail(emailId, source.accountId).then((loaded) => (loaded
+            ? { ...loaded, sourceAccountId: source.accountId, ...(loginId ? { sourceClientAccountId: loginId } : {}) }
+            : loaded))
           : fetchEmailContent(client, emailId),
       };
       loadRef.current = load;

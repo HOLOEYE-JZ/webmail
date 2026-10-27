@@ -20,6 +20,7 @@ import { useTagDisplay } from "@/hooks/use-tag-display";
 import { TagBadge } from "./tag-badge";
 import { useListRowShape, LIST_COLUMN_CLASS } from "@/hooks/use-list-row-shape";
 import { SizeCell, listLeadClass } from "./list-columns";
+import { FollowUpChip, FollowUpFlagButton } from "./follow-up";
 
 interface ThreadEmailItemProps {
   email: Email;
@@ -125,7 +126,7 @@ export function ThreadEmailItem({
         {...rowHandlers}
         data-testid="thread-email-row"
         className={cn(
-          "relative cursor-pointer select-none px-3 transition-colors duration-150",
+          "group relative cursor-pointer select-none px-3 transition-colors duration-150",
           selected ? "bg-selection" : "hover:bg-muted/50",
           isUnread && !selected && "bg-warning/10",
           !isLast && "border-b border-border/30",
@@ -176,6 +177,7 @@ export function ThreadEmailItem({
               {isAnswered && <Reply className="w-3 h-3 text-muted-foreground" />}
               {isForwarded && <Forward className="w-3 h-3 text-muted-foreground" />}
               {email.hasAttachment && <Paperclip className="w-3 h-3 text-muted-foreground" />}
+              <FollowUpChip email={email} className="max-w-28" />
               <span className={cn(
                 LIST_COLUMN_CLASS.date,
                 "text-xs tabular-nums",
@@ -184,6 +186,7 @@ export function ThreadEmailItem({
                 {formatDate(emailDisplayDate(email))}
               </span>
               <SizeCell bytes={email.size} />
+              <FollowUpFlagButton email={email} revealOnHover className="-my-1" />
             </div>
           </div>
         </div>
@@ -195,8 +198,9 @@ export function ThreadEmailItem({
     <div
       {...dragHandlers}
       {...longPressHandlers}
+      data-testid="thread-email-item"
       className={cn(
-        "relative cursor-pointer select-none transition-all duration-150",
+        "group relative cursor-pointer select-none transition-all duration-150",
         "ps-12 pe-4",
         "border-s-2 border-l-transparent",
         selected
@@ -309,6 +313,8 @@ export function ThreadEmailItem({
               {cleanPreview(email.preview) || t('no_preview_available')}
             </span>
 
+            <FollowUpChip email={email} />
+
             {/* Date */}
             <span className={cn(
               "text-xs flex-shrink-0 tabular-nums",
@@ -318,6 +324,7 @@ export function ThreadEmailItem({
             )}>
               {formatDate(emailDisplayDate(email))}
             </span>
+            <FollowUpFlagButton email={email} revealOnHover className="-my-1" />
           </div>
         </div>
       </div>

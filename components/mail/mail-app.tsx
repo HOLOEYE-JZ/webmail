@@ -63,6 +63,7 @@ import { usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
 import { findNextUnreadIndex } from "@/lib/next-unread-email";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
+import { useFollowUpTasks } from "@/hooks/use-follow-ups";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { usePromptDialog } from "@/hooks/use-prompt-dialog";
 import { useBrowserNavigation, type NavSnapshot } from "@/hooks/use-browser-navigation";
@@ -155,7 +156,8 @@ import {
   resolveFolderRef,
   type MailDeepLink,
 } from "@/lib/deep-links";
-import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
+import { groupMailFolder, groupMailAsListed, messageLinkAccount } from "@/lib/group-mail-links";
+import { consumePendingDeepLinkEntry, subscribePendingDeepLink, takeFollowedMessageAccount } from "@/lib/deep-link-handoff";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import type { QuoteHeader } from "@/lib/plugin-types";
 import { initialLinkSearch, useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
@@ -213,6 +215,8 @@ const UNIFIED_LIST_PUSH = {
 export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
+  // The task list, so rows and reader know which mails have a follow-up.
+  useFollowUpTasks();
   const t = useTranslations();
   const tCommon = useTranslations('common');
   const appName = productName(useConfig().appName);
@@ -1731,14 +1735,28 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
 
     if (link.kind === 'message') {
+      // A link naming a shared or group mailbox's JMAP account (`?owner=`, or
+      // `?mailAccount=` as older follow-up tasks hold it) opens the mail
+      // there: its ids mean nothing in the login's own account (#1351). Only
+      // an account the login reaches. A link the app followed itself hands its
+      // account over, since on a client-side navigation this view never sees
+      // the query (`followMessageLink`).
+      const followed = takeFollowedMessageAccount(link.id);
+      const target = messageLinkAccount(link.ownerAccountId ?? followed, activeClient);
+      // An account the login does not reach: never the own mail of the same id.
+      if (target.kind === 'unreachable') {
+        toast.error(t('deep_link.message_not_found'));
+        return;
+      }
+      const groupAccountId = target.kind === 'group' ? target.accountId : undefined;
       // In the Pro shell a message permalink opens as its own fullscreen
       // email tab - the tab body fetches the message and retitles itself.
       if (isEmbedded) {
         // A shared account's message is fetched from that account through
         // the active login (#1351).
-        const loginId = link.ownerAccountId ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
+        const loginId = groupAccountId ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
         useProTabStore.getState().openEmailTab({
-          accountId: link.ownerAccountId ?? '',
+          accountId: groupAccountId ?? '',
           ...(loginId ? { clientAccountId: loginId } : {}),
           emailId: link.id,
           mailboxId: null,
@@ -1748,12 +1766,34 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
       setLoadingEmail(true);
       try {
-        const email = await fetchEmailContent(activeClient, link.id, link.ownerAccountId);
+        // A group mailbox's mail: its folder first, so the message is fetched,
+        // listed and acted on in the group's account, as one opened there.
+        // The mail fetched there is the one shown: as its row in the group's
+        // folder (same key), else stamped with its account, so nothing takes
+        // it for the own mail of the same id.
+        let groupEmail: Email | null = null;
+        if (groupAccountId) {
+          const found = await activeClient.getEmail(link.id, groupAccountId);
+          const state = useEmailStore.getState();
+          const mailbox = found && groupMailFolder(found.mailboxIds, state.mailboxes, groupAccountId);
+          if (!found || !mailbox) {
+            toast.error(t('deep_link.message_not_found'));
+            return;
+          }
+          if (mailbox.id !== state.selectedMailbox) {
+            await fetchEmails(activeClient, mailbox.id, { background: true });
+            selectMailbox(mailbox.id);
+          }
+          groupEmail = groupMailAsListed(found, groupAccountId, useAuthStore.getState().activeAccountId, useEmailStore.getState().emails);
+        }
+        const email = groupEmail ?? await fetchEmailContent(activeClient, link.id);
         if (!email) {
           toast.error(t('deep_link.message_not_found'));
           return;
         }
-        await showInOwningFolder(activeClient, email);
+        // The group's folder is open already (above).
+        if (groupAccountId) selectEmail(email);
+        else await showInOwningFolder(activeClient, email);
         if (link.fullscreen && !isMobile) {
           // The owning-folder branch above may have skipped selecting (the
           // folder was already current) - fullscreen needs the message open.
@@ -1816,8 +1856,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // briefly and must not steal the link parked for the Pro one.
   useEffect(() => {
     if (!isEmbedded) return;
-    return subscribePendingDeepLink('mail', (segments) => {
-      const link = parseMailPath(segments, new URLSearchParams(window.location.search));
+    return subscribePendingDeepLink('mail', (segments, search) => {
+      const link = parseMailPath(segments, new URLSearchParams(search ?? window.location.search));
       if (link) void applyMailDeepLinkRef.current(link);
     });
   }, [isEmbedded]);
@@ -1864,10 +1904,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (mailboxes.length === 0) return;
     if (!initialMailLoadDone) return;
 
-    const params = new URLSearchParams(initialSearchRef.current ?? window.location.search);
-    // Inside the Pro shell the route is /pro, so the segments arrive through
-    // the handoff the redirect parked them in rather than as route params.
-    const segments = linkSegments ?? consumePendingDeepLink('mail') ?? [];
+    // Inside the Pro shell the route is /pro, so the segments (and the query,
+    // gone from the address by now) arrive through the handoff the redirect
+    // parked them in rather than as route params.
+    const parked = linkSegments ? null : consumePendingDeepLinkEntry('mail');
+    const params = new URLSearchParams(parked?.search ?? initialSearchRef.current ?? window.location.search);
+    const segments = linkSegments ?? parked?.segments ?? [];
     const link = parseMailPath(segments, params);
     const openLatestUnread = params.get('openLatestUnread') === '1';
 
