@@ -9,6 +9,7 @@ import { mergeMessages } from '@/i18n/merge-messages';
 import { detectBrowserLocale } from '@/i18n/detect-locale';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { IS_LITE } from '@/lib/lite';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
@@ -47,6 +48,8 @@ function availablePages(config: ConfigData | null): Set<SettingsSearchTab> {
   if (client?.supportsSieve?.()) pages.add('filters');
   if (client?.supportsVacationResponse?.()) pages.add('vacation');
   if (client?.supportsCalendars?.() && gate('calendarEnabled')) pages.add('calendar');
+  const { enableCalendarTasks, enableFollowUps } = useSettingsStore.getState();
+  if (client?.supportsCalendars?.() && enableCalendarTasks && enableFollowUps && !IS_LITE) pages.add('follow_ups');
   if (gate('contactsEnabled')) pages.add('contacts');
   if (client?.supportsFiles?.() && gate('filesEnabled')) pages.add('files');
   if (gate('sidebarAppsEnabled') || gate('pluginsEnabled')) pages.add('addons');

@@ -23,6 +23,7 @@ import { AdminSaveBar } from '@/components/admin/save-bar';
 import { Badge } from '@/components/admin/badge';
 import { Flash, useFlash } from '@/components/admin/flash-message';
 import { inputClass } from '@/components/admin/config-items';
+import { FollowUpPolicySection } from './follow-up-policy';
 
 // `allMailViewEnabled` is deprecated (folded into `crossAllViewEnabled`, normalized
 // forward on policy load), so it is hidden from the admin UI.
@@ -216,6 +217,12 @@ export function PolicyPage() {
       [apps[index], apps[target]] = [apps[target], apps[index]];
       return { ...prev, defaultSidebarApps: apps };
     });
+    setDirty(true);
+    setMessage(null);
+  }
+
+  function updateFollowUps(change: (prev: SettingsPolicy) => SettingsPolicy) {
+    setPolicy(change);
     setDirty(true);
     setMessage(null);
   }
@@ -582,6 +589,8 @@ export function PolicyPage() {
               );
             })}
           </SettingsSection>
+
+          <FollowUpPolicySection policy={policy} update={updateFollowUps} />
 
           <SettingsSection
             id="restrictions"

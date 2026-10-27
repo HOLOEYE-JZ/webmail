@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "@/stores/toast-store";
 import {
@@ -15,7 +15,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useFilterStore } from "@/stores/filter-store";
 import { SettingsSection, SettingItem, ToggleSwitch, Select, AdvancedOnly } from './settings-section';
-import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search } from "@/components/icons";
+import { Plus, Check, X, Loader2, Search } from "@/components/icons";
+import { RowTools, SortableRow, useRowDrag, type SortableRowDrag } from "./sortable-row";
 import { cn } from "@/lib/utils";
 import { KEYWORD_PREFIX } from "@/lib/thread-utils";
 import { findUnrecognizedKeywords, type UnrecognizedKeyword } from "@/lib/keyword-discovery";
@@ -71,12 +72,7 @@ function KeywordRow({
   onEdit,
   onDelete,
   onVisibilityChange,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
-  isDragOver,
-  isDragging,
+  drag,
 }: {
   keyword: KeywordDefinition;
   keywords: KeywordDefinition[];
@@ -84,12 +80,7 @@ function KeywordRow({
   onEdit: () => void;
   onDelete: () => void;
   onVisibilityChange: (visibility: KeywordVisibility) => void;
-  onDragStart: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: () => void;
-  onDragEnd: () => void;
-  isDragOver: boolean;
-  isDragging: boolean;
+  drag: SortableRowDrag;
 }) {
   const t = useTranslations("settings.keywords");
   const hasChildren = hasChildKeywords(keyword.id, keywords);
@@ -104,19 +95,7 @@ function KeywordRow({
   ];
 
   return (
-    <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
-      className={cn(
-        "flex items-center gap-3 py-2.5 px-3 rounded-md border bg-background group transition-opacity",
-        isDragging ? "opacity-40" : "opacity-100",
-        isDragOver ? "border-primary" : "border-border"
-      )}
-    >
-      <GripVertical className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-50 cursor-grab" />
+    <SortableRow drag={drag}>
       <div className="flex min-w-0 flex-1">
         <TagBadge tagId={keyword.id} variant="badge" className="text-xs" />
       </div>
@@ -134,26 +113,15 @@ function KeywordRow({
         ariaLabel={t("visibility_field")}
         className="text-xs py-1"
       />
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          type="button"
-          onClick={onEdit}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          title={t("edit")}
-        >
-          <Pencil className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={hasChildren}
-          className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-          title={hasChildren ? t("has_children_delete") : t("delete")}
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
+      <RowTools
+        onEdit={onEdit}
+        onDelete={onDelete}
+        editLabel={t("edit")}
+        deleteLabel={t("delete")}
+        deleteDisabled={hasChildren}
+        deleteTitle={hasChildren ? t("has_children_delete") : undefined}
+      />
+    </SortableRow>
   );
 }
 
@@ -531,38 +499,14 @@ export function KeywordSettings() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-
   const existingIds = emailKeywords.map((k) => k.id);
 
-  const handleDragStart = (index: number) => {
-    setDragIndex(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (index !== dragOverIndex) setDragOverIndex(index);
-  };
-
-  const handleDrop = (index: number) => {
-    if (dragIndex === null || dragIndex === index) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
+  const rowDrag = useRowDrag((from, to) => {
     const reordered = [...emailKeywords];
-    const [moved] = reordered.splice(dragIndex, 1);
-    reordered.splice(index, 0, moved);
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
     reorderKeywords(reordered);
-    setDragIndex(null);
-    setDragOverIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDragIndex(null);
-    setDragOverIndex(null);
-  };
+  });
 
   const handleAdd = (keyword: KeywordDefinition) => {
     addKeyword(keyword);
@@ -681,12 +625,7 @@ export function KeywordSettings() {
               }}
               onDelete={() => handleDelete(keyword.id)}
               onVisibilityChange={(visibility) => handleVisibilityChange(keyword.id, visibility)}
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDrop={() => handleDrop(index)}
-              onDragEnd={handleDragEnd}
-              isDragOver={dragOverIndex === index && dragIndex !== index}
-              isDragging={dragIndex === index}
+              drag={rowDrag(index)}
             />
           )
         )}

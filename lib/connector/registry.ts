@@ -41,7 +41,7 @@ import { RELEASE_VERSION } from '@/lib/release-version';
 const LEGACY_SETTINGS_TABS = ['layout', 'themes', 'content_senders', 'identities', 'language', 'protocol_handlers', 'templates', 'folders', 'keywords', 'downloads', 'sidebar_apps', 'about_data', 'plugins', 'debug'] as const;
 const SETTINGS_TABS: readonly (SettingsSearchTab | typeof LEGACY_SETTINGS_TABS[number])[] = [
   'account', 'general', 'notifications', 'appearance', 'message_list', 'reading',
-  'composing', 'vacation', 'filters',
+  'composing', 'follow_ups', 'vacation', 'filters',
   'organize', 'security', 'calendar', 'contacts',
   'files', 'addons', 'backup',
   ...LEGACY_SETTINGS_TABS,
