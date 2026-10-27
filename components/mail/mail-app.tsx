@@ -43,7 +43,7 @@ import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { toast } from "@/stores/toast-store";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast } from "@/lib/send-failure-message";
-import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
+import { formatRejectedRecipients, leftUnscheduled, RescheduleRestoredError } from "@/lib/jmap/client";
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
 import { runBatchEmailAction } from "@/lib/email-action-toast";
@@ -139,7 +139,9 @@ import { prefetchEmailContent, requestEmailContent } from "@/lib/email-prefetch"
 import { createMailboxWithHooks } from "@/lib/plugin-mail-hooks";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
-import { announceSent, cancelAnnouncedSend, releaseAnnouncedSend } from "@/lib/plugin-after-send";
+import { announceSent, cancelAnnouncedSend, dropHeldThen, rekeyHeldThen, releaseAnnouncedSend } from "@/lib/plugin-after-send";
+import { draftFollowUp, type SendFollowUp } from "@/lib/send-follow-up";
+import { dropFollowUpsOfUnsentMail, useSendFollowUp } from "@/hooks/use-send-follow-up";
 import { composeOptionsFor, runBeforeCompose, type ComposePrefill, type ComposerOpenMode } from "@/lib/plugin-compose-gate";
 import { formatMailto } from "@/lib/protocol-handlers/mailto";
 import { buildQuoteHeader } from "@/lib/quote-header";
@@ -2081,6 +2083,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // another account's message under the same id.
   const composerSource = usePinnedPerSession(composerSessionId, selectedEmail ? emailWriteSource(selectedEmail, client) : undefined);
 
+  const followUpSent = useSendFollowUp();
+  // A reschedule that put the mail back into Drafts: it never left, so its follow-up goes.
+  const dropFollowUpIfUnscheduled = (error: unknown, emailId: string, accountId?: string) => {
+    if (leftUnscheduled(error) && client) {
+      void dropFollowUpsOfUnsentMail(client, emailId, accountId ?? client.getAccountId());
+    }
+  };
   const handleEmailSend = async (data: {
     to: string[];
     cc: string[];
@@ -2106,6 +2115,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     requestDsn?: boolean;
     requireTls?: boolean;
     priority?: MessagePriority;
+    /** The composer's "Follow up" (lib/send-follow-up.ts). */
+    followUp?: SendFollowUp | null;
+    /** `delayedUntil` is the "send delay" setting's undo hold. */
+    undoHold?: boolean;
   }) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
     if (!client) return false;
@@ -2131,7 +2144,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
       const result = await sendEmail(sendClient, data.to, data.subject, data.body, data.cc, data.bcc, data.identityId, data.fromEmail, data.draftId, data.fromName, data.htmlBody, data.attachments, data.inReplyTo, data.references, data.delayedUntil, data.envelopeMailFrom, { requestReadReceipt: data.requestReadReceipt, requestDsn: data.requestDsn, requireTls: data.requireTls, priority: data.priority, localAccountId: data.localAccountId, draftAccountId: data.draftAccountId });
       submitted = true;
-      announceSent(result, data);
+      announceSent(result, data, followUpSent(result, data), { undoHold: data.undoHold });
       setShowComposer(false);
       // Sending an edited draft destroys it server-side - and every autosave
       // before that already replaced it under a fresh id (createDraft is a
@@ -2430,6 +2443,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       inReplyTo: draft.inReplyTo ?? undefined,
       references: draft.references ?? undefined,
       priority: messagePriorityFromHeaders(draft.headers),
+      // The composer's "Follow up", kept for the session (a send undone, a draft reopened).
+      followUp: draftFollowUp(draft.id),
       // Existing server-side attachments must ride along, or the composer
       // starts empty and the next save/send silently rebuilds the draft
       // without them (#849).
@@ -2471,7 +2486,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const cancelScheduledForEdit = async (email: Email): Promise<Email | null | undefined> => {
     if (!client) return undefined;
     try {
-      return await cancelScheduledEmailForEdit(client, email);
+      const restored = await cancelScheduledEmailForEdit(client, email);
+      // It never left: its follow-up goes.
+      void dropFollowUpsOfUnsentMail(client, email.id, email.scheduledAccountId ?? client.getAccountId());
+      return restored;
     } catch (error) {
       console.error('Failed to cancel the scheduled send for editing:', error);
       toastCancelFailure(error, tViewer('cancel_scheduled_failed'));
@@ -2535,6 +2553,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   if (isScheduledView) await fetchScheduledEmails(client);
                 } catch (error) {
                   console.error('Failed to send now:', error);
+                  // A follow-up held for this send waits for whatever goes out now (lib/plugin-after-send.ts).
+                  if (error instanceof RescheduleRestoredError) rekeyHeldThen(pending.submissionId, error.restoredSubmissionId, error.restoredSendAt);
+                  else if (leftUnscheduled(error)) dropHeldThen(pending.submissionId);
                   // The original was put back under a new id: show the undo
                   // toast again for that one so Undo still cancels it.
                   if (error instanceof RescheduleRestoredError) {
@@ -2568,6 +2589,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             try {
               // Never left the server: plugins don't hear about it.
               cancelAnnouncedSend(pending.submissionId);
+              // A mail scheduled for later had its follow-up written already.
+              if (pending.emailId && undoClient === client) {
+                void dropFollowUpsOfUnsentMail(client, pending.emailId, pending.emailAccountId ?? pending.submissionAccountId ?? client.getAccountId());
+              }
               if (restored && !pending.isSmime) {
                 // Back in the Drafts of the account it was sent from, through
                 // the login that sent it.
@@ -5213,6 +5238,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       if (refused) toast.warning(refused);
                     } catch (error) {
                       console.error('Failed to reschedule the scheduled send:', error);
+                      dropFollowUpIfUnscheduled(error, email.id, email.scheduledAccountId);
                       const { title, message } = rescheduleFailureToast(error, tViewer, tComposer, scheduledTime(email.scheduledSendAt));
                       toast.error(title, message ? { message } : undefined);
                     }
@@ -5530,7 +5556,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     }}
                     onRescheduleScheduled={async (delayedUntil) => {
                       if (client && selectedEmail?.emailSubmissionId && selectedEmail.scheduledIdentityId) {
-                        const result = await rescheduleScheduledEmail(client, selectedEmail.emailSubmissionId, selectedEmail.id, selectedEmail.scheduledIdentityId, delayedUntil, selectedEmail.scheduledAccountId);
+                        const result = await rescheduleScheduledEmail(client, selectedEmail.emailSubmissionId, selectedEmail.id, selectedEmail.scheduledIdentityId, delayedUntil, selectedEmail.scheduledAccountId)
+                          .catch((error: unknown) => {
+                            dropFollowUpIfUnscheduled(error, selectedEmail.id, selectedEmail.scheduledAccountId);
+                            throw error;
+                          });
                         const refused = partlyRefusedWarning(result, tComposer);
                         if (refused) toast.warning(refused);
                       }

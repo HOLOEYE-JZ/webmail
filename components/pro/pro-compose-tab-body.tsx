@@ -14,6 +14,7 @@ import { debug } from "@/lib/debug";
 import { threadKeyFor } from "@/lib/thread-utils";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { announceSent } from "@/lib/plugin-after-send";
+import { useSendFollowUp } from "@/hooks/use-send-follow-up";
 
 interface ProComposeTabBodyProps {
   tabId: string;
@@ -54,6 +55,8 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     }
     closeTab(tabIdRef.current);
   }, [client, refreshScheduledMetadata, isScheduledView, fetchScheduledEmails, closeTab]);
+
+  const followUpSent = useSendFollowUp();
 
   const handleSend = useCallback(async (sendData: Parameters<NonNullable<React.ComponentProps<typeof EmailComposer>['onSend']>>[0]) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
@@ -98,7 +101,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           recipients: formatRejectedRecipients(result.rejectedRecipients),
         }));
       }
-      announceSent(result, sendData);
+      announceSent(result, sendData, followUpSent(result, sendData), { undoHold: sendData.undoHold });
 
       // Mark the original message as $answered / $forwarded so the standard
       // viewer and list reflect the action (same behaviour as inline compose).
@@ -150,7 +153,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
       if (!submitted) throw error;
       toast.error(t('notifications.error_sending'));
     }
-  }, [client, sendEmail, closeTab, data.sourceEmailId, data.sourceEmailSource, data.mode, t, handleScheduledSendCreated, refreshCurrentMailbox]);
+  }, [client, sendEmail, closeTab, data.sourceEmailId, data.sourceEmailSource, data.mode, t, handleScheduledSendCreated, refreshCurrentMailbox, followUpSent]);
 
   const handleClose = useCallback(() => {
     closeTab(tabIdRef.current);

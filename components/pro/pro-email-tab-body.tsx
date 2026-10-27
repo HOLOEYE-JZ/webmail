@@ -22,6 +22,7 @@ import { buildForwardAsAttachmentPayload } from "@/lib/forward-as-attachment";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor } from "@/lib/thread-utils";
 import { cn } from "@/lib/utils";
 import { getDraftTextBody } from '@/lib/email-body-selection';
+import { draftFollowUp } from "@/lib/send-follow-up";
 import { messagePriorityFromHeaders } from '@/lib/message-priority';
 import { useArchiveActionEnabled } from '@/lib/archive-gate';
 
@@ -460,6 +461,8 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
         // composer without its files and the next save stripped them.
         attachments: email.attachments,
         priority: messagePriorityFromHeaders(email.headers),
+        // The composer's "Follow up", kept for the session (lib/send-follow-up.ts).
+        followUp: draftFollowUp(email.id),
       },
     }, { to: addresses(email.to), cc: addresses(email.cc), subject: draftSubject, body: bodyText }, onClose);
   }, [email, accountId, localAccountId, identities, multiAccountIdentities, openComposeTab, onClose, t]);
