@@ -4,7 +4,7 @@ import { AccessibilitySettings } from '../accessibility-settings';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
-import { presetChanges } from '@/lib/accessibility-presets';
+import { ACCESSIBILITY_PRESET_IDS, presetChanges } from '@/lib/accessibility-presets';
 
 // Labels are their keys; plural/ICU arguments are appended so tests can see them.
 vi.mock('next-intl', () => ({
@@ -48,6 +48,18 @@ describe('accessibility presets', () => {
     // Already on before the preset; the undo must not switch it off.
     expect(settings().underlineLinks).toBe(true);
     expect(settings().contrast).toBe('system');
+  });
+
+  it('draws each preset on its card without adding to the name screen readers hear', () => {
+    render(<AccessibilitySettings />);
+    for (const id of ACCESSIBILITY_PRESET_IDS) {
+      // jsdom joins the two spans without a space, so compare without any.
+      const expected = `settings.accessibility.presets.${id}.labelsettings.accessibility.presets.${id}.description`;
+      const button = screen.getByRole('button', { name: (name) => name.replace(/\s/g, '') === expected });
+      const preview = within(button).getByTestId(`preset-preview-${id}`);
+      expect(preview.getAttribute('aria-hidden')).toBe('true');
+      expect(preview.querySelector('span, svg')).toBeTruthy();
+    }
   });
 
   it('combines presets: a second one keeps what the first set', () => {

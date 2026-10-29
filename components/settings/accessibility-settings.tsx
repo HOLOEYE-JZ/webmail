@@ -31,6 +31,7 @@ import {
   type AccessibilityPresetId,
   type PresetChange,
 } from '@/lib/accessibility-presets';
+import { AccessibilityPresetPreview } from './accessibility-preset-preview';
 import { FONT_SIZES as COMPOSE_FONT_SIZES } from '@/components/email/font-size';
 import type { Density, SendDelaySeconds } from '@/stores/settings-store';
 
@@ -139,10 +140,13 @@ export function AccessibilitySettings() {
               key={id}
               type="button"
               onClick={() => applyPreset(id)}
-              className="text-start rounded-md border border-border px-3 py-2.5 hover:bg-muted transition-colors"
+              className="flex items-start gap-3 text-start rounded-md border border-border px-3 py-2.5 hover:bg-muted transition-colors"
             >
-              <span className="block text-sm font-medium text-foreground">{t(`presets.${id}.label`)}</span>
-              <span className="block text-xs text-muted-foreground mt-0.5">{t(`presets.${id}.description`)}</span>
+              <AccessibilityPresetPreview id={id} />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-foreground">{t(`presets.${id}.label`)}</span>
+                <span className="block text-xs text-muted-foreground mt-0.5">{t(`presets.${id}.description`)}</span>
+              </span>
             </button>
           ))}
         </div>
