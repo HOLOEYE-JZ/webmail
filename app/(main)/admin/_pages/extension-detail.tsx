@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Puzzle, SwatchBook, Loader2, Eye, EyeOff, Lock, RotateCcw, Trash2, Shield, ShieldAlert, Store, Upload } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { adminPath } from '@/lib/admin/admin-nav';
@@ -31,6 +31,8 @@ export interface ConfigField {
   default?: unknown;
   placeholder?: string;
   options?: { label: string; value: string }[];
+  /** A string that takes several lines (instructions, templates): a full-width text box. */
+  multiline?: boolean;
 }
 
 /** A plugin or theme as /api/admin/plugins and /api/admin/themes list it. */
@@ -421,7 +423,14 @@ export function ExtensionDetailPage({ kind, id }: Props) {
         {/* The plugin's own settings come last: they are the long part. */}
         {kind === 'plugin' && hasSchema && schema && (
           <SettingsSection id="settings" title="Settings" description="What this plugin reads from the server. Saved for every user.">
-            {Object.entries(schema).map(([key, field]) => (
+            {Object.entries(schema).map(([key, field]) => field.type === 'string' && field.multiline ? (
+              <MultilineConfigItem
+                key={key}
+                field={field}
+                value={formValues[key] ?? ''}
+                onChange={(v) => setFormValues((prev) => ({ ...prev, [key]: v }))}
+              />
+            ) : (
               <SettingItem
                 key={key}
                 label={field.required ? `${field.label} *` : field.label}
@@ -507,6 +516,35 @@ function ConfigFieldControl({ field, value, stored, revealed, onReveal, onChange
       autoComplete="off"
       className={cn(inputClass, width)}
     />
+  );
+}
+
+/**
+ * A setting that takes several lines: label and description on top, a
+ * full-width text box under them, as wide as the section.
+ */
+function MultilineConfigItem({ field, value, onChange }: {
+  field: ConfigField;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const id = useId();
+  return (
+    <div data-search-label={field.label} className="py-3 border-b border-border last:border-0">
+      <label htmlFor={id} className="text-sm font-medium text-foreground">
+        {field.required ? `${field.label} *` : field.label}
+      </label>
+      {field.description && <p id={`${id}-desc`} className="text-xs text-muted-foreground mt-1">{field.description}</p>}
+      <textarea
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={field.placeholder || ''}
+        aria-describedby={field.description ? `${id}-desc` : undefined}
+        rows={5}
+        className={cn(inputClass, 'mt-2 block h-auto min-h-24 w-full resize-y py-2 leading-relaxed')}
+      />
+    </div>
   );
 }
 
