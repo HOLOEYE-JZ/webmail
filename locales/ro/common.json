@@ -497,6 +497,11 @@
       "failed_sent_from": "Acest mesaj pretinde că provine de la {domain}, dar a fost trimis de pe {host} și nu a trecut de verificările de expeditor ale domeniului {domain}. Este posibil să fie falsificat.",
       "caution": "Fiți atenți la linkuri, atașamente și solicitări de parole sau date de plată."
     },
+    "brand_logo": {
+      "verified_label": "Logo verificat",
+      "verified": "Acest logo este verificat ca aparținând {organization}.",
+      "verified_by": "{issuer} a verificat că acest logo aparține {organization}."
+    },
     "back_to_list": "Înapoi la listă",
     "view_contact": "Vizualizare contact",
     "message_details": "Detalii mesaj",

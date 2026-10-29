@@ -497,6 +497,11 @@
       "failed_sent_from": "Aquest missatge diu que és de {domain}, però s'ha enviat des de {host} i no ha superat les comprovacions de remitent de {domain}. Podria estar falsificat.",
       "caution": "Aneu amb compte amb els enllaços, els fitxers adjunts i les sol·licituds de contrasenyes o dades de pagament."
     },
+    "brand_logo": {
+      "verified_label": "Logotip verificat",
+      "verified": "Aquest logotip està verificat com a propietat de {organization}.",
+      "verified_by": "{issuer} ha verificat que aquest logotip pertany a {organization}."
+    },
     "back_to_list": "Torna a la llista",
     "view_contact": "Mostra el contacte",
     "message_details": "Detalls del missatge",

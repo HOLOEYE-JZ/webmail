@@ -4,6 +4,7 @@ import { CalendarDays, FileText, Folder, Repeat } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/avatar";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { brandIndicatorDomain } from "@/lib/email-headers";
 import { parseSearchSnippet, type SnippetSegment } from "@/lib/search-snippet";
 import type { GlobalSearchHit } from "@/lib/global-search/types";
 import { getContactDisplayName, getContactPhotoRef, getContactPrimaryEmail } from "@/stores/contact-store";
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils";
 function MailSenderAvatar({ email }: { email: Extract<GlobalSearchHit, { kind: 'mail' }>['email'] }) {
   const from = email.from?.[0];
   const senderWarning = useSenderWarning(email);
-  return <Avatar name={from?.name || undefined} email={from?.email || undefined} size="sm" className="mt-0.5 shrink-0" senderWarning={senderWarning} />;
+  return <Avatar name={from?.name || undefined} email={from?.email || undefined} size="sm" className="mt-0.5 shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />;
 }
 
 /**

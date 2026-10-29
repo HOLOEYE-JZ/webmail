@@ -497,6 +497,11 @@
       "failed_sent_from": "Ta wiadomość twierdzi, że pochodzi z domeny {domain}, ale została wysłana z domeny {host} i nie przeszła weryfikacji nadawcy domeny {domain}. Może być sfałszowana.",
       "caution": "Uważaj na linki, załączniki i prośby o hasła lub dane płatnicze."
     },
+    "brand_logo": {
+      "verified_label": "Zweryfikowane logo",
+      "verified": "To logo zostało zweryfikowane jako należące do {organization}.",
+      "verified_by": "{issuer} potwierdził, że to logo należy do {organization}."
+    },
     "back_to_list": "Powrót do listy",
     "view_contact": "Pokaż kontakt",
     "message_details": "Szczegóły wiadomości",

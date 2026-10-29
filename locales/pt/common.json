@@ -497,6 +497,11 @@
       "failed_sent_from": "Esta mensagem afirma ser de {domain}, mas foi enviada de {host} e não passou nas verificações de remetente de {domain}. Pode ter sido falsificada.",
       "caution": "Tenha cuidado com links, anexos e pedidos de senhas ou dados de pagamento."
     },
+    "brand_logo": {
+      "verified_label": "Logotipo verificado",
+      "verified": "Este logotipo foi verificado como pertencente a {organization}.",
+      "verified_by": "{issuer} verificou que este logotipo pertence a {organization}."
+    },
     "back_to_list": "Voltar para a lista",
     "view_contact": "Ver contato",
     "message_details": "Detalhes da Mensagem",

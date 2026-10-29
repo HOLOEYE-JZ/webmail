@@ -7,6 +7,7 @@ import { useFaviconRefreshStore } from '@/stores/favicon-refresh-store';
 import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import type { ContactCard } from '@/lib/jmap/types';
 import { setNoThirdPartyTraffic } from '@/lib/third-party-mode';
+import { useSettingsStore } from '@/stores/settings-store';
 
 describe('Avatar', () => {
   it('renders initials from full name', () => {
@@ -262,6 +263,72 @@ describe('Avatar', () => {
       const { container } = render(<Avatar name="Ann" email="ann@example.com" contactPhoto={{ blobId: 'dbcAnn' }} senderWarning="Unverified sender" />);
       expect(container.querySelector('img')).toBeNull();
       expect(fetchBlob).not.toHaveBeenCalled();
+    });
+
+    it('shows the shield, not the brand logo, when both are given', () => {
+      const { container } = render(<Avatar name="PayPal" email="billing@paypal.com" senderWarning="Sender check failed" brandDomain="paypal.com" />);
+      expect(container.querySelector('img')).toBeNull();
+    });
+  });
+
+  describe('brand logo (BIMI)', () => {
+    beforeEach(() => {
+      useFaviconRefreshStore.setState({ refreshedAt: 0 });
+      useFaviconRefreshStore.getState().refresh();
+      useFaviconRefreshStore.setState({ refreshedAt: 0 });
+    });
+
+    it('shows the logo of a domain the message passed DMARC for, before the favicon', () => {
+      const { container } = render(<Avatar name="Brand" email="news@brand.org" brandDomain="brand.org" />);
+      expect(container.querySelector('img')?.getAttribute('src')).toBe('/api/bimi?domain=brand.org');
+    });
+
+    it('asks for no logo without a DMARC pass', () => {
+      const { container } = render(<Avatar name="Brand" email="news@brand.org" />);
+      expect(container.querySelector('img')?.getAttribute('src')).toBe('/api/favicon?domain=brand.org');
+    });
+
+    it('asks for no logo when the avatar shows someone from another domain', () => {
+      const { container } = render(<Avatar name="Ann" email="ann@other.org" brandDomain="brand.org" />);
+      expect(container.querySelector('img')?.getAttribute('src')).toBe('/api/favicon?domain=other.org');
+    });
+
+    it('falls through to the favicon when the domain has no logo', () => {
+      const { container } = render(<Avatar name="Brand" email="news@brand.org" brandDomain="brand.org" />);
+      const img = container.querySelector('img')!;
+      // /api/bimi answers a 1x1 placeholder when there is no logo.
+      Object.defineProperty(img, 'naturalWidth', { value: 1 });
+      fireEvent.load(img);
+      expect(container.querySelector('img')?.getAttribute('src')).toBe('/api/favicon?domain=brand.org');
+      // Other avatars of the domain don't ask again.
+      const { container: second } = render(<Avatar name="Brand" email="news@brand.org" brandDomain="brand.org" />);
+      expect(second.querySelector('img')?.getAttribute('src')).toBe('/api/favicon?domain=brand.org');
+    });
+
+    it('keeps a contact photo first', async () => {
+      clearContactPhotoCache();
+      const fetchBlob = vi.fn(async () => new Blob([new Uint8Array([0xff, 0xd8, 0xff])], { type: 'image/jpeg' }));
+      vi.spyOn(URL, 'createObjectURL').mockImplementation(() => 'blob:photo');
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+      useAuthStore.setState({ client: { fetchBlob } as never });
+      try {
+        const { container } = render(<Avatar name="Ann" email="ann@brand.org" contactPhoto={{ blobId: 'dbcAnnBrand' }} brandDomain="brand.org" />);
+        await waitFor(() => expect(container.querySelector('img')?.getAttribute('src')).toBe('blob:photo'));
+      } finally {
+        useAuthStore.setState({ client: null });
+        clearContactPhotoCache();
+        vi.restoreAllMocks();
+      }
+    });
+
+    it('asks for no logo while sender icons are off', () => {
+      useSettingsStore.setState({ senderFavicons: false });
+      try {
+        const { container } = render(<Avatar name="Brand" email="news@brand.org" brandDomain="brand.org" />);
+        expect(container.querySelector('img')).toBeNull();
+      } finally {
+        useSettingsStore.setState({ senderFavicons: true });
+      }
     });
   });
 });

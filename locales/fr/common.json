@@ -497,6 +497,11 @@
       "failed_sent_from": "Ce message prétend venir de {domain}, mais il a été envoyé depuis {host} et a échoué aux vérifications d'expéditeur de {domain}. Il est peut-être falsifié.",
       "caution": "Méfiez-vous des liens, des pièces jointes et des demandes de mots de passe ou d'informations de paiement."
     },
+    "brand_logo": {
+      "verified_label": "Logo vérifié",
+      "verified": "Ce logo est vérifié comme appartenant à {organization}.",
+      "verified_by": "{issuer} a vérifié que ce logo appartient à {organization}."
+    },
     "back_to_list": "Retour à la liste",
     "view_contact": "Voir le contact",
     "message_details": "Détails du message",

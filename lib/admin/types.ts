@@ -380,6 +380,10 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   // network access don't run. Instance-wide on purpose. An env "on" can't be
   // switched off in the admin panel (lib/admin/third-party-mode.ts).
   noThirdPartyTraffic: { envVar: 'NO_THIRD_PARTY_TRAFFIC', type: 'boolean', defaultValue: false },
+  // BIMI sender logos (/api/bimi). Off shows a logo whose only backing is the
+  // sender's DNS record and an enforcing DMARC policy; on also requires a
+  // valid Verified Mark or Common Mark Certificate, as Gmail and Apple Mail do.
+  bimiRequireCertificate: { envVar: 'BIMI_REQUIRE_CERTIFICATE', type: 'boolean', defaultValue: false },
   // WOPI document editing (#425). `wopiClientUrl` is the editor's base URL
   // (Collabora Online / OnlyOffice / EuroOffice, ...); discovery is fetched
   // from `<url>/hosting/discovery` unless the URL already carries a path.

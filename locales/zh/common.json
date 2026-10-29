@@ -497,6 +497,11 @@
       "failed_sent_from": "此邮件声称来自 {domain}，但它是从 {host} 发出的，并且未通过 {domain} 的发件人验证。它可能是伪造的。",
       "caution": "请谨慎对待其中的链接、附件，以及索要密码或付款信息的请求。"
     },
+    "brand_logo": {
+      "verified_label": "已验证的标志",
+      "verified": "此标志已验证属于 {organization}。",
+      "verified_by": "{issuer} 已验证此标志属于 {organization}。"
+    },
     "back_to_list": "返回列表",
     "view_contact": "查看联系人",
     "message_details": "邮件详情",

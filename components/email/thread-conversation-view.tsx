@@ -26,6 +26,7 @@ import { useThemeStore } from "@/stores/theme-store";
 import { useShallow } from "zustand/react/shallow";
 import { Avatar } from "@/components/ui/avatar";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { brandIndicatorDomain } from "@/lib/email-headers";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatFileSize, cn, cleanPreview } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
@@ -375,6 +376,7 @@ function EmailCard({
             size="md"
             className="flex-shrink-0"
             senderWarning={senderWarning}
+            brandDomain={brandIndicatorDomain(email)}
           />
         )}
         <div className="flex-1 min-w-0">

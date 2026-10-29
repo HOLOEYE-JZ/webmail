@@ -497,6 +497,11 @@
       "failed_sent_from": "See kiri väidab, et on saadetud domeenilt {domain}, kuid see saadeti hostilt {host} ega läbinud domeeni {domain} saatjakontrolle. See võib olla võltsitud.",
       "caution": "Ole ettevaatlik linkide, manuste ning paroolide või makseandmete küsimistega."
     },
+    "brand_logo": {
+      "verified_label": "Kinnitatud logo",
+      "verified": "See logo on kinnitatud kui {organization} logo.",
+      "verified_by": "{issuer} kinnitas, et see logo kuulub ettevõttele {organization}."
+    },
     "back_to_list": "Tagasi loetellu",
     "view_contact": "Vaata kontakti",
     "message_details": "Kirja üksikasjad",

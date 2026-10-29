@@ -30,6 +30,7 @@ export {
   IconArrowsSort as ArrowUpDown,
   IconCircleArrowUp as ArrowUpCircle,
   IconBan as Ban,
+  IconRosetteDiscountCheckFilled as BadgeCheck,
   IconBaseline as Baseline,
   IconBell as Bell,
   IconBellOff as BellOff,

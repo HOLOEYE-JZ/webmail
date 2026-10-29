@@ -497,6 +497,11 @@
       "failed_sent_from": "Tato zpráva tvrdí, že pochází z domény {domain}, ale byla odeslána z domény {host} a neprošla kontrolami odesílatele domény {domain}. Může být podvržená.",
       "caution": "Buďte opatrní u odkazů, příloh a žádostí o hesla nebo platební údaje."
     },
+    "brand_logo": {
+      "verified_label": "Ověřené logo",
+      "verified": "Toto logo je ověřeno jako logo společnosti {organization}.",
+      "verified_by": "{issuer} ověřil, že toto logo patří společnosti {organization}."
+    },
     "back_to_list": "Zpět na seznam",
     "view_contact": "Zobrazit kontakt",
     "message_details": "Podrobnosti zprávy",

@@ -497,6 +497,11 @@
       "failed_sent_from": "Šis ziņojums apgalvo, ka ir no domēna {domain}, taču tas nosūtīts no domēna {host} un neizturēja domēna {domain} sūtītāja pārbaudes. Tas var būt viltots.",
       "caution": "Esiet piesardzīgi ar saitēm, pielikumiem un paroļu vai maksājumu datu pieprasījumiem."
     },
+    "brand_logo": {
+      "verified_label": "Verificēts logotips",
+      "verified": "Šis logotips ir verificēts kā {organization} logotips.",
+      "verified_by": "{issuer} ir verificējis, ka šis logotips pieder {organization}."
+    },
     "back_to_list": "Atpakaļ uz sarakstu",
     "view_contact": "Skatīt kontaktu",
     "message_details": "Informācija par ziņojumu",

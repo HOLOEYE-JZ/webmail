@@ -8,6 +8,7 @@ import { Email } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { brandIndicatorDomain } from "@/lib/email-headers";
 import { Paperclip, Star, Circle, CheckSquare, Square, Reply, Forward, CalendarClock } from "@/components/icons";
 import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
@@ -296,6 +297,7 @@ export function ThreadEmailItem({
             size="sm"
             className="flex-shrink-0"
             senderWarning={senderWarning}
+            brandDomain={brandIndicatorDomain(email)}
           />
         )}
 

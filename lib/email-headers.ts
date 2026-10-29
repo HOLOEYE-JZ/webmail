@@ -133,6 +133,25 @@ export function getSenderVerification(
   return { status: 'unverified', domain, sentFrom };
 }
 
+/**
+ * The From domain whose BIMI logo this message may show, or undefined. BIMI
+ * needs a DMARC pass for the very domain in From: an aligned SPF or DKIM
+ * pass without a DMARC verdict isn't enough, and neither is a pass that the
+ * receiving server recorded for another header.from. Whether the domain
+ * enforces DMARC and publishes a logo is /api/bimi's to find out.
+ */
+export function brandIndicatorDomain(
+  email: { from?: { email?: string | null }[] | null; authenticationResults?: AuthenticationResults } | undefined,
+): string | undefined {
+  const auth = email?.authenticationResults;
+  const fromEmail = email?.from?.[0]?.email ?? undefined;
+  if (!auth?.dmarc || auth.dmarc.result !== 'pass' || !fromEmail) return undefined;
+  const domain = domainOf(fromEmail);
+  if (!domain || isAuthenticationSpoofed(auth)) return undefined;
+  const checked = auth.dmarc.domain ? domainOf(`@${auth.dmarc.domain}`) : domain;
+  return checked === domain ? domain : undefined;
+}
+
 interface ResInfo {
   method: string;
   result: string;

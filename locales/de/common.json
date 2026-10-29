@@ -497,6 +497,11 @@
       "failed_sent_from": "Diese Nachricht gibt vor, von {domain} zu kommen, wurde aber von {host} verschickt und hat die Absenderprüfung von {domain} nicht bestanden. Sie ist möglicherweise gefälscht.",
       "caution": "Seien Sie vorsichtig mit Links, Anhängen und Fragen nach Passwörtern oder Zahlungsdaten."
     },
+    "brand_logo": {
+      "verified_label": "Verifiziertes Logo",
+      "verified": "Dieses Logo ist als Logo von {organization} verifiziert.",
+      "verified_by": "{issuer} hat bestätigt, dass dieses Logo zu {organization} gehört."
+    },
     "back_to_list": "Zurück zur Liste",
     "view_contact": "Kontakt anzeigen",
     "message_details": "Nachrichtendetails",

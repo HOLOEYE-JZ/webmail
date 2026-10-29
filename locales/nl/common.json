@@ -497,6 +497,11 @@
       "failed_sent_from": "Dit bericht beweert van {domain} te komen, maar is verzonden vanaf {host} en is niet door de afzendercontroles van {domain} gekomen. Het kan vervalst zijn.",
       "caution": "Wees voorzichtig met links, bijlagen en verzoeken om wachtwoorden of betaalgegevens."
     },
+    "brand_logo": {
+      "verified_label": "Geverifieerd logo",
+      "verified": "Dit logo is geverifieerd als logo van {organization}.",
+      "verified_by": "{issuer} heeft geverifieerd dat dit logo van {organization} is."
+    },
     "back_to_list": "Terug naar lijst",
     "view_contact": "Contact bekijken",
     "message_details": "Berichtdetails",

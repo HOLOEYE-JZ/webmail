@@ -176,6 +176,10 @@ export function SettingsPage() {
           </ConfigNote>
         </SettingsSection>
 
+        <SettingsSection id="bimi" title="Brand logos">
+          <ConfigToggleItem label="Require a mark certificate" description="Senders that publish a BIMI record and enforce DMARC get their logo as the sender icon. Off shows a logo that only the sender's DNS record backs, as Yahoo does. On shows only logos backed by a Verified Mark or Common Mark Certificate, as Gmail and Apple Mail do, so a lookalike domain can't put up someone else's logo." configKey="bimiRequireCertificate" value={currentValue('bimiRequireCertificate') as boolean} source={config.bimiRequireCertificate?.source} onChange={handleChange} onRevert={handleRevert} />
+        </SettingsSection>
+
         <SettingsSection id="logging" title="Logging">
           <ConfigSelectItem label="Format" configKey="logFormat" value={currentValue('logFormat') as string} source={config.logFormat?.source} options={['text', 'json']} onChange={handleChange} onRevert={handleRevert} />
           <ConfigSelectItem label="Level" configKey="logLevel" value={currentValue('logLevel') as string} source={config.logLevel?.source} options={['error', 'warn', 'info', 'debug']} onChange={handleChange} onRevert={handleRevert} />

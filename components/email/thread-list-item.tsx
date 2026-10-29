@@ -37,6 +37,7 @@ import { SearchSnippetText } from "./search-snippet-text";
 import { PluginRowBadges } from "./plugin-row-badges";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { brandIndicatorDomain } from "@/lib/email-headers";
 import { useTranslations } from "next-intl";
 
 /**
@@ -744,6 +745,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   className="shadow-sm"
                   disableImages={hideJunkAvatarImages}
                   senderWarning={senderWarning}
+                  brandDomain={showRecipient ? undefined : brandIndicatorDomain(email)}
                   checked={isChecked}
                   onToggle={handleCheckboxClick}
                   selectLabel={selectRowLabel}
@@ -1447,6 +1449,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     className="shadow-sm"
                     disableImages={hideJunkAvatarImages}
                     senderWarning={senderWarning}
+                    brandDomain={showRecipient ? undefined : brandIndicatorDomain(latestEmail)}
                     checked={isChecked}
                     onToggle={handleThreadCheckboxClick}
                     selectLabel={selectRowLabel}

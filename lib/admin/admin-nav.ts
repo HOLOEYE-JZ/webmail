@@ -80,6 +80,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
       { id: 'login', title: 'Login page', keywords: 'version 2fa totp code access token remember me heading subtitle' },
       { id: 'servers', title: 'JMAP servers', keywords: 'multi server domain auto pick list' },
       { id: 'wopi', title: 'Document editing', keywords: 'wopi collabora onlyoffice office files host url' },
+      { id: 'bimi', title: 'Brand logos', keywords: 'bimi vmc cmc mark certificate sender logo icon dmarc' },
       { id: 'logging', title: 'Logging', keywords: 'log level format json text debug' },
       { id: 'sync', title: 'Settings sync', keywords: 'session secret devices' },
     ],

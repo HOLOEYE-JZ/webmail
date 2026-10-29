@@ -497,6 +497,11 @@
       "failed_sent_from": "This message claims to be from {domain}, but it was sent from {host} and failed {domain}'s sender checks. It may be forged.",
       "caution": "Be careful with links, attachments and requests for passwords or payment details."
     },
+    "brand_logo": {
+      "verified_label": "Verified logo",
+      "verified": "This logo is verified as belonging to {organization}.",
+      "verified_by": "{issuer} verified that this logo belongs to {organization}."
+    },
     "back_to_list": "Back to list",
     "view_contact": "View contact",
     "message_details": "Message Details",

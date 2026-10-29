@@ -497,6 +497,11 @@
       "failed_sent_from": "このメッセージは{domain}からのものとされていますが、実際には{host}から送信されており、{domain}の送信者チェックにも失敗しました。なりすましの可能性があります。",
       "caution": "リンクや添付ファイル、パスワードや支払い情報の要求には注意してください。"
     },
+    "brand_logo": {
+      "verified_label": "認証済みロゴ",
+      "verified": "このロゴは {organization} のものとして認証されています。",
+      "verified_by": "{issuer} がこのロゴが {organization} のものであることを認証しました。"
+    },
     "back_to_list": "リストに戻る",
     "view_contact": "連絡先を表示",
     "message_details": "メッセージの詳細",

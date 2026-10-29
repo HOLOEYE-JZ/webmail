@@ -497,6 +497,11 @@
       "failed_sent_from": "تدّعي هذه الرسالة أنها من {domain}، لكنها أُرسلت من {host} ولم تجتز فحوصات المرسل الخاصة بـ {domain}. قد تكون مزوّرة.",
       "caution": "توخَّ الحذر مع الروابط والمرفقات وطلبات كلمات المرور أو بيانات الدفع."
     },
+    "brand_logo": {
+      "verified_label": "شعار موثّق",
+      "verified": "هذا الشعار موثّق على أنه يخص {organization}.",
+      "verified_by": "تحققت {issuer} من أن هذا الشعار يخص {organization}."
+    },
     "back_to_list": "العودة إلى القائمة",
     "view_contact": "عرض جهة الاتصال",
     "message_details": "تفاصيل الرسالة",

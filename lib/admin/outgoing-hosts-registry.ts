@@ -95,6 +95,18 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     lite: false,
   },
   {
+    id: 'bimi',
+    host: '<sender domain> (BIMI)',
+    // The hosts come from the sender's DNS records; no literal in the source.
+    literals: [],
+    files: [],
+    side: 'server',
+    usedBy: 'Brand logos (BIMI) for messages that pass DMARC, looked up by /api/bimi: TXT records at the sender\'s domain, then the logo, mark certificate and CRL they name.',
+    off: 'Users can turn sender icons off in Settings > Message list.',
+    inMode: 'Avatars show no brand logos; /api/bimi answers 403 before any lookup.',
+    lite: false,
+  },
+  {
     id: 'translate',
     host: 'api.mymemory.translated.net',
     files: ['app/api/translate/route.ts'],

@@ -4,6 +4,8 @@ import { persist } from 'zustand/middleware';
 // Domains whose favicon failed to load in this tab. Avatars skip them so a
 // missing icon isn't requested again on every render.
 export const failedFaviconDomains = new Set<string>();
+// The same for BIMI logos (/api/bimi), by From domain.
+export const failedBrandDomains = new Set<string>();
 
 interface FaviconRefreshState {
   /** When the user last asked for fresh sender icons (ms), 0 if never. */
@@ -21,6 +23,7 @@ export const useFaviconRefreshStore = create<FaviconRefreshState>()(
       refreshedAt: 0,
       refresh: () => {
         failedFaviconDomains.clear();
+        failedBrandDomains.clear();
         set({ refreshedAt: Date.now() });
       },
     }),

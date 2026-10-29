@@ -13,7 +13,7 @@ import { withBasePath } from "@/lib/browser-navigation";
 import { IS_LITE } from "@/lib/lite";
 import { avatarUrlAllowed, sampleAvatarsAllowed, senderFaviconsAllowed } from "@/lib/outgoing-hosts";
 import { useNoThirdPartyTraffic } from "@/hooks/use-third-party-mode";
-import { useFaviconRefreshStore, failedFaviconDomains } from "@/stores/favicon-refresh-store";
+import { useFaviconRefreshStore, failedFaviconDomains, failedBrandDomains } from "@/stores/favicon-refresh-store";
 
 const IS_DEV = process.env.NODE_ENV !== "production";
 
@@ -162,6 +162,12 @@ interface AvatarProps {
    * From doesn't get the real sender's logo or photo (#1439).
    */
   senderWarning?: string;
+  /**
+   * The From domain of a message that passed DMARC for it (see
+   * brandIndicatorDomain): its BIMI logo, when it publishes one, comes before
+   * every source but a contact photo.
+   */
+  brandDomain?: string;
 }
 
 /**
@@ -176,8 +182,10 @@ function initialsColor(background: string): string {
   return 1.05 / (l + 0.05) >= (l + 0.05) / 0.05 ? '#ffffff' : '#000000';
 }
 
-export function Avatar({ name, email, contactPhoto, size = "md", className, disableImages = false, disableFavicon = false, fallbackColor, senderWarning }: AvatarProps) {
+export function Avatar({ name, email, contactPhoto, size = "md", className, disableImages = false, disableFavicon = false, fallbackColor, senderWarning, brandDomain }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
+  // The BIMI logo of this domain answered with no logo (or didn't load).
+  const [failedBrand, setFailedBrand] = useState<string | null>(null);
   const [pluginAvatarUrl, setPluginAvatarUrl] = useState<string | null>(null);
   const [pluginAvatarFailed, setPluginAvatarFailed] = useState(false);
   // A contact photo that downloaded but would not render (an SVG made inert,
@@ -216,6 +224,7 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
   // A refresh of the sender icons gives a failed favicon another chance.
   useEffect(() => {
     setImgError(false);
+    setFailedBrand(null);
   }, [faviconRefreshedAt]);
 
   const domain = email?.split("@")[1]?.toLowerCase();
@@ -271,18 +280,30 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
   const showFavicon =
     !IS_LITE && senderFaviconsAllowed() && !disableFavicon && senderFavicons && faviconDomain && !PERSONAL_DOMAINS.has(faviconDomain) && !imgError && !domainFailed;
 
-  // Priority: contact photo > plugin avatar (e.g. Gravatar) > custom avatar > profile picture > company favicon > initials
+  // Priority: contact photo > BIMI logo > plugin avatar (e.g. Gravatar) > custom avatar > profile picture > company favicon > initials
   const customAvatar = devMode && email && sampleAvatarsAllowed() ? CUSTOM_AVATARS[email.toLowerCase()] : null;
   // Gravatar and the like are outside hosts: initials instead in the no-third-party mode.
   const pluginAvatar = pluginAvatarFailed || !avatarUrlAllowed(pluginAvatarUrl) ? null : pluginAvatarUrl;
-  const photoSrc = resolvedContactPhoto || pluginAvatar || customAvatar || profilePic || null;
+  // BIMI logos come from /api/bimi under the same switches as favicons, and
+  // only for the address shown: a thread row may show another participant
+  // than the message whose DMARC pass named the domain.
+  const showBrand =
+    !IS_LITE && senderFaviconsAllowed() && senderFavicons && !!brandDomain && domain === brandDomain && brandDomain !== failedBrand && !failedBrandDomains.has(brandDomain);
+  const brandSrc = showBrand ? withBasePath(`/api/bimi?domain=${encodeURIComponent(brandDomain!)}${faviconRefreshedAt ? `&v=${faviconRefreshedAt}` : ""}`) : null;
+  const photoSrc = resolvedContactPhoto || brandSrc || pluginAvatar || customAvatar || profilePic || null;
   const faviconSrc = !imgError && !domainFailed && showFavicon ? withBasePath(`/api/favicon?domain=${encodeURIComponent(faviconDomain!)}${faviconRefreshedAt ? `&v=${faviconRefreshedAt}` : ""}`) : null;
   const imgSrc = disableImages ? null : (photoSrc || faviconSrc);
   const isFavicon = imgSrc !== null && imgSrc === faviconSrc;
+  const isBrand = imgSrc !== null && imgSrc === brandSrc;
 
   const handleImgError = useCallback(() => {
     if (resolvedContactPhoto && imgSrc === resolvedContactPhoto) {
       setFailedContactPhoto(resolvedContactPhoto);
+      return;
+    }
+    if (brandSrc && brandDomain && imgSrc === brandSrc) {
+      failedBrandDomains.add(brandDomain);
+      setFailedBrand(brandDomain);
       return;
     }
     // If the plugin avatar just failed, mark it and fall through to the next source
@@ -295,7 +316,7 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
     if (faviconDomain && !resolvedContactPhoto && !pluginAvatar && !customAvatar && !profilePic) {
       failedFaviconDomains.add(faviconDomain);
     }
-  }, [imgSrc, pluginAvatar, faviconDomain, resolvedContactPhoto, customAvatar, profilePic]);
+  }, [imgSrc, pluginAvatar, faviconDomain, resolvedContactPhoto, brandSrc, brandDomain, customAvatar, profilePic]);
 
   const initialsBackground = fallbackColor ?? getBackgroundColor();
 
@@ -324,7 +345,7 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
         className
       )}
       style={{
-        backgroundColor: imgSrc ? (isFavicon ? "#ffffff" : "transparent") : initialsBackground,
+        backgroundColor: imgSrc ? (isFavicon || isBrand ? "#ffffff" : "transparent") : initialsBackground,
         color: imgSrc ? undefined : initialsColor(initialsBackground),
       }}
       title={name || email}
@@ -335,12 +356,12 @@ export function Avatar({ name, email, contactPhoto, size = "md", className, disa
           alt=""
           className="w-full h-full object-cover"
           onError={handleImgError}
-          // /api/favicon returns a 1x1 transparent PNG (HTTP 200) when no real
-          // favicon exists, to avoid spamming the DevTools console with 404s.
-          // Detect that sentinel by naturalWidth and fall back to initials.
+          // /api/favicon and /api/bimi return a 1x1 transparent PNG (HTTP 200)
+          // when there is no icon, to avoid spamming the DevTools console with
+          // 404s. Detect that sentinel by naturalWidth and fall through.
           onLoad={(e) => {
             const img = e.currentTarget;
-            if (isFavicon && img.naturalWidth <= 1) {
+            if ((isFavicon || isBrand) && img.naturalWidth <= 1) {
               handleImgError();
             }
           }}

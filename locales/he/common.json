@@ -446,6 +446,11 @@
       "failed_sent_from": "ההודעה הזו טוענת שהיא מהדומיין {domain}, אבל היא נשלחה מהדומיין {host} ונכשלה בבדיקות השולח של {domain}. ייתכן שהיא מזויפת.",
       "caution": "היזהר מקישורים, מקבצים מצורפים ומבקשות לסיסמאות או לפרטי תשלום."
     },
+    "brand_logo": {
+      "verified_label": "לוגו מאומת",
+      "verified": "הלוגו הזה מאומת כשייך ל-{organization}.",
+      "verified_by": "{issuer} אימת שהלוגו הזה שייך ל-{organization}."
+    },
     "back_to_list": "חזרה לרשימה",
     "view_contact": "הצג איש קשר",
     "message_details": "פרטי הודעה",

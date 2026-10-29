@@ -497,6 +497,11 @@
       "failed_sent_from": "이 메시지는 {domain}에서 보냈다고 하지만 실제로는 {host}에서 발송되었고 {domain}의 보낸 사람 확인을 통과하지 못했어요. 위조된 메시지일 수 있어요.",
       "caution": "링크, 첨부 파일, 비밀번호나 결제 정보 요청에 주의하세요."
     },
+    "brand_logo": {
+      "verified_label": "인증된 로고",
+      "verified": "이 로고는 {organization}의 로고로 인증되었습니다.",
+      "verified_by": "{issuer}에서 이 로고가 {organization}의 로고임을 인증했습니다."
+    },
     "back_to_list": "목록으로",
     "view_contact": "연락처 보기",
     "message_details": "메시지 상세 정보",

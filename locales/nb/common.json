@@ -497,6 +497,11 @@
       "failed_sent_from": "Denne meldingen utgir seg for å være fra {domain}, men den ble sendt fra {host} og besto ikke avsenderkontrollene til {domain}. Den kan være forfalsket.",
       "caution": "Vær forsiktig med lenker, vedlegg og forespørsler om passord eller betalingsopplysninger."
     },
+    "brand_logo": {
+      "verified_label": "Bekreftet logo",
+      "verified": "Denne logoen er bekreftet å tilhøre {organization}.",
+      "verified_by": "{issuer} har bekreftet at denne logoen tilhører {organization}."
+    },
     "back_to_list": "Tilbake til listen",
     "view_contact": "Se kontakt",
     "message_details": "Meldingsdetaljer",

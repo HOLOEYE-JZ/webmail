@@ -48,7 +48,7 @@ import { useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useAccountTags, useEmailTagScope, type TagScope } from "@/hooks/use-account-tags";
 import { getEmailTagIds, emailKeyFor } from "@/lib/thread-utils";
-import { getSecurityStatus, extractListHeaders, getSenderVerification } from "@/lib/email-headers";
+import { getSecurityStatus, extractListHeaders, getSenderVerification, brandIndicatorDomain } from "@/lib/email-headers";
 import { emailToReadView } from "@/lib/plugin-projection";
 import type { EmailReadView, ExternalLinkContext } from "@/lib/plugin-types";
 import { ViewSourceDialog } from "./view-source-dialog";
@@ -170,6 +170,7 @@ import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { useNoThirdPartyTraffic } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
+import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
 
 /** The More menu's two drill-downs: a folder list and a tag list. */
 type MoreMenuSub = MessageSubmenuKey;
@@ -751,7 +752,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact }: { email: Ema
       data-email-id={email.id}
       className={cn("w-full flex items-start py-3 border-t border-border text-start hover:bg-muted/40 transition-colors", compact ? "gap-3 px-4" : "gap-4 px-6")}
     >
-      <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} />
+      <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
       <span className="flex-1 min-w-0">
         <span className="flex items-baseline gap-2">
           <span dir="auto" className={cn("text-sm truncate", unread ? "font-bold" : "font-semibold")}>
@@ -875,7 +876,7 @@ export function MvExpandedConversationCard({
         data-mv-conversation-header=""
         className={cn("flex items-start pt-3 pb-2 cursor-pointer", compact ? "gap-3 px-4" : "gap-4 px-6")}
       >
-        <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} />
+        <Avatar name={sender?.name} email={sender?.email} size="md" className="w-10 h-10 flex-shrink-0" senderWarning={senderWarning} brandDomain={brandIndicatorDomain(email)} />
         <span className="flex-1 min-w-0">
           <span className="flex items-baseline gap-2">
             <span dir="auto" className="text-sm font-semibold truncate">{sender?.name || sender?.email || ''}</span>
@@ -888,6 +889,7 @@ export function MvExpandedConversationCard({
             {!compact && sender?.name && sender.email && (
               <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
             )}
+            <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
             <span className="ms-auto ps-2 text-xs text-muted-foreground whitespace-nowrap">
               {compact ? formatDate(emailDisplayDate(email)) : mvSenderDate(emailDisplayDate(email), timeFormat)}
@@ -4930,6 +4932,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
                 senderWarning={senderVerification ? senderVerificationLabel : undefined}
+                brandDomain={brandIndicatorDomain(email)}
               />
             </button>
 
@@ -4952,6 +4955,7 @@ export function EmailViewer({
                     {mvViewer && sender?.email && sender?.name && (
                       <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
                     )}
+                    <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                     <EmailIdentityBadge email={email} identities={identities} />
                     {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
@@ -5239,6 +5243,7 @@ export function EmailViewer({
                 size="lg"
                 className="shadow-sm w-10 h-10 group-hover:ring-2 group-hover:ring-primary/30 transition-all"
                 senderWarning={senderVerification ? senderVerificationLabel : undefined}
+                brandDomain={brandIndicatorDomain(email)}
               />
             </button>
             <div className="flex-1 min-w-0">
@@ -5254,6 +5259,7 @@ export function EmailViewer({
                 ) : (
                   <span className="text-sm font-semibold text-foreground">{t('unknown_sender')}</span>
                 )}
+                <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                 <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                 <EmailIdentityBadge email={email} identities={identities} />
                 {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
@@ -5447,6 +5453,7 @@ export function EmailViewer({
                           onViewContact={handleViewContactSidebar}
                           className="text-sm text-start"
                         />
+                        <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                         <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                         {senderVerification && (
                           <span

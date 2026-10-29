@@ -25,6 +25,12 @@ vi.mock('@/lib/stalwart/credentials', () => ({
   getStalwartCredentials: vi.fn(async () => ({ serverUrl: 'https://mail.example.com', authHeader: 'Basic x', username: 'u' })),
 }));
 vi.mock('@/lib/security/same-origin', () => ({ rejectCrossOriginRequest: () => null }));
+// The BIMI route would query real DNS; the probe only needs to see whether it gets that far.
+const bimiResolve = vi.hoisted(() => vi.fn(async (_domain: string) => null));
+vi.mock('@/lib/bimi/lookup', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/bimi/lookup')>()),
+  bimiResolver: () => ({ resolve: bimiResolve, clear: () => {} }),
+}));
 
 import { configManager } from '@/lib/admin/config-manager';
 
@@ -69,6 +75,12 @@ const probes: Record<string, () => Promise<boolean>> = {
     const { GET } = await import('@/app/api/favicon/route');
     await GET(new NextRequest(`https://webmail.example/api/favicon?domain=probe${Date.now()}.org`));
     return fetchedHosts().includes('icons.duckduckgo.com') || senderFaviconsAllowed();
+  },
+  bimi: async () => {
+    const { GET } = await import('@/app/api/bimi/route');
+    bimiResolve.mockClear();
+    await GET(new NextRequest('https://webmail.example/api/bimi?domain=probe.org'));
+    return bimiResolve.mock.calls.length > 0;
   },
   translate: async () => {
     const { POST } = await import('@/app/api/translate/route');

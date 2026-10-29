@@ -497,6 +497,11 @@
       "failed_sent_from": "這封郵件聲稱來自 {domain}，但它是從 {host} 寄出的，而且未通過 {domain} 的寄件者驗證，可能是偽造的。",
       "caution": "請小心其中的連結、附件，以及要求提供密碼或付款資訊的請求。"
     },
+    "brand_logo": {
+      "verified_label": "已驗證的標誌",
+      "verified": "此標誌已驗證屬於 {organization}。",
+      "verified_by": "{issuer} 已驗證此標誌屬於 {organization}。"
+    },
     "back_to_list": "回到清單",
     "view_contact": "檢視聯絡人",
     "message_details": "郵件詳細資料",

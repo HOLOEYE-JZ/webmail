@@ -497,6 +497,11 @@
       "failed_sent_from": "Ez az üzenet azt állítja, hogy a(z) {domain} tartományból jött, de a(z) {host} tartományból küldték, és nem ment át a(z) {domain} tartomány feladóellenőrzésén. Lehet, hogy hamisított.",
       "caution": "Légy óvatos a linkekkel, a mellékletekkel, és ha jelszót vagy fizetési adatokat kérnek tőled."
     },
+    "brand_logo": {
+      "verified_label": "Ellenőrzött logó",
+      "verified": "Ez a logó ellenőrzötten a(z) {organization} tulajdona.",
+      "verified_by": "A(z) {issuer} ellenőrizte, hogy ez a logó a(z) {organization} tulajdona."
+    },
     "back_to_list": "Vissza a listához",
     "view_contact": "Névjegy megtekintése",
     "message_details": "Üzenet részletei",

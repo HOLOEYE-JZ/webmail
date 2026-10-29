@@ -497,6 +497,11 @@
       "failed_sent_from": "Bu ileti {domain} etki alanından geldiğini iddia ediyor, ancak {host} etki alanından gönderildi ve {domain} etki alanının gönderen denetimlerinden geçemedi. Sahte olabilir.",
       "caution": "Bağlantılara, eklere ve parola ya da ödeme bilgisi isteklerine karşı dikkatli olun."
     },
+    "brand_logo": {
+      "verified_label": "Doğrulanmış logo",
+      "verified": "Bu logonun {organization} kuruluşuna ait olduğu doğrulandı.",
+      "verified_by": "{issuer}, bu logonun {organization} kuruluşuna ait olduğunu doğruladı."
+    },
     "back_to_list": "Listeye dön",
     "view_contact": "Kişiyi görüntüle",
     "message_details": "İleti Ayrıntıları",

@@ -497,6 +497,11 @@
       "failed_sent_from": "Táto správa tvrdí, že pochádza z domény {domain}, ale bola odoslaná z domény {host} a neprešla kontrolami odosielateľa domény {domain}. Môže byť podvrhnutá.",
       "caution": "Buďte opatrní pri odkazoch, prílohách a žiadostiach o heslá alebo platobné údaje."
     },
+    "brand_logo": {
+      "verified_label": "Overené logo",
+      "verified": "Toto logo je overené ako logo spoločnosti {organization}.",
+      "verified_by": "{issuer} overil, že toto logo patrí spoločnosti {organization}."
+    },
     "back_to_list": "Späť na zoznam",
     "view_contact": "Zobraziť kontakt",
     "message_details": "Podrobnosti správy",
