@@ -321,9 +321,19 @@ body[data-theme-skin="builtin-flat-fields"] :is(input[type="checkbox"], input[ty
   accent-color: var(--color-primary);
 }
 
-/* Unread is a small square and a 600 weight, not a tinted row. */
+/* Unread is a small square and a heavy weight, not a tinted row. Hanken
+   Grotesk's 600 sits too close to the 500 of read senders to tell apart, so
+   unread sender and subject go to 700 and read senders drop to 400. */
 body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] .bg-accent\\/30:not(:hover) {
   background-color: var(--color-background);
+}
+
+body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] [data-unread="true"] .text-foreground:is(.font-semibold, .font-bold) {
+  font-weight: 700;
+}
+
+body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] [data-unread="false"] .font-medium:is([class~="text-foreground/80"], .text-muted-foreground) {
+  font-weight: 400;
 }
 
 body[data-theme-skin="builtin-flat-fields"] [data-tour="email-list"] svg.fill-unread {
