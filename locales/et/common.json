@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Kas lubada pistikprogrammil {plugin} saata kirju edasi aadressile {addresses}?",
-      "message": "{plugin} soovib saata kirja „{subject}“ koos manustega edasi aadressile {addresses}. Kui lubad, saab see edaspidi sellele aadressile kirju küsimata edasi saata. Saad selle tagasi võtta jaotises Seaded > Pistikprogrammid.",
+      "message": "{plugin} soovib saata kirja „{subject}“ koos manustega edasi aadressile {addresses}. Kui lubad, saab see edaspidi sellele aadressile kirju küsimata edasi saata. Saad selle tagasi võtta jaotises Seaded > Lisad.",
       "allow": "Luba ja saada edasi"
     },
     "dialog": {

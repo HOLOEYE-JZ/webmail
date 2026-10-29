@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Tillate {plugin} å videresende e-post til {addresses}?",
-      "message": "{plugin} vil videresende «{subject}» med vedlegg til {addresses}. Hvis du tillater det, kan den heretter videresende e-post til denne adressen uten å spørre. Du kan trekke det tilbake under Innstillinger > Programtillegg.",
+      "message": "{plugin} vil videresende «{subject}» med vedlegg til {addresses}. Hvis du tillater det, kan den heretter videresende e-post til denne adressen uten å spørre. Du kan trekke det tilbake under Innstillinger > Tillegg.",
       "allow": "Tillat og videresend"
     },
     "dialog": {

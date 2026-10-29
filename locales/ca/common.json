@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Voleu permetre que {plugin} reenviï correu a {addresses}?",
-      "message": "{plugin} vol reenviar «{subject}» amb els adjunts a {addresses}. Si ho permeteu, d'ara endavant podrà reenviar correu a aquesta adreça sense preguntar. Ho podeu revocar a Configuració > Connectors.",
+      "message": "{plugin} vol reenviar «{subject}» amb els adjunts a {addresses}. Si ho permeteu, d'ara endavant podrà reenviar correu a aquesta adreça sense preguntar. Ho podeu revocar a Configuració > Complements.",
       "allow": "Permet i reenvia"
     },
     "dialog": {

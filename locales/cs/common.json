@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Povolit pluginu {plugin} přeposílat poštu na {addresses}?",
-      "message": "{plugin} chce přeposlat „{subject}“ i s přílohami na {addresses}. Pokud to povolíte, bude od teď moci přeposílat poštu na tuto adresu bez ptaní. Odvolat to můžete v Nastavení > Pluginy.",
+      "message": "{plugin} chce přeposlat „{subject}“ i s přílohami na {addresses}. Pokud to povolíte, bude od teď moci přeposílat poštu na tuto adresu bez ptaní. Odvolat to můžete v Nastavení > Doplňky.",
       "allow": "Povolit a přeposlat"
     },
     "dialog": {

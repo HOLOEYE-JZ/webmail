@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Consentire a {plugin} di inoltrare posta a {addresses}?",
-      "message": "{plugin} vuole inoltrare «{subject}» con i suoi allegati a {addresses}. Se lo consenti, d'ora in poi potrà inoltrare posta a questo indirizzo senza chiedere. Puoi revocarlo in Impostazioni > Plugin.",
+      "message": "{plugin} vuole inoltrare «{subject}» con i suoi allegati a {addresses}. Se lo consenti, d'ora in poi potrà inoltrare posta a questo indirizzo senza chiedere. Puoi revocarlo in Impostazioni > Componenti aggiuntivi.",
       "allow": "Consenti e inoltra"
     },
     "dialog": {

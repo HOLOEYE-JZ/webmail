@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Pozwolić wtyczce {plugin} przekazywać pocztę na {addresses}?",
-      "message": "{plugin} chce przekazać „{subject}” razem z załącznikami na {addresses}. Jeśli na to pozwolisz, będzie od teraz mogła przekazywać pocztę na ten adres bez pytania. Możesz to cofnąć w Ustawienia > Wtyczki.",
+      "message": "{plugin} chce przekazać „{subject}” razem z załącznikami na {addresses}. Jeśli na to pozwolisz, będzie od teraz mogła przekazywać pocztę na ten adres bez pytania. Możesz to cofnąć w Ustawienia > Dodatki.",
       "allow": "Zezwól i przekaż"
     },
     "dialog": {

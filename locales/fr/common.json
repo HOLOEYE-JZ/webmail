@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Autoriser {plugin} à transférer des e-mails à {addresses} ?",
-      "message": "{plugin} veut transférer « {subject} » avec ses pièces jointes à {addresses}. Si vous l'autorisez, il pourra désormais transférer des e-mails à cette adresse sans vous demander. Vous pouvez revenir sur ce choix dans Paramètres > Plugins.",
+      "message": "{plugin} veut transférer « {subject} » avec ses pièces jointes à {addresses}. Si vous l'autorisez, il pourra désormais transférer des e-mails à cette adresse sans vous demander. Vous pouvez revenir sur ce choix dans Paramètres > Extensions.",
       "allow": "Autoriser et transférer"
     },
     "dialog": {

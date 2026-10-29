@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "{plugin} erlauben, E-Mails an {addresses} weiterzuleiten?",
-      "message": "{plugin} möchte „{subject}“ samt Anhängen an {addresses} weiterleiten. Wenn Sie das erlauben, kann es künftig ohne Nachfrage E-Mails an diese Adresse weiterleiten. Unter Einstellungen > Plugins können Sie das zurücknehmen.",
+      "message": "{plugin} möchte „{subject}“ samt Anhängen an {addresses} weiterleiten. Wenn Sie das erlauben, kann es künftig ohne Nachfrage E-Mails an diese Adresse weiterleiten. Unter Einstellungen > Erweiterungen können Sie das zurücknehmen.",
       "allow": "Erlauben und weiterleiten"
     },
     "dialog": {

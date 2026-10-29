@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Let {plugin} forward mail to {addresses}?",
-      "message": "{plugin} wants to forward “{subject}” with its attachments to {addresses}. If you allow it, it can forward mail to this address from now on without asking. You can take this back in Settings > Plugins.",
+      "message": "{plugin} wants to forward “{subject}” with its attachments to {addresses}. If you allow it, it can forward mail to this address from now on without asking. You can take this back in Settings > Add-ons.",
       "allow": "Allow and forward"
     },
     "dialog": {

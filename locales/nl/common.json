@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "{plugin} toestaan e-mail door te sturen naar {addresses}?",
-      "message": "{plugin} wil ‘{subject}’ met de bijlagen doorsturen naar {addresses}. Als je dit toestaat, kan het voortaan zonder te vragen e-mail naar dit adres doorsturen. Je kunt dit intrekken via Instellingen > Plugins.",
+      "message": "{plugin} wil ‘{subject}’ met de bijlagen doorsturen naar {addresses}. Als je dit toestaat, kan het voortaan zonder te vragen e-mail naar dit adres doorsturen. Je kunt dit intrekken via Instellingen > Add-ons.",
       "allow": "Toestaan en doorsturen"
     },
     "dialog": {

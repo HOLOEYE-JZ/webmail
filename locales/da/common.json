@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Tillad {plugin} at videresende post til {addresses}?",
-      "message": "{plugin} vil videresende “{subject}” med vedhæftninger til {addresses}. Hvis du tillader det, kan den fremover videresende post til denne adresse uden at spørge. Du kan trække det tilbage under Indstillinger > Plugins.",
+      "message": "{plugin} vil videresende “{subject}” med vedhæftninger til {addresses}. Hvis du tillader det, kan den fremover videresende post til denne adresse uden at spørge. Du kan trække det tilbage under Indstillinger > Tilføjelser.",
       "allow": "Tillad og videresend"
     },
     "dialog": {

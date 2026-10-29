@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Atļaut spraudnim {plugin} pārsūtīt pastu uz {addresses}?",
-      "message": "{plugin} vēlas pārsūtīt “{subject}” kopā ar pielikumiem uz {addresses}. Ja jūs to atļausiet, turpmāk tas varēs pārsūtīt pastu uz šo adresi, nejautājot. To var atsaukt sadaļā Iestatījumi > Spraudņi.",
+      "message": "{plugin} vēlas pārsūtīt “{subject}” kopā ar pielikumiem uz {addresses}. Ja jūs to atļausiet, turpmāk tas varēs pārsūtīt pastu uz šo adresi, nejautājot. To var atsaukt sadaļā Iestatījumi > Papildinājumi.",
       "allow": "Atļaut un pārsūtīt"
     },
     "dialog": {

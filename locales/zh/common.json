@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "允许 {plugin} 将邮件转发到 {addresses} 吗？",
-      "message": "{plugin} 想将“{subject}”连同附件转发到 {addresses}。如果允许，它今后可以不经询问将邮件转发到该地址。您可以在 设置 > 插件 中撤销。",
+      "message": "{plugin} 想将“{subject}”连同附件转发到 {addresses}。如果允许，它今后可以不经询问将邮件转发到该地址。您可以在 设置 > 附加组件 中撤销。",
       "allow": "允许并转发"
     },
     "dialog": {

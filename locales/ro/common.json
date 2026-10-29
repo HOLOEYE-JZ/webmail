@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Permiteți ca {plugin} să redirecționeze mesaje către {addresses}?",
-      "message": "{plugin} vrea să redirecționeze „{subject}” împreună cu atașamentele către {addresses}. Dacă permiteți, de acum înainte va putea redirecționa mesaje către această adresă fără să întrebe. Puteți retrage permisiunea din Setări > Pluginuri.",
+      "message": "{plugin} vrea să redirecționeze „{subject}” împreună cu atașamentele către {addresses}. Dacă permiteți, de acum înainte va putea redirecționa mesaje către această adresă fără să întrebe. Puteți retrage permisiunea din Setări > Suplimente.",
       "allow": "Permiteți și redirecționați"
     },
     "dialog": {

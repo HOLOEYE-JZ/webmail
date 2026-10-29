@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "¿Permitir que {plugin} reenvíe correo a {addresses}?",
-      "message": "{plugin} quiere reenviar «{subject}» con sus adjuntos a {addresses}. Si lo permites, podrá reenviar correo a esta dirección a partir de ahora sin preguntar. Puedes revocarlo en Ajustes > Plugins.",
+      "message": "{plugin} quiere reenviar «{subject}» con sus adjuntos a {addresses}. Si lo permites, podrá reenviar correo a esta dirección a partir de ahora sin preguntar. Puedes revocarlo en Configuración > Complementos.",
       "allow": "Permitir y reenviar"
     },
     "dialog": {

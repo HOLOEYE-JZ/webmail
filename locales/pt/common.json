@@ -5702,7 +5702,7 @@
     },
     "forward_approval": {
       "title": "Permitir que {plugin} encaminhe e-mails para {addresses}?",
-      "message": "{plugin} quer encaminhar “{subject}” com os anexos para {addresses}. Se você permitir, ele poderá encaminhar e-mails para esse endereço daqui em diante sem perguntar. Você pode desfazer isso em Configurações > Plugins.",
+      "message": "{plugin} quer encaminhar “{subject}” com os anexos para {addresses}. Se você permitir, ele poderá encaminhar e-mails para esse endereço daqui em diante sem perguntar. Você pode desfazer isso em Configurações > Extras.",
       "allow": "Permitir e encaminhar"
     },
     "dialog": {
