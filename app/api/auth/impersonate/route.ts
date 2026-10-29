@@ -13,7 +13,7 @@ import {
   readImpersonationConfig,
   resolveImpersonationServerUrl,
 } from '@/lib/impersonation/master-config';
-import { mintImpersonationCredential } from '@/lib/impersonation/app-password';
+import { IMPERSONATION_DESCRIPTION_PREFIX, mintImpersonationCredential } from '@/lib/impersonation/app-password';
 import { IMPERSONATION_GRANT_COOKIE, sealImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { IMPERSONATION_MARKER_COOKIE, IMPERSONATION_MARKER_MAX_AGE_SECONDS } from '@/lib/impersonation/marker-cookie';
 
@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
       mailbox: claims.mailbox,
       masterUser: config.masterUser,
       masterPassword: config.masterPassword,
-      description: `Support session ${claims.jti}`.slice(0, 100),
+      description: `${IMPERSONATION_DESCRIPTION_PREFIX}${claims.jti}`.slice(0, 100),
     });
   } catch (err) {
     logger.error('Impersonation credential could not be created', {
