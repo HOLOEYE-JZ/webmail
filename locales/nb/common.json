@@ -5417,6 +5417,10 @@
       "accounts_heading": "Tilkoblede kontoer",
       "account_on": "{label} på {host}",
       "account_waiting": "{label} på {host} (pålogging ikke fullført)",
+      "forward_heading": "Videresender e-post til",
+      "forward_hint": "Adresser dette programtillegget kan videresende meldinger til uten å spørre.",
+      "forward_remove": "Fjern",
+      "forward_remove_label": "Slutt å videresende til {address}",
       "disconnect": "Koble fra",
       "disconnect_failed": "Kunne ikke koble fra {label}"
     },
@@ -5659,6 +5663,10 @@
         "title": "Endre meldingen du skriver",
         "body": "Erstatte eller legge til tekst i en melding mens du skriver den, når du bruker tillegget i redigeringsvinduet. Du kan angre hver endring, og du bestemmer fortsatt om den skal sendes."
       },
+      "email_forward": {
+        "title": "Videresende e-posten din",
+        "body": "Videresende meldinger fra kontoen din med vedlegg, uten å åpne redigeringsvinduet. Du blir spurt før første videresending til hver adresse."
+      },
       "ui_notifications": {
         "title": "Vise varsler",
         "body": "Vise varsler på enheten din, eller i appen hvis du ikke har tillatt dem. Hvert varsel viser navnet på tillegget."
@@ -5691,6 +5699,11 @@
         "title": "Bruke kontoer du kobler til",
         "body": "Sende forespørsler via {appName}s server med en konto eller nøkkel som du eller administratoren din har satt opp. Tillegget ser aldri passordet, men det kan gjøre alt den kontoen kan gjøre på sin egen server."
       }
+    },
+    "forward_approval": {
+      "title": "Tillate {plugin} å videresende e-post til {addresses}?",
+      "message": "{plugin} vil videresende «{subject}» med vedlegg til {addresses}. Hvis du tillater det, kan den heretter videresende e-post til denne adressen uten å spørre. Du kan trekke det tilbake under Innstillinger > Programtillegg.",
+      "allow": "Tillat og videresend"
     },
     "dialog": {
       "from_plugin": "Fra tillegget {name}",

@@ -5417,6 +5417,10 @@
       "accounts_heading": "Połączone konta",
       "account_on": "{label} na {host}",
       "account_waiting": "{label} na {host} (logowanie niedokończone)",
+      "forward_heading": "Przekazuje pocztę na",
+      "forward_hint": "Adresy, na które ta wtyczka może przekazywać wiadomości bez pytania.",
+      "forward_remove": "Usuń",
+      "forward_remove_label": "Przestań przekazywać na {address}",
       "disconnect": "Rozłącz",
       "disconnect_failed": "Nie udało się rozłączyć {label}"
     },
@@ -5659,6 +5663,10 @@
         "title": "Zmiana pisanej wiadomości",
         "body": "Zastępowanie lub dodawanie tekstu w wiadomości podczas pisania, gdy używasz wtyczki w edytorze. Każdą zmianę możesz cofnąć, a o wysłaniu nadal decydujesz Ty."
       },
+      "email_forward": {
+        "title": "Przekazywanie Twojej poczty",
+        "body": "Przekazuje wiadomości z Twojego konta razem z załącznikami, bez otwierania edytora. Przed pierwszym przekazaniem na każdy adres zostaniesz zapytany."
+      },
       "ui_notifications": {
         "title": "Wyświetlanie powiadomień",
         "body": "Wyświetla powiadomienia na urządzeniu lub w aplikacji, jeśli ich nie zezwolono. Każde podaje nazwę wtyczki."
@@ -5691,6 +5699,11 @@
         "title": "Korzystanie z połączonych przez Ciebie kont",
         "body": "Wysyła żądania przez serwer {appName} z użyciem konta lub klucza skonfigurowanego przez Ciebie lub Twojego administratora. Wtyczka nigdy nie widzi hasła, ale może zrobić na tym serwerze wszystko, co może to konto."
       }
+    },
+    "forward_approval": {
+      "title": "Pozwolić wtyczce {plugin} przekazywać pocztę na {addresses}?",
+      "message": "{plugin} chce przekazać „{subject}” razem z załącznikami na {addresses}. Jeśli na to pozwolisz, będzie od teraz mogła przekazywać pocztę na ten adres bez pytania. Możesz to cofnąć w Ustawienia > Wtyczki.",
+      "allow": "Zezwól i przekaż"
     },
     "dialog": {
       "from_plugin": "Od wtyczki {name}",

@@ -16,7 +16,7 @@ import { isServerSetKeyword } from '@/lib/jmap/server-keywords';
 // Resolve a message's plain-text body from its JMAP body parts. Plugins that
 // translate or scan content need the real body, not just the short `preview`
 // snippet. Prefers text/plain parts; falls back to stripped HTML, then preview.
-function plainTextFromEmail(email: Email): string {
+export function plainTextFromEmail(email: Email): string {
   const values = email.bodyValues || {};
   const collect = (parts?: { partId: string }[]) =>
     (parts || [])

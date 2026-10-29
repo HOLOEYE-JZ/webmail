@@ -25,7 +25,7 @@ type Messages = Record<string, unknown>;
 const MAX_QUERY = 200;
 const MAX_RESULTS = 20;
 
-async function messagesFor(locale: string): Promise<Messages> {
+export async function messagesFor(locale: string): Promise<Messages> {
   const loader = LOCALE_LOADERS[locale];
   if (locale === 'en' || !loader) return enMessages as Messages;
   try {

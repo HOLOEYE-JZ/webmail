@@ -17,6 +17,7 @@ import { effectiveSettings } from '@/lib/plugin-settings';
 import { PLUGIN_REFUSED_ERROR } from '@/lib/outgoing-hosts';
 import { lookup } from '@/lib/plugin-sandbox/plugin-i18n';
 import { forgetCredentials, listConnectedAccounts, type ConnectedAccount } from '@/lib/plugin-sandbox/connect-dialog';
+import { forwardApprovals, revokeForwardApproval } from '@/lib/plugin-sandbox/forward-approvals';
 
 const STATUS_COLORS: Record<PluginStatus, string> = {
   installed: 'bg-muted text-muted-foreground',
@@ -326,6 +327,8 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
             <ConnectedAccounts pluginId={plugin.id} />
           )}
 
+          {plugin.permissions.includes('email:forward') && <ForwardApprovals pluginId={plugin.id} />}
+
           {!isManaged && (
             <div className="flex justify-end">
               <Button variant="ghost" size="sm" onClick={onRemove} className="text-destructive hover:text-destructive">
@@ -379,6 +382,40 @@ function ConnectedAccounts({ pluginId }: { pluginId: string }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── Forward addresses ───────────────────────────────────────
+
+/** Addresses the user let this plugin forward mail to (api.email.forward). */
+function ForwardApprovals({ pluginId }: { pluginId: string }) {
+  const t = useTranslations('plugins.settings');
+  const [addresses, setAddresses] = useState<string[]>([]);
+
+  useEffect(() => {
+    setAddresses(forwardApprovals(pluginId));
+  }, [pluginId]);
+
+  if (addresses.length === 0) return null;
+
+  const remove = (address: string) => {
+    revokeForwardApproval(pluginId, address);
+    setAddresses(forwardApprovals(pluginId));
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <span className="text-xs font-medium text-foreground">{t('forward_heading')}</span>
+      <p className="text-[0.625rem] text-muted-foreground">{t('forward_hint')}</p>
+      {addresses.map((address) => (
+        <div key={address} className="flex items-center justify-between gap-2 text-xs">
+          <span className="min-w-0 truncate text-muted-foreground">{address}</span>
+          <Button variant="ghost" size="sm" onClick={() => remove(address)} aria-label={t('forward_remove_label', { address })}>
+            {t('forward_remove')}
+          </Button>
+        </div>
+      ))}
     </div>
   );
 }

@@ -5417,6 +5417,10 @@
       "accounts_heading": "Připojené účty",
       "account_on": "{label} na {host}",
       "account_waiting": "{label} na {host} (přihlášení nedokončeno)",
+      "forward_heading": "Přeposílá poštu na",
+      "forward_hint": "Adresy, na které smí tento plugin přeposílat zprávy bez ptaní.",
+      "forward_remove": "Odebrat",
+      "forward_remove_label": "Přestat přeposílat na {address}",
       "disconnect": "Odpojit",
       "disconnect_failed": "{label} se nepodařilo odpojit"
     },
@@ -5659,6 +5663,10 @@
         "title": "Měnit zprávu, kterou píšete",
         "body": "Nahrazovat nebo přidávat text ve zprávě během psaní, když plugin použijete v editoru. Každou změnu můžete vrátit a o odeslání stále rozhodujete vy."
       },
+      "email_forward": {
+        "title": "Přeposílat vaši poštu",
+        "body": "Přeposílá zprávy z vašeho účtu i s přílohami, aniž by otevřel editor. Před prvním přeposláním na každou adresu se vás zeptá."
+      },
       "ui_notifications": {
         "title": "Zobrazovat oznámení",
         "body": "Zobrazuje oznámení ve vašem zařízení, nebo v aplikaci, pokud jste je nepovolili. Každé uvádí název pluginu."
@@ -5691,6 +5699,11 @@
         "title": "Používat účty, které připojíte",
         "body": "Odesílá požadavky přes server aplikace {appName} pomocí účtu nebo klíče, který jste nastavili vy nebo váš správce. Plugin nikdy nevidí heslo, ale může na příslušném serveru dělat cokoli, co může tento účet."
       }
+    },
+    "forward_approval": {
+      "title": "Povolit pluginu {plugin} přeposílat poštu na {addresses}?",
+      "message": "{plugin} chce přeposlat „{subject}“ i s přílohami na {addresses}. Pokud to povolíte, bude od teď moci přeposílat poštu na tuto adresu bez ptaní. Odvolat to můžete v Nastavení > Pluginy.",
+      "allow": "Povolit a přeposlat"
     },
     "dialog": {
       "from_plugin": "Od pluginu {name}",

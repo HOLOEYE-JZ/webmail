@@ -5417,6 +5417,10 @@
       "accounts_heading": "已连接的账户",
       "account_on": "{host} 上的 {label}",
       "account_waiting": "{host} 上的 {label}（尚未完成登录）",
+      "forward_heading": "邮件转发到",
+      "forward_hint": "此插件可以不经询问转发邮件的地址。",
+      "forward_remove": "移除",
+      "forward_remove_label": "停止转发到 {address}",
       "disconnect": "断开连接",
       "disconnect_failed": "无法断开 {label} 的连接"
     },
@@ -5659,6 +5663,10 @@
         "title": "修改您正在写的邮件",
         "body": "在编辑器中使用插件时，替换或添加您正在写的邮件中的文字。每次修改都可以撤销，是否发送仍由您决定。"
       },
+      "email_forward": {
+        "title": "转发您的邮件",
+        "body": "无需打开撰写窗口，即可将您账户中的邮件连同附件一起转发。首次转发到每个地址前都会征求您的同意。"
+      },
       "ui_notifications": {
         "title": "显示通知",
         "body": "在您的设备上显示通知；如果您未允许通知，则在应用内显示。每条通知都会注明插件名称。"
@@ -5691,6 +5699,11 @@
         "title": "使用您连接的账户",
         "body": "使用您或管理员设置的账户或密钥，通过 {appName} 的服务器发送请求。插件永远看不到密码，但可以在该账户所属的服务器上执行该账户能做的任何操作。"
       }
+    },
+    "forward_approval": {
+      "title": "允许 {plugin} 将邮件转发到 {addresses} 吗？",
+      "message": "{plugin} 想将“{subject}”连同附件转发到 {addresses}。如果允许，它今后可以不经询问将邮件转发到该地址。您可以在 设置 > 插件 中撤销。",
+      "allow": "允许并转发"
     },
     "dialog": {
       "from_plugin": "来自插件 {name}",

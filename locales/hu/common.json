@@ -5417,6 +5417,10 @@
       "accounts_heading": "Csatlakoztatott fiókok",
       "account_on": "{label} – {host}",
       "account_waiting": "{label} – {host} (a bejelentkezés nincs befejezve)",
+      "forward_heading": "Leveleket továbbít ide",
+      "forward_hint": "Címek, amelyekre ez a bővítmény kérdés nélkül továbbíthat üzeneteket.",
+      "forward_remove": "Eltávolítás",
+      "forward_remove_label": "Továbbítás leállítása ide: {address}",
       "disconnect": "Leválasztás",
       "disconnect_failed": "Nem sikerült leválasztani: {label}"
     },
@@ -5659,6 +5663,10 @@
         "title": "Az éppen írt üzeneted módosítása",
         "body": "Szöveg cseréje vagy hozzáadása az üzenetben írás közben, amikor a bővítményt a szerkesztőben használod. Minden módosítás visszavonható, és továbbra is te döntöd el, elküldöd-e."
       },
+      "email_forward": {
+        "title": "Leveleid továbbítása",
+        "body": "Üzeneteket továbbít a fiókodból a mellékleteikkel együtt, a szerkesztő megnyitása nélkül. Minden címre az első továbbítás előtt megkérdez."
+      },
       "ui_notifications": {
         "title": "Értesítések megjelenítése",
         "body": "Értesítéseket jelenít meg az eszközödön, vagy az alkalmazásban, ha nem engedélyezted őket. Mindegyiken szerepel a bővítmény neve."
@@ -5691,6 +5699,11 @@
         "title": "Az általad csatlakoztatott fiókok használata",
         "body": "Kéréseket küld a(z) {appName} szerverén keresztül egy olyan fiókkal vagy kulccsal, amelyet te vagy a rendszergazdád állított be. A bővítmény soha nem látja a jelszót, de bármit megtehet, amit az a fiók a saját szerverén megtehet."
       }
+    },
+    "forward_approval": {
+      "title": "Engedélyezed, hogy a(z) {plugin} leveleket továbbítson ide: {addresses}?",
+      "message": "A(z) {plugin} továbbítaná a(z) „{subject}” üzenetet a mellékleteivel együtt ide: {addresses}. Ha engedélyezed, mostantól kérdés nélkül továbbíthat leveleket erre a címre. Ezt a Beállítások > Bővítmények alatt vonhatod vissza.",
+      "allow": "Engedélyezés és továbbítás"
     },
     "dialog": {
       "from_plugin": "A(z) {name} bővítménytől",

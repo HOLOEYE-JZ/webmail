@@ -79,6 +79,7 @@ describe('plugin permissions', () => {
       'email.getRaw': 'email:blob-read',
       'compose.open': 'compose:open',
       'drafts.create': 'email:write',
+      'email.forward': 'email:forward',
       'notifications.show': 'ui:notifications',
     });
   });

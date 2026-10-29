@@ -57,6 +57,7 @@ import {
 } from './host-api-mail';
 import { MAX_PLUGIN_FETCH_BYTES, readFileName, readMediaType, sessionClient } from './host-api-input';
 import { doComposeOpen, doComposeReply, doDraftsCreate } from './host-api-compose';
+import { doEmailForward } from './host-api-forward';
 import { doNotificationsShow } from './host-api-notify';
 import { doAccountDataGet, doAccountDataSet, doUserFindPeople, doUserGetMailAccounts, doUserGetSelf } from './host-api-account';
 import { setSectionTitle } from './section-titles';
@@ -288,6 +289,9 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   // Moving messages between the account's folders, archive included.
   'email.move': 'email:write',
   'email.archive': 'email:write',
+  // Forward a message with its attachments, without the composer. The
+  // host asks the user before the first forward to each address.
+  'email.forward': 'email:forward',
   // Open the composer filled in; the user still decides whether to send.
   'compose.open': 'compose:open',
   // Reply to the message open in the reader, with text to start from.
@@ -2300,6 +2304,10 @@ export async function dispatchApiCall(
     case 'email.getRaw': return doEmailGetRaw(args[0], args[1]);
     case 'email.move': return doEmailMove(plugin.id, args[0], args[1]);
     case 'email.archive': return doEmailArchive(plugin.id, args[0]);
+    case 'email.forward': return doEmailForward(plugin, args[0], args[1], {
+      confirm: (input) => awaitDialog({ pluginId: plugin.id, kind: 'confirm', ...input }),
+      markForwarded: (emailId, accountId) => doEmailUpdateKeywords(emailId, { $forwarded: true }, accountId),
+    });
 
     case 'compose.open': return doComposeOpen(plugin, args[0]);
     case 'compose.reply': return doComposeReply(plugin, args[0], args[1]);

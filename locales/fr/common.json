@@ -5417,6 +5417,10 @@
       "accounts_heading": "Comptes connectés",
       "account_on": "{label} sur {host}",
       "account_waiting": "{label} sur {host} (connexion non terminée)",
+      "forward_heading": "Transfère les e-mails à",
+      "forward_hint": "Adresses auxquelles ce plugin peut transférer des messages sans demander.",
+      "forward_remove": "Retirer",
+      "forward_remove_label": "Ne plus transférer à {address}",
       "disconnect": "Déconnecter",
       "disconnect_failed": "Impossible de déconnecter {label}"
     },
@@ -5659,6 +5663,10 @@
         "title": "Modifier le message que vous écrivez",
         "body": "Remplacer ou ajouter du texte dans un message pendant que vous l'écrivez, quand vous utilisez le plugin dans l'éditeur. Chaque modification peut être annulée, et c'est toujours vous qui décidez de l'envoyer."
       },
+      "email_forward": {
+        "title": "Transférer vos e-mails",
+        "body": "Transférer des messages de votre compte avec leurs pièces jointes, sans ouvrir l'éditeur. Vous êtes consulté avant le premier transfert vers chaque adresse."
+      },
       "ui_notifications": {
         "title": "Afficher des notifications",
         "body": "Afficher des notifications sur votre appareil, ou dans l'application si vous ne les avez pas autorisées. Chacune indique le nom du plugin."
@@ -5691,6 +5699,11 @@
         "title": "Utiliser les comptes que vous connectez",
         "body": "Envoyer des requêtes via le serveur de {appName} avec un compte ou une clé configurés par vous ou votre administrateur. Le plugin ne voit jamais le mot de passe, mais il peut faire tout ce que ce compte peut faire sur son propre serveur."
       }
+    },
+    "forward_approval": {
+      "title": "Autoriser {plugin} à transférer des e-mails à {addresses} ?",
+      "message": "{plugin} veut transférer « {subject} » avec ses pièces jointes à {addresses}. Si vous l'autorisez, il pourra désormais transférer des e-mails à cette adresse sans vous demander. Vous pouvez revenir sur ce choix dans Paramètres > Plugins.",
+      "allow": "Autoriser et transférer"
     },
     "dialog": {
       "from_plugin": "Du plugin {name}",

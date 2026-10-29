@@ -33,7 +33,7 @@ import { initFloatingDropdownBridge, dispatchFloatingDropdownEvent } from './ui-
 import { interpolate, lookup, textDirection, type LocaleTables } from './plugin-i18n';
 import { isFillableSlot, isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
 import type {
-  AppInfoView, AppSettingsView, HostFeaturesView, SettingsSearchResult, CalendarEventInput, CalendarEventView, CalendarView, ComposeInput, DraftInput, EmailReadView,
+  AppInfoView, AppSettingsView, HostFeaturesView, SettingsSearchResult, CalendarEventInput, CalendarEventView, CalendarView, ComposeInput, DraftInput, EmailForwardInput, EmailForwardResult, EmailReadView,
   EmailSummary, IdentityPatch, IdentityView, MailboxView, NotificationInput, SlotName, TaskInput,
   TaskView, TemplateInput, TemplateView, VacationInput, VacationView,
 } from '../plugin-types';
@@ -767,6 +767,15 @@ function buildPluginApi(manifest: PluginManifest) {
        */
       updateKeywords: (emailId: string, changes: Record<string, boolean>, accountId?: string) =>
         callApi('email.updateKeywords', [emailId, changes, accountId]) as Promise<boolean>,
+      /**
+       * Forward a message with its attachments to 1-10 addresses, without
+       * the composer (email:forward). The first forward to an address asks
+       * the user; resolves to { sent: false, reason: 'declined' } when they
+       * say no and 'stopped' when a send check stopped it. 10 a minute.
+       * Waits as long as the user takes to answer.
+       */
+      forward: (emailId: string, input: EmailForwardInput) =>
+        callApi('email.forward', [emailId, input], 0) as Promise<EmailForwardResult>,
     },
     // A small JSON value (at most 4 KB) the plugin keeps in a mail account's
     // Inbox, shared with everyone who can open that account (Stalwart 1.0

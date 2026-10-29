@@ -5417,6 +5417,10 @@
       "accounts_heading": "Conturi conectate",
       "account_on": "{label} pe {host}",
       "account_waiting": "{label} pe {host} (conectare neterminată)",
+      "forward_heading": "Redirecționează mesaje către",
+      "forward_hint": "Adrese către care acest plugin poate redirecționa mesaje fără să întrebe.",
+      "forward_remove": "Eliminați",
+      "forward_remove_label": "Opriți redirecționarea către {address}",
       "disconnect": "Deconectați",
       "disconnect_failed": "{label} nu a putut fi deconectat"
     },
@@ -5659,6 +5663,10 @@
         "title": "Modificarea mesajului pe care îl scrieți",
         "body": "Înlocuirea sau adăugarea de text într-un mesaj în timp ce îl scrieți, când folosiți pluginul în editor. Puteți anula fiecare modificare și decideți în continuare dacă îl trimiteți."
       },
+      "email_forward": {
+        "title": "Redirecționarea mesajelor dvs.",
+        "body": "Redirecționează mesaje din contul dvs. împreună cu atașamentele, fără a deschide editorul. Sunteți întrebat înainte de prima redirecționare către fiecare adresă."
+      },
       "ui_notifications": {
         "title": "Afișarea notificărilor",
         "body": "Afișează notificări pe dispozitiv sau în aplicație, dacă nu le-ați permis. Fiecare indică numele pluginului."
@@ -5691,6 +5699,11 @@
         "title": "Folosirea conturilor pe care le conectați",
         "body": "Trimite cereri prin serverul {appName} cu un cont sau o cheie configurate de dvs. sau de administratorul dvs. Pluginul nu vede niciodată parola, dar poate face tot ce poate face acel cont pe serverul său."
       }
+    },
+    "forward_approval": {
+      "title": "Permiteți ca {plugin} să redirecționeze mesaje către {addresses}?",
+      "message": "{plugin} vrea să redirecționeze „{subject}” împreună cu atașamentele către {addresses}. Dacă permiteți, de acum înainte va putea redirecționa mesaje către această adresă fără să întrebe. Puteți retrage permisiunea din Setări > Pluginuri.",
+      "allow": "Permiteți și redirecționați"
     },
     "dialog": {
       "from_plugin": "De la pluginul {name}",

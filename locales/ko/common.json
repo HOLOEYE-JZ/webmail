@@ -5417,6 +5417,10 @@
       "accounts_heading": "연결된 계정",
       "account_on": "{host}의 {label}",
       "account_waiting": "{host}의 {label} (로그인 미완료)",
+      "forward_heading": "메일 전달 대상",
+      "forward_hint": "이 플러그인이 묻지 않고 메시지를 전달할 수 있는 주소예요.",
+      "forward_remove": "삭제",
+      "forward_remove_label": "{address}(으)로 전달 중지",
       "disconnect": "연결 해제",
       "disconnect_failed": "{label} 연결을 해제하지 못했어요"
     },
@@ -5659,6 +5663,10 @@
         "title": "작성 중인 메시지 변경",
         "body": "편집기에서 플러그인을 사용할 때 작성 중인 메시지의 텍스트를 바꾸거나 추가해요. 각 변경은 되돌릴 수 있고, 보낼지는 여전히 직접 결정해요."
       },
+      "email_forward": {
+        "title": "메일 전달",
+        "body": "작성 창을 열지 않고 계정의 메시지를 첨부 파일과 함께 전달해요. 주소마다 처음 전달하기 전에 물어봐요."
+      },
       "ui_notifications": {
         "title": "알림 표시",
         "body": "기기에 알림을 표시하고, 알림을 허용하지 않았다면 앱 안에 표시해요. 모든 알림에 플러그인 이름이 나와요."
@@ -5691,6 +5699,11 @@
         "title": "연결한 계정 사용",
         "body": "나 또는 관리자가 설정한 계정이나 키로 {appName} 서버를 거쳐 요청을 보낼 수 있어요. 플러그인은 비밀번호를 볼 수 없지만, 해당 계정이 그 서버에서 할 수 있는 모든 작업을 할 수 있어요."
       }
+    },
+    "forward_approval": {
+      "title": "{plugin}이(가) {addresses}(으)로 메일을 전달하도록 허용할까요?",
+      "message": "{plugin}이(가) ‘{subject}’을(를) 첨부 파일과 함께 {addresses}(으)로 전달하려고 해요. 허용하면 앞으로 이 주소로는 묻지 않고 메일을 전달할 수 있어요. 설정 > 플러그인에서 언제든지 취소할 수 있어요.",
+      "allow": "허용하고 전달"
     },
     "dialog": {
       "from_plugin": "플러그인 {name}에서",

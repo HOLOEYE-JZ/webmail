@@ -5417,6 +5417,10 @@
       "accounts_heading": "Forbundne konti",
       "account_on": "{label} på {host}",
       "account_waiting": "{label} på {host} (login ikke afsluttet)",
+      "forward_heading": "Videresender post til",
+      "forward_hint": "Adresser, som dette plugin må videresende beskeder til uden at spørge.",
+      "forward_remove": "Fjern",
+      "forward_remove_label": "Stop videresendelse til {address}",
       "disconnect": "Afbryd forbindelse",
       "disconnect_failed": "Kunne ikke afbryde forbindelsen til {label}"
     },
@@ -5659,6 +5663,10 @@
         "title": "Ændre den besked, du skriver",
         "body": "Erstatte eller tilføje tekst i en besked, mens du skriver den, når du bruger pluginet i editoren. Du kan fortryde hver ændring, og du bestemmer stadig, om den sendes."
       },
+      "email_forward": {
+        "title": "Videresende din post",
+        "body": "Videresende beskeder fra din konto med vedhæftninger uden at åbne editoren. Du bliver spurgt før første videresendelse til hver adresse."
+      },
       "ui_notifications": {
         "title": "Vise notifikationer",
         "body": "Vise notifikationer på din enhed eller i appen, hvis du ikke har tilladt dem. Hver af dem nævner pluginets navn."
@@ -5691,6 +5699,11 @@
         "title": "Bruge konti, du forbinder",
         "body": "Sende forespørgsler via {appName}s server med en konto eller nøgle, som du eller din administrator har sat op. Pluginnet ser aldrig adgangskoden, men det kan gøre alt, hvad kontoen kan gøre på sin egen server."
       }
+    },
+    "forward_approval": {
+      "title": "Tillad {plugin} at videresende post til {addresses}?",
+      "message": "{plugin} vil videresende “{subject}” med vedhæftninger til {addresses}. Hvis du tillader det, kan den fremover videresende post til denne adresse uden at spørge. Du kan trække det tilbage under Indstillinger > Plugins.",
+      "allow": "Tillad og videresend"
     },
     "dialog": {
       "from_plugin": "Fra pluginet {name}",

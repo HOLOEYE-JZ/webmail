@@ -15,6 +15,8 @@ export const HIGH_RISK_PERMISSIONS: ReadonlySet<string> = new Set([
   'email:read',
   'email:send',
   'email:raw-send',
+  // Sends mail in the user's name; the host asks once per address.
+  'email:forward',
   'email:blob-read',
   'email:blob-write',
   'email:render-takeover',

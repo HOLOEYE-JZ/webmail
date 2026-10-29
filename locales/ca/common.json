@@ -5417,6 +5417,10 @@
       "accounts_heading": "Comptes connectats",
       "account_on": "{label} a {host}",
       "account_waiting": "{label} a {host} (inici de sessió sense acabar)",
+      "forward_heading": "Reenvia el correu a",
+      "forward_hint": "Adreces a les quals aquest connector pot reenviar missatges sense preguntar.",
+      "forward_remove": "Elimina",
+      "forward_remove_label": "Deixa de reenviar a {address}",
       "disconnect": "Desconnecta",
       "disconnect_failed": "No s'ha pogut desconnectar {label}"
     },
@@ -5659,6 +5663,10 @@
         "title": "Canviar el missatge que escriviu",
         "body": "Substituir o afegir text en un missatge mentre l'escriviu, quan feu servir el connector a l'editor. Podeu desfer cada canvi i continueu decidint si l'envieu."
       },
+      "email_forward": {
+        "title": "Reenviar el vostre correu",
+        "body": "Reenviar missatges del vostre compte amb els adjunts, sense obrir l'editor. Se us pregunta abans del primer reenviament a cada adreça."
+      },
       "ui_notifications": {
         "title": "Mostrar notificacions",
         "body": "Mostrar notificacions al dispositiu, o dins l'aplicació si no les heu permeses. Cadascuna indica el nom del connector."
@@ -5691,6 +5699,11 @@
         "title": "Fer servir els comptes que connecteu",
         "body": "Enviar peticions a través del servidor de {appName} amb un compte o una clau que heu configurat vós o el vostre administrador. El connector no veu mai la contrasenya, però pot fer tot el que aquest compte pot fer al seu propi servidor."
       }
+    },
+    "forward_approval": {
+      "title": "Voleu permetre que {plugin} reenviï correu a {addresses}?",
+      "message": "{plugin} vol reenviar «{subject}» amb els adjunts a {addresses}. Si ho permeteu, d'ara endavant podrà reenviar correu a aquesta adreça sense preguntar. Ho podeu revocar a Configuració > Connectors.",
+      "allow": "Permet i reenvia"
     },
     "dialog": {
       "from_plugin": "Del connector {name}",
