@@ -307,6 +307,8 @@ export interface ConfigFieldSchema {
   default?: unknown;
   placeholder?: string;
   options?: { label: string; value: string }[];
+  /** `type: 'string'` only: the admin form shows a full-width text box. */
+  multiline?: boolean;
 }
 
 function validateConfigSchema(raw: unknown, errors: string[]): Record<string, ConfigFieldSchema> | undefined {

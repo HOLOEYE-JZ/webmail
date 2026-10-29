@@ -25,6 +25,8 @@ export interface PluginConfigField {
   default?: unknown;
   placeholder?: string;
   options?: { label: string; value: string }[];
+  /** `type: 'string'` only: the admin form shows a full-width text box. */
+  multiline?: boolean;
 }
 
 /**
