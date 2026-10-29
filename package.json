@@ -30,7 +30,7 @@
     "test:lite-smoke:stalwart": "playwright test -c scripts/lite/smoke/playwright.stalwart.config.ts",
     "test:perf-guard": "playwright test -c scripts/perf-guard/playwright.config.ts",
     "test:a11y-guard": "playwright test -c scripts/a11y-guard/playwright.config.ts",
-    "start": "next start",
+    "start": "node scripts/start.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test:translations": "vitest run --no-isolate lib/__tests__/translations.test.ts",

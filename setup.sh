@@ -1298,11 +1298,7 @@ run_deployment() {
             echo -e "  ${BOLD}To start the application:${RESET}"
             echo ""
             echo -e "    ${CYAN}cd ${SCRIPT_DIR}${RESET}"
-            if [[ "$CFG_PORT" != "3000" ]]; then
-                echo -e "    ${CYAN}PORT=${CFG_PORT} npm start${RESET}"
-            else
-                echo -e "    ${CYAN}npm start${RESET}"
-            fi
+            echo -e "    ${CYAN}npm start${RESET}"
             ;;
 
         "docker")
