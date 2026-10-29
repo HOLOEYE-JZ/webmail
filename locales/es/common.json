@@ -5422,6 +5422,10 @@
       "accounts_heading": "Cuentas conectadas",
       "account_on": "{label} en {host}",
       "account_waiting": "{label} en {host} (inicio de sesión sin terminar)",
+      "forward_heading": "Reenvía correo a",
+      "forward_hint": "Direcciones a las que este plugin puede reenviar mensajes sin preguntar.",
+      "forward_remove": "Quitar",
+      "forward_remove_label": "Dejar de reenviar a {address}",
       "disconnect": "Desconectar",
       "disconnect_failed": "No se pudo desconectar {label}"
     },
@@ -5664,6 +5668,10 @@
         "title": "Cambiar el mensaje que escribes",
         "body": "Sustituir o añadir texto en un mensaje mientras lo escribes, cuando usas el complemento en el editor. Puedes deshacer cada cambio y sigues decidiendo si lo envías."
       },
+      "email_forward": {
+        "title": "Reenviar tu correo",
+        "body": "Reenviar mensajes de tu cuenta con sus adjuntos, sin abrir el editor. Se te pregunta antes del primer reenvío a cada dirección."
+      },
       "ui_notifications": {
         "title": "Mostrar notificaciones",
         "body": "Mostrar notificaciones en tu dispositivo, o dentro de la aplicación si no las has permitido. Cada una indica el nombre del complemento."
@@ -5696,6 +5704,11 @@
         "title": "Usar las cuentas que conectes",
         "body": "Enviar solicitudes a través del servidor de {appName} con una cuenta o clave configurada por ti o por tu administrador. El complemento nunca ve la contraseña, pero puede hacer todo lo que esa cuenta puede hacer en su propio servidor."
       }
+    },
+    "forward_approval": {
+      "title": "¿Permitir que {plugin} reenvíe correo a {addresses}?",
+      "message": "{plugin} quiere reenviar «{subject}» con sus adjuntos a {addresses}. Si lo permites, podrá reenviar correo a esta dirección a partir de ahora sin preguntar. Puedes revocarlo en Configuración > Complementos.",
+      "allow": "Permitir y reenviar"
     },
     "dialog": {
       "from_plugin": "Del complemento {name}",

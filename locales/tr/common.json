@@ -5422,6 +5422,10 @@
       "accounts_heading": "Bağlı hesaplar",
       "account_on": "{host} üzerinde {label}",
       "account_waiting": "{host} üzerinde {label} (giriş tamamlanmadı)",
+      "forward_heading": "Postaları şuraya iletir",
+      "forward_hint": "Bu eklentinin sormadan ileti iletebileceği adresler.",
+      "forward_remove": "Kaldır",
+      "forward_remove_label": "{address} adresine iletmeyi durdur",
       "disconnect": "Bağlantıyı kes",
       "disconnect_failed": "{label} bağlantısı kesilemedi"
     },
@@ -5664,6 +5668,10 @@
         "title": "Yazdığınız iletiyi değiştirme",
         "body": "Eklentiyi düzenleyicide kullandığınızda, yazarken iletide metni değiştirir veya ekler. Her değişikliği geri alabilirsiniz ve göndermeye yine siz karar verirsiniz."
       },
+      "email_forward": {
+        "title": "Postanızı iletme",
+        "body": "Hesabınızdaki iletileri ekleriyle birlikte, düzenleyiciyi açmadan iletir. Her adrese ilk iletmeden önce size sorulur."
+      },
       "ui_notifications": {
         "title": "Bildirim gösterme",
         "body": "Cihazınızda bildirim gösterme ya da bildirimlere izin vermediyseniz uygulama içinde gösterme. Her bildirimde eklentinin adı yer alır."
@@ -5696,6 +5704,11 @@
         "title": "Bağladığınız hesapları kullanma",
         "body": "Sizin veya yöneticinizin ayarladığı bir hesap ya da anahtarla {appName} sunucusu üzerinden istek gönderme. Eklenti parolayı hiçbir zaman görmez, ancak o hesabın kendi sunucusunda yapabildiği her şeyi yapabilir."
       }
+    },
+    "forward_approval": {
+      "title": "{plugin} eklentisinin {addresses} adresine posta iletmesine izin verilsin mi?",
+      "message": "{plugin}, “{subject}” iletisini ekleriyle birlikte {addresses} adresine iletmek istiyor. İzin verirseniz bundan sonra bu adrese sormadan posta iletebilir. Bunu Ayarlar > Eklentiler bölümünden geri alabilirsiniz.",
+      "allow": "İzin ver ve ilet"
     },
     "dialog": {
       "from_plugin": "{name} eklentisinden",

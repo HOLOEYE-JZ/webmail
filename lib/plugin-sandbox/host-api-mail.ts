@@ -66,6 +66,23 @@ async function sourceAccount(client: IJMAPClient, emailId: string, method: strin
   return listed ? accountId : null;
 }
 
+/**
+ * The message a plugin named, read the way email.get reads it, with the
+ * account it is in (undefined: the signed-in account). Null when there is
+ * no such message this login may read.
+ */
+export async function readNamedEmail(
+  client: IJMAPClient,
+  emailId: string,
+  method: string,
+  accountArg?: unknown,
+): Promise<{ email: Email; accountId: string | undefined } | null> {
+  const accountId = await sourceAccount(client, emailId, method, accountArg);
+  if (accountId === null) return null;
+  const email = await loadEmail(client, emailId, accountId, accountArg !== undefined);
+  return email ? { email, accountId } : null;
+}
+
 export async function doEmailGet(id: unknown, accountArg?: unknown): Promise<EmailReadView | null> {
   const method = 'email.get';
   const emailId = readId(id, method, 'emailId');

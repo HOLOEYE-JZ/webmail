@@ -5422,6 +5422,10 @@
       "accounts_heading": "Account collegati",
       "account_on": "{label} su {host}",
       "account_waiting": "{label} su {host} (accesso non completato)",
+      "forward_heading": "Inoltra la posta a",
+      "forward_hint": "Indirizzi a cui questo plugin può inoltrare messaggi senza chiedere.",
+      "forward_remove": "Rimuovi",
+      "forward_remove_label": "Interrompi l'inoltro a {address}",
       "disconnect": "Disconnetti",
       "disconnect_failed": "Impossibile disconnettere {label}"
     },
@@ -5664,6 +5668,10 @@
         "title": "Modificare il messaggio che stai scrivendo",
         "body": "Sostituire o aggiungere testo in un messaggio mentre lo scrivi, quando usi il plugin nell'editor. Puoi annullare ogni modifica e decidi sempre tu se inviarlo."
       },
+      "email_forward": {
+        "title": "Inoltrare la tua posta",
+        "body": "Inoltrare messaggi dal tuo account con i loro allegati, senza aprire l'editor. Ti viene chiesto prima del primo inoltro a ciascun indirizzo."
+      },
       "ui_notifications": {
         "title": "Mostrare notifiche",
         "body": "Mostrare notifiche sul tuo dispositivo, o nell'app se non le hai consentite. Ognuna indica il nome del plugin."
@@ -5696,6 +5704,11 @@
         "title": "Usare gli account che colleghi",
         "body": "Inviare richieste tramite il server di {appName} con un account o una chiave configurati da te o dal tuo amministratore. Il plugin non vede mai la password, ma può fare tutto ciò che quell'account può fare sul proprio server."
       }
+    },
+    "forward_approval": {
+      "title": "Consentire a {plugin} di inoltrare posta a {addresses}?",
+      "message": "{plugin} vuole inoltrare «{subject}» con i suoi allegati a {addresses}. Se lo consenti, d'ora in poi potrà inoltrare posta a questo indirizzo senza chiedere. Puoi revocarlo in Impostazioni > Componenti aggiuntivi.",
+      "allow": "Consenti e inoltra"
     },
     "dialog": {
       "from_plugin": "Dal plugin {name}",

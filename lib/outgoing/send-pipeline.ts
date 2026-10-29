@@ -18,7 +18,8 @@
 
 import { debug } from '@/lib/debug';
 
-export type SendSurface = 'composer' | 'quick-reply' | 'calendar-invitation';
+// 'plugin-forward': a plugin forwarding a message (api.email.forward).
+export type SendSurface = 'composer' | 'quick-reply' | 'calendar-invitation' | 'plugin-forward';
 
 export interface OutgoingContext {
   surface: SendSurface;

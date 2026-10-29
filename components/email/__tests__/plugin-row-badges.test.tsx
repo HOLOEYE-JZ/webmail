@@ -168,6 +168,17 @@ describe('plugin badges in message-list rows', () => {
     expect(screen.queryByTestId('plugin-row-badges')).toBeNull();
     transform.mockRestore();
   });
+
+  it('asks rows drawn before the plugin started once its handler arrives, and drops the badge when it goes', async () => {
+    render(row([makeEmail()]));
+    await act(async () => {});
+    expect(screen.queryByTestId('plugin-row-badges')).toBeNull();
+    let off: { dispose: () => void } = { dispose: () => {} };
+    act(() => { off = renderHooks.onEmailListItemRender.register('e-invoice', () => [{ key: 'e', label: 'E-invoice' }]); });
+    expect(await screen.findByText('E-invoice')).toBeInTheDocument();
+    act(() => { off.dispose(); });
+    await waitFor(() => expect(screen.queryByText('E-invoice')).toBeNull());
+  });
 });
 
 describe('normalizeBadges', () => {

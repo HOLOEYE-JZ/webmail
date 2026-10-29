@@ -5422,6 +5422,10 @@
       "accounts_heading": "已連線的帳號",
       "account_on": "{host} 上的 {label}",
       "account_waiting": "{host} 上的 {label}（尚未完成登入）",
+      "forward_heading": "郵件轉寄到",
+      "forward_hint": "這個外掛程式可以不經詢問轉寄郵件的地址。",
+      "forward_remove": "移除",
+      "forward_remove_label": "停止轉寄到 {address}",
       "disconnect": "中斷連線",
       "disconnect_failed": "無法中斷 {label} 的連線"
     },
@@ -5664,6 +5668,10 @@
         "title": "修改您正在撰寫的郵件",
         "body": "在編輯器中使用外掛程式時，取代或新增您正在撰寫的郵件中的文字。每次修改都可以復原，是否寄出仍由您決定。"
       },
+      "email_forward": {
+        "title": "轉寄您的郵件",
+        "body": "不必開啟撰寫視窗，即可將您帳號中的郵件連同附件一起轉寄。第一次轉寄到每個地址前都會先徵求您的同意。"
+      },
       "ui_notifications": {
         "title": "顯示通知",
         "body": "在您的裝置上顯示通知；如果您未允許通知，則在應用程式內顯示。每則通知都會註明外掛程式名稱。"
@@ -5696,6 +5704,11 @@
         "title": "使用您連線的帳號",
         "body": "使用您或管理員設定的帳號或金鑰，透過 {appName} 的伺服器傳送要求。外掛程式永遠看不到密碼，但可以在該帳號所屬的伺服器上執行該帳號能做的任何動作。"
       }
+    },
+    "forward_approval": {
+      "title": "允許 {plugin} 將郵件轉寄到 {addresses} 嗎？",
+      "message": "{plugin} 想將「{subject}」連同附件轉寄到 {addresses}。如果允許，它之後可以不經詢問將郵件轉寄到這個地址。您可以在 設定 > 附加元件 中撤銷。",
+      "allow": "允許並轉寄"
     },
     "dialog": {
       "from_plugin": "來自外掛程式 {name}",

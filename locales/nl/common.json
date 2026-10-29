@@ -5422,6 +5422,10 @@
       "accounts_heading": "Gekoppelde accounts",
       "account_on": "{label} op {host}",
       "account_waiting": "{label} op {host} (inloggen niet afgerond)",
+      "forward_heading": "Stuurt e-mail door naar",
+      "forward_hint": "Adressen waarnaar deze plugin berichten mag doorsturen zonder te vragen.",
+      "forward_remove": "Verwijderen",
+      "forward_remove_label": "Niet meer doorsturen naar {address}",
       "disconnect": "Ontkoppelen",
       "disconnect_failed": "Kan {label} niet ontkoppelen"
     },
@@ -5664,6 +5668,10 @@
         "title": "Het bericht wijzigen dat je schrijft",
         "body": "Tekst in een bericht vervangen of toevoegen terwijl je het schrijft, als je de plug-in in de editor gebruikt. Je kunt elke wijziging ongedaan maken en je beslist nog steeds zelf of je het verstuurt."
       },
+      "email_forward": {
+        "title": "Je e-mail doorsturen",
+        "body": "Berichten uit je account met hun bijlagen doorsturen, zonder de editor te openen. Voor de eerste keer doorsturen naar een adres wordt het je gevraagd."
+      },
       "ui_notifications": {
         "title": "Meldingen tonen",
         "body": "Meldingen op je apparaat tonen, of in de app als je ze niet hebt toegestaan. Elke melding noemt de naam van de plug-in."
@@ -5696,6 +5704,11 @@
         "title": "Accounts gebruiken die je koppelt",
         "body": "Verzoeken via de server van {appName} sturen met een account of sleutel die jij of je beheerder heeft ingesteld. De plug-in ziet het wachtwoord nooit, maar kan alles doen wat dat account op zijn eigen server mag."
       }
+    },
+    "forward_approval": {
+      "title": "{plugin} toestaan e-mail door te sturen naar {addresses}?",
+      "message": "{plugin} wil ‘{subject}’ met de bijlagen doorsturen naar {addresses}. Als je dit toestaat, kan het voortaan zonder te vragen e-mail naar dit adres doorsturen. Je kunt dit intrekken via Instellingen > Add-ons.",
+      "allow": "Toestaan en doorsturen"
     },
     "dialog": {
       "from_plugin": "Van de plug-in {name}",

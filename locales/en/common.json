@@ -5422,6 +5422,10 @@
       "accounts_heading": "Connected accounts",
       "account_on": "{label} on {host}",
       "account_waiting": "{label} on {host} (sign-in not finished)",
+      "forward_heading": "Forwards mail to",
+      "forward_hint": "Addresses this plugin may forward messages to without asking.",
+      "forward_remove": "Remove",
+      "forward_remove_label": "Stop forwarding to {address}",
       "disconnect": "Disconnect",
       "disconnect_failed": "Could not disconnect {label}"
     },
@@ -5692,10 +5696,19 @@
         "title": "Change the message you are writing",
         "body": "Replace or add text in a message while you write it, when you use the plugin in the composer. You can undo each change, and you still decide whether to send."
       },
+      "email_forward": {
+        "title": "Forward your mail",
+        "body": "Forward messages from your account with their attachments, without opening the composer. You are asked before the first forward to each address."
+      },
       "ui_notifications": {
         "title": "Show notifications",
         "body": "Show notifications on your device, or in the app if you haven't allowed them. Each one names the plugin."
       }
+    },
+    "forward_approval": {
+      "title": "Let {plugin} forward mail to {addresses}?",
+      "message": "{plugin} wants to forward “{subject}” with its attachments to {addresses}. If you allow it, it can forward mail to this address from now on without asking. You can take this back in Settings > Add-ons.",
+      "allow": "Allow and forward"
     },
     "dialog": {
       "from_plugin": "From the plugin {name}",

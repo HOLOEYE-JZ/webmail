@@ -1,6 +1,7 @@
 // Plugin Hook Bus - event bus system for plugin lifecycle hooks
 
 import type { CalendarEventFormView, Disposable } from './plugin-types';
+import { rowBadgeHandlersChanged } from './plugin-sandbox/row-badges';
 
 // ─── Error Tracker (Circuit Breaker) ─────────────────────────
 
@@ -158,31 +159,38 @@ export class HookBus<T extends (...args: any[]) => any> {
    * @param opts.failClosed For intercepts guarding an action that can't be
    *   taken back (sending mail): a handler that throws or runs out of time
    *   cancels the action instead of letting it through.
+   * @param opts.onChange Called when handlers come or go, for UI that asked
+   *   the bus before a plugin started (row badges).
    */
   constructor(
     private readonly timeoutMs: number = DEFAULT_TIMEOUT_MS,
-    private readonly opts: { failClosed?: boolean } = {},
+    private readonly opts: { failClosed?: boolean; onChange?: () => void } = {},
   ) {}
+
+  private setHandlers(next: HookEntry<T>[]): void {
+    const changed = next.length !== this.handlers.length;
+    this.handlers = next;
+    if (changed) this.opts.onChange?.();
+  }
 
   register(pluginId: string, handler: T, order: number = 100): Disposable {
     const entry: HookEntry<T> = { pluginId, handler, order };
-    this.handlers.push(entry);
-    this.handlers.sort((a, b) => a.order - b.order);
+    this.setHandlers([...this.handlers, entry].sort((a, b) => a.order - b.order));
     return {
       dispose: () => {
-        this.handlers = this.handlers.filter(h => h !== entry);
+        this.setHandlers(this.handlers.filter(h => h !== entry));
       },
     };
   }
 
   /** Remove all handlers for a given plugin */
   removePlugin(pluginId: string): void {
-    this.handlers = this.handlers.filter(h => h.pluginId !== pluginId);
+    this.setHandlers(this.handlers.filter(h => h.pluginId !== pluginId));
   }
 
   /** Remove all handlers */
   clear(): void {
-    this.handlers = [];
+    this.setHandlers([]);
   }
 
   get size(): number {
@@ -837,7 +845,8 @@ export const renderHooks = {
   // Second argument: { emailId: string; email: EmailReadView }
   // Handlers return a new (or extended) badges array.
   // Rendered by the email list row component next to the subject line.
-  onEmailListItemRender: new HookBus(),
+  // Rows drawn before a plugin started ask again once its handler is there.
+  onEmailListItemRender: new HookBus(undefined, { onChange: rowBadgeHandlersChanged }),
   // Transform hook - runs when an email is opened, BEFORE the viewer computes
   // the body it will render. Initial value: RenderableBody { html, text,
   // attachments, handledBy? }. Second argument: MessageContext { id,

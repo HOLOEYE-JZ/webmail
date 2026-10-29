@@ -737,6 +737,34 @@ export interface ComposeInput {
 export type DraftInput = ComposeInput;
 
 /**
+ * What a plugin passes to `api.email.forward`. The host builds the forward
+ * (subject with the forward prefix, the plugin's note, the original's
+ * header lines and text) and sends it from the user's default address.
+ */
+export interface EmailForwardInput {
+  /** 1-10 recipients, `a@example.com` or `Name <a@example.com>`. */
+  to: string[];
+  /** A note above the forwarded message, plain text, up to 64 KB. */
+  text?: string;
+  /**
+   * Which attachments of the original go along, by blobId (attachments of
+   * that message only). Default: every attachment that isn't an inline image.
+   */
+  attachments?: string[];
+  /** The account the message is in, as on EmailReadView (team and shared mailboxes). */
+  accountId?: string;
+}
+
+/**
+ * What `api.email.forward` resolves to. `declined`: the user didn't let the
+ * plugin forward to a new address; `stopped`: a pre-send check or another
+ * plugin's onBeforeEmailSend stopped the send.
+ */
+export type EmailForwardResult =
+  | { sent: true; emailId: string | null; to: string[]; scheduledFor: string | null }
+  | { sent: false; reason: 'declined' | 'stopped' };
+
+/**
  * What a plugin passes to `api.notifications.show`. The plugin's name is
  * added to what the user sees, so they know who sent it.
  */
@@ -1345,6 +1373,9 @@ export const ALL_PERMISSIONS = [
   'compose:read',
   // Change the message being written (api.composer.replaceSelection/replaceBody).
   'compose:write',
+  // Forward a message of the account with its attachments, without the
+  // composer (api.email.forward). The host asks the user once per address.
+  'email:forward',
   'calendar:read', 'calendar:write',
   'contacts:read', 'contacts:write',
   'files:read', 'files:write',

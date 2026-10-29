@@ -127,6 +127,35 @@ describe('plugin UI kit components', () => {
     expect(container.querySelector('dd')).toHaveTextContent('2 MB');
   });
 
+  it('draws a table with amounts aligned to the end and totals under the last column', () => {
+    render(<kit.Table
+      label="Items"
+      columns={[
+        { key: 'name', label: 'Item' },
+        { key: 'qty', label: 'Qty', align: 'end', hideNarrow: true },
+        { key: 'net', label: 'Net', align: 'end' },
+      ]}
+      rows={[{ key: 'a', name: 'Consulting', qty: '8 h', net: '800.00' }, { name: 'Travel', qty: '1', net: '120.50' }]}
+      summary={[{ label: 'VAT 19 %', value: '174.80' }, { label: 'Total', value: '1,095.30', strong: true }]}
+    />);
+    const table = screen.getByRole('table', { name: 'Items' });
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Item', 'Qty', 'Net']);
+    const travel = screen.getByText('Travel').closest('tr')!;
+    expect([...travel.children].map((c) => c.textContent)).toEqual(['Travel', '1', '120.50']);
+    expect(screen.getByText('120.50').className).toContain('text-end');
+    expect(screen.getByText('1').className).toContain('hidden sm:table-cell');
+    const total = screen.getByRole('rowheader', { name: 'Total' });
+    expect(total.getAttribute('colspan')).toBe('2');
+    expect(total.closest('tr')!.lastElementChild!).toHaveTextContent('1,095.30');
+    expect(total.className).toContain('font-semibold');
+    expect(table.closest('.bk')).not.toBeNull();
+  });
+
+  it('says so when a table has no rows', () => {
+    render(<kit.Table columns={[{ key: 'a', label: 'A' }, { key: 'b', label: 'B' }]} rows={[]} empty="No items" />);
+    expect(screen.getByText('No items').getAttribute('colspan')).toBe('2');
+  });
+
   it('makes sidebar rows as tall as folder rows on touch screens', () => {
     // The page sets --touch-row-min-h to 44px below lg, where folder rows
     // are max-lg:min-h-[44px]; the frame can't see the page's width itself.

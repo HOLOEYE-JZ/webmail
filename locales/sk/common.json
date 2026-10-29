@@ -5422,6 +5422,10 @@
       "accounts_heading": "Pripojené účty",
       "account_on": "{label} na {host}",
       "account_waiting": "{label} na {host} (prihlásenie nedokončené)",
+      "forward_heading": "Preposiela poštu na",
+      "forward_hint": "Adresy, na ktoré smie tento doplnok preposielať správy bez pýtania.",
+      "forward_remove": "Odstrániť",
+      "forward_remove_label": "Prestať preposielať na {address}",
       "disconnect": "Odpojiť",
       "disconnect_failed": "{label} sa nepodarilo odpojiť"
     },
@@ -5664,6 +5668,10 @@
         "title": "Meniť správu, ktorú píšete",
         "body": "Nahrádzať alebo pridávať text v správe počas písania, keď doplnok použijete v editore. Každú zmenu môžete vrátiť a o odoslaní stále rozhodujete vy."
       },
+      "email_forward": {
+        "title": "Preposielať vašu poštu",
+        "body": "Preposiela správy z vášho účtu aj s prílohami bez otvorenia editora. Pred prvým preposlaním na každú adresu sa vás opýta."
+      },
       "ui_notifications": {
         "title": "Zobrazovať upozornenia",
         "body": "Zobrazuje upozornenia vo vašom zariadení alebo v aplikácii, ak ste ich nepovolili. Každé uvádza názov doplnku."
@@ -5696,6 +5704,11 @@
         "title": "Používať účty, ktoré pripojíte",
         "body": "Odosiela požiadavky cez server aplikácie {appName} pomocou účtu alebo kľúča, ktorý ste nastavili vy alebo váš správca. Doplnok nikdy nevidí heslo, ale môže na príslušnom serveri robiť čokoľvek, čo môže tento účet."
       }
+    },
+    "forward_approval": {
+      "title": "Povoliť doplnku {plugin} preposielať poštu na {addresses}?",
+      "message": "{plugin} chce preposlať „{subject}“ aj s prílohami na {addresses}. Ak to povolíte, bude odteraz môcť preposielať poštu na túto adresu bez pýtania. Odvolať to môžete v Nastaveniach > Doplnky.",
+      "allow": "Povoliť a preposlať"
     },
     "dialog": {
       "from_plugin": "Od doplnku {name}",

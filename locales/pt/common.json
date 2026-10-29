@@ -5422,6 +5422,10 @@
       "accounts_heading": "Contas conectadas",
       "account_on": "{label} em {host}",
       "account_waiting": "{label} em {host} (login não concluído)",
+      "forward_heading": "Encaminha e-mails para",
+      "forward_hint": "Endereços para os quais este plugin pode encaminhar mensagens sem perguntar.",
+      "forward_remove": "Remover",
+      "forward_remove_label": "Parar de encaminhar para {address}",
       "disconnect": "Desconectar",
       "disconnect_failed": "Não foi possível desconectar {label}"
     },
@@ -5664,6 +5668,10 @@
         "title": "Alterar a mensagem que você está escrevendo",
         "body": "Substituir ou adicionar texto em uma mensagem enquanto você a escreve, quando usa o plugin no editor. Você pode desfazer cada alteração e continua decidindo se envia."
       },
+      "email_forward": {
+        "title": "Encaminhar seus e-mails",
+        "body": "Encaminhar mensagens da sua conta com os anexos, sem abrir o editor. Você é consultado antes do primeiro encaminhamento para cada endereço."
+      },
       "ui_notifications": {
         "title": "Mostrar notificações",
         "body": "Mostrar notificações no seu dispositivo, ou dentro do aplicativo se você não as permitiu. Cada uma indica o nome do plugin."
@@ -5696,6 +5704,11 @@
         "title": "Usar contas que você conecta",
         "body": "Enviar solicitações pelo servidor do {appName} com uma conta ou chave configurada por você ou pelo seu administrador. O plugin nunca vê a senha, mas pode fazer tudo o que essa conta pode fazer no próprio servidor."
       }
+    },
+    "forward_approval": {
+      "title": "Permitir que {plugin} encaminhe e-mails para {addresses}?",
+      "message": "{plugin} quer encaminhar “{subject}” com os anexos para {addresses}. Se você permitir, ele poderá encaminhar e-mails para esse endereço daqui em diante sem perguntar. Você pode desfazer isso em Configurações > Extras.",
+      "allow": "Permitir e encaminhar"
     },
     "dialog": {
       "from_plugin": "Do plugin {name}",
