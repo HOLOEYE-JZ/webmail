@@ -683,6 +683,17 @@ function buildPluginApi(manifest: PluginManifest) {
       openPage: (pageId: string, path?: string) =>
         callApi('ui.openPage', [pageId, path]) as Promise<boolean>,
       /**
+       * Opens a message in the reader of this tab, as a click on it in the
+       * list does: in place on the mail page, in an email tab in the Pro
+       * shell, else the tab loads the message's link (at most 5 times a
+       * minute). `accountId` names the JMAP account holding it (a shared or
+       * group account); the signed-in account's own when missing. Rejects
+       * when no account of the user reads it, the account has no such
+       * message, or the mail page could not open it. Needs `email:read`.
+       */
+      openEmail: (email: { id: string; accountId?: string }) =>
+        callApi('ui.openEmail', [email]) as Promise<void>,
+      /**
        * The header of this plugin's sidebar section (the host draws it like
        * Folders and Tags), e.g. a translated "Upcoming birthdays". null goes
        * back to the plugin's name. At most 40 characters.
