@@ -82,6 +82,8 @@ export interface FeatureGates {
   archiveActionEnabled: boolean;
   /** The sidebar lists the Tags above the shared mailboxes instead of below them. */
   tagsAboveSharedEnabled: boolean;
+  /** Booking, parcel and order cards read from schema.org markup in mail. */
+  structuredMailEnabled: boolean;
 }
 
 export const DEFAULT_FEATURE_GATES: FeatureGates = {
@@ -114,6 +116,7 @@ export const DEFAULT_FEATURE_GATES: FeatureGates = {
   customFromEnabled: true,
   archiveActionEnabled: true,
   tagsAboveSharedEnabled: false,
+  structuredMailEnabled: true,
 };
 
 export type ColorMode = 'light' | 'dark' | 'system';

@@ -63,6 +63,8 @@ export interface Email {
   headers?: Record<string, string | string[]>;
   // Security headers parsed
   authenticationResults?: AuthenticationResults;
+  /** See authenticationResultsOnReceipt (lib/email-headers.ts); set by the full message fetch. */
+  authenticationResultsOnReceipt?: boolean;
   spamScore?: number;
   spamStatus?: string;
   spamLLM?: {

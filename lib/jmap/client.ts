@@ -3047,10 +3047,13 @@ export class JMAPClient implements IJMAPClient {
   }
 
   private async parseEmailHeaders(email: Email): Promise<void> {
-    const { parseAuthenticationResults, parseSpamScore, parseSpamLLM } = await import('@/lib/email-headers');
+    const { authenticationResultsOnReceipt, parseAuthenticationResults, parseSpamScore, parseSpamLLM } = await import('@/lib/email-headers');
 
     let headersRecord: Record<string, string | string[]>;
     if (Array.isArray(email.headers)) {
+      // The record below loses the order between different header names,
+      // which the receipt check needs.
+      email.authenticationResultsOnReceipt = authenticationResultsOnReceipt(email.headers as unknown as JMAPEmailHeader[]);
       headersRecord = {};
       for (const header of email.headers as unknown as JMAPEmailHeader[]) {
         if (!header?.name || !header?.value) continue;
