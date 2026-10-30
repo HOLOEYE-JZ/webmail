@@ -122,6 +122,20 @@ describe('resolveCards', () => {
     expect((card as { checkin: { time?: string } }).checkin.time).toBeUndefined();
   });
 
+  it('ends a date-only event end at midnight local time even across a DST change', async () => {
+    const event = (country?: string) => ({
+      '@context': ctx, '@type': 'EventReservation', reservationNumber: 'EV1',
+      reservationFor: {
+        '@type': 'Event', name: 'Herbstmesse', startDate: '2026-10-23T18:00:00+02:00', endDate: '2026-10-26',
+        location: { '@type': 'Place', name: 'Messe', ...(country ? { address: { addressCountry: country } } : {}) },
+      },
+    });
+    const [withVenue] = await resolved(event('DE'));
+    expect(withVenue).toMatchObject({ end: { date: '2026-10-26', time: '23:59:59', zone: 'Europe/Berlin', utc: '2026-10-26T22:59:59Z' } });
+    const [noVenueCountry] = await resolved(event());
+    expect(noVenueCountry).toMatchObject({ end: { date: '2026-10-26', time: '23:59:59', zone: 'Etc/GMT-2', utc: '2026-10-26T21:59:59Z' } });
+  });
+
   it('reads bus times in the single zone of the stop\'s country', async () => {
     const [card] = (await resolved({
       '@context': ctx, '@type': 'BusReservation', reservationNumber: 'B',

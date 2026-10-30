@@ -116,8 +116,14 @@ function resolveCard(card: StructuredCard, zoneOf: ZoneOf | undefined): Structur
     case 'event': {
       const named = (m: Moment) => namedZone(card.venue, card.kind, zoneOf, m.offsetMinutes === undefined);
       const start = resolveMoment(card.start, named(card.start));
-      const end = card.end ? resolveMoment(card.end, named(card.end)) : undefined;
-      if (start === 'drop' || end === 'drop') return null;
+      if (start === 'drop') return null;
+      // An end without its own offset (a date-only end turned into the end of
+      // that day) belongs to the start's zone when the venue names none.
+      const endNamed = card.end && card.end.offsetMinutes === undefined && !named(card.end) && start.zone
+        ? { zone: start.zone, source: 'country' as const }
+        : card.end ? named(card.end) : undefined;
+      const end = card.end ? resolveMoment(card.end, endNamed) : undefined;
+      if (end === 'drop') return null;
       if (end && !notBefore(end, start)) return null;
       return { ...card, start, ...(end ? { end } : {}) };
     }

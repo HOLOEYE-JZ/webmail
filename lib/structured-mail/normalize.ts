@@ -231,12 +231,6 @@ function base(kind: BookingKind, res: Obj, source: CardSource) {
 
 const MISSING: Moment = { date: '' };
 
-function offsetSuffix(minutes: number): string {
-  const sign = minutes < 0 ? '-' : '+';
-  const abs = Math.abs(minutes);
-  return `${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
-}
-
 function reservation(kind: BookingKind, res: Obj, source: CardSource): StructuredCard | undefined {
   if (kind === 'flight' || kind === 'train' || kind === 'bus') return transport(kind, res, source);
   const target = obj(res.reservationFor) ?? {};
@@ -275,8 +269,9 @@ function reservation(kind: BookingKind, res: Obj, source: CardSource): Structure
       let end = moment(target.endDate);
       // An end date without a time means the end of that day, when the
       // event starts at a time; with a date-only start it's an all-day span.
-      if (end && !end.time && start?.time) end = { ...end, time: '23:59:59', ...(start.offsetMinutes !== undefined ? { offsetMinutes: start.offsetMinutes } : {}) };
-      if (end?.offsetMinutes !== undefined && end.time && !end.utc) end = moment(`${end.date}T${end.time}${offsetSuffix(end.offsetMinutes)}`);
+      // The end carries no offset: the day may end on the other side of a
+      // DST change, so resolve.ts reads it in the zone the start resolves to.
+      if (end && !end.time && start?.time) end = { ...end, time: '23:59:59' };
       return {
         ...base(kind, res, source),
         kind,
