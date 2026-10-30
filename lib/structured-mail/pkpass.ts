@@ -14,7 +14,7 @@
  */
 import type JSZip from 'jszip';
 import { cardKey } from './normalize';
-import { isValidTimeZone, zoneOffsetAt } from './time-zones';
+import { isValidTimeZone, wallClockAt, zoneOffsetAt } from './time-zones';
 import type { EventBooking, Moment, Place, Seat, StructuredCard, TransportBooking, TransportKind, TransportLeg } from './types';
 import { validateCard } from './validate';
 import { isObj, moment, str, type Obj } from './values';
@@ -168,15 +168,52 @@ function date(semantics: Obj, key: string): Moment | undefined {
 }
 
 /**
- * The pass's IANA zone for a place (departureLocationTimeZone,
- * destinationLocationTimeZone), when given, has to agree with the offset of
- * the time it belongs to; otherwise one of the two is wrong.
+ * A time as local to its place. Passes often give times in UTC (`Z`,
+ * `+00:00`), which fixes the instant but not the wall clock. With the pass's
+ * IANA zone for the place (departureLocationTimeZone,
+ * destinationLocationTimeZone) the instant is turned into that zone's wall
+ * clock; for a flight without one, the moment is marked `instantOnly` and the
+ * airport's zone supplies the wall clock later (resolve.ts); for anything
+ * else it is doubtful. A zone given next to a non-UTC offset has to agree
+ * with it, otherwise one of the two is wrong.
  */
-function checkZone(semantics: Obj, key: string, at: Moment | undefined): void {
-  const zone = semantics[key];
-  if (zone === undefined || zone === null) return;
-  if (typeof zone !== 'string' || !isValidTimeZone(zone)) doubt();
-  if (at?.utc && at.offsetMinutes !== undefined && zoneOffsetAt(zone, Date.parse(at.utc)) !== at.offsetMinutes) doubt();
+function placeTime(semantics: Obj, zoneKey: string | undefined, at: Moment | undefined, airport: boolean): Moment | undefined {
+  const tag = zoneKey ? semantics[zoneKey] : undefined;
+  let zone: string | undefined;
+  if (tag !== undefined && tag !== null) {
+    if (typeof tag !== 'string' || !isValidTimeZone(tag)) doubt();
+    zone = tag;
+  }
+  if (!at?.utc || at.offsetMinutes === undefined) return at;
+  const ms = Date.parse(at.utc);
+  if (at.offsetMinutes === 0) {
+    if (zone) {
+      const local = wallClockAt(ms, zone);
+      return { date: local.date, time: local.time, offsetMinutes: zoneOffsetAt(zone, ms), utc: at.utc };
+    }
+    if (airport) return { ...at, instantOnly: true };
+    doubt();
+  }
+  if (zone && zoneOffsetAt(zone, ms) !== at.offsetMinutes) doubt();
+  return at;
+}
+
+function sameTime(a: Moment, b: Moment): boolean {
+  if (a.utc && b.utc) return a.utc === b.utc;
+  return a.date === b.date && (a.time ?? '') === (b.time ?? '');
+}
+
+/**
+ * transitStatus is free text. Only a status that clearly says the trip runs
+ * as planned keeps the card; "Delayed 40 min", "Diverted", "fällt aus" or
+ * anything unknown leaves the times in doubt.
+ */
+const PLANNED_STATUS = new Set(['on time', 'pünktlich', 'boarding', 'scheduled', 'planmäßig']);
+
+function plannedStatus(status: string | undefined): boolean {
+  if (status === undefined) return true;
+  const normal = status.normalize('NFC').toLowerCase().replace(/[-_]+/g, ' ').replace(/[.!]+$/, '').replace(/\s+/g, ' ').trim();
+  return normal === '' || PLANNED_STATUS.has(normal);
 }
 
 /** PersonNameComponents → "Given Family". */
@@ -253,25 +290,21 @@ function seats(semantics: Obj, kind: TransportKind, passenger: string | undefine
 }
 
 function transportCard(kind: TransportKind, pass: Obj, semantics: Obj): TransportBooking {
-  // A status like "Cancelled" is free text; a pass that mentions it isn't
-  // turned into a confirmed-looking card.
-  const transitStatus = text(semantics, 'transitStatus');
-  if (transitStatus && /cancel|annul|storn/i.test(transitStatus)) doubt();
+  if (!plannedStatus(text(semantics, 'transitStatus'))) doubt();
 
-  const original = date(semantics, 'originalDepartureDate');
-  const current = date(semantics, 'currentDepartureDate');
-  // A departure moved to another day would make the pass and the booking
-  // mail describe two different legs.
+  const flight = kind === 'flight';
+  const departureTime = (key: string) => placeTime(semantics, 'departureLocationTimeZone', date(semantics, key), flight);
+  const arrivalTime = (key: string) => placeTime(semantics, 'destinationLocationTimeZone', date(semantics, key), flight);
+  const original = departureTime('originalDepartureDate');
+  const current = departureTime('currentDepartureDate');
+  // A departure moved to another day would make the pass describe another leg.
   if (original && current && original.date !== current.date) doubt();
   const departureAt = current ?? original;
   if (!departureAt) doubt();
-  const rescheduled = !!current && !!original && (current.utc ?? `${current.date}T${current.time}`) !== (original.utc ?? `${original.date}T${original.time}`);
-  // After a change only the updated arrival belongs to the updated departure.
-  const arrivalAt = rescheduled
-    ? date(semantics, 'currentArrivalDate')
-    : date(semantics, 'currentArrivalDate') ?? date(semantics, 'originalArrivalDate');
-  checkZone(semantics, 'departureLocationTimeZone', departureAt);
-  checkZone(semantics, 'destinationLocationTimeZone', arrivalAt);
+  // The scheduled arrival belongs to the scheduled departure only; after a
+  // change, only the updated arrival (if any) goes with the updated departure.
+  const onSchedule = !current || (!!original && sameTime(current, original));
+  const arrivalAt = arrivalTime('currentArrivalDate') ?? (onSchedule ? arrivalTime('originalArrivalDate') : undefined);
 
   const passenger = personName(semantics.passengerName);
   const provider = text(semantics, 'transitProvider');
@@ -314,9 +347,10 @@ function transportCard(kind: TransportKind, pass: Obj, semantics: Obj): Transpor
 
 function eventCard(pass: Obj, semantics: Obj): EventBooking {
   const name = text(semantics, 'eventName');
-  const start = date(semantics, 'eventStartDate');
+  // Event tickets have no zone tag, so a UTC time can't be placed: doubtful.
+  const start = placeTime(semantics, undefined, date(semantics, 'eventStartDate'), false);
   if (!name || !start) doubt();
-  let end = date(semantics, 'eventEndDate');
+  let end = placeTime(semantics, undefined, date(semantics, 'eventEndDate'), false);
   // A date-only end next to a timed start says nothing reliable about when it ends.
   if (end && !end.time && start.time) end = undefined;
   const venueName = text(semantics, 'venueName');

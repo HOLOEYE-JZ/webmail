@@ -118,6 +118,57 @@ describe('passToCards', () => {
     expect(await cardsFrom(boardingPass({ ...AIR_SEMANTICS, currentDepartureDate: '2026-12-04T00:30+01:00' }))).toEqual([]);
   });
 
+  it('pairs the scheduled arrival only with the scheduled departure', async () => {
+    const { originalDepartureDate: _d, ...noOriginal } = AIR_SEMANTICS;
+    const [delayed] = await cardsFrom(boardingPass({ ...noOriginal, currentDepartureDate: '2026-12-03T08:25+01:00' })) as TransportBooking[];
+    expect(delayed.legs[0].departure.at.time).toBe('08:25:00');
+    expect(delayed.legs[0].arrival).toEqual({ place: { code: 'BER', name: 'Berlin Brandenburg' } });
+    const [updated] = await cardsFrom(boardingPass({ ...noOriginal, currentDepartureDate: '2026-12-03T08:25+01:00', currentArrivalDate: '2026-12-03T09:50+01:00' })) as TransportBooking[];
+    expect(updated.legs[0].arrival?.at?.time).toBe('09:50:00');
+    const [same] = await cardsFrom(boardingPass({ ...AIR_SEMANTICS, currentDepartureDate: '2026-12-03T07:40:00+01:00' })) as TransportBooking[];
+    expect(same.legs[0].arrival?.at?.time).toBe('09:05:00');
+  });
+
+  it('places a UTC flight time in the airport zone once resolved, with or without a zone tag', async () => {
+    const zones = await loadAirportZones();
+    const { departureLocationTimeZone: _z, destinationLocationTimeZone: _y, ...noTags } = AIR_SEMANTICS;
+    const utc = { ...noTags, originalDepartureDate: '2026-12-03T06:40:00Z', originalArrivalDate: '2026-12-03T08:05:00Z' };
+    const raw = await cardsFrom(boardingPass(utc)) as TransportBooking[];
+    expect(raw[0].legs[0].departure.at.instantOnly).toBe(true);
+    const [card] = resolveCards(raw, zones) as TransportBooking[];
+    expect(card.legs[0].departure.at).toEqual({ date: '2026-12-03', time: '07:40:00', offsetMinutes: 60, utc: '2026-12-03T06:40:00Z', zone: 'Europe/Zurich' });
+    expect(card.legs[0].arrival?.at).toMatchObject({ time: '09:05:00', zone: 'Europe/Berlin' });
+    expect(resolveCards(raw)).toEqual([]);
+
+    const [tagged] = await cardsFrom(boardingPass({ ...AIR_SEMANTICS, originalDepartureDate: '2026-12-03T06:40:00+00:00' })) as TransportBooking[];
+    expect(tagged.legs[0].departure.at).toEqual({ date: '2026-12-03', time: '07:40:00', offsetMinutes: 60, utc: '2026-12-03T06:40:00Z' });
+
+    const london = { ...noTags, airlineCode: 'BA', flightNumber: 710, flightCode: 'BA710', departureAirportCode: 'LHR', departureAirportName: 'Heathrow', originalDepartureDate: '2026-12-03T06:40:00+00:00', originalArrivalDate: '2026-12-03T09:10:00+01:00' };
+    const [lhr] = resolveCards(await cardsFrom(boardingPass(london)), zones) as TransportBooking[];
+    expect(lhr.legs[0].departure.at).toMatchObject({ date: '2026-12-03', time: '06:40:00', offsetMinutes: 0, zone: 'Europe/London' });
+  });
+
+  it('places a UTC train time only with a zone tag, and never a UTC event time', async () => {
+    const utcTrain = { ...TRAIN_SEMANTICS, originalDepartureDate: '2026-12-05T07:46:00Z', originalArrivalDate: '2026-12-05T11:50:00Z' };
+    expect(await cardsFrom(boardingPass(utcTrain, 'PKTransitTypeTrain'))).toEqual([]);
+    const tagged = { ...utcTrain, departureLocationTimeZone: 'Europe/Berlin', destinationLocationTimeZone: 'Europe/Berlin' };
+    const [train] = await cardsFrom(boardingPass(tagged, 'PKTransitTypeTrain')) as TransportBooking[];
+    expect(train.legs[0].departure.at).toEqual({ date: '2026-12-05', time: '08:46:00', offsetMinutes: 60, utc: '2026-12-05T07:46:00Z' });
+    expect(train.legs[0].arrival?.at?.time).toBe('12:50:00');
+    expect(await cardsFrom(boardingPass({ ...BUS_SEMANTICS, currentDepartureDate: '2026-12-06T09:15:00Z' }, 'PKTransitTypeBus'))).toEqual([]);
+    expect(await cardsFrom(eventTicket({ ...EVENT_SEMANTICS, eventStartDate: '2026-12-12T18:30:00Z' }))).toEqual([]);
+    expect(await cardsFrom(eventTicket({ ...EVENT_SEMANTICS, eventEndDate: '2026-12-12T20:45:00Z' }))).toEqual([]);
+  });
+
+  it('keeps the card only for a transit status that says the trip runs as planned', async () => {
+    for (const status of ['On Time', 'pünktlich', 'Boarding', 'SCHEDULED', 'planmäßig', 'on-time']) {
+      expect(await cardsFrom(boardingPass({ ...AIR_SEMANTICS, transitStatus: status })), status).toHaveLength(1);
+    }
+    for (const status of ['Delayed', 'Verspätet 40 Min.', 'Diverted', 'fällt aus', 'gestrichen', 'Gate closed', 'Cancelled']) {
+      expect(await cardsFrom(boardingPass({ ...AIR_SEMANTICS, transitStatus: status })), status).toEqual([]);
+    }
+  });
+
   it('gives nothing when the pass zone disagrees with the time, or the status says cancelled', async () => {
     expect(await cardsFrom(boardingPass({ ...AIR_SEMANTICS, departureLocationTimeZone: 'America/New_York' }))).toEqual([]);
     expect(await cardsFrom(boardingPass({ ...AIR_SEMANTICS, departureLocationTimeZone: 'Not/AZone' }))).toEqual([]);
@@ -217,15 +268,25 @@ describe('readPassJson', () => {
     const zip = new JSZip();
     zip.file('pass.json', JSON.stringify(boardingPass()));
     zip.file('strip.png', 'y'.repeat(4 * 1024 * 1024));
+    zip.file('en.lproj/pass.strings', '"a" = "b";');
     const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
-    const loaded: string[] = [];
     const real = await JSZip.loadAsync(bytes);
-    const loadZip = async () => ({ loadAsync: async () => new Proxy(real, {
-      get: (target, prop) => prop === 'file'
-        ? (name: string) => { loaded.push(name); return target.file(name); }
-        : Reflect.get(target, prop),
-    }) }) as unknown as typeof JSZip;
+    // Every way to inflate an entry, on every entry, however it is reached
+    // (zip.file(), zip.files[...], forEach): record which entries are read.
+    const inflated: string[] = [];
+    for (const entry of Object.values(real.files)) {
+      const target = entry as unknown as Record<string, (...args: unknown[]) => unknown>;
+      for (const method of ['async', 'internalStream', 'nodeStream']) {
+        const original = target[method];
+        if (typeof original !== 'function') continue;
+        target[method] = function (this: unknown, ...args: unknown[]) {
+          inflated.push(entry.name);
+          return original.apply(this, args);
+        };
+      }
+    }
+    const loadZip = async () => ({ loadAsync: async () => real }) as unknown as typeof JSZip;
     expect(await readPkpass(bytes, CTX, { loadZip })).toHaveLength(1);
-    expect(loaded).toEqual(['pass.json']);
+    expect(inflated).toEqual(['pass.json']);
   });
 });

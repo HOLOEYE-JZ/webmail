@@ -4,7 +4,7 @@
  * eastbound flight over the date line lands "earlier" on the wall clock).
  * A booking whose times don't hold together is dropped.
  */
-import { countryZone, resolveZone, zonedTimeToUtc, type ResolvedZone } from './time-zones';
+import { countryZone, resolveZone, wallClockAt, zoneOffsetAt, zonedTimeToUtc, type ResolvedZone } from './time-zones';
 import type { Moment, Place, StructuredCard, TransportBooking, TransportLeg } from './types';
 
 type ZoneOf = (code: string | undefined) => string | undefined;
@@ -36,8 +36,16 @@ function namedZone(place: Place | undefined, kind: StructuredCard['kind'], zoneO
 /**
  * Attach zone and instant to a timed moment. 'drop' when table and mail
  * disagree, or when a floating local time falls into a DST gap or overlap.
+ * An instant without a known wall clock (a pass's UTC time, `instantOnly`)
+ * takes date, time and offset from the place's zone, or is dropped without one.
  */
 function resolveMoment(m: Moment, named: Named | undefined): Moment | 'drop' {
+  if (m.instantOnly) {
+    if (!named || !m.utc) return 'drop';
+    const ms = Date.parse(m.utc);
+    const local = wallClockAt(ms, named.zone);
+    return { date: local.date, time: local.time, offsetMinutes: zoneOffsetAt(named.zone, ms), utc: m.utc, zone: named.zone };
+  }
   if (!m.time) return m;
   const utcMs = m.utc ? Date.parse(m.utc) : undefined;
   const resolved: ResolvedZone | 'mismatch' = resolveZone({ named, offsetMinutes: m.offsetMinutes, utcMs });

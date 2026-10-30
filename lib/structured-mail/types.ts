@@ -25,6 +25,12 @@ export interface Moment {
    * fixed-offset zone; null for a time that stays floating. Absent before.
    */
   zone?: string | null;
+  /**
+   * Set by the .pkpass reader for a UTC time with no zone for its place:
+   * `utc` is the instant, but date, time and offset are UTC, not local.
+   * Resolution takes the wall clock from the airport's zone and clears it.
+   */
+  instantOnly?: true;
 }
 
 export interface Address {
