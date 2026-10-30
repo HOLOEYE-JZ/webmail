@@ -103,6 +103,17 @@ describe('POST /api/admin/marketplace', () => {
     ]);
   });
 
+  it("keeps the version's changelog with the install", async () => {
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates' }), { changelog: '### Fixed\n- Dates in March' });
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
+    expect(registry.get('pretty-dates')).toMatchObject({ changelog: '### Fixed\n- Dates in March' });
+
+    // A version without notes doesn't keep the last one's.
+    directory(await bundle({ ...MANIFEST, id: 'pretty-dates' }), { changelog: null });
+    expect((await install({ slug: 'pretty-dates', version: '1.0.0', type: 'plugin' })).status).toBe(200);
+    expect(registry.get('pretty-dates')).not.toHaveProperty('changelog');
+  });
+
   it('answers 404 for a version the directory does not have', async () => {
     directory(await bundle({ ...MANIFEST, id: 'pretty-dates' }), {}, { missing: true });
     const res = await install({ slug: 'pretty-dates', version: '9.9.9', type: 'plugin' });

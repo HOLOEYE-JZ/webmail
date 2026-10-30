@@ -39,6 +39,8 @@ import { useAdminFeedback } from '@/components/admin/feedback';
 import { installVersion } from './marketplace';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { ChangelogBadges, ChangelogEntries, ChangelogNotes, type ChangelogFlags } from '@/components/admin/changelog';
+import { versionsBetween } from '@/lib/admin/changelog-range';
 
 const CURRENT_APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
 
@@ -53,6 +55,7 @@ interface VersionRow {
   sha256: string;
   yanked: { at: string; reason: string | null } | null;
   changelog: string | null;
+  notes: ChangelogFlags | null;
   downloads: number;
   signed: boolean;
   commit: string | null;
@@ -309,6 +312,15 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
     ? compareVersions(preview.version, data.installedVersion)
     : 0;
   const installedRow = data.installedVersion ? ext.versions.find((v) => v.version === data.installedVersion) ?? null : null;
+  // The notes for the previewed version: everything an update to it brings,
+  // or everything going back to it undoes, or just its own.
+  const comparing = !!preview && data.installed && !!data.installedVersion && !previewIsInstalled;
+  const changeRows = !preview ? []
+    : comparing ? versionsBetween(ext.versions, data.installedVersion!, preview.version, data.channel)
+      : ext.versions.filter((v) => v.version === preview.version);
+  const changesTitle = !comparing ? `Changelog of v${preview?.version}`
+    : previewDirection > 0 ? `What's new since v${data.installedVersion}`
+      : `What going back to v${preview!.version} undoes`;
   const suspended = ext.status === 'suspended';
   const historyVersions = new Set(data.history.map((h) => h.version));
   const canInstallPreview = !!preview && !bundle.error && previewFits && !suspended && bundle.signature?.status !== 'invalid';
@@ -529,6 +541,12 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
           </div>
         </SettingsSection>
 
+        {changeRows.some((r) => r.changelog) && (
+          <SettingsSection id="changes" title={changesTitle}>
+            <ChangelogEntries entries={changeRows.map((r) => ({ version: r.version, publishedAt: r.publishedAt, changelog: r.changelog, notes: r.notes ?? undefined }))} />
+          </SettingsSection>
+        )}
+
         <SettingsSection
           id="versions"
           title="Versions"
@@ -560,8 +578,14 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
                           <code className="font-mono text-xs text-foreground">v{v.version}</code>
                           {v.channel === 'beta' && <Badge tone="info">beta</Badge>}
                           {v.signed && <ShieldCheck className="h-3 w-3 text-muted-foreground" aria-label="signed" />}
+                          <ChangelogBadges flags={v.notes ?? undefined} />
                         </div>
-                        {v.changelog && <p className="mt-0.5 line-clamp-2 max-w-xs whitespace-pre-wrap text-xs text-muted-foreground">{v.changelog}</p>}
+                        {v.changelog && (
+                          <details className="mt-1 max-w-md">
+                            <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">Changelog</summary>
+                            <ChangelogNotes markdown={v.changelog} className="mt-1.5" />
+                          </details>
+                        )}
                       </td>
                       <td className={cn(tdClass, 'whitespace-nowrap text-xs text-muted-foreground')}>{fmtDate(v.publishedAt)}</td>
                       <td className={cn(tdClass, 'whitespace-nowrap text-xs text-muted-foreground')}>

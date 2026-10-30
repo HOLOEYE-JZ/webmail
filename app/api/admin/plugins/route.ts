@@ -12,7 +12,7 @@ import {
 import { listDevPlugins } from '@/lib/admin/plugin-dev';
 import { invalidateFrameOriginsCache } from '@/lib/admin/csp-frame-origins';
 import { cleanUpDeletedPlugin } from '@/lib/admin/extension-cleanup';
-import { listHistory } from '@/lib/admin/extension-history';
+import { keptVersions, listHistory } from '@/lib/admin/extension-history';
 import { ExtensionPackageError, readPluginPackage, suspiciousCode } from '@/lib/extension-package';
 import { MAX_PLUGIN_SIZE } from '@/lib/plugin-types';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
@@ -33,14 +33,13 @@ export async function GET(request: NextRequest) {
     // Dev plugins win on id collision so admins see what users actually load.
     const devIds = new Set(devEntries.map(e => e.plugin.id));
     const merged = [
-      ...devEntries.map(e => ({ ...e.plugin, dev: true as const, previousVersions: [] as string[] })),
+      ...devEntries.map(e => ({ ...e.plugin, dev: true as const, ...keptVersions([]) })),
       ...(await Promise.all(registry.plugins
         .filter(p => !devIds.has(p.id))
         .map(async p => ({
           ...p,
           dev: false as const,
-          // Versions this server still has a copy of (lib/admin/extension-history.ts).
-          previousVersions: (await listHistory('plugin', p.id).catch(() => [])).map(h => h.version),
+          ...keptVersions(await listHistory('plugin', p.id).catch(() => [])),
         })))),
     ];
     return NextResponse.json(merged, {

@@ -43,6 +43,8 @@ export interface HistoryEntry {
   /** SHA-256 of the bundle (plugins) or css + skin (themes). */
   contentHash: string;
   source?: ServerPlugin['source'];
+  /** The kept version's changelog, when it came from the marketplace with one. */
+  changelog?: string;
 }
 
 const SAFE_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
@@ -112,14 +114,26 @@ async function prune(kind: ExtensionKind, id: string): Promise<void> {
   }
 }
 
+/**
+ * What the admin lists say about the kept versions: the versions, most
+ * recently replaced first, and the changelog of each that has one.
+ */
+export function keptVersions(history: HistoryEntry[]): { previousVersions: string[]; previousChangelogs: Record<string, string> } {
+  return {
+    previousVersions: history.map((h) => h.version),
+    previousChangelogs: Object.fromEntries(history.filter((h) => h.changelog).map((h) => [h.version, h.changelog!])),
+  };
+}
+
 /** The versions kept for an extension, most recently replaced first. */
 export async function listHistory(kind: ExtensionKind, id: string): Promise<HistoryEntry[]> {
   if (!SAFE_ID_RE.test(id)) return [];
-  return (await readAll(kind, id)).map(({ version, savedAt, contentHash, source }) => ({
+  return (await readAll(kind, id)).map(({ version, savedAt, contentHash, source, entry }) => ({
     version,
     savedAt,
     contentHash,
     ...(source ? { source } : {}),
+    ...(typeof entry.changelog === 'string' ? { changelog: entry.changelog } : {}),
   }));
 }
 

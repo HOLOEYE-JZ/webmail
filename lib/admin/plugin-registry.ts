@@ -106,6 +106,12 @@ export interface ServerPlugin {
   /** Credentials the plugin uses through the server proxy (no secrets here). */
   credentials?: Record<string, CredentialSpec>;
   source?: ExtensionSource;
+  /**
+   * The version's changelog (Markdown) from the directory, kept from a
+   * marketplace install so the admin UI and the rollback history can show it
+   * without the directory. Admin-only: /api/plugins doesn't send it.
+   */
+  changelog?: string;
 }
 
 export interface ServerTheme {
@@ -120,6 +126,8 @@ export interface ServerTheme {
   installedAt: string;
   updatedAt: string;
   source?: ExtensionSource;
+  /** The version's changelog from the directory; see ServerPlugin.changelog. */
+  changelog?: string;
   /** True when a Theme API v2 skin.css is stored next to the CSS. */
   hasSkin?: boolean;
   /**
