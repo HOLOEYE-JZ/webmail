@@ -63,7 +63,7 @@ function LowVisionPreview() {
   // Big, high-contrast text, a thick focus outline, an underlined link, a big pointer.
   return (
     <Frame className="flex-col gap-1.5 p-1.5">
-      <span className="text-[20px] leading-none font-bold text-foreground">Aa</span>
+      <span className="text-[1.25rem] leading-none font-bold text-foreground">Aa</span>
       <span className="flex items-center gap-1.5 rounded-sm px-1 py-1 outline outline-[2.5px] outline-primary">
         <Avatar size={10} />
         <Bar width={40} strong className="h-[4px]" />
@@ -83,7 +83,7 @@ function DyslexiaPreview() {
     <Frame className="justify-center">
       <span className="flex flex-col gap-[6px] w-[64px] py-1.5">
         <span
-          className="text-[14px] leading-none text-foreground tracking-[0.12em]"
+          className="text-[0.875rem] leading-none text-foreground tracking-[0.12em]"
           style={{ fontFamily: '"Atkinson Hyperlegible Next", sans-serif' }}
         >
           Abc
