@@ -126,6 +126,14 @@ describe('cards in the conversation body', () => {
     expect(cardImages()).toHaveLength(1);
   }, 30_000);
 
+  it('loads no item images while mail is shown as plain text', () => {
+    gate(true);
+    useSettingsStore.setState({ mailViewMode: 'plain' });
+    body(mail('c4'), true);
+    expect(cardRegion()).not.toBeNull();
+    expect(cardImages()).toHaveLength(0);
+  }, 30_000);
+
   it('shows the card of a verified sender above the body', () => {
     gate(true);
     const { container } = body(mail('c1'));

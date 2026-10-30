@@ -937,7 +937,8 @@ export function ConversationEmailBody({
         // Aligned with the body: its own padding on the phone card, the
         // caller's (className) in Mountain View.
         <div style={bodyStyle ? { paddingTop: '0.5rem', paddingBottom: '0.25rem' } : { paddingInline: 'var(--density-card-p)', paddingTop: 'var(--density-card-p)' }}>
-          <StructuredMailCards cards={structuredCards} email={email} allowRemoteImages={allowExternal} />
+          {/* No product images when the mail is shown as plain text. */}
+          <StructuredMailCards cards={structuredCards} email={email} allowRemoteImages={allowExternal && mailViewMode !== 'plain'} />
         </div>
       )}
 
