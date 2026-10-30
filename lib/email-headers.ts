@@ -141,15 +141,19 @@ export function getSenderVerification(
 const SUBMISSION_PROTOCOL_RE = /\bwith\s+(?:UTF8)?(?:E?SMTP|LMTP)S?A\b/i;
 
 /**
- * Whether the topmost Authentication-Results header was written by a server
- * that received the message, rather than by whoever composed it. Stalwart
- * keeps an Authentication-Results header a signed-in user puts into a mail
- * they submit, and adds no Received header to mail submitted over JMAP, so a
- * forged "dkim=pass" can sit on top. A receiving server writes its Received
- * line first and its Authentication-Results below it (Stalwart and Gmail
- * both do), so: a Received header must sit above the topmost
- * Authentication-Results, and the nearest one must not record an
- * authenticated submission. Takes the headers in message order.
+ * Whether the topmost Authentication-Results header looks like it was
+ * written by a server that received the message, rather than by whoever
+ * composed it. A receiving server writes its Received line first and its
+ * Authentication-Results below it (Stalwart and Gmail both do), so: a
+ * Received header must sit above the topmost Authentication-Results, and the
+ * nearest one must not record an authenticated submission. Takes the headers
+ * in message order.
+ *
+ * This only catches a forged header on its own. Stalwart (0.16 and 1.0)
+ * keeps both headers when a signed-in user writes them into a mail they
+ * submit over JMAP, and adds nothing above them, so a forged Received line
+ * followed by a forged "dkim=pass" arrives exactly like mail from outside.
+ * Only the server can tell them apart.
  */
 export function authenticationResultsOnReceipt(headers: readonly { name: string; value: string }[]): boolean {
   const index = headers.findIndex((header) => header.name.toLowerCase() === 'authentication-results');
