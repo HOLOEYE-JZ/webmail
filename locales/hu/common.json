@@ -2016,8 +2016,8 @@
         "unsupported": "A jelenlegi fiók nem támogatja a késleltetett küldést. A beállítás más fiókokhoz elmentésre kerül."
       },
       "return_to_list_after_action": {
-        "label": "Visszatérés a listához törlés vagy olvasatlanként jelölés után",
-        "description": "A megnyitott üzenet törlése vagy olvasatlanként való megjelölése után visszatérés az üzenetlistához a következő üzenet megnyitása helyett."
+        "label": "Visszatérés a listához törlés, archiválás vagy olvasatlanként jelölés után",
+        "description": "A megnyitott üzenet törlése, archiválása vagy olvasatlanként való megjelölése után visszatérés az üzenetlistához a következő üzenet megnyitása helyett."
       },
       "swipe_right_action": {
         "label": "Jobbra húzás művelete (mobil)",

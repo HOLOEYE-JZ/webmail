@@ -2013,8 +2013,8 @@
         "unsupported": "La cuenta actual no anuncia compatibilidad con envío demorado. La opción seguirá guardada para otras cuentas."
       },
       "return_to_list_after_action": {
-        "label": "Volver a la lista tras eliminar o marcar como no leído",
-        "description": "Después de eliminar o marcar como no leído el mensaje abierto, volver a la lista de mensajes en lugar de abrir el mensaje siguiente."
+        "label": "Volver a la lista tras eliminar, archivar o marcar como no leído",
+        "description": "Después de eliminar, archivar o marcar como no leído el mensaje abierto, volver a la lista de mensajes en lugar de abrir el mensaje siguiente."
       },
       "swipe_right_action": {
         "label": "Acción al deslizar a la derecha (móvil)",

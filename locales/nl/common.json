@@ -2013,8 +2013,8 @@
         "unsupported": "Het huidige account meldt geen ondersteuning voor vertraagd verzenden. De instelling blijft opgeslagen voor andere accounts."
       },
       "return_to_list_after_action": {
-        "label": "Terug naar lijst na verwijderen of markeren als ongelezen",
-        "description": "Na het verwijderen of als ongelezen markeren van het geopende bericht terugkeren naar de berichtenlijst in plaats van het volgende bericht te openen."
+        "label": "Terug naar lijst na verwijderen, archiveren of markeren als ongelezen",
+        "description": "Na het verwijderen, archiveren of als ongelezen markeren van het geopende bericht terugkeren naar de berichtenlijst in plaats van het volgende bericht te openen."
       },
       "swipe_right_action": {
         "label": "Actie bij naar rechts vegen (mobiel)",

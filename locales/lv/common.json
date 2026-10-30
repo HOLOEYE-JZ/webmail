@@ -2013,8 +2013,8 @@
         "unsupported": "Pašreizējais konts neziņo par aizturētas sūtīšanas atbalstu. Iestatījums joprojām tiks saglabāts citiem kontiem."
       },
       "return_to_list_after_action": {
-        "label": "Atgriezties sarakstā pēc dzēšanas vai atzīmēšanas kā nelasītu",
-        "description": "Pēc atvērtā ziņojuma dzēšanas vai atzīmēšanas kā nelasīta atgriezieties ziņojumu sarakstā, nevis atveriet nākamo ziņojumu."
+        "label": "Atgriezties sarakstā pēc dzēšanas, arhivēšanas vai atzīmēšanas kā nelasītu",
+        "description": "Pēc atvērtā ziņojuma dzēšanas, arhivēšanas vai atzīmēšanas kā nelasīta atgriezieties ziņojumu sarakstā, nevis atveriet nākamo ziņojumu."
       },
       "swipe_right_action": {
         "label": "Darbība, velkot pa labi (mobilajā ierīcē)",

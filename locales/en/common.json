@@ -2016,8 +2016,8 @@
         "unsupported": "The current account does not advertise delayed-send support. The setting is still saved for other accounts."
       },
       "return_to_list_after_action": {
-        "label": "Return to list after delete or mark unread",
-        "description": "After deleting or marking the open message unread, go back to the message list instead of opening the next message."
+        "label": "Return to list after delete, archive or mark unread",
+        "description": "After deleting, archiving or marking the open message unread, go back to the message list instead of opening the next message."
       },
       "swipe_right_action": {
         "label": "Swipe right action (mobile)",

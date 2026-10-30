@@ -1168,7 +1168,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailKeys, mailboxes, isScheduledView, mvShell, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled]);
+  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled]);
 
   // Initialize keyboard shortcuts
   // Mountain View keeps the ticked rows while a message is read (#1231). The
@@ -2918,6 +2918,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     clearSelection(); // only on success - a vetoed/no-op attempt keeps the selection
   };
 
+  // Deleting or archiving the open message returns to the list (Gmail-style),
+  // not the next email, unless the user turned the setting off. Called once
+  // the action is confirmed and right before the store removes the row: with
+  // nothing selected its remove-and-advance opens nothing, so the next message
+  // is not loaded and marked read on the way. A Mountain View cursor is no
+  // open message and moves on to the next row. (#1458)
+  const leaveIfOpen = (email: Email) => {
+    const open = useEmailStore.getState().selectedEmail;
+    if (!open || emailKeyFor(open) !== emailKeyFor(email) || (mvShell && cursorOnly)) return;
+    if (useSettingsStore.getState().returnToListAfterAction) handleMobileBack();
+  };
+
   const handleDelete = async (emailToDelete: Email | null = selectedEmail) => {
     if (!client || !emailToDelete) return;
 
@@ -2958,6 +2970,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     } else if (!(await confirmMailRemoval('delete', 1, confirmDialog, tRemove))) {
       return;
     }
+
+    leaveIfOpen(emailToDelete);
 
     // The store's delete reads the "Delete action" setting: move to the
     // email's own account's trash (marking it read when asked), or destroy
@@ -3023,11 +3037,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       });
       if (!archiveMailbox) return; // a plugin refused the Archive folder
 
-      let archived: boolean;
-      let restore: EmailRestoreBatch[] | null = null;
-      const keepRestore = (batches: EmailRestoreBatch[]) => { restore = batches; };
+      let destination: Mailbox;
       if (archiveMode === 'single') {
-        archived = await moveThreadToMailbox(client, emailToArchive.id, archiveMailbox.id, emailKeyFor(emailToArchive), keepRestore);
+        destination = archiveMailbox;
       } else {
         const emailDate = new Date(emailToArchive.receivedAt);
         const year = emailDate.getFullYear().toString();
@@ -3052,7 +3064,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         }
 
         if (archiveMode === 'year') {
-          archived = await moveThreadToMailbox(client, emailToArchive.id, yearMailbox.id, emailKeyFor(emailToArchive), keepRestore);
+          destination = yearMailbox;
         } else {
           const yearId = yearMailbox.originalId || yearMailbox.id;
           const afterYear = readMailboxes();
@@ -3062,9 +3074,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             if (!monthMailbox) return; // a plugin refused the folder
             await refreshMailboxes();
           }
-          archived = await moveThreadToMailbox(client, emailToArchive.id, monthMailbox.id, emailKeyFor(emailToArchive), keepRestore);
+          destination = monthMailbox;
         }
       }
+
+      let restore: EmailRestoreBatch[] | null = null;
+      leaveIfOpen(emailToArchive);
+      const archived = await moveThreadToMailbox(client, emailToArchive.id, destination.id, emailKeyFor(emailToArchive), (batches) => { restore = batches; });
       if (!archived) return;
 
       if (conversationThread && conversationThread.threadKey === threadKeyFor(emailToArchive)) {
@@ -5499,17 +5515,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onReplyAll={handleReplyAll}
                     onForward={handleForward}
                     onForwardAsAttachment={handleForwardAsAttachment}
-                    onDelete={() => {
-                      // Deleting the open message returns to the list (Gmail-style),
-                      // not the next email — unless the user turned the setting off.
-                      // Deselect first so the store's remove-and-advance sees no
-                      // selection and doesn't auto-open the next message.
-                      const target = selectedEmail;
-                      if (useSettingsStore.getState().returnToListAfterAction) {
-                        handleMobileBack();
-                      }
-                      handleDelete(target);
-                    }}
+                    onDelete={() => handleDelete()}
                     onArchive={archiveActionEnabled ? () => handleArchive() : undefined}
                     onToggleStar={handleToggleStar}
                     onTogglePinned={() => { if (selectedEmail) void handleTogglePinned(selectedEmail); }}

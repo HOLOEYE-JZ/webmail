@@ -2016,8 +2016,8 @@
         "unsupported": "El compte actual no indica compatibilitat amb l'enviament retardat. La configuració es continua desant per a altres comptes."
       },
       "return_to_list_after_action": {
-        "label": "Torna a la llista després de suprimir o marcar com a no llegit",
-        "description": "Després de suprimir o marcar com a no llegit el missatge obert, torna a la llista de missatges en lloc d'obrir el següent."
+        "label": "Torna a la llista després de suprimir, arxivar o marcar com a no llegit",
+        "description": "Després de suprimir, arxivar o marcar com a no llegit el missatge obert, torna a la llista de missatges en lloc d'obrir el següent."
       },
       "swipe_right_action": {
         "label": "Acció en lliscar a la dreta (mòbil)",

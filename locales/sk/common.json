@@ -2016,8 +2016,8 @@
         "unsupported": "Aktuálny účet neoznamuje podporu oneskoreného odoslania."
       },
       "return_to_list_after_action": {
-        "label": "Vrátiť sa na zoznam po odstránení alebo označení ako neprečítané",
-        "description": "Po odstránení alebo označení otvorenej správy ako neprečítanej sa vrátiť na zoznam správ."
+        "label": "Vrátiť sa na zoznam po odstránení, archivovaní alebo označení ako neprečítané",
+        "description": "Po odstránení, archivovaní alebo označení otvorenej správy ako neprečítanej sa vrátiť na zoznam správ."
       },
       "swipe_right_action": {
         "label": "Akcia pri potiahnutí doprava (mobil)",

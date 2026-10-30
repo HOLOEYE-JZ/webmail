@@ -545,7 +545,7 @@ interface SettingsState extends AccessibilitySettings {
   deleteAction: DeleteAction;
   permanentlyDeleteJunk: boolean; // Permanently delete emails from junk/spam instead of moving to trash
   confirmBulkDelete: boolean; // Ask before moving several selected emails to Trash (permanent deletes always ask)
-  returnToListAfterAction: boolean; // After delete / mark-unread in an open message, return to the list instead of opening the next message
+  returnToListAfterAction: boolean; // After delete / archive / mark-unread in an open message, return to the list instead of opening the next message
   clearSearchOnFolderChange: boolean; // Reset the search query + advanced filters when switching folders, instead of re-running the search in the newly selected folder (#553 keeps it applied when this is off)
   showPreview: boolean;
   showVerificationCodes: boolean; // Offer the one-time code of a sign-in mail as a copy chip in the list and the reader

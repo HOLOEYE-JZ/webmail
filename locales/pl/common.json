@@ -2013,8 +2013,8 @@
         "unsupported": "Bieżące konto nie zgłasza obsługi opóźnionej wysyłki. Ustawienie pozostanie zapisane dla innych kont."
       },
       "return_to_list_after_action": {
-        "label": "Powrót do listy po usunięciu lub oznaczeniu jako nieprzeczytane",
-        "description": "Po usunięciu lub oznaczeniu otwartej wiadomości jako nieprzeczytanej wróć do listy wiadomości zamiast otwierać następną."
+        "label": "Powrót do listy po usunięciu, zarchiwizowaniu lub oznaczeniu jako nieprzeczytane",
+        "description": "Po usunięciu, zarchiwizowaniu lub oznaczeniu otwartej wiadomości jako nieprzeczytanej wróć do listy wiadomości zamiast otwierać następną."
       },
       "swipe_right_action": {
         "label": "Akcja przy przesunięciu w prawo (mobilne)",
