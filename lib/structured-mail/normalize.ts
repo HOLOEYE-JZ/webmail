@@ -388,6 +388,15 @@ export function normalizeItems(extracted: ExtractedItem[]): StructuredCard[] {
   return cards;
 }
 
+/**
+ * Whether the markup holds a reservation of any type (known or not, valid or
+ * not) under a schema.org context. A mail that describes its booking in
+ * markup is read from the markup alone; its Wallet passes are not consulted.
+ */
+export function hasReservation(extracted: ExtractedItem[]): boolean {
+  return flatten(extracted).some(({ object }) => typesOf(object).some((t) => /Reservation$/.test(t)));
+}
+
 /** The merge key: equal keys describe the same booking or order. */
 export function cardKey(card: StructuredCard): string {
   switch (card.kind) {
