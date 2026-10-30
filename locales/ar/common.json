@@ -5951,5 +5951,35 @@
     "easy_read": "قراءة سهلة",
     "sign_language": "لغة الإشارة",
     "new_tab": "يُفتح في علامة تبويب جديدة"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "إضافة إلى التقويم",
+    "update_in_calendar": "تحديث في التقويم",
+    "remove_from_calendar": "إزالة من التقويم",
+    "in_calendar": "في تقويمك",
+    "view_in_calendar": "عرض في التقويم",
+    "select_calendar": "اختر تقويمًا",
+    "added": "تمت الإضافة إلى تقويمك",
+    "updated": "تم تحديث التقويم",
+    "removed": "تمت الإزالة من تقويمك",
+    "action_failed": "تعذّر تغيير تقويمك. حاول مرة أخرى.",
+    "title": {
+      "rental_car": "سيارة مستأجرة",
+      "rental_car_company": "سيارة مستأجرة: {company}"
+    },
+    "description": {
+      "reference": "رقم الحجز: {reference}",
+      "passengers": "المسافرون: {names}",
+      "seats": "المقاعد: {seats}",
+      "checkin": "تسجيل الوصول: {url}",
+      "manage": "إدارة الحجز: {url}",
+      "ticket": "التذكرة: {url}",
+      "phone": "الهاتف: {phone}",
+      "car": "السيارة: {car}",
+      "tickets": "التذاكر: {numbers}",
+      "party_size": "عدد الأشخاص: {count}",
+      "added_from": "أُضيف من رسالة من {domain}",
+      "added_from_subject": "أُضيف من الرسالة «{subject}» من {domain}"
+    }
   }
 }

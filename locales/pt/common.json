@@ -5951,5 +5951,35 @@
     "easy_read": "Leitura fácil",
     "sign_language": "Língua de sinais",
     "new_tab": "abre em uma nova aba"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Adicionar ao calendário",
+    "update_in_calendar": "Atualizar no calendário",
+    "remove_from_calendar": "Remover do calendário",
+    "in_calendar": "No seu calendário",
+    "view_in_calendar": "Ver no calendário",
+    "select_calendar": "Escolha um calendário",
+    "added": "Adicionado ao seu calendário",
+    "updated": "Calendário atualizado",
+    "removed": "Removido do seu calendário",
+    "action_failed": "Não foi possível alterar seu calendário. Tente novamente.",
+    "title": {
+      "rental_car": "Carro alugado",
+      "rental_car_company": "Carro alugado: {company}"
+    },
+    "description": {
+      "reference": "Código da reserva: {reference}",
+      "passengers": "Passageiros: {names}",
+      "seats": "Assentos: {seats}",
+      "checkin": "Check-in: {url}",
+      "manage": "Gerenciar reserva: {url}",
+      "ticket": "Bilhete: {url}",
+      "phone": "Telefone: {phone}",
+      "car": "Carro: {car}",
+      "tickets": "Ingressos: {numbers}",
+      "party_size": "Pessoas: {count}",
+      "added_from": "Adicionado a partir de um e-mail de {domain}",
+      "added_from_subject": "Adicionado a partir do e-mail “{subject}” de {domain}"
+    }
   }
 }

@@ -5951,5 +5951,35 @@
     "easy_read": "易讀版",
     "sign_language": "手語",
     "new_tab": "在新分頁中開啟"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "新增到行事曆",
+    "update_in_calendar": "在行事曆中更新",
+    "remove_from_calendar": "從行事曆移除",
+    "in_calendar": "已在您的行事曆中",
+    "view_in_calendar": "在行事曆中檢視",
+    "select_calendar": "選取行事曆",
+    "added": "已新增到您的行事曆",
+    "updated": "行事曆已更新",
+    "removed": "已從您的行事曆移除",
+    "action_failed": "無法變更您的行事曆，請再試一次。",
+    "title": {
+      "rental_car": "租車",
+      "rental_car_company": "租車：{company}"
+    },
+    "description": {
+      "reference": "訂位代號：{reference}",
+      "passengers": "乘客：{names}",
+      "seats": "座位：{seats}",
+      "checkin": "報到：{url}",
+      "manage": "管理訂位：{url}",
+      "ticket": "電子票：{url}",
+      "phone": "電話：{phone}",
+      "car": "車輛：{car}",
+      "tickets": "票號：{numbers}",
+      "party_size": "人數：{count}",
+      "added_from": "新增自 {domain} 寄來的郵件",
+      "added_from_subject": "新增自 {domain} 寄來的郵件「{subject}」"
+    }
   }
 }

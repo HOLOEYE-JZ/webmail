@@ -5951,5 +5951,35 @@
     "easy_read": "Könnyen érthető",
     "sign_language": "Jelnyelv",
     "new_tab": "új lapon nyílik meg"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Hozzáadás a naptárhoz",
+    "update_in_calendar": "Frissítés a naptárban",
+    "remove_from_calendar": "Eltávolítás a naptárból",
+    "in_calendar": "A naptáradban",
+    "view_in_calendar": "Megtekintés a naptárban",
+    "select_calendar": "Válassz naptárat",
+    "added": "Hozzáadva a naptáradhoz",
+    "updated": "Naptár frissítve",
+    "removed": "Eltávolítva a naptáradból",
+    "action_failed": "Nem sikerült módosítani a naptárat. Próbáld újra.",
+    "title": {
+      "rental_car": "Bérautó",
+      "rental_car_company": "Bérautó: {company}"
+    },
+    "description": {
+      "reference": "Foglalási szám: {reference}",
+      "passengers": "Utasok: {names}",
+      "seats": "Ülőhelyek: {seats}",
+      "checkin": "Utasfelvétel: {url}",
+      "manage": "Foglalás kezelése: {url}",
+      "ticket": "Jegy: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Autó: {car}",
+      "tickets": "Jegyek: {numbers}",
+      "party_size": "Létszám: {count}",
+      "added_from": "Hozzáadva egy {domain} által küldött levélből",
+      "added_from_subject": "Hozzáadva a(z) {domain} által küldött „{subject}” levélből"
+    }
   }
 }

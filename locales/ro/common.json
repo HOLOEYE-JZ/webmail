@@ -5951,5 +5951,35 @@
     "easy_read": "Ușor de citit",
     "sign_language": "Limbaj mimico-gestual",
     "new_tab": "se deschide într-o filă nouă"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Adaugă în calendar",
+    "update_in_calendar": "Actualizează în calendar",
+    "remove_from_calendar": "Elimină din calendar",
+    "in_calendar": "În calendarul dvs.",
+    "view_in_calendar": "Vizualizare în calendar",
+    "select_calendar": "Alegeți un calendar",
+    "added": "Adăugat în calendarul dvs.",
+    "updated": "Calendar actualizat",
+    "removed": "Eliminat din calendarul dvs.",
+    "action_failed": "Calendarul nu a putut fi modificat. Încercați din nou.",
+    "title": {
+      "rental_car": "Mașină închiriată",
+      "rental_car_company": "Mașină închiriată: {company}"
+    },
+    "description": {
+      "reference": "Cod rezervare: {reference}",
+      "passengers": "Pasageri: {names}",
+      "seats": "Locuri: {seats}",
+      "checkin": "Check-in: {url}",
+      "manage": "Gestionați rezervarea: {url}",
+      "ticket": "Bilet: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Mașină: {car}",
+      "tickets": "Bilete: {numbers}",
+      "party_size": "Număr de persoane: {count}",
+      "added_from": "Adăugat dintr-un e-mail de la {domain}",
+      "added_from_subject": "Adăugat din e-mailul „{subject}” de la {domain}"
+    }
   }
 }

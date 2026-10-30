@@ -5951,5 +5951,35 @@
     "easy_read": "Snadné čtení",
     "sign_language": "Znakový jazyk",
     "new_tab": "otevře se na nové kartě"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Přidat do kalendáře",
+    "update_in_calendar": "Aktualizovat v kalendáři",
+    "remove_from_calendar": "Odebrat z kalendáře",
+    "in_calendar": "Ve vašem kalendáři",
+    "view_in_calendar": "Zobrazit v kalendáři",
+    "select_calendar": "Vyberte kalendář",
+    "added": "Přidáno do vašeho kalendáře",
+    "updated": "Kalendář aktualizován",
+    "removed": "Odebráno z vašeho kalendáře",
+    "action_failed": "Kalendář se nepodařilo změnit. Zkuste to znovu.",
+    "title": {
+      "rental_car": "Pronájem auta",
+      "rental_car_company": "Pronájem auta: {company}"
+    },
+    "description": {
+      "reference": "Číslo rezervace: {reference}",
+      "passengers": "Cestující: {names}",
+      "seats": "Místa: {seats}",
+      "checkin": "Odbavení: {url}",
+      "manage": "Spravovat rezervaci: {url}",
+      "ticket": "Lístek: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Vůz: {car}",
+      "tickets": "Vstupenky: {numbers}",
+      "party_size": "Počet osob: {count}",
+      "added_from": "Přidáno z e-mailu od {domain}",
+      "added_from_subject": "Přidáno z e-mailu „{subject}“ od {domain}"
+    }
   }
 }

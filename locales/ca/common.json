@@ -5951,5 +5951,35 @@
     "easy_read": "Lectura fàcil",
     "sign_language": "Llengua de signes",
     "new_tab": "s'obre en una pestanya nova"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Afegeix al calendari",
+    "update_in_calendar": "Actualitza al calendari",
+    "remove_from_calendar": "Treu del calendari",
+    "in_calendar": "Al vostre calendari",
+    "view_in_calendar": "Mostra al calendari",
+    "select_calendar": "Trieu un calendari",
+    "added": "S’ha afegit al vostre calendari",
+    "updated": "S’ha actualitzat el calendari",
+    "removed": "S’ha tret del vostre calendari",
+    "action_failed": "No s’ha pogut modificar el calendari. Torneu-ho a provar.",
+    "title": {
+      "rental_car": "Cotxe de lloguer",
+      "rental_car_company": "Cotxe de lloguer: {company}"
+    },
+    "description": {
+      "reference": "Codi de reserva: {reference}",
+      "passengers": "Passatgers: {names}",
+      "seats": "Seients: {seats}",
+      "checkin": "Facturació: {url}",
+      "manage": "Gestiona la reserva: {url}",
+      "ticket": "Bitllet: {url}",
+      "phone": "Telèfon: {phone}",
+      "car": "Cotxe: {car}",
+      "tickets": "Entrades: {numbers}",
+      "party_size": "Persones: {count}",
+      "added_from": "Afegit des d’un correu de {domain}",
+      "added_from_subject": "Afegit des del correu «{subject}» de {domain}"
+    }
   }
 }

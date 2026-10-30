@@ -5951,5 +5951,35 @@
     "easy_read": "쉬운 글",
     "sign_language": "수어",
     "new_tab": "새 탭에서 열림"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "캘린더에 추가",
+    "update_in_calendar": "캘린더에서 업데이트",
+    "remove_from_calendar": "캘린더에서 제거",
+    "in_calendar": "내 캘린더에 있어요",
+    "view_in_calendar": "캘린더에서 보기",
+    "select_calendar": "캘린더 선택",
+    "added": "캘린더에 추가되었어요",
+    "updated": "캘린더가 업데이트되었어요",
+    "removed": "캘린더에서 제거되었어요",
+    "action_failed": "캘린더를 변경할 수 없어요. 다시 시도해 주세요.",
+    "title": {
+      "rental_car": "렌터카",
+      "rental_car_company": "렌터카: {company}"
+    },
+    "description": {
+      "reference": "예약 번호: {reference}",
+      "passengers": "탑승객: {names}",
+      "seats": "좌석: {seats}",
+      "checkin": "체크인: {url}",
+      "manage": "예약 관리: {url}",
+      "ticket": "티켓: {url}",
+      "phone": "전화: {phone}",
+      "car": "차량: {car}",
+      "tickets": "티켓 번호: {numbers}",
+      "party_size": "인원: {count}",
+      "added_from": "{domain}에서 보낸 메일에서 추가함",
+      "added_from_subject": "{domain}에서 보낸 메일 “{subject}”에서 추가함"
+    }
   }
 }

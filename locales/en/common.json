@@ -5951,5 +5951,35 @@
     "easy_read": "Easy Read",
     "sign_language": "Sign language",
     "new_tab": "opens in a new tab"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Add to calendar",
+    "update_in_calendar": "Update in calendar",
+    "remove_from_calendar": "Remove from calendar",
+    "in_calendar": "In your calendar",
+    "view_in_calendar": "View in calendar",
+    "select_calendar": "Choose a calendar",
+    "added": "Added to your calendar",
+    "updated": "Calendar updated",
+    "removed": "Removed from your calendar",
+    "action_failed": "Couldn't change your calendar. Try again.",
+    "title": {
+      "rental_car": "Rental car",
+      "rental_car_company": "Rental car: {company}"
+    },
+    "description": {
+      "reference": "Booking reference: {reference}",
+      "passengers": "Passengers: {names}",
+      "seats": "Seats: {seats}",
+      "checkin": "Check in: {url}",
+      "manage": "Manage booking: {url}",
+      "ticket": "Ticket: {url}",
+      "phone": "Phone: {phone}",
+      "car": "Car: {car}",
+      "tickets": "Tickets: {numbers}",
+      "party_size": "Party size: {count}",
+      "added_from": "Added from a mail from {domain}",
+      "added_from_subject": "Added from the mail “{subject}” from {domain}"
+    }
   }
 }

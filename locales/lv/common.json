@@ -5951,5 +5951,35 @@
     "easy_read": "Vieglā valoda",
     "sign_language": "Zīmju valoda",
     "new_tab": "atveras jaunā cilnē"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Pievienot kalendāram",
+    "update_in_calendar": "Atjaunināt kalendārā",
+    "remove_from_calendar": "Noņemt no kalendāra",
+    "in_calendar": "Jūsu kalendārā",
+    "view_in_calendar": "Atvērt kalendārā",
+    "select_calendar": "Izvēlieties kalendāru",
+    "added": "Pievienots jūsu kalendāram",
+    "updated": "Kalendārs atjaunināts",
+    "removed": "Noņemts no jūsu kalendāra",
+    "action_failed": "Neizdevās mainīt kalendāru. Mēģiniet vēlreiz.",
+    "title": {
+      "rental_car": "Nomas auto",
+      "rental_car_company": "Nomas auto: {company}"
+    },
+    "description": {
+      "reference": "Rezervācijas numurs: {reference}",
+      "passengers": "Pasažieri: {names}",
+      "seats": "Vietas: {seats}",
+      "checkin": "Reģistrēšanās: {url}",
+      "manage": "Pārvaldīt rezervāciju: {url}",
+      "ticket": "Biļete: {url}",
+      "phone": "Tālrunis: {phone}",
+      "car": "Automašīna: {car}",
+      "tickets": "Biļetes: {numbers}",
+      "party_size": "Personu skaits: {count}",
+      "added_from": "Pievienots no {domain} e-pasta",
+      "added_from_subject": "Pievienots no {domain} e-pasta “{subject}”"
+    }
   }
 }

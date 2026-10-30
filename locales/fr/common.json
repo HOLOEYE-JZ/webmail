@@ -5951,5 +5951,35 @@
     "easy_read": "Facile à lire",
     "sign_language": "Langue des signes",
     "new_tab": "s'ouvre dans un nouvel onglet"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Ajouter au calendrier",
+    "update_in_calendar": "Mettre à jour dans le calendrier",
+    "remove_from_calendar": "Retirer du calendrier",
+    "in_calendar": "Dans votre calendrier",
+    "view_in_calendar": "Voir dans le calendrier",
+    "select_calendar": "Choisir un calendrier",
+    "added": "Ajouté à votre calendrier",
+    "updated": "Calendrier mis à jour",
+    "removed": "Retiré de votre calendrier",
+    "action_failed": "Impossible de modifier votre calendrier. Réessayez.",
+    "title": {
+      "rental_car": "Voiture de location",
+      "rental_car_company": "Voiture de location : {company}"
+    },
+    "description": {
+      "reference": "Référence de réservation : {reference}",
+      "passengers": "Passagers : {names}",
+      "seats": "Sièges : {seats}",
+      "checkin": "Enregistrement : {url}",
+      "manage": "Gérer la réservation : {url}",
+      "ticket": "Billet : {url}",
+      "phone": "Téléphone : {phone}",
+      "car": "Véhicule : {car}",
+      "tickets": "Billets : {numbers}",
+      "party_size": "Nombre de personnes : {count}",
+      "added_from": "Ajouté depuis un e-mail de {domain}",
+      "added_from_subject": "Ajouté depuis l’e-mail « {subject} » de {domain}"
+    }
   }
 }

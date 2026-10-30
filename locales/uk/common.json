@@ -5951,5 +5951,35 @@
     "easy_read": "Легке читання",
     "sign_language": "Жестова мова",
     "new_tab": "відкривається в новій вкладці"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Додати в календар",
+    "update_in_calendar": "Оновити в календарі",
+    "remove_from_calendar": "Видалити з календаря",
+    "in_calendar": "У вашому календарі",
+    "view_in_calendar": "Переглянути в календарі",
+    "select_calendar": "Виберіть календар",
+    "added": "Додано до вашого календаря",
+    "updated": "Календар оновлено",
+    "removed": "Видалено з вашого календаря",
+    "action_failed": "Не вдалося змінити календар. Спробуйте ще раз.",
+    "title": {
+      "rental_car": "Оренда авто",
+      "rental_car_company": "Оренда авто: {company}"
+    },
+    "description": {
+      "reference": "Номер бронювання: {reference}",
+      "passengers": "Пасажири: {names}",
+      "seats": "Місця: {seats}",
+      "checkin": "Реєстрація: {url}",
+      "manage": "Керувати бронюванням: {url}",
+      "ticket": "Квиток: {url}",
+      "phone": "Телефон: {phone}",
+      "car": "Автомобіль: {car}",
+      "tickets": "Квитки: {numbers}",
+      "party_size": "Кількість осіб: {count}",
+      "added_from": "Додано з листа від {domain}",
+      "added_from_subject": "Додано з листа «{subject}» від {domain}"
+    }
   }
 }

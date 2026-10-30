@@ -5951,5 +5951,35 @@
     "easy_read": "Хялбар унших",
     "sign_language": "Дохионы хэл",
     "new_tab": "шинэ табад нээгдэнэ"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Хуанлид нэмэх",
+    "update_in_calendar": "Хуанлид шинэчлэх",
+    "remove_from_calendar": "Хуанлиас хасах",
+    "in_calendar": "Таны хуанлид байна",
+    "view_in_calendar": "Хуанлиар харах",
+    "select_calendar": "Хуанли сонгох",
+    "added": "Таны хуанлид нэмсэн",
+    "updated": "Хуанли шинэчлэгдлээ",
+    "removed": "Таны хуанлиас хассан",
+    "action_failed": "Хуанлийг өөрчилж чадсангүй. Дахин оролдоно уу.",
+    "title": {
+      "rental_car": "Түрээсийн машин",
+      "rental_car_company": "Түрээсийн машин: {company}"
+    },
+    "description": {
+      "reference": "Захиалгын дугаар: {reference}",
+      "passengers": "Зорчигчид: {names}",
+      "seats": "Суудал: {seats}",
+      "checkin": "Бүртгэл: {url}",
+      "manage": "Захиалга удирдах: {url}",
+      "ticket": "Тасалбар: {url}",
+      "phone": "Утас: {phone}",
+      "car": "Машин: {car}",
+      "tickets": "Тасалбарууд: {numbers}",
+      "party_size": "Хүний тоо: {count}",
+      "added_from": "{domain}-аас ирсэн имэйлээс нэмсэн",
+      "added_from_subject": "{domain}-аас ирсэн “{subject}” имэйлээс нэмсэн"
+    }
   }
 }

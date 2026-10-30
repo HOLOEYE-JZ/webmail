@@ -5951,5 +5951,35 @@
     "easy_read": "Lihtne keel",
     "sign_language": "Viipekeel",
     "new_tab": "avaneb uuel vahekaardil"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Lisa kalendrisse",
+    "update_in_calendar": "Uuenda kalendris",
+    "remove_from_calendar": "Eemalda kalendrist",
+    "in_calendar": "Sinu kalendris",
+    "view_in_calendar": "Vaata kalendris",
+    "select_calendar": "Vali kalender",
+    "added": "Lisatud sinu kalendrisse",
+    "updated": "Kalender uuendatud",
+    "removed": "Eemaldatud sinu kalendrist",
+    "action_failed": "Kalendrit ei õnnestunud muuta. Proovi uuesti.",
+    "title": {
+      "rental_car": "Rendiauto",
+      "rental_car_company": "Rendiauto: {company}"
+    },
+    "description": {
+      "reference": "Broneeringu number: {reference}",
+      "passengers": "Reisijad: {names}",
+      "seats": "Kohad: {seats}",
+      "checkin": "Registreerimine: {url}",
+      "manage": "Halda broneeringut: {url}",
+      "ticket": "Pilet: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Auto: {car}",
+      "tickets": "Piletid: {numbers}",
+      "party_size": "Inimesi: {count}",
+      "added_from": "Lisatud kirjast, mille saatis {domain}",
+      "added_from_subject": "Lisatud kirjast „{subject}“, mille saatis {domain}"
+    }
   }
 }

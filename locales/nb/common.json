@@ -5951,5 +5951,35 @@
     "easy_read": "Lettlest",
     "sign_language": "Tegnspråk",
     "new_tab": "åpnes i en ny fane"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Legg til i kalenderen",
+    "update_in_calendar": "Oppdater i kalenderen",
+    "remove_from_calendar": "Fjern fra kalenderen",
+    "in_calendar": "I kalenderen din",
+    "view_in_calendar": "Se i kalenderen",
+    "select_calendar": "Velg en kalender",
+    "added": "Lagt til i kalenderen din",
+    "updated": "Kalenderen er oppdatert",
+    "removed": "Fjernet fra kalenderen din",
+    "action_failed": "Kunne ikke endre kalenderen. Prøv igjen.",
+    "title": {
+      "rental_car": "Leiebil",
+      "rental_car_company": "Leiebil: {company}"
+    },
+    "description": {
+      "reference": "Bestillingsnummer: {reference}",
+      "passengers": "Reisende: {names}",
+      "seats": "Seter: {seats}",
+      "checkin": "Innsjekking: {url}",
+      "manage": "Administrer bestillingen: {url}",
+      "ticket": "Billett: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Bil: {car}",
+      "tickets": "Billetter: {numbers}",
+      "party_size": "Antall personer: {count}",
+      "added_from": "Lagt til fra en e-post fra {domain}",
+      "added_from_subject": "Lagt til fra e-posten «{subject}» fra {domain}"
+    }
   }
 }
