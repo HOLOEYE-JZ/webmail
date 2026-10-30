@@ -6014,5 +6014,36 @@
     "easy_read": "わかりやすい版",
     "sign_language": "手話",
     "new_tab": "新しいタブで開きます"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "カレンダーに追加",
+    "update_in_calendar": "カレンダーを更新",
+    "remove_from_calendar": "カレンダーから削除",
+    "in_calendar": "カレンダーに登録済み",
+    "view_in_calendar": "カレンダーで表示",
+    "select_calendar": "カレンダーを選択",
+    "added": "カレンダーに追加しました",
+    "updated": "カレンダーを更新しました",
+    "removed": "カレンダーから削除しました",
+    "action_failed": "カレンダーを変更できませんでした。もう一度お試しください。",
+    "blocked": "プラグインがこのカレンダーの変更を止めました。",
+    "title": {
+      "rental_car": "レンタカー",
+      "rental_car_company": "レンタカー: {company}"
+    },
+    "description": {
+      "reference": "予約番号: {reference}",
+      "passengers": "乗客: {names}",
+      "seats": "座席: {seats}",
+      "checkin": "チェックイン: {url}",
+      "manage": "予約の管理: {url}",
+      "ticket": "チケット: {url}",
+      "phone": "電話: {phone}",
+      "car": "車両: {car}",
+      "tickets": "チケット番号: {numbers}",
+      "party_size": "人数: {count}",
+      "added_from": "{domain} からのメールから追加",
+      "added_from_subject": "{domain} からのメール「{subject}」から追加"
+    }
   }
 }

@@ -6022,5 +6022,36 @@
     "easy_read": "ภาษาที่อ่านง่าย",
     "sign_language": "ภาษามือ",
     "new_tab": "เปิดในแท็บใหม่"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "เพิ่มลงในปฏิทิน",
+    "update_in_calendar": "อัปเดตในปฏิทิน",
+    "remove_from_calendar": "นำออกจากปฏิทิน",
+    "in_calendar": "อยู่ในปฏิทินของคุณ",
+    "view_in_calendar": "เปิดดูในปฏิทิน",
+    "select_calendar": "เลือกปฏิทิน",
+    "added": "เพิ่มลงในปฏิทินของคุณแล้ว",
+    "updated": "อัปเดตปฏิทินแล้ว",
+    "removed": "นำออกจากปฏิทินของคุณแล้ว",
+    "action_failed": "เปลี่ยนแปลงปฏิทินไม่สำเร็จ โปรดลองอีกครั้ง",
+    "blocked": "ปลั๊กอินหยุดการเปลี่ยนแปลงปฏิทินนี้",
+    "title": {
+      "rental_car": "รถเช่า",
+      "rental_car_company": "รถเช่า: {company}"
+    },
+    "description": {
+      "reference": "หมายเลขการจอง: {reference}",
+      "passengers": "ผู้โดยสาร: {names}",
+      "seats": "ที่นั่ง: {seats}",
+      "checkin": "เช็กอิน: {url}",
+      "manage": "จัดการการจอง: {url}",
+      "ticket": "ตั๋ว: {url}",
+      "phone": "โทรศัพท์: {phone}",
+      "car": "รถ: {car}",
+      "tickets": "หมายเลขตั๋ว: {numbers}",
+      "party_size": "จำนวนคน: {count}",
+      "added_from": "เพิ่มจากอีเมลของ {domain}",
+      "added_from_subject": "เพิ่มจากอีเมล “{subject}” ของ {domain}"
+    }
   }
 }

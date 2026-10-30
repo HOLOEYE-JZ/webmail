@@ -6014,5 +6014,36 @@
     "easy_read": "Makkelijk lezen",
     "sign_language": "Gebarentaal",
     "new_tab": "opent in een nieuw tabblad"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Toevoegen aan agenda",
+    "update_in_calendar": "Bijwerken in agenda",
+    "remove_from_calendar": "Uit agenda verwijderen",
+    "in_calendar": "In je agenda",
+    "view_in_calendar": "In agenda bekijken",
+    "select_calendar": "Kies een agenda",
+    "added": "Toegevoegd aan je agenda",
+    "updated": "Agenda bijgewerkt",
+    "removed": "Uit je agenda verwijderd",
+    "action_failed": "Je agenda kon niet worden gewijzigd. Probeer het opnieuw.",
+    "blocked": "Een plug-in heeft deze agendawijziging tegengehouden.",
+    "title": {
+      "rental_car": "Huurauto",
+      "rental_car_company": "Huurauto: {company}"
+    },
+    "description": {
+      "reference": "Boekingsnummer: {reference}",
+      "passengers": "Reizigers: {names}",
+      "seats": "Stoelen: {seats}",
+      "checkin": "Inchecken: {url}",
+      "manage": "Boeking beheren: {url}",
+      "ticket": "Ticket: {url}",
+      "phone": "Telefoon: {phone}",
+      "car": "Auto: {car}",
+      "tickets": "Tickets: {numbers}",
+      "party_size": "Aantal personen: {count}",
+      "added_from": "Toegevoegd vanuit een e-mail van {domain}",
+      "added_from_subject": "Toegevoegd vanuit de e-mail ‘{subject}’ van {domain}"
+    }
   }
 }

@@ -6014,5 +6014,36 @@
     "easy_read": "Leichte Sprache",
     "sign_language": "Gebärdensprache",
     "new_tab": "öffnet in einem neuen Tab"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Zum Kalender hinzufügen",
+    "update_in_calendar": "Im Kalender aktualisieren",
+    "remove_from_calendar": "Aus Kalender entfernen",
+    "in_calendar": "In Ihrem Kalender",
+    "view_in_calendar": "Im Kalender anzeigen",
+    "select_calendar": "Kalender auswählen",
+    "added": "Zu Ihrem Kalender hinzugefügt",
+    "updated": "Kalender aktualisiert",
+    "removed": "Aus Ihrem Kalender entfernt",
+    "action_failed": "Ihr Kalender konnte nicht geändert werden. Bitte versuchen Sie es erneut.",
+    "blocked": "Ein Plugin hat diese Kalenderänderung verhindert.",
+    "title": {
+      "rental_car": "Mietwagen",
+      "rental_car_company": "Mietwagen: {company}"
+    },
+    "description": {
+      "reference": "Buchungsnummer: {reference}",
+      "passengers": "Reisende: {names}",
+      "seats": "Sitzplätze: {seats}",
+      "checkin": "Check-in: {url}",
+      "manage": "Buchung verwalten: {url}",
+      "ticket": "Ticket: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Fahrzeug: {car}",
+      "tickets": "Tickets: {numbers}",
+      "party_size": "Personen: {count}",
+      "added_from": "Hinzugefügt aus einer E-Mail von {domain}",
+      "added_from_subject": "Hinzugefügt aus der E-Mail „{subject}“ von {domain}"
+    }
   }
 }

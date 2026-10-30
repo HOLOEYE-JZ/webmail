@@ -6014,5 +6014,36 @@
     "easy_read": "Facile da leggere",
     "sign_language": "Lingua dei segni",
     "new_tab": "si apre in una nuova scheda"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Aggiungi al calendario",
+    "update_in_calendar": "Aggiorna nel calendario",
+    "remove_from_calendar": "Rimuovi dal calendario",
+    "in_calendar": "Nel tuo calendario",
+    "view_in_calendar": "Vedi nel calendario",
+    "select_calendar": "Scegli un calendario",
+    "added": "Aggiunto al tuo calendario",
+    "updated": "Calendario aggiornato",
+    "removed": "Rimosso dal tuo calendario",
+    "action_failed": "Impossibile modificare il calendario. Riprova.",
+    "blocked": "Un plugin ha impedito questa modifica al calendario.",
+    "title": {
+      "rental_car": "Auto a noleggio",
+      "rental_car_company": "Auto a noleggio: {company}"
+    },
+    "description": {
+      "reference": "Codice di prenotazione: {reference}",
+      "passengers": "Passeggeri: {names}",
+      "seats": "Posti: {seats}",
+      "checkin": "Check-in: {url}",
+      "manage": "Gestisci la prenotazione: {url}",
+      "ticket": "Biglietto: {url}",
+      "phone": "Telefono: {phone}",
+      "car": "Auto: {car}",
+      "tickets": "Biglietti: {numbers}",
+      "party_size": "Persone: {count}",
+      "added_from": "Aggiunto da un’e-mail di {domain}",
+      "added_from_subject": "Aggiunto dall’e-mail «{subject}» di {domain}"
+    }
   }
 }

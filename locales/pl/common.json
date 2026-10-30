@@ -6014,5 +6014,36 @@
     "easy_read": "Tekst łatwy do czytania",
     "sign_language": "Język migowy",
     "new_tab": "otwiera się w nowej karcie"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Dodaj do kalendarza",
+    "update_in_calendar": "Zaktualizuj w kalendarzu",
+    "remove_from_calendar": "Usuń z kalendarza",
+    "in_calendar": "W Twoim kalendarzu",
+    "view_in_calendar": "Pokaż w kalendarzu",
+    "select_calendar": "Wybierz kalendarz",
+    "added": "Dodano do Twojego kalendarza",
+    "updated": "Zaktualizowano kalendarz",
+    "removed": "Usunięto z Twojego kalendarza",
+    "action_failed": "Nie udało się zmienić kalendarza. Spróbuj ponownie.",
+    "blocked": "Wtyczka zablokowała tę zmianę w kalendarzu.",
+    "title": {
+      "rental_car": "Wynajem samochodu",
+      "rental_car_company": "Wynajem samochodu: {company}"
+    },
+    "description": {
+      "reference": "Numer rezerwacji: {reference}",
+      "passengers": "Pasażerowie: {names}",
+      "seats": "Miejsca: {seats}",
+      "checkin": "Odprawa: {url}",
+      "manage": "Zarządzaj rezerwacją: {url}",
+      "ticket": "Bilet: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Samochód: {car}",
+      "tickets": "Bilety: {numbers}",
+      "party_size": "Liczba osób: {count}",
+      "added_from": "Dodano z wiadomości od {domain}",
+      "added_from_subject": "Dodano z wiadomości „{subject}” od {domain}"
+    }
   }
 }

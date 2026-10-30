@@ -6014,5 +6014,36 @@
     "easy_read": "Простой язык",
     "sign_language": "Жестовый язык",
     "new_tab": "открывается в новой вкладке"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Добавить в календарь",
+    "update_in_calendar": "Обновить в календаре",
+    "remove_from_calendar": "Удалить из календаря",
+    "in_calendar": "В вашем календаре",
+    "view_in_calendar": "Открыть в календаре",
+    "select_calendar": "Выберите календарь",
+    "added": "Добавлено в ваш календарь",
+    "updated": "Календарь обновлён",
+    "removed": "Удалено из вашего календаря",
+    "action_failed": "Не удалось изменить календарь. Попробуйте ещё раз.",
+    "blocked": "Плагин остановил это изменение календаря.",
+    "title": {
+      "rental_car": "Аренда автомобиля",
+      "rental_car_company": "Аренда автомобиля: {company}"
+    },
+    "description": {
+      "reference": "Номер бронирования: {reference}",
+      "passengers": "Пассажиры: {names}",
+      "seats": "Места: {seats}",
+      "checkin": "Регистрация: {url}",
+      "manage": "Управление бронированием: {url}",
+      "ticket": "Билет: {url}",
+      "phone": "Телефон: {phone}",
+      "car": "Автомобиль: {car}",
+      "tickets": "Билеты: {numbers}",
+      "party_size": "Количество человек: {count}",
+      "added_from": "Добавлено из письма от {domain}",
+      "added_from_subject": "Добавлено из письма «{subject}» от {domain}"
+    }
   }
 }

@@ -6014,5 +6014,36 @@
     "easy_read": "متن آسان‌خوان",
     "sign_language": "زبان اشاره",
     "new_tab": "در زبانه‌ای تازه باز می‌شود"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "افزودن به تقویم",
+    "update_in_calendar": "به‌روزرسانی در تقویم",
+    "remove_from_calendar": "حذف از تقویم",
+    "in_calendar": "در تقویم شما",
+    "view_in_calendar": "مشاهده در تقویم",
+    "select_calendar": "یک تقویم انتخاب کنید",
+    "added": "به تقویم شما اضافه شد",
+    "updated": "تقویم به‌روزرسانی شد",
+    "removed": "از تقویم شما حذف شد",
+    "action_failed": "تغییر تقویم انجام نشد. دوباره تلاش کنید.",
+    "blocked": "یک افزونه این تغییر تقویم را متوقف کرد.",
+    "title": {
+      "rental_car": "خودروی اجاره‌ای",
+      "rental_car_company": "خودروی اجاره‌ای: {company}"
+    },
+    "description": {
+      "reference": "کد رزرو: {reference}",
+      "passengers": "مسافران: {names}",
+      "seats": "صندلی‌ها: {seats}",
+      "checkin": "پذیرش آنلاین: {url}",
+      "manage": "مدیریت رزرو: {url}",
+      "ticket": "بلیت: {url}",
+      "phone": "تلفن: {phone}",
+      "car": "خودرو: {car}",
+      "tickets": "بلیت‌ها: {numbers}",
+      "party_size": "تعداد نفرات: {count}",
+      "added_from": "از ایمیلی از {domain} اضافه شد",
+      "added_from_subject": "از ایمیل «{subject}» از {domain} اضافه شد"
+    }
   }
 }

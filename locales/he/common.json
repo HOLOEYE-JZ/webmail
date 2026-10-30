@@ -6015,5 +6015,36 @@
     "easy_read": "שפה פשוטה",
     "sign_language": "שפת סימנים",
     "new_tab": "נפתח בכרטיסייה חדשה"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "הוסף ליומן",
+    "update_in_calendar": "עדכן ביומן",
+    "remove_from_calendar": "הסרה מהיומן",
+    "in_calendar": "ביומן שלך",
+    "view_in_calendar": "הצג בלוח שנה",
+    "select_calendar": "בחר יומן",
+    "added": "נוסף ליומן שלך",
+    "updated": "היומן עודכן",
+    "removed": "הוסר מהיומן שלך",
+    "action_failed": "לא ניתן היה לשנות את היומן. נסה שוב.",
+    "blocked": "תוסף עצר את השינוי הזה ביומן.",
+    "title": {
+      "rental_car": "רכב שכור",
+      "rental_car_company": "רכב שכור: {company}"
+    },
+    "description": {
+      "reference": "מספר הזמנה: {reference}",
+      "passengers": "נוסעים: {names}",
+      "seats": "מושבים: {seats}",
+      "checkin": "צ׳ק-אין: {url}",
+      "manage": "ניהול ההזמנה: {url}",
+      "ticket": "כרטיס: {url}",
+      "phone": "טלפון: {phone}",
+      "car": "רכב: {car}",
+      "tickets": "כרטיסים: {numbers}",
+      "party_size": "מספר אנשים: {count}",
+      "added_from": "נוסף מהודעה מ-{domain}",
+      "added_from_subject": "נוסף מההודעה ״{subject}״ מ-{domain}"
+    }
   }
 }

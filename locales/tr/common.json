@@ -6014,5 +6014,36 @@
     "easy_read": "Kolay okunur",
     "sign_language": "İşaret dili",
     "new_tab": "yeni sekmede açılır"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Takvime ekle",
+    "update_in_calendar": "Takvimde güncelle",
+    "remove_from_calendar": "Takvimden kaldır",
+    "in_calendar": "Takviminizde",
+    "view_in_calendar": "Takvimde görüntüle",
+    "select_calendar": "Bir takvim seçin",
+    "added": "Takviminize eklendi",
+    "updated": "Takvim güncellendi",
+    "removed": "Takviminizden kaldırıldı",
+    "action_failed": "Takviminiz değiştirilemedi. Tekrar deneyin.",
+    "blocked": "Bir eklenti bu takvim değişikliğini durdurdu.",
+    "title": {
+      "rental_car": "Kiralık araç",
+      "rental_car_company": "Kiralık araç: {company}"
+    },
+    "description": {
+      "reference": "Rezervasyon kodu: {reference}",
+      "passengers": "Yolcular: {names}",
+      "seats": "Koltuklar: {seats}",
+      "checkin": "Check-in: {url}",
+      "manage": "Rezervasyonu yönet: {url}",
+      "ticket": "Bilet: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Araç: {car}",
+      "tickets": "Biletler: {numbers}",
+      "party_size": "Kişi sayısı: {count}",
+      "added_from": "{domain} adresinden gelen bir e-postadan eklendi",
+      "added_from_subject": "{domain} adresinden gelen “{subject}” e-postasından eklendi"
+    }
   }
 }

@@ -6014,5 +6014,36 @@
     "easy_read": "易读版",
     "sign_language": "手语",
     "new_tab": "在新标签页中打开"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "添加到日历",
+    "update_in_calendar": "在日历中更新",
+    "remove_from_calendar": "从日历中移除",
+    "in_calendar": "已在你的日历中",
+    "view_in_calendar": "在日历中打开",
+    "select_calendar": "选择日历",
+    "added": "已添加到你的日历",
+    "updated": "日历已更新",
+    "removed": "已从你的日历中移除",
+    "action_failed": "无法更改你的日历，请重试。",
+    "blocked": "某个插件阻止了此日历更改。",
+    "title": {
+      "rental_car": "租车",
+      "rental_car_company": "租车：{company}"
+    },
+    "description": {
+      "reference": "预订编号：{reference}",
+      "passengers": "乘客：{names}",
+      "seats": "座位：{seats}",
+      "checkin": "值机：{url}",
+      "manage": "管理预订：{url}",
+      "ticket": "电子票：{url}",
+      "phone": "电话：{phone}",
+      "car": "车辆：{car}",
+      "tickets": "票号：{numbers}",
+      "party_size": "人数：{count}",
+      "added_from": "添加自 {domain} 发来的邮件",
+      "added_from_subject": "添加自 {domain} 发来的邮件“{subject}”"
+    }
   }
 }

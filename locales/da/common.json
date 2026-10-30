@@ -6014,5 +6014,36 @@
     "easy_read": "Let læst",
     "sign_language": "Tegnsprog",
     "new_tab": "åbner i en ny fane"
+  },
+  "structured_mail_calendar": {
+    "add_to_calendar": "Tilføj til kalender",
+    "update_in_calendar": "Opdater i kalender",
+    "remove_from_calendar": "Fjern fra kalender",
+    "in_calendar": "I din kalender",
+    "view_in_calendar": "Vis i kalender",
+    "select_calendar": "Vælg en kalender",
+    "added": "Tilføjet til din kalender",
+    "updated": "Kalender opdateret",
+    "removed": "Fjernet fra din kalender",
+    "action_failed": "Din kalender kunne ikke ændres. Prøv igen.",
+    "blocked": "Et plugin stoppede denne ændring i kalenderen.",
+    "title": {
+      "rental_car": "Lejebil",
+      "rental_car_company": "Lejebil: {company}"
+    },
+    "description": {
+      "reference": "Bookingnummer: {reference}",
+      "passengers": "Rejsende: {names}",
+      "seats": "Pladser: {seats}",
+      "checkin": "Check-in: {url}",
+      "manage": "Administrer booking: {url}",
+      "ticket": "Billet: {url}",
+      "phone": "Telefon: {phone}",
+      "car": "Bil: {car}",
+      "tickets": "Billetter: {numbers}",
+      "party_size": "Antal personer: {count}",
+      "added_from": "Tilføjet fra en mail fra {domain}",
+      "added_from_subject": "Tilføjet fra mailen »{subject}« fra {domain}"
+    }
   }
 }
