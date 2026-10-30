@@ -10,6 +10,7 @@
  *     : resolveCards(cards);
  */
 import { extractStructuredData } from './extract';
+import { mergeCandidates } from './merge';
 import { normalizeItems } from './normalize';
 import type { StructuredCard } from './types';
 import { validateCard } from './validate';
@@ -20,18 +21,19 @@ export interface ReadOptions {
   parseHtml?: (html: string) => Document;
 }
 
-/** Cards from one HTML body, validated but with zones not yet resolved. */
+/**
+ * Cards from one HTML body: validated and merged to one card per booking,
+ * with zones not yet resolved (resolveCards).
+ */
 export function readStructuredMail(html: string, options: ReadOptions): StructuredCard[] {
   const cards = normalizeItems(extractStructuredData(html, options.parseHtml));
-  return cards
-    .map((card) => validateCard(card, options.mailDate))
-    .filter((candidate) => candidate.problems.length === 0)
-    .map((candidate) => candidate.card);
+  return mergeCandidates(cards.map((card) => validateCard(card, options.mailDate)));
 }
 
 export { extractStructuredData, mayContainStructuredData } from './extract';
 export { normalizeItems } from './normalize';
 export { validateCard } from './validate';
+export { mergeCandidates } from './merge';
 export { needsAirportZones, resolveCards } from './resolve';
 export { loadAirportZones } from './time-zones';
 export * from './types';
