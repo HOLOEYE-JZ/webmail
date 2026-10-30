@@ -154,9 +154,11 @@ export function TransportCard({ booking, emailId, calendarActions }: BookingCard
         />
       ) : undefined}
     >
-      {booking.legs.map((leg, i) => (
-        <Leg key={`${leg.departure.at.date}-${leg.number ?? ""}-${i}`} leg={leg} kind={booking.kind} bookingCancelled={cancelled} />
-      ))}
+      <div className="flex flex-col gap-2 min-w-0">
+        {booking.legs.map((leg, i) => (
+          <Leg key={`${leg.departure.at.date}-${leg.number ?? ""}-${i}`} leg={leg} kind={booking.kind} bookingCancelled={cancelled} />
+        ))}
+      </div>
       <PassengersRow names={booking.passengers} />
     </CardShell>
   );

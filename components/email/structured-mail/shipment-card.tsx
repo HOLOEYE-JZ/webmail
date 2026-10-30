@@ -19,6 +19,9 @@ const STATUS_TONE: Record<OrderStatus, string> = {
   cancelled: "bg-destructive/15 text-destructive",
 };
 
+/** States in which an expected arrival date is out of date. */
+const ARRIVED_OR_STOPPED = new Set<OrderStatus>(["delivered", "returned", "cancelled"]);
+
 function OrderStatusPill({ status }: { status: OrderStatus }) {
   const t = useTranslations("email_viewer.structured_mail");
   const labels: Record<OrderStatus, string> = {
@@ -54,10 +57,12 @@ function ItemImages({ items }: { items: Item[] }) {
   );
 }
 
-function ParcelRows({ parcel }: { parcel: Parcel }) {
+/** Carrier, tracking number and expected date; no date once the order is delivered, returned or cancelled. */
+function ParcelRows({ parcel, showExpected }: { parcel: Parcel; showExpected: boolean }) {
   const t = useTranslations("email_viewer.structured_mail");
   const { opts } = useCardFormat();
-  if (!parcel.carrier && !parcel.trackingNumber && !parcel.expectedBy) return null;
+  const expectedBy = showExpected ? parcel.expectedBy : undefined;
+  if (!parcel.carrier && !parcel.trackingNumber && !expectedBy) return null;
   return (
     <>
       {(parcel.carrier || parcel.trackingNumber) && (
@@ -73,8 +78,8 @@ function ParcelRows({ parcel }: { parcel: Parcel }) {
           </span>
         </MetaRow>
       )}
-      {parcel.expectedBy && (
-        <MetaRow icon={Clock}>{t("expected_by", { date: formatMomentDate(parcel.expectedBy, opts) })}</MetaRow>
+      {expectedBy && (
+        <MetaRow icon={Clock}>{t("expected_by", { date: formatMomentDate(expectedBy, opts) })}</MetaRow>
       )}
     </>
   );
@@ -144,7 +149,7 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages }: ShipmentC
             .filter(Boolean).join(" · ")}
         </div>
       )}
-      {shipment.parcels.map((parcel, i) => <ParcelRows key={parcel.trackingNumber ?? i} parcel={parcel} />)}
+      {shipment.parcels.map((parcel, i) => <ParcelRows key={parcel.trackingNumber ?? i} parcel={parcel} showExpected={!ARRIVED_OR_STOPPED.has(shipment.status ?? "processing")} />)}
     </CardShell>
   );
 }

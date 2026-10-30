@@ -87,7 +87,7 @@ export function CardLink({ link, label, icon: Icon = ExternalLink, emailId }: { 
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className={ACTION_CLASS}
+      className={cn(ACTION_CLASS, "flex-wrap gap-y-0")}
       data-testid="structured-mail-link"
       onClick={async (e) => {
         e.preventDefault();
@@ -99,7 +99,8 @@ export function CardLink({ link, label, icon: Icon = ExternalLink, emailId }: { 
     >
       <Icon aria-hidden="true" className="w-3.5 h-3.5 flex-shrink-0" />
       <span className="whitespace-nowrap">{label}</span>
-      <span className="min-w-0 truncate text-muted-foreground/80">· {link.host}</span>
+      {/* The host is how a reader judges the link: wrapped, never cut off. */}
+      <span className="max-w-full [overflow-wrap:anywhere] text-muted-foreground/80">· {link.host}</span>
     </a>
   );
 }

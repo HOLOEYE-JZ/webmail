@@ -218,6 +218,17 @@ describe('StructuredMailCards', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('SO-449120'));
   });
 
+  it('drops the expected date once the order is delivered', () => {
+    const shipment = card<Shipment>('order-and-parcel');
+    shipment.status = 'delivered';
+    show([shipment]);
+    const region = screen.getByRole('region', { name: 'region_shipment' });
+    expect(region).toHaveTextContent('order_status_delivered');
+    expect(region).not.toHaveTextContent('expected_by');
+    // Carrier and tracking number stay.
+    expect(region).toHaveTextContent('00340434161234567890');
+  });
+
   it('lists three items and says how many more there are', () => {
     const shipment: Shipment = {
       kind: 'shipment', key: 's', merchant: 'Shop', orderNumber: 'A-1', source: 'json-ld', parcels: [],
