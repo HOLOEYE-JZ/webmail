@@ -138,9 +138,14 @@ export function AuthPage() {
       });
       const data = await res.json();
       if (res.ok) {
+        const mobile = data.mobileClient === 'created' || data.mobileClient === 'updated'
+          ? ` Bulwark Mobile client ${data.mobileClient} (${data.mobileClientId}, ${data.mobileRedirectUri}).`
+          : data.mobileClient === 'failed'
+            ? ` Stalwart refused the Bulwark Mobile client (${data.mobileClientId}); the app registers its own instead, without access to account settings.`
+            : '';
         setMessage({
           type: 'success',
-          text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.`,
+          text: `OAuth client ${data.action} on Stalwart (${data.issuerUrl}). ${data.redirectUriCount} redirect URI(s) registered for ${data.origin}.${mobile}`,
         });
         setEdits({});
         setSetupOpen(false);
@@ -256,6 +261,9 @@ export function AuthPage() {
             />
             Also enable “OAuth only” (hide password login)
           </label>
+          <p className="text-[0.6875rem] text-muted-foreground">
+            On Stalwart 1.0 this also registers a client for Bulwark Mobile: <code>bulwark-mobile</code>, no secret, redirect URI <code>org.bulwarkmail.mobile:/auth/callback</code>.
+          </p>
         </div>
       </Dialog>
 

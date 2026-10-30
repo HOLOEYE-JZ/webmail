@@ -8,6 +8,9 @@ let readOnly = false;
 let saveError: Error | null = null;
 let stalwart016 = false;
 let signedIn = true;
+let mobileRefused = false;
+// Registry ids of the clients Stalwart already has, by client id.
+let existing: Record<string, string> = {};
 const jmapCalls: Array<[string, Record<string, unknown>]> = [];
 
 vi.mock('@/lib/admin/session', () => ({
@@ -42,7 +45,13 @@ vi.mock('@/lib/stalwart/server-fetch', () => ({
     }
     const [name, args] = JSON.parse(init.body!).methodCalls[0];
     jmapCalls.push([name, args]);
-    if (name === 'x:OAuthClient/query') return Response.json({ methodResponses: [[name, { ids: [] }, '0']] });
+    if (name === 'x:OAuthClient/query') {
+      const id = existing[(args.filter as { clientId: string }).clientId];
+      return Response.json({ methodResponses: [[name, { ids: id ? [id] : [] }, '0']] });
+    }
+    if (mobileRefused && JSON.stringify(args).includes('bulwark-mobile')) {
+      return Response.json({ methodResponses: [[name, { notCreated: { mobile: { type: 'invalidProperties', properties: ['redirectUris'] } } }, '0']] });
+    }
     // Stalwart 0.16 has no firstParty and refuses it (answer seen in its source:
     // PatchError "Invalid property" -> invalidPatch naming the path).
     if (stalwart016 && JSON.stringify(args).includes('firstParty')) {
@@ -66,14 +75,56 @@ beforeEach(() => {
   saveError = null;
   stalwart016 = false;
   signedIn = true;
+  mobileRefused = false;
+  existing = {};
   jmapCalls.length = 0;
 });
+
+const setCalls = () => jmapCalls.filter(([name]) => name === 'x:OAuthClient/set').map(([, args]) => args);
 
 describe('POST /api/admin/oauth/setup', () => {
   it('creates the client on Stalwart when the config is writable', async () => {
     const res = await setup();
     expect(res.status).toBe(200);
-    expect(jmapCalls.map(([name]) => name)).toEqual(['x:OAuthClient/query', 'x:OAuthClient/set']);
+    expect(jmapCalls.slice(0, 2).map(([name]) => name)).toEqual(['x:OAuthClient/query', 'x:OAuthClient/set']);
+    expect((setCalls()[0].create as Record<string, Record<string, unknown>>).new.clientId).toBe('bulwark-webmail');
+  });
+
+  it('registers a public first-party client for Bulwark Mobile on Stalwart 1.0 (#1459)', async () => {
+    const res = await setup();
+    expect(res.status).toBe(200);
+    expect((await res.json()).mobileClient).toBe('created');
+    const mobile = (setCalls()[1].create as Record<string, Record<string, unknown>>).mobile;
+    expect(mobile).toMatchObject({
+      clientId: 'bulwark-mobile',
+      firstParty: true,
+      redirectUris: { 'org.bulwarkmail.mobile:/auth/callback': true },
+    });
+    // The app has no secret to send; a client with one fails its token exchange.
+    expect(mobile).not.toHaveProperty('secret');
+  });
+
+  it('takes over an existing Bulwark Mobile client and drops its secret', async () => {
+    existing = { 'bulwark-mobile': 'm' };
+    const res = await setup();
+    expect((await res.json()).mobileClient).toBe('updated');
+    const update = (setCalls()[1].update as Record<string, Record<string, unknown>>).m;
+    expect(update).toMatchObject({ secret: null, firstParty: true, redirectUris: { 'org.bulwarkmail.mobile:/auth/callback': true } });
+  });
+
+  it('still sets up the webmail when Stalwart refuses the mobile client', async () => {
+    mobileRefused = true;
+    const res = await setup();
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    expect(body.mobileClient).toBe('failed');
+  });
+
+  it('never adds the mobile redirect URI to the webmail client', async () => {
+    await setup();
+    const webmail = (setCalls()[0].create as Record<string, Record<string, unknown>>).new;
+    expect(Object.keys(webmail.redirectUris as object).every((uri) => uri.startsWith('https://webmail.example.org/'))).toBe(true);
   });
 
   it('registers a first-party client, which Stalwart 1.0 gives full access', async () => {
@@ -87,10 +138,12 @@ describe('POST /api/admin/oauth/setup', () => {
     stalwart016 = true;
     const res = await setup();
     expect(res.status).toBe(200);
+    // No mobile client either: first-party clients are a 1.0 thing.
     expect(jmapCalls.map(([name]) => name)).toEqual(['x:OAuthClient/query', 'x:OAuthClient/set', 'x:OAuthClient/set']);
     const create = (jmapCalls[2][1].create as Record<string, Record<string, unknown>>).new;
     expect(create.clientId).toBe('bulwark-webmail');
     expect(create).not.toHaveProperty('firstParty');
+    expect((await res.json()).mobileClient).toBe('skipped');
   });
 
   it('tells the admin to sign in to the webmail when no mail account is signed in here', async () => {
