@@ -11,6 +11,8 @@ import { emailDisplayDate } from "@/lib/email-date";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
 import { VerificationCodeChip } from "./verification-code-chip";
+import { StructuredMailCards } from "./structured-mail/structured-mail-cards";
+import { useStructuredMail } from "./structured-mail/use-structured-mail";
 import { attachmentIcon } from "./attachment-chips";
 import { ExternalSenderChip } from "./external-sender-chip";
 import { collectReferencedCids, isEmbeddedInBody, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
@@ -565,6 +567,8 @@ export function ConversationEmailBody({
   const fallbackSource = useEmailStore(useShallow(() => resolveEmailBlobContext(email, client)));
   const source = blobSource ?? fallbackSource;
   const { client: blobClient, accountId } = source;
+  // Booking, parcel and order cards; only an expanded message mounts this body.
+  const structuredCards = useStructuredMail(email, source);
   // Local CID URLs belong to a particular client/owner/message/part list.
   // Hide the previous set during render, before the new fetch's effect runs.
   const cidRequest = useMemo(() => ({ blobClient, accountId, emailId: email.id, attachments: email.attachments }),
@@ -926,6 +930,15 @@ export function ConversationEmailBody({
       {verificationCode && (
         <div className="flex" style={{ paddingInline: 'var(--density-card-p)', paddingTop: 'var(--density-card-p)' }}>
           <VerificationCodeChip code={verificationCode} className="py-1 text-sm" />
+        </div>
+      )}
+
+      {structuredCards.length > 0 && (
+        // Aligned with the body: its own padding on the phone card, the
+        // caller's (className) in Mountain View.
+        <div style={bodyStyle ? { paddingTop: '0.5rem', paddingBottom: '0.25rem' } : { paddingInline: 'var(--density-card-p)', paddingTop: 'var(--density-card-p)' }}>
+          {/* No product images when the mail is shown as plain text. */}
+          <StructuredMailCards cards={structuredCards} email={email} allowRemoteImages={allowExternal && mailViewMode !== 'plain'} />
         </div>
       )}
 

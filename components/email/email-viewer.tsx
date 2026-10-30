@@ -152,6 +152,8 @@ import { parseTnef, isTnefAttachment } from "@/lib/tnef";
 import { debug } from "@/lib/debug";
 import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
 import { VerificationCodeChip } from "./verification-code-chip";
+import { StructuredMailCards } from "./structured-mail/structured-mail-cards";
+import { useStructuredMail } from "./structured-mail/use-structured-mail";
 import { ConversationEmailBody, type ConversationAttachmentHandler, useConversationExternalContent, useMarkReadWhenShown } from "./thread-conversation-view";
 import type { TnefAttachment } from "@/lib/tnef";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
@@ -2699,6 +2701,11 @@ export function EmailViewer({
     // the srcDoc rebuild contract described on `emailContent`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, externalContentPolicy, allowExternalContent, remoteBlockedByOrg]);
+
+  // Booking, parcel and order cards of the message itself (never of an
+  // unwrapped attached .eml); empty unless the sender is verified and the
+  // admin gate is on.
+  const structuredCards = useStructuredMail(email, blobSource);
 
   // Sanitize and prepare email HTML content
   const emailContent = useMemo(() => {
@@ -5760,7 +5767,8 @@ export function EmailViewer({
         {(senderVerification ||
           (!plainView && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
           hasCalendarInvitation ||
-          (readReceiptResponse === 'ask' && shouldOfferReadReceipt)) && (
+          (readReceiptResponse === 'ask' && shouldOfferReadReceipt) ||
+          structuredCards.length > 0) && (
           <div className="border-b border-border bg-muted/30 isolate">
             <div className="px-6 py-1.5">
               <div className="flex flex-col gap-3 isolate">
@@ -5857,6 +5865,18 @@ export function EmailViewer({
                 {hasCalendarInvitation && (
                   <div className="py-1">
                     <CalendarInvitationBanner email={email} />
+                  </div>
+                )}
+
+                {/* Booking, parcel and order cards (structured mail) */}
+                {structuredCards.length > 0 && (
+                  <div className="py-1">
+                    <StructuredMailCards
+                      cards={structuredCards}
+                      email={email}
+                      // Product images load only when the body's remote content would.
+                      allowRemoteImages={!shouldBlockExternal && !plainView}
+                    />
                   </div>
                 )}
               </div>
