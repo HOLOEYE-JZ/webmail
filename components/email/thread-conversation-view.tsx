@@ -12,6 +12,7 @@ import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
 import { VerificationCodeChip } from "./verification-code-chip";
 import { StructuredMailCards } from "./structured-mail/structured-mail-cards";
+import { BookingCalendarActions } from "./structured-mail/booking-calendar-actions";
 import { useStructuredMail } from "./structured-mail/use-structured-mail";
 import { attachmentIcon } from "./attachment-chips";
 import { ExternalSenderChip } from "./external-sender-chip";
@@ -938,7 +939,12 @@ export function ConversationEmailBody({
         // caller's (className) in Mountain View.
         <div style={bodyStyle ? { paddingTop: '0.5rem', paddingBottom: '0.25rem' } : { paddingInline: 'var(--density-card-p)', paddingTop: 'var(--density-card-p)' }}>
           {/* No product images when the mail is shown as plain text. */}
-          <StructuredMailCards cards={structuredCards} email={email} allowRemoteImages={allowExternal && mailViewMode !== 'plain'} />
+          <StructuredMailCards
+            cards={structuredCards}
+            email={email}
+            allowRemoteImages={allowExternal && mailViewMode !== 'plain'}
+            calendarActions={(booking) => <BookingCalendarActions booking={booking} email={email} />}
+          />
         </div>
       )}
 

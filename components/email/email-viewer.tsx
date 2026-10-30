@@ -153,6 +153,7 @@ import { debug } from "@/lib/debug";
 import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
 import { VerificationCodeChip } from "./verification-code-chip";
 import { StructuredMailCards } from "./structured-mail/structured-mail-cards";
+import { BookingCalendarActions } from "./structured-mail/booking-calendar-actions";
 import { useStructuredMail } from "./structured-mail/use-structured-mail";
 import { ConversationEmailBody, type ConversationAttachmentHandler, useConversationExternalContent, useMarkReadWhenShown } from "./thread-conversation-view";
 import type { TnefAttachment } from "@/lib/tnef";
@@ -5876,6 +5877,7 @@ export function EmailViewer({
                       email={email}
                       // Product images load only when the body's remote content would.
                       allowRemoteImages={!shouldBlockExternal && !plainView}
+                      calendarActions={(booking) => <BookingCalendarActions booking={booking} email={email} />}
                     />
                   </div>
                 )}
