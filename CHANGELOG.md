@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- **Mail**: Booking, shipping and order mail that carries schema.org markup gets a card above the message: route and local times for flights, trains and buses, check-in and check-out for hotels, rental cars, events and restaurants, tracking for parcels and status for orders, with copy buttons and links that show where they lead. Flights, hotels and the other bookings can be added to a calendar you pick; a later mail about the same booking offers to update the event and a cancellation to remove it. Apple Wallet boarding passes and event tickets attached to a mail give the same cards. Cards appear only when the receiving server verified the sender's domain, never for forwarded mail, and everything is read in the browser without contacting airlines or carriers. Admins can turn them off under Policy
+
 ## 1.19.0 (2026-10-29)
 
 1.19.0 gives admins an Organisation area: signatures, disclaimers and template libraries per domain or group, external mail warnings, idle and session time limits, settings locked to a value, and one switch that stops all traffic to third-party services. On Stalwart 1.0, group mailboxes share tags and templates, a colleague can be made a delegate in one step, and mail deleted for good can be recovered from Stalwart's archive. A new Accessibility page in Settings has presets, text size and spacing, reading aids for mail and keyboard options, and the app was gone through with screen readers, the keyboard, contrast themes and large text. A usability pass made dialogs, menus, wording and phone layouts work the same way in Mail, Calendar, Contacts and Files, and added Undo for most mail actions, a Files trash and printing. Thai is a new language.
