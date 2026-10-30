@@ -26,6 +26,8 @@
 # misc
 .DS_Store
 *.pem
+# BIMI test certificates (public; the keys stay out)
+!lib/__tests__/fixtures/bimi/*.pem
 
 # debug
 npm-debug.log*
