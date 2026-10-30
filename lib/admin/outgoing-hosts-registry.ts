@@ -170,6 +170,7 @@ export const NON_REQUEST_HOSTS: readonly { host: string; files: readonly string[
   { host: 'www.youtube-nocookie.com', why: 'example in a comment', files: ['lib/plugin-types.ts'] },
   { host: 'bulwark-webmail.vercel.app', why: 'sample message text', files: ['stores/email-store.ts'] },
   { host: 'randomuser.me', why: 'docs links in a comment of the mock server', files: ['app/api/dev-jmap/[...path]/route.ts'] },
+  { host: 'schema.org', why: 'vocabulary names in booking markup, matched and never requested', files: ['lib/structured-mail/extract.ts'] },
 ];
 
 /**
