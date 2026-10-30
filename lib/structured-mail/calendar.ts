@@ -13,6 +13,7 @@
  * domain never can.
  */
 import type { CalendarEvent, CalendarLocation } from '@/lib/jmap/types';
+import { normalizeCalendarEventLike, sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normalization';
 import { fixedOffsetZone, wallClockAt } from './time-zones';
 import type {
   Address,
@@ -31,16 +32,28 @@ const UID_DOMAIN = 'structured.bulwark';
 // uid
 
 /**
- * The organisational domain of a sender domain: its last two labels, or three
- * when the second-level label has at most three characters under a
- * two-letter TLD (`co.uk`, `com.au`). `booking.flixbus.com` → `flixbus.com`.
+ * Public suffixes of two labels that commercial senders sit under. Not the
+ * whole Public Suffix List: a suffix missing here (`gouv.fr`) makes every
+ * domain under it share one organisational domain. That is acceptable for
+ * uids, which also need the same booking reference (or, without one, the
+ * same leg and date) to match, and booking mail from such domains is rare.
+ */
+const TWO_LABEL_SUFFIXES = new Set([
+  'co.uk', 'org.uk', 'ac.uk', 'gov.uk', 'me.uk', 'ltd.uk', 'plc.uk',
+  'com.au', 'net.au', 'org.au',
+  'co.jp', 'ne.jp', 'or.jp',
+  'com.br', 'co.nz', 'co.za', 'com.mx', 'com.tr', 'co.in', 'com.cn', 'com.sg', 'com.hk', 'co.kr', 'co.il',
+  'com.ar', 'com.tw', 'co.th', 'co.id', 'com.my', 'com.ph', 'co.at', 'or.at', 'com.es', 'com.pl', 'com.pt',
+]);
+
+/**
+ * The organisational domain of a sender domain: the last two labels, or three
+ * under a two-label public suffix (`co.uk`, `com.au`).
+ * `booking.flixbus.com` → `flixbus.com`, `shop.example.co.uk` → `example.co.uk`.
  */
 export function organizationalDomain(fromDomain: string): string {
   const labels = fromDomain.trim().toLowerCase().replace(/\.+$/, '').split('.').filter(Boolean);
-  if (labels.length <= 2) return labels.join('.');
-  const tld = labels[labels.length - 1];
-  const second = labels[labels.length - 2];
-  const count = tld.length === 2 && second.length <= 3 ? 3 : 2;
+  const count = labels.length >= 3 && TWO_LABEL_SUFFIXES.has(labels.slice(-2).join('.')) ? 3 : 2;
   return labels.slice(-count).join('.');
 }
 
@@ -94,19 +107,34 @@ function uidFrom(kind: Booking['kind'], parts: (string | undefined)[]): string {
 }
 
 /**
- * The identity of a leg: carrier IATA code (the name only without one),
- * number and departure code or name, after the reference. Without a
- * reference the departure's local date is added. Never the time, so a
- * schedule change keeps the uid.
+ * A leg's number as an identity: no spaces ("ICE 577" = "ICE577") and no
+ * leading zeros ("LX0072" in the markup is flight 72 on the boarding pass;
+ * legKey in normalize.ts strips them the same way).
  */
-function legParts(booking: TransportBooking, leg: TransportLeg, withDate: boolean): (string | undefined)[] {
+function legNumber(number: string | undefined): string {
+  return norm(number).replace(/\s+/g, '').replace(/^0+(?=\d)/, '');
+}
+
+/**
+ * The identity of a leg, from the leg alone: reference, carrier IATA code
+ * (the name only without one), number and departure code or name. Without a
+ * reference the departure's local date is added. Never the time, and with a
+ * reference not the date either, so a schedule change (even one that moves
+ * the departure past midnight) updates the same event.
+ *
+ * It never depends on the booking's other legs, so a later mail that lists
+ * only some of them finds the same events. The price: two legs of one
+ * booking with the same reference, flight and departure (the same commuter
+ * flight on two days) share a uid, and since one uid holds one event,
+ * bookingEventSlots offers neither of them.
+ */
+function legParts(booking: TransportBooking, leg: TransportLeg): (string | undefined)[] {
   return [
     booking.reference,
     leg.carrierCode ?? leg.carrier,
-    // "LX0072" in the markup is flight 72 on the boarding pass (legKey does the same).
-    norm(leg.number).replace(/^0+(?=\d)/, ''),
+    legNumber(leg.number),
     leg.departure.place.code ?? leg.departure.place.name,
-    ...(withDate || !booking.reference ? [leg.departure.at.date] : []),
+    ...(booking.reference ? [] : [leg.departure.at.date]),
   ];
 }
 
@@ -117,30 +145,20 @@ function legParts(booking: TransportBooking, leg: TransportLeg, withDate: boolea
  * starts with the sender's organisational domain.
  */
 export function bookingEventUid(booking: Booking, senderDomain: string, leg?: TransportLeg): string {
-  return bookingUids(booking, senderDomain, leg ? [leg] : undefined)[0];
-}
-
-function bookingUids(booking: Booking, senderDomain: string, onlyLegs?: TransportLeg[]): string[] {
   const domain = organizationalDomain(senderDomainOf(senderDomain));
+  // With a reference the date stays out, so a moved booking keeps its event;
+  // without one the date is part of what identifies it.
+  const dateUnlessReference = (date: string) => (booking.reference ? [] : [date]);
   switch (booking.kind) {
-    case 'flight': case 'train': case 'bus': {
-      // Two legs of one booking with the same carrier, number and departure
-      // (the same commuter flight on two days) would share a uid: those get
-      // their date as well.
-      const keyOf = (leg: TransportLeg) => legParts(booking, leg, false).map(norm).join('|');
-      const counts = new Map<string, number>();
-      for (const leg of booking.legs) counts.set(keyOf(leg), (counts.get(keyOf(leg)) ?? 0) + 1);
-      return (onlyLegs ?? booking.legs).map((leg) => {
-        const clash = (counts.get(keyOf(leg)) ?? 0) > 1;
-        return uidFrom(booking.kind, [domain, ...legParts(booking, leg, clash)]);
-      });
-    }
+    case 'flight': case 'train': case 'bus':
+      return uidFrom(booking.kind, [domain, ...legParts(booking, leg ?? booking.legs[0])]);
     case 'lodging':
-      return [uidFrom('lodging', [domain, booking.reference, booking.name, ...(booking.reference ? [] : [booking.checkin.date])])];
+      return uidFrom('lodging', [domain, booking.reference, booking.name, ...dateUnlessReference(booking.checkin.date)]);
     case 'rentalcar':
-      return [uidFrom('rentalcar', [domain, booking.reference, booking.company ?? booking.provider, booking.pickup.at.date])];
+      return uidFrom('rentalcar', [domain, booking.reference, booking.company ?? booking.provider, ...dateUnlessReference(booking.pickup.at.date)]);
     case 'event': case 'restaurant':
-      return [uidFrom(booking.kind, [domain, booking.reference, booking.name, booking.start.date])];
+      // One order can cover several events: the name stays in the key.
+      return uidFrom(booking.kind, [domain, booking.reference, booking.name, ...dateUnlessReference(booking.start.date)]);
   }
 }
 
@@ -439,15 +457,20 @@ function slotsOf(booking: Booking, options: BookingEventOptions): BookingEventSl
 
   switch (booking.kind) {
     case 'flight': case 'train': case 'bus': {
-      const uids = bookingUids(booking, options.senderDomain);
-      return booking.legs.map((leg, i) => ({
-        uid: uids[i],
-        cancelled: cancelled || leg.status === 'cancelled',
-        event: legEvent(booking, leg, uids[i], tail, labels),
-      }));
+      const uids = booking.legs.map((leg) => bookingEventUid(booking, options.senderDomain, leg));
+      return booking.legs.map((leg, i) => {
+        // Legs sharing a uid can't each have their own event: offer nothing
+        // for them, neither adding nor removing.
+        const shared = uids.indexOf(uids[i]) !== uids.lastIndexOf(uids[i]);
+        return {
+          uid: uids[i],
+          cancelled: !shared && (cancelled || leg.status === 'cancelled'),
+          event: shared ? null : legEvent(booking, leg, uids[i], tail, labels),
+        };
+      });
     }
     case 'lodging': {
-      const [uid] = bookingUids(booking, options.senderDomain);
+      const uid = bookingEventUid(booking, options.senderDomain);
       const hotel = joinParts([booking.name, ...addressLines(booking.address)]);
       const description = [
         reference,
@@ -472,7 +495,7 @@ function slotsOf(booking: Booking, options: BookingEventOptions): BookingEventSl
       }];
     }
     case 'rentalcar': {
-      const [uid] = bookingUids(booking, options.senderDomain);
+      const uid = bookingEventUid(booking, options.senderDomain);
       const span = timedSpan(booking.pickup.at, booking.dropoff.at);
       const locations: Locations = {};
       if (span) {
@@ -494,7 +517,7 @@ function slotsOf(booking: Booking, options: BookingEventOptions): BookingEventSl
       }];
     }
     case 'event': {
-      const [uid] = bookingUids(booking, options.senderDomain);
+      const uid = bookingEventUid(booking, options.senderDomain);
       const description = [
         reference,
         booking.tickets.length > 0 ? labels.tickets(booking.tickets.join(', ')) : '',
@@ -517,7 +540,7 @@ function slotsOf(booking: Booking, options: BookingEventOptions): BookingEventSl
       return [{ uid, cancelled, event: made }];
     }
     case 'restaurant': {
-      const [uid] = bookingUids(booking, options.senderDomain);
+      const uid = bookingEventUid(booking, options.senderDomain);
       const span = timedSpan(booking.start, undefined);
       const place = joinParts([booking.name, ...addressLines(booking.address)]);
       return [{
@@ -578,49 +601,96 @@ const localDateTime = (value: string | undefined | null) => {
 const OWN_LOCATION_IDS = ['dep', 'arr', 'hotel', 'pickup', 'dropoff', 'venue', 'restaurant'];
 
 /**
- * Whether the stored event differs from the one the booking now gives, in
- * what matters for where it sits: start, duration, time zone, title, all-day
- * flag and the name, zone and anchor of each location this module writes.
- * Field by field, because the server adds defaults (`iCalendar`, nulls).
+ * An event as the calendar store saves it and reads it back: a timed event
+ * from midnight that lasts whole days becomes all-day without a zone
+ * (sanitizeOutgoingCalendarEventData on the way out, normalizeCalendarEventLike
+ * on the way in). Comparing against this keeps such an event from looking
+ * changed for ever.
  */
-export function eventNeedsUpdate(existing: Partial<CalendarEvent>, wanted: Partial<CalendarEvent>): boolean {
-  if (localDateTime(existing.start) !== localDateTime(wanted.start)) return true;
-  if (durationParts(existing.duration) !== durationParts(wanted.duration ?? 'PT0S')) return true;
-  if ((existing.timeZone ?? null) !== (wanted.timeZone ?? null)) return true;
-  if ((existing.title ?? '') !== (wanted.title ?? '')) return true;
-  if (Boolean(existing.showWithoutTime) !== Boolean(wanted.showWithoutTime)) return true;
-  const have = existing.locations ?? {};
-  const want = wanted.locations ?? {};
-  for (const id of OWN_LOCATION_IDS) {
-    const a = have[id];
-    const b = want[id];
-    if (!a && !b) continue;
-    if (!a || !b) return true;
-    if ((a.name ?? '') !== (b.name ?? '')) return true;
-    if ((a.timeZone ?? null) !== (b.timeZone ?? null)) return true;
-    if ((a.relativeTo ?? null) !== (b.relativeTo ?? null)) return true;
-  }
-  return false;
+export function asStoredEvent(event: Partial<CalendarEvent>): Partial<CalendarEvent> {
+  return normalizeCalendarEventLike(sanitizeOutgoingCalendarEventData({ ...event }));
+}
+
+/** Start, duration, all-day flag or zone differ (the zone only matters for timed events). */
+function whenDiffers(have: Partial<CalendarEvent>, want: Partial<CalendarEvent>): boolean {
+  if (localDateTime(have.start) !== localDateTime(want.start)) return true;
+  if (durationParts(have.duration ?? 'PT0S') !== durationParts(want.duration ?? 'PT0S')) return true;
+  if (Boolean(have.showWithoutTime) !== Boolean(want.showWithoutTime)) return true;
+  if (want.showWithoutTime) return false;
+  return (have.timeZone ?? null) !== (want.timeZone ?? null);
+}
+
+/** A location this module writes is missing, extra, or has another name, zone or anchor. */
+function locationsDiffer(have: Partial<CalendarEvent>, want: Partial<CalendarEvent>): boolean {
+  const a = have.locations ?? {};
+  const b = want.locations ?? {};
+  return OWN_LOCATION_IDS.some((id) => {
+    const x = a[id];
+    const y = b[id];
+    if (!x && !y) return false;
+    if (!x || !y) return true;
+    return (x.name ?? '') !== (y.name ?? '')
+      || (x.timeZone ?? null) !== (y.timeZone ?? null)
+      || (x.relativeTo ?? null) !== (y.relativeTo ?? null);
+  });
 }
 
 /**
- * The patch that brings a stored event to the booking's current state. The
- * user's own locations stay; ours are replaced.
+ * Whether the stored event sits somewhere else than the booking now says:
+ * start, duration, all-day flag, zone (timed events only) and the name, zone
+ * and anchor of each location this module writes. Field by field, because
+ * the server adds defaults (`iCalendar`, nulls). Title and description are
+ * not compared: the user may have renamed the event or written notes, and a
+ * title in another language is no reason to offer "Update".
  */
-export function bookingEventPatch(existing: Partial<CalendarEvent>, wanted: Partial<CalendarEvent>): Partial<CalendarEvent> {
-  const locations: Locations = {};
-  for (const [id, loc] of Object.entries(existing.locations ?? {})) {
-    if (!OWN_LOCATION_IDS.includes(id)) locations[id] = loc;
+export function eventNeedsUpdate(existing: Partial<CalendarEvent>, wanted: Partial<CalendarEvent>): boolean {
+  const have = normalizeCalendarEventLike({ ...existing });
+  const want = asStoredEvent(wanted);
+  return whenDiffers(have, want) || locationsDiffer(have, want);
+}
+
+/**
+ * Whether a stored description is still the one this module wrote: its last
+ * line names the sender's organisational domain ("Added from a mail from
+ * lufthansa.com"). Notes the user added below it make it theirs.
+ */
+function isOwnDescription(description: string | null | undefined, senderDomain: string | undefined): boolean {
+  if (!description || !senderDomain) return false;
+  const domain = organizationalDomain(senderDomainOf(senderDomain));
+  const lines = description.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  return domain !== '' && (lines[lines.length - 1] ?? '').includes(domain);
+}
+
+/**
+ * The patch that brings a stored event to the booking's current state,
+ * touching only what differs: the times as one group (start, duration, zone,
+ * all-day flag, so the store can't half-convert them), and the locations this
+ * module writes (the user's own locations stay). Title and description change
+ * only while the description is still the generated one (see
+ * isOwnDescription), so user edits survive. `senderDomain` is the mail's From
+ * domain; without it title and description are never touched.
+ */
+export function bookingEventPatch(existing: Partial<CalendarEvent>, wanted: Partial<CalendarEvent>, senderDomain?: string): Partial<CalendarEvent> {
+  const have = normalizeCalendarEventLike({ ...existing });
+  const want = asStoredEvent(wanted);
+  const patch: Partial<CalendarEvent> = {};
+  if (whenDiffers(have, want)) {
+    patch.start = want.start;
+    patch.duration = want.duration;
+    patch.timeZone = want.timeZone ?? null;
+    patch.showWithoutTime = Boolean(want.showWithoutTime);
   }
-  Object.assign(locations, wanted.locations ?? {});
-  return {
-    title: wanted.title,
-    start: wanted.start,
-    timeZone: wanted.timeZone ?? null,
-    duration: wanted.duration,
-    showWithoutTime: Boolean(wanted.showWithoutTime),
-    locations: Object.keys(locations).length > 0 ? locations : null,
-    ...(wanted.description !== undefined ? { description: wanted.description } : {}),
-    ...(wanted.freeBusyStatus ? { freeBusyStatus: wanted.freeBusyStatus } : {}),
-  };
+  if (locationsDiffer(have, want)) {
+    const locations: Locations = {};
+    for (const [id, loc] of Object.entries(existing.locations ?? {})) {
+      if (!OWN_LOCATION_IDS.includes(id)) locations[id] = loc;
+    }
+    Object.assign(locations, want.locations ?? {});
+    patch.locations = Object.keys(locations).length > 0 ? locations : null;
+  }
+  if (isOwnDescription(existing.description, senderDomain)) {
+    if (want.title !== undefined && want.title !== existing.title) patch.title = want.title;
+    if (want.description !== undefined && want.description !== existing.description) patch.description = want.description;
+  }
+  return patch;
 }

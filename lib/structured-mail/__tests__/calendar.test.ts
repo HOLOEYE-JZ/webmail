@@ -10,6 +10,7 @@ import {
   fnv1a64,
   organizationalDomain,
 } from '../calendar';
+import { normalizeCalendarEventLike, sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normalization';
 import { loadAirportZones, readStructuredMail, resolveCards, type Booking, type StructuredCard, type TransportBooking } from '..';
 
 const ctx = 'http://schema.org';
@@ -61,13 +62,22 @@ const SFO_JFK = flight({
 });
 
 describe('organizationalDomain', () => {
-  it('keeps the last two labels, three under short second-level labels of country domains', () => {
+  it('keeps the last two labels, three under a listed two-label public suffix', () => {
     expect(organizationalDomain('booking.flixbus.com')).toBe('flixbus.com');
     expect(organizationalDomain('flixbus.com')).toBe('flixbus.com');
     expect(organizationalDomain('mail.Lufthansa.COM.')).toBe('lufthansa.com');
     expect(organizationalDomain('news.easyjet.co.uk')).toBe('easyjet.co.uk');
+    expect(organizationalDomain('shop.example.co.uk')).toBe('example.co.uk');
     expect(organizationalDomain('mail.qantas.com.au')).toBe('qantas.com.au');
     expect(organizationalDomain('info.bahn.de')).toBe('bahn.de');
+  });
+
+  it('treats short brand names under country domains as brands, not suffixes', () => {
+    expect(organizationalDomain('mail.klm.nl')).toBe('klm.nl');
+    expect(organizationalDomain('info.klm.nl')).toBe('klm.nl');
+    expect(organizationalDomain('news.dhl.de')).toBe('dhl.de');
+    // Not listed, so both collapse; the reference still has to match (see the list's comment).
+    expect(organizationalDomain('x.gouv.fr')).toBe(organizationalDomain('y.gouv.fr'));
   });
 });
 
@@ -369,14 +379,59 @@ describe('bookingEventUid', () => {
     expect(bookingEventUid(day2, 'lufthansa.com')).not.toBe(bookingEventUid(day1, 'lufthansa.com'));
   });
 
-  it('keeps two legs of one booking apart when they share flight and departure', async () => {
-    const [card] = (await cards([
-      lh(['2026-12-01T10:15:00+01:00', '2026-12-01T13:05:00-05:00']),
-      lh(['2026-12-08T10:15:00+01:00', '2026-12-08T13:05:00-05:00']),
-    ])) as TransportBooking[];
-    expect(card.legs).toHaveLength(2);
-    const uids = bookingToEvents(card, { senderDomain: 'lufthansa.com' }).map((e) => e.uid);
-    expect(new Set(uids).size).toBe(2);
+  it('gives a leg the same uid whatever other legs the mail lists, and offers no event for legs that would share one', async () => {
+    const day1 = lh(['2026-12-01T10:15:00+01:00', '2026-12-01T13:05:00-05:00']);
+    const day8 = lh(['2026-12-08T10:15:00+01:00', '2026-12-08T13:05:00-05:00']);
+    const back = flight({ airline: { name: 'Lufthansa', iataCode: 'LH' }, number: '401', ref: 'QX7K2M', dep: ['New York JFK', 'JFK', '2026-12-08T17:30:00-05:00'], arr: ['Frankfurt', 'FRA', '2026-12-09T07:20:00+01:00'] });
+    const [both] = (await cards([day1, day8, back])) as TransportBooking[];
+    const [one] = (await cards([day1, back])) as TransportBooking[];
+    expect(both.legs).toHaveLength(3);
+    expect(bookingEventUid(both, 'lufthansa.com', both.legs[0])).toBe(bookingEventUid(one, 'lufthansa.com', one.legs[0]));
+    expect(bookingEventUid(both, 'lufthansa.com', both.legs[2])).toBe(bookingEventUid(one, 'lufthansa.com', one.legs[1]));
+    // LH 400 FRA twice under one reference: one uid can't hold both, so neither is offered (nor removed); LH 401 still is.
+    const slots = bookingEventSlots(both, { senderDomain: 'lufthansa.com' });
+    expect(slots.map((slot) => [slot.event !== null, slot.cancelled])).toEqual([[false, false], [false, false], [true, false]]);
+    expect(bookingToEvents(both, { senderDomain: 'lufthansa.com' }).map((e) => e.title)).toEqual(['LH 401 JFK → FRA']);
+  });
+
+  it('ignores spaces in train numbers', async () => {
+    const train = (number: string) => ({
+      '@context': ctx, '@type': 'TrainReservation', reservationNumber: 'ZUG577',
+      reservationFor: {
+        '@type': 'TrainTrip', trainNumber: number, provider: { name: 'DB' },
+        departureStation: { name: 'Hannover Hbf', address: { addressCountry: 'DE' } }, departureTime: '2026-12-01T10:00:00+01:00',
+        arrivalStation: { name: 'Berlin Hbf', address: { addressCountry: 'DE' } }, arrivalTime: '2026-12-01T11:40:00+01:00',
+      },
+    });
+    const spaced = await booking(train('ICE 577'));
+    expect(bookingEventUid(spaced, 'bahn.de')).toBe(bookingEventUid(await booking(train('ICE577')), 'bahn.de'));
+    expect(bookingEventUid(spaced, 'bahn.de')).not.toBe(bookingEventUid(await booking(train('ICE 578')), 'bahn.de'));
+  });
+
+  it('keeps the uid of a rescheduled car, event or table that has a reference, and keys on the date without one', async () => {
+    const table = (ref: string | undefined, start: string) => ({
+      '@context': ctx, '@type': 'FoodEstablishmentReservation', ...(ref ? { reservationNumber: ref } : {}), partySize: 2,
+      reservationFor: { '@type': 'Restaurant', name: 'Restaurant Tim Raue', address: { addressCountry: 'DE' } }, startTime: start,
+    });
+    const car = (ref: string | undefined, pickup: string, dropoff: string) => ({
+      '@context': ctx, '@type': 'RentalCarReservation', ...(ref ? { reservationNumber: ref } : {}),
+      reservationFor: { '@type': 'RentalCar', name: 'Golf', rentalCompany: { name: 'Sixt' } },
+      pickupLocation: { name: 'Sixt Berlin', address: { addressCountry: 'DE' } }, pickupTime: pickup,
+      dropoffLocation: { name: 'Sixt Berlin', address: { addressCountry: 'DE' } }, dropoffTime: dropoff,
+    });
+    const show = (ref: string | undefined, name: string, start: string) => ({
+      '@context': ctx, '@type': 'EventReservation', ...(ref ? { reservationNumber: ref } : {}),
+      reservationFor: { '@type': 'Event', name, startDate: start, location: { name: 'Werkstatt', address: { addressCountry: 'DE' } } },
+    });
+    const uid = async (item: unknown) => bookingEventUid(await booking(item), 'example-tickets.de');
+    expect(await uid(table('TR-1', '2026-12-05T19:30:00+01:00'))).toBe(await uid(table('TR-1', '2026-12-06T20:00:00+01:00')));
+    expect(await uid(table(undefined, '2026-12-05T19:30:00+01:00'))).not.toBe(await uid(table(undefined, '2026-12-06T19:30:00+01:00')));
+    expect(await uid(car('RC-1', '2026-12-04T09:00:00+01:00', '2026-12-07T18:00:00+01:00'))).toBe(await uid(car('RC-1', '2026-12-05T09:00:00+01:00', '2026-12-08T18:00:00+01:00')));
+    expect(await uid(car(undefined, '2026-12-04T09:00:00+01:00', '2026-12-07T18:00:00+01:00'))).not.toBe(await uid(car(undefined, '2026-12-05T09:00:00+01:00', '2026-12-08T18:00:00+01:00')));
+    expect(await uid(show('EV-1', 'Workshop', '2026-12-05T14:00:00+01:00'))).toBe(await uid(show('EV-1', 'Workshop', '2026-12-12T14:00:00+01:00')));
+    // One order, two events: the name keeps them apart.
+    expect(await uid(show('EV-1', 'Workshop', '2026-12-05T14:00:00+01:00'))).not.toBe(await uid(show('EV-1', 'Concert', '2026-12-05T14:00:00+01:00')));
+    expect(await uid(show(undefined, 'Workshop', '2026-12-05T14:00:00+01:00'))).not.toBe(await uid(show(undefined, 'Workshop', '2026-12-12T14:00:00+01:00')));
   });
 
   it('keys stays on reference and hotel, adding the check-in date only without reference', async () => {
@@ -415,23 +470,76 @@ describe('eventNeedsUpdate', () => {
     expect(eventNeedsUpdate(serverShaped(wanted), wanted)).toBe(false);
   });
 
-  it('sees a changed start, duration, zone, title or location zone', async () => {
+  it('sees a changed start, duration, zone or location', async () => {
     const [wanted] = bookingToEvents(await booking(SFO_JFK), SENDER);
     const stored = serverShaped(wanted);
     expect(eventNeedsUpdate({ ...stored, start: '2026-12-04T21:15:00' }, wanted)).toBe(true);
     expect(eventNeedsUpdate({ ...stored, duration: 'PT7H' }, wanted)).toBe(true);
     expect(eventNeedsUpdate({ ...stored, timeZone: 'America/Denver' }, wanted)).toBe(true);
-    expect(eventNeedsUpdate({ ...stored, title: 'UA 110 SFO → EWR' }, wanted)).toBe(true);
     expect(eventNeedsUpdate({ ...stored, locations: { ...stored.locations, arr: { ...stored.locations!.arr, timeZone: 'America/Chicago' } } }, wanted)).toBe(true);
     expect(eventNeedsUpdate({ ...stored, locations: { dep: stored.locations!.dep } }, wanted)).toBe(true);
   });
 
-  it('ignores the description and the user\'s own locations, and keeps those in the patch', async () => {
+  it('does not compare titles or descriptions: the user may rename the event or write notes', async () => {
     const [wanted] = bookingToEvents(await booking(SFO_JFK), SENDER);
+    expect(eventNeedsUpdate({ ...serverShaped(wanted), title: 'Flight to New York', description: 'my notes' }, wanted)).toBe(false);
+  });
+
+  it('ignores the zone of two all-day events', async () => {
+    const stay = await booking({
+      '@context': ctx, '@type': 'LodgingReservation', reservationNumber: 'HB-3', reservationFor: { '@type': 'Hotel', name: 'Hotel' },
+      checkinDate: '2026-12-04', checkoutDate: '2026-12-06',
+    });
+    const [wanted] = bookingToEvents(stay, { senderDomain: 'hotel.test' });
+    expect(eventNeedsUpdate({ ...serverShaped(wanted), timeZone: 'Europe/Berlin' }, wanted)).toBe(false);
+    expect(eventNeedsUpdate({ ...serverShaped(wanted), duration: 'P2D' }, wanted)).toBe(true);
+  });
+
+  it('sees no change in a midnight-to-midnight span the store saved as all-day', async () => {
+    const card = await booking({
+      '@context': ctx, '@type': 'RentalCarReservation', reservationNumber: 'RC-0000',
+      reservationFor: { '@type': 'RentalCar', name: 'Golf', rentalCompany: { name: 'Sixt' } },
+      pickupLocation: { name: 'Sixt Berlin', address: { addressCountry: 'DE' } }, pickupTime: '2026-12-04T00:00:00+01:00',
+      dropoffLocation: { name: 'Sixt Berlin', address: { addressCountry: 'DE' } }, dropoffTime: '2026-12-07T00:00:00+01:00',
+    });
+    const [wanted] = bookingToEvents(card, { senderDomain: 'sixt.de' });
+    expect(wanted).toMatchObject({ start: '2026-12-04T00:00:00', duration: 'PT72H', timeZone: 'Europe/Berlin' });
+    // What the store's createEvent sends, and what its lookup turns the server's answer into.
+    const sent = sanitizeOutgoingCalendarEventData({ ...wanted });
+    expect(sent).toMatchObject({ showWithoutTime: true, duration: 'P3D', timeZone: null });
+    const readBack = normalizeCalendarEventLike(serverShaped(sent));
+    expect(eventNeedsUpdate(readBack, wanted)).toBe(false);
+    expect(bookingEventPatch(readBack, wanted, 'sixt.de')).toEqual({});
+  });
+
+  it('patches only what moved, and keeps the user\'s title, notes and own locations', async () => {
+    const before = await booking(SFO_JFK);
+    const after = await booking({ ...SFO_JFK, reservationFor: { ...SFO_JFK.reservationFor, departureTime: '2026-12-04T21:00:00-08:00', arrivalTime: '2026-12-05T07:15:00-05:00' } });
+    const [old] = bookingToEvents(before, SENDER);
+    const [now] = bookingToEvents(after, SENDER);
     const mine = { '@type': 'Location', name: 'Gate B12' } as CalendarEvent['locations'] extends Record<string, infer L> | null ? L : never;
-    const stored = { ...serverShaped(wanted), description: 'my notes', locations: { ...serverShaped(wanted).locations, mine } };
-    expect(eventNeedsUpdate(stored, wanted)).toBe(false);
-    expect(bookingEventPatch(stored, wanted).locations).toHaveProperty('mine');
+    const edited = { ...serverShaped(old), title: 'Flight to New York', description: `${old.description}\nmy notes`, locations: { ...serverShaped(old).locations, mine } };
+    const patch = bookingEventPatch(edited, now, 'united.com');
+    expect(patch).toEqual({ start: '2026-12-04T21:00:00', duration: 'PT7H15M', timeZone: 'America/Los_Angeles', showWithoutTime: false });
+    expect(patch).not.toHaveProperty('title');
+    expect(patch).not.toHaveProperty('description');
+    expect(patch).not.toHaveProperty('locations');
+
+    const diverted = await booking({ ...SFO_JFK, reservationFor: { ...SFO_JFK.reservationFor, arrivalAirport: { '@type': 'Airport', name: 'Newark Liberty International Airport', iataCode: 'EWR' } } });
+    const [toEwr] = bookingToEvents(diverted, SENDER);
+    const locationPatch = bookingEventPatch(edited, toEwr, 'united.com');
+    expect(locationPatch.locations).toMatchObject({ mine: { name: 'Gate B12' }, arr: { name: 'Newark Liberty International Airport (EWR)' } });
+    expect(locationPatch).not.toHaveProperty('title');
+    expect(locationPatch).not.toHaveProperty('start');
+  });
+
+  it('updates title and description while the description is still the generated one', async () => {
+    const [old] = bookingToEvents(await booking(SFO_JFK), SENDER);
+    const diverted = await booking({ ...SFO_JFK, reservationFor: { ...SFO_JFK.reservationFor, arrivalAirport: { '@type': 'Airport', name: 'Newark Liberty International Airport', iataCode: 'EWR' } } });
+    const [toEwr] = bookingToEvents(diverted, { ...SENDER, mailSubjectOrProvider: 'Change to your flight' });
+    const patch = bookingEventPatch(serverShaped(old), toEwr, 'united.com');
+    expect(patch).toMatchObject({ title: 'UA 110 SFO → EWR', description: toEwr.description });
+    expect(bookingEventPatch(serverShaped(old), toEwr)).not.toHaveProperty('title');
   });
 });
 
