@@ -835,7 +835,8 @@
       "total": "Gesamt {total}",
       "expected_by": "Ankunft bis {date}",
       "local_time": "Ortszeit",
-      "local_time_title": "Uhrzeit vor Ort, nicht in Ihrer Zeitzone"
+      "local_time_title": "Uhrzeit vor Ort, nicht in Ihrer Zeitzone",
+      "route": "{from} nach {to}"
     },
     "mv_position": "{index} von {total}",
     "plugin_panel_show": "Plugin-Bereich einblenden",

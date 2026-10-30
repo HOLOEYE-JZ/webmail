@@ -835,7 +835,8 @@
       "total": "Total {total}",
       "expected_by": "Livraison prévue d'ici le {date}",
       "local_time": "heure locale",
-      "local_time_title": "Heure locale du lieu, pas celle de votre fuseau horaire"
+      "local_time_title": "Heure locale du lieu, pas celle de votre fuseau horaire",
+      "route": "{from} vers {to}"
     },
     "mv_position": "{index} sur {total}",
     "plugin_panel_show": "Afficher le panneau du plugin",

@@ -47,7 +47,7 @@ function ItemImages({ items }: { items: Item[] }) {
         <img
           key={`${item.image!.url}-${i}`}
           src={item.image!.url}
-          alt={item.name}
+          alt=""
           referrerPolicy="no-referrer"
           loading="lazy"
           className="h-10 w-10 rounded-md border border-border bg-background object-cover"
@@ -102,7 +102,9 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages }: ShipmentC
   const items = shipmentItems(shipment);
   const { shown, more, count } = summarizeItems(items);
   const total = shipment.total ? formatMoney(shipment.total, opts.locale) : undefined;
-  const trackLinks = shipment.parcels.map((p) => p.trackingUrl).filter((l) => isWebLink(l));
+  // One Track button per distinct tracking page.
+  const trackLinks = shipment.parcels.map((p) => p.trackingUrl)
+    .filter((l, i, all): l is NonNullable<typeof l> => isWebLink(l) && all.findIndex((o) => o?.url === l!.url) === i);
   const hasOrderLink = isWebLink(shipment.orderUrl);
   const cancelled = shipment.status === "cancelled";
 
@@ -118,7 +120,7 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages }: ShipmentC
       actions={trackLinks.length > 0 || hasOrderLink ? (
         <>
           {trackLinks.map((link, i) => (
-            <CardLink key={`${link!.url}-${i}`} link={link} label={t("link_track")} icon={Truck} emailId={emailId} />
+            <CardLink key={`${link.url}-${i}`} link={link} label={t("link_track")} icon={Truck} emailId={emailId} />
           ))}
           <CardLink link={shipment.orderUrl} label={t("link_view_order")} icon={ExternalLink} emailId={emailId} />
         </>
@@ -149,7 +151,7 @@ export function ShipmentCard({ shipment, emailId, allowRemoteImages }: ShipmentC
             .filter(Boolean).join(" · ")}
         </div>
       )}
-      {shipment.parcels.map((parcel, i) => <ParcelRows key={parcel.trackingNumber ?? i} parcel={parcel} showExpected={!ARRIVED_OR_STOPPED.has(shipment.status ?? "processing")} />)}
+      {shipment.parcels.map((parcel, i) => <ParcelRows key={`${parcel.trackingNumber ?? ""}-${i}`} parcel={parcel} showExpected={!ARRIVED_OR_STOPPED.has(shipment.status ?? "processing")} />)}
     </CardShell>
   );
 }

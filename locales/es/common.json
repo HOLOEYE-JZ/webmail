@@ -835,7 +835,8 @@
       "total": "Total {total}",
       "expected_by": "Llega antes del {date}",
       "local_time": "hora local",
-      "local_time_title": "Hora local del lugar, no la de tu zona horaria"
+      "local_time_title": "Hora local del lugar, no la de tu zona horaria",
+      "route": "{from} a {to}"
     },
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostrar el panel del complemento",

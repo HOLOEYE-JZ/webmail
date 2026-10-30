@@ -3,7 +3,10 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 // Keys with their parameters, so a test can see the facts that go into a string.
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string, params?: Record<string, unknown>) => (params ? `${key}${JSON.stringify(params)}` : key),
+  useTranslations: () => (key: string, params?: Record<string, unknown>) => {
+    if (key === 'route') return `${params!.from} to ${params!.to}`;
+    return params ? `${key}${JSON.stringify(params)}` : key;
+  },
   useLocale: () => 'en',
 }));
 
@@ -53,7 +56,8 @@ describe('StructuredMailCards', () => {
   it('shows a flight with its route, legs at local time, passengers and seats', () => {
     show([card('flight-two-passengers-two-legs')]);
     const region = screen.getByRole('region', { name: 'region_flight' });
-    expect(within(region).getByRole('heading', { name: 'FRA → JFK → FRA' })).toBeInTheDocument();
+    expect(within(region).getByRole('heading', { name: 'FRA to JFK to FRA' })).toBeInTheDocument();
+    expect(within(region).getAllByTestId('structured-mail-stop').map((el) => el.textContent)).toEqual(['FRA', 'JFK', 'FRA']);
     expect(region).toHaveTextContent('kind_flight · Lufthansa');
     const legs = within(region).getAllByTestId('structured-mail-leg');
     expect(legs).toHaveLength(2);
@@ -143,7 +147,7 @@ describe('StructuredMailCards', () => {
   it('titles a train with its towns and lists the stations', () => {
     show([card('train-multiple-types')]);
     const region = screen.getByRole('region', { name: 'region_train' });
-    expect(within(region).getByRole('heading', { name: 'Hamburg → München' })).toBeInTheDocument();
+    expect(within(region).getByRole('heading', { name: 'Hamburg to München' })).toBeInTheDocument();
     expect(region).toHaveTextContent('Wed, Nov 18, 08:01 · Hamburg Hbf');
     expect(region).toHaveTextContent('13:58 · München Hbf');
     expect(region).toHaveTextContent('Rail Co ICE 577');
@@ -229,6 +233,89 @@ describe('StructuredMailCards', () => {
     expect(region).toHaveTextContent('00340434161234567890');
   });
 
+  describe('right-to-left place names and values', () => {
+    const hebrewTrain = (): TransportBooking => {
+      const train = card<TransportBooking>('train-multiple-types');
+      train.legs[0].departure.place = { name: 'תל אביב סבידור מרכז', address: { locality: 'תל אביב', country: 'IL' } };
+      train.legs[0].arrival!.place = { name: 'חיפה מרכז השמונה', address: { locality: 'חיפה', country: 'IL' } };
+      return train;
+    };
+
+    it.each(['rtl', 'ltr'] as const)('isolates each stop and draws the arrow as a mirrored icon (%s UI)', (dir) => {
+      render(
+        <div dir={dir}>
+          <StructuredMailCards cards={[hebrewTrain()]} email={{ id: 'm1' }} allowRemoteImages={false} />
+        </div>,
+      );
+      const region = screen.getByRole('region', { name: 'region_train' });
+      // Spoken in reading order, whatever the script.
+      expect(within(region).getByRole('heading', { name: 'תל אביב to חיפה' })).toBeInTheDocument();
+      const stops = within(region).getAllByTestId('structured-mail-stop');
+      expect(stops.map((el) => el.tagName)).toEqual(['BDI', 'BDI']);
+      expect(stops.map((el) => el.textContent)).toEqual(['תל אביב', 'חיפה']);
+      const visual = within(region).getByTestId('structured-mail-title-visual');
+      // No arrow character the bidi algorithm could turn around: an icon between the stops.
+      expect(visual.textContent).not.toMatch(/[→←]/);
+      const arrow = visual.querySelector('svg');
+      expect(arrow).toHaveClass('tabler-icon-arrow-right');
+      expect(arrow!.compareDocumentPosition(stops[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(stops[0].compareDocumentPosition(arrow!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      // Station names in the leg rows are isolated too.
+      const leg = within(region).getByTestId('structured-mail-leg');
+      expect([...leg.querySelectorAll('bdi')].map((el) => el.textContent)).toEqual(expect.arrayContaining(['תל אביב סבידור מרכז', 'חיפה מרכז השמונה']));
+    });
+
+    it('relies on the global mirror for that arrow in RTL', async () => {
+      const { readFileSync } = await import('node:fs');
+      const css = readFileSync(`${process.cwd()}/app/globals.css`, 'utf8');
+      expect(css).toMatch(/\[dir="rtl"\] \.tabler-icon-arrow-right/);
+    });
+
+    it('keeps references, tracking and order numbers, seats and tickets left to right', () => {
+      render(
+        <div dir="rtl">
+          <StructuredMailCards
+            cards={[card('flight-two-passengers-two-legs'), card('ahoi-event'), card('order-and-parcel')]}
+            email={{ id: 'm1' }}
+            allowRemoteImages={false}
+          />
+        </div>,
+      );
+      for (const value of ['QX7K2M', 'AB12CD', 'SO-449120', '00340434161234567890']) {
+        expect(screen.getAllByText(value)[0]).toHaveAttribute('dir', 'ltr');
+      }
+      const seats = screen.getAllByTestId('structured-mail-seat');
+      expect(seats.map((el) => el.textContent)).toEqual(['12A', '12B', '31K', '31J']);
+      seats.forEach((el) => expect(el).toHaveAttribute('dir', 'ltr'));
+      expect(screen.getByTestId('structured-mail-tickets')).toHaveAttribute('dir', 'ltr');
+      expect(screen.getByTestId('structured-mail-tickets')).toHaveTextContent('AB12CD-1');
+    });
+  });
+
+  it('shows no action row when a card has nothing it would put there', () => {
+    const restaurant = card<Booking>('restaurant-cafe');
+    delete restaurant.reference;
+    // A restaurant card shows no ticket link, so this alone gives no row.
+    restaurant.links = { ticket: { url: 'https://tables.example.com/t/1', host: 'tables.example.com' } };
+    show([restaurant]);
+    const region = screen.getByRole('region', { name: 'region_restaurant' });
+    expect(within(region).queryByTestId('structured-mail-actions')).toBeNull();
+    expect(within(region).queryByRole('link')).toBeNull();
+  });
+
+  it('shows one Track button per tracking page', () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const shipment = card<Shipment>('order-and-parcel');
+    const parcel = shipment.parcels[0];
+    // The same parcel twice (same number and page), and a second one with its own page.
+    shipment.parcels = [parcel, { ...parcel }, { ...parcel, trackingNumber: '00340434169999999999', trackingUrl: { url: 'https://www.dhl.de/x?piececode=00340434169999999999', host: 'dhl.de' } }];
+    show([shipment]);
+    const region = screen.getByRole('region', { name: 'region_shipment' });
+    const tracks = within(region).getAllByRole('link', { name: /link_track/ });
+    expect(tracks.map((a) => a.getAttribute('href'))).toEqual([parcel.trackingUrl!.url, 'https://www.dhl.de/x?piececode=00340434169999999999']);
+    expect(errors.mock.calls.flat().join(' ')).not.toMatch(/same key/);
+  });
+
   it('lists three items and says how many more there are', () => {
     const shipment: Shipment = {
       kind: 'shipment', key: 's', merchant: 'Shop', orderNumber: 'A-1', source: 'json-ld', parcels: [],
@@ -251,6 +338,8 @@ describe('StructuredMailCards', () => {
     expect(imgs).toHaveLength(1);
     expect(imgs[0]).toHaveAttribute('src', 'https://img.shop.example.com/p/1.jpg');
     expect(imgs[0]).toHaveAttribute('referrerpolicy', 'no-referrer');
+    // The item names are in the text already.
+    expect(imgs[0]).toHaveAttribute('alt', '');
   });
 
   it('gives each booking to the calendar slot, and none for a shipment', () => {

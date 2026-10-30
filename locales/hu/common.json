@@ -835,7 +835,8 @@
       "total": "Összesen {total}",
       "expected_by": "Érkezés legkésőbb: {date}",
       "local_time": "helyi idő",
-      "local_time_title": "Az adott hely helyi ideje, nem a saját időzónád"
+      "local_time_title": "Az adott hely helyi ideje, nem a saját időzónád",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Bővítménypanel megjelenítése",

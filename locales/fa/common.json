@@ -835,7 +835,8 @@
       "total": "مجموع {total}",
       "expected_by": "رسیدن تا {date}",
       "local_time": "به وقت محلی",
-      "local_time_title": "به وقت محلی همان مکان، نه منطقه زمانی شما"
+      "local_time_title": "به وقت محلی همان مکان، نه منطقه زمانی شما",
+      "route": "{from} به {to}"
     },
     "mv_position": "{index} از {total}",
     "plugin_panel_show": "نمایش پنل افزونه",

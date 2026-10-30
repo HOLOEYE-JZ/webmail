@@ -835,7 +835,8 @@
       "total": "Total {total}",
       "expected_by": "Arrives by {date}",
       "local_time": "local time",
-      "local_time_title": "Local time at the place, not your time zone"
+      "local_time_title": "Local time at the place, not your time zone",
+      "route": "{from} to {to}"
     },
     "mv_position": "{index} of {total}",
     "copy": "Copy",

@@ -835,7 +835,8 @@
       "total": "Toplam {total}",
       "expected_by": "En geç {date} tarihinde gelir",
       "local_time": "yerel saat",
-      "local_time_title": "Yerin yerel saati, sizin saat diliminiz değil"
+      "local_time_title": "Yerin yerel saati, sizin saat diliminiz değil",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Eklenti panelini göster",

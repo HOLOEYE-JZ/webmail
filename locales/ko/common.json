@@ -835,7 +835,8 @@
       "total": "합계 {total}",
       "expected_by": "{date}까지 도착 예정",
       "local_time": "현지 시간",
-      "local_time_title": "사용자의 시간대가 아닌 해당 장소의 현지 시간입니다"
+      "local_time_title": "사용자의 시간대가 아닌 해당 장소의 현지 시간입니다",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "플러그인 패널 표시",

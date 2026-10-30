@@ -835,7 +835,8 @@
       "total": "Kopā {total}",
       "expected_by": "Piegāde līdz {date}",
       "local_time": "vietējais laiks",
-      "local_time_title": "Vietējais laiks attiecīgajā vietā, nevis jūsu laika joslā"
+      "local_time_title": "Vietējais laiks attiecīgajā vietā, nevis jūsu laika joslā",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} no {total}",
     "plugin_panel_show": "Rādīt spraudņa paneli",

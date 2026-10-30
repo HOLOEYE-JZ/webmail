@@ -835,7 +835,8 @@
       "total": "合计 {total}",
       "expected_by": "预计 {date} 前送达",
       "local_time": "当地时间",
-      "local_time_title": "这是该地点的当地时间，而不是你所在时区的时间"
+      "local_time_title": "这是该地点的当地时间，而不是你所在时区的时间",
+      "route": "{from} 至 {to}"
     },
     "mv_position": "第 {index} 封，共 {total} 封",
     "plugin_panel_show": "显示插件面板",

@@ -800,7 +800,8 @@
       "total": "סה\"כ {total}",
       "expected_by": "יגיע עד {date}",
       "local_time": "שעון מקומי",
-      "local_time_title": "השעה המקומית במקום, לא באזור הזמן שלך"
+      "local_time_title": "השעה המקומית במקום, לא באזור הזמן שלך",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} מתוך {total}",
     "plugin_panel_show": "הצגת חלונית התוסף",

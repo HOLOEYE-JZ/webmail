@@ -835,7 +835,8 @@
       "total": "الإجمالي {total}",
       "expected_by": "يصل بحلول {date}",
       "local_time": "بالتوقيت المحلي",
-      "local_time_title": "بالتوقيت المحلي للمكان، وليس بمنطقتك الزمنية"
+      "local_time_title": "بالتوقيت المحلي للمكان، وليس بمنطقتك الزمنية",
+      "route": "{from} إلى {to}"
     },
     "mv_position": "{index} من {total}",
     "plugin_panel_show": "إظهار لوحة الإضافة",

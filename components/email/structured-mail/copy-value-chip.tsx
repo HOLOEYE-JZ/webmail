@@ -52,7 +52,8 @@ export function CopyValueChip({ value, copyLabel, copiedMessage, label, classNam
     >
       <Icon aria-hidden="true" className={cn(CHIP_ICON_CLASS, copied ? "text-success" : "text-muted-foreground")} />
       {label && <span className="font-normal text-muted-foreground">{label}</span>}
-      <span className="min-w-0 break-all font-mono tracking-wide">{value}</span>
+      {/* Digit groups keep their order in a right-to-left UI. */}
+      <bdi dir="ltr" className="min-w-0 break-all font-mono tracking-wide">{value}</bdi>
     </button>
   );
 }

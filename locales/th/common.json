@@ -1770,7 +1770,8 @@
       "total": "รวม {total}",
       "expected_by": "ถึงภายใน {date}",
       "local_time": "เวลาท้องถิ่น",
-      "local_time_title": "เวลาท้องถิ่นของสถานที่ ไม่ใช่เขตเวลาของคุณ"
+      "local_time_title": "เวลาท้องถิ่นของสถานที่ ไม่ใช่เขตเวลาของคุณ",
+      "route": "{from} ไป {to}"
     },
     "mv_position": "{index} จาก {total}",
     "copy": "คัดลอก",

@@ -835,7 +835,8 @@
       "total": "Totaal {total}",
       "expected_by": "Verwacht uiterlijk {date}",
       "local_time": "lokale tijd",
-      "local_time_title": "Lokale tijd ter plaatse, niet in je eigen tijdzone"
+      "local_time_title": "Lokale tijd ter plaatse, niet in je eigen tijdzone",
+      "route": "{from} naar {to}"
     },
     "mv_position": "{index} van {total}",
     "plugin_panel_show": "Plug-inpaneel tonen",

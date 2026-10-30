@@ -835,7 +835,8 @@
       "total": "合計 {total}",
       "expected_by": "{date}までにお届け予定",
       "local_time": "現地時間",
-      "local_time_title": "あなたのタイムゾーンではなく、その場所の現地時間です"
+      "local_time_title": "あなたのタイムゾーンではなく、その場所の現地時間です",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "プラグインパネルを表示",

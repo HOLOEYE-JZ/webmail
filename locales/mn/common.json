@@ -835,7 +835,8 @@
       "total": "Нийт {total}",
       "expected_by": "{date}-ны дотор ирнэ",
       "local_time": "орон нутгийн цаг",
-      "local_time_title": "Тухайн газрын орон нутгийн цаг, таны цагийн бүс биш"
+      "local_time_title": "Тухайн газрын орон нутгийн цаг, таны цагийн бүс биш",
+      "route": "{from} – {to}"
     },
     "mv_position": "{total}-с {index}",
     "plugin_panel_show": "Залгаасын самбарыг харуулах",

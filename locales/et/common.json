@@ -835,7 +835,8 @@
       "total": "Kokku {total}",
       "expected_by": "Saabub hiljemalt {date}",
       "local_time": "kohalik aeg",
-      "local_time_title": "Kohalik aeg sihtkohas, mitte sinu ajavööndis"
+      "local_time_title": "Kohalik aeg sihtkohas, mitte sinu ajavööndis",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Näita pistikprogrammi paneeli",

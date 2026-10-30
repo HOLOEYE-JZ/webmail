@@ -194,11 +194,11 @@ export function legService(leg: TransportLeg): string | undefined {
 }
 
 /**
- * The route as a title: "FRA → JFK → FRA" for flights with codes, city or
- * station names otherwise. Legs that don't connect start a new run,
- * separated by a comma.
+ * The stops of a route, for its title: airport codes for flights, city or
+ * station names otherwise. Connecting legs form one run (FRA, JFK, FRA);
+ * a leg that doesn't connect starts the next run.
  */
-export function routeTitle(booking: TransportBooking): string {
+export function routeRuns(booking: TransportBooking): string[][] {
   const legs = booking.legs;
   const towns = legs.flatMap((leg) => [leg.departure.place, leg.arrival?.place]).filter((p): p is Place => !!p)
     .map((p) => p.address?.locality?.trim());
@@ -220,7 +220,12 @@ export function routeTitle(booking: TransportBooking): string {
       runs.push(to ? [from, to] : [from]);
     }
   }
-  return runs.map((run) => run.join(' → ')).join(', ');
+  return runs;
+}
+
+/** The route as plain text, "FRA → JFK → FRA"; runs separated by a comma. */
+export function routeTitle(booking: TransportBooking): string {
+  return routeRuns(booking).map((run) => run.join(' → ')).join(', ');
 }
 
 /** The items a shipment card lists: the order's, else the parcels', with images from either. */

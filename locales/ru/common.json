@@ -835,7 +835,8 @@
       "total": "Итого {total}",
       "expected_by": "Доставка до {date}",
       "local_time": "местное время",
-      "local_time_title": "Местное время в этом месте, а не в вашем часовом поясе"
+      "local_time_title": "Местное время в этом месте, а не в вашем часовом поясе",
+      "route": "{from} — {to}"
     },
     "mv_position": "{index} из {total}",
     "plugin_panel_show": "Показать панель плагина",

@@ -835,7 +835,8 @@
       "total": "I alt {total}",
       "expected_by": "Ankommer senest {date}",
       "local_time": "lokal tid",
-      "local_time_title": "Lokal tid på stedet, ikke din tidszone"
+      "local_time_title": "Lokal tid på stedet, ikke din tidszone",
+      "route": "{from} til {to}"
     },
     "mv_position": "{index} af {total}",
     "plugin_panel_show": "Vis pluginpanel",

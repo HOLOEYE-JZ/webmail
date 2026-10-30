@@ -835,7 +835,8 @@
       "total": "Total {total}",
       "expected_by": "Sosește până pe {date}",
       "local_time": "ora locală",
-      "local_time_title": "Ora locală a locului, nu cea din fusul tău orar"
+      "local_time_title": "Ora locală a locului, nu cea din fusul tău orar",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} din {total}",
     "plugin_panel_show": "Afișează panoul pluginului",

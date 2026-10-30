@@ -835,7 +835,8 @@
       "total": "總計 {total}",
       "expected_by": "預計 {date} 前送達",
       "local_time": "當地時間",
-      "local_time_title": "這是該地點的當地時間，而非你所在時區的時間"
+      "local_time_title": "這是該地點的當地時間，而非你所在時區的時間",
+      "route": "{from} 至 {to}"
     },
     "mv_position": "第 {index} 封，共 {total} 封",
     "plugin_panel_show": "顯示外掛程式面板",

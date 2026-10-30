@@ -112,7 +112,9 @@ interface CardShellProps {
   /** Destructive tone and a struck-through title. */
   cancelled?: boolean;
   eyebrow: string;
-  title: string;
+  title: ReactNode;
+  /** What screen readers hear instead of a title drawn from parts (a route with arrow icons). */
+  titleLabel?: string;
   pills?: ReactNode;
   children?: ReactNode;
   actions?: ReactNode;
@@ -120,7 +122,7 @@ interface CardShellProps {
 }
 
 /** The banner layout every card shares (CalendarInvitationBanner's look). */
-export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title, pills, children, actions, kind }: CardShellProps) {
+export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title, titleLabel, pills, children, actions, kind }: CardShellProps) {
   return (
     <section aria-label={name} className="flex items-start gap-3 min-w-0" data-testid="structured-mail-card" data-kind={kind}>
       <div
@@ -136,12 +138,17 @@ export function CardShell({ name, icon: Icon, cancelled = false, eyebrow, title,
         <div className="min-w-0">
           <div className="text-[0.6875rem] font-semibold text-muted-foreground break-words">{eyebrow}</div>
           <h3 className={cn("text-sm font-semibold leading-snug break-words", cancelled ? "line-through text-muted-foreground" : "text-foreground")}>
-            {title}
+            {titleLabel ? (
+              <>
+                <span className="sr-only">{titleLabel}</span>
+                <span aria-hidden="true" data-testid="structured-mail-title-visual">{title}</span>
+              </>
+            ) : title}
           </h3>
         </div>
         {pills && <div className="flex flex-wrap items-center gap-1.5">{pills}</div>}
         {children && <div className="flex flex-col gap-1 text-sm text-muted-foreground">{children}</div>}
-        {actions && <div className="flex flex-wrap items-center gap-1.5 pt-0.5">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center gap-1.5 pt-0.5" data-testid="structured-mail-actions">{actions}</div>}
       </div>
     </section>
   );

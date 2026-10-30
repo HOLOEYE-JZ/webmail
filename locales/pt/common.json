@@ -835,7 +835,8 @@
       "total": "Total {total}",
       "expected_by": "Chega até {date}",
       "local_time": "hora local",
-      "local_time_title": "Hora local do lugar, não do seu fuso horário"
+      "local_time_title": "Hora local do lugar, não do seu fuso horário",
+      "route": "{from} para {to}"
     },
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostrar o painel do plugin",

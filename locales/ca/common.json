@@ -835,7 +835,8 @@
       "total": "Total {total}",
       "expected_by": "Arriba abans del {date}",
       "local_time": "hora local",
-      "local_time_title": "Hora local del lloc, no la de la teva zona horària"
+      "local_time_title": "Hora local del lloc, no la de la teva zona horària",
+      "route": "{from} a {to}"
     },
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostra el tauler del connector",

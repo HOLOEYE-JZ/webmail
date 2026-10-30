@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowRight, Bed, Bus, Car, Clock, MapPin, Phone, Plane, Restaurant, Ticket, Train, Users } from "@/components/icons";
 import {
@@ -13,12 +13,14 @@ import {
   legPlaceLabel,
   legService,
   nightsBetween,
+  routeRuns,
   routeTitle,
   sameLocalDate,
 } from "@/lib/structured-mail/format";
 import type {
   Booking,
   EventBooking,
+  Link,
   LodgingBooking,
   Moment,
   RentalCarBooking,
@@ -49,8 +51,26 @@ export interface BookingCardProps<B extends Booking = Booking> {
 
 const TRANSPORT_ICON = { flight: Plane, train: Train, bus: Bus } as const;
 
-/** Reference chip, the booking's links and the calendar slot (render only when hasActions). */
-function BookingActions({ booking, calendarActions, links }: Omit<BookingCardProps, "emailId"> & { links: ReactNode }) {
+interface CardLinkSpec {
+  link?: Link;
+  label: string;
+}
+
+/**
+ * The action row: reference chip, the links this card shows and the
+ * calendar slot. Undefined when there is none of them, so no empty row.
+ */
+function bookingActions(booking: Booking, calendarActions: BookingCardProps["calendarActions"], emailId: string | undefined, links: CardLinkSpec[]): ReactNode {
+  const shown = links.filter((l) => isWebLink(l.link));
+  if (!booking.reference && !calendarActions && shown.length === 0) return undefined;
+  return (
+    <BookingActions booking={booking} calendarActions={calendarActions}>
+      {shown.map((l) => <CardLink key={l.label} link={l.link} label={l.label} emailId={emailId} />)}
+    </BookingActions>
+  );
+}
+
+function BookingActions({ booking, calendarActions, children }: Pick<BookingCardProps, "booking" | "calendarActions"> & { children: ReactNode }) {
   const t = useTranslations("email_viewer.structured_mail");
   return (
     <>
@@ -63,15 +83,10 @@ function BookingActions({ booking, calendarActions, links }: Omit<BookingCardPro
           className={ACTION_CHIP_CLASS}
         />
       )}
-      {links}
+      {children}
       {calendarActions?.(booking)}
     </>
   );
-}
-
-function hasActions(booking: Booking, calendarActions: unknown): boolean {
-  return !!booking.reference || !!calendarActions
-    || [booking.links.checkin, booking.links.manage, booking.links.ticket].some(isWebLink);
 }
 
 function PassengersRow({ names }: { names: string[] }) {
@@ -91,7 +106,7 @@ function Leg({ leg, kind, bookingCancelled }: { leg: TransportLeg; kind: Transpo
   const service = legService(leg);
   const Icon = TRANSPORT_ICON[kind];
   const arrival = leg.arrival;
-  const seats = leg.seats.map((s) => (s.passenger ? `${s.passenger} ${s.seat}` : s.seat));
+
   return (
     <div className="space-y-0.5 min-w-0" data-testid="structured-mail-leg" data-cancelled={cancelled || undefined}>
       {(service || (cancelled && !bookingCancelled)) && (
@@ -109,21 +124,50 @@ function Leg({ leg, kind, bookingCancelled }: { leg: TransportLeg; kind: Transpo
       )}
       <MetaRow icon={Clock}>
         <When at={leg.departure.at} struck={cancelled} />
-        <span className={cn(cancelled && "line-through")}> · {legPlaceLabel(leg.departure.place, kind)}</span>
+        <span className={cn(cancelled && "line-through")}> · <bdi>{legPlaceLabel(leg.departure.place, kind)}</bdi></span>
       </MetaRow>
       {arrival && (
         <MetaRow icon={ArrowRight}>
           {arrival.at && <When at={arrival.at} timeOnly={sameLocalDate(arrival.at, leg.departure.at)} struck={cancelled} />}
-          <span className={cn(cancelled && "line-through")}>{arrival.at ? " · " : ""}{legPlaceLabel(arrival.place, kind)}</span>
+          <span className={cn(cancelled && "line-through")}>{arrival.at ? " · " : ""}<bdi>{legPlaceLabel(arrival.place, kind)}</bdi></span>
         </MetaRow>
       )}
-      {seats.length > 0 && (
+      {leg.seats.length > 0 && (
         <MetaRow icon={Ticket}>
           <span>{t("seats")}: </span>
-          {seats.join(", ")}
+          {leg.seats.map((seat, i) => (
+            <Fragment key={`${seat.passenger ?? ""}-${seat.seat}-${i}`}>
+              {i > 0 && ", "}
+              {seat.passenger && <><bdi>{seat.passenger}</bdi> </>}
+              <bdi dir="ltr" data-testid="structured-mail-seat">{seat.seat}</bdi>
+            </Fragment>
+          ))}
         </MetaRow>
       )}
     </div>
+  );
+}
+
+/**
+ * "FRA → JFK → FRA" as parts: every stop isolated in a <bdi>, and ArrowRight,
+ * which globals.css mirrors under [dir=rtl], between them, so the arrows
+ * point the reading direction whatever script the names are in.
+ */
+function RouteTitle({ runs }: { runs: string[][] }) {
+  return (
+    <>
+      {runs.map((run, r) => (
+        <Fragment key={r}>
+          {r > 0 && ", "}
+          {run.map((stop, i) => (
+            <Fragment key={i}>
+              {i > 0 && <ArrowRight aria-hidden="true" className="inline-block w-3.5 h-3.5 mx-1 align-[-0.125em]" />}
+              <bdi data-testid="structured-mail-stop">{stop}</bdi>
+            </Fragment>
+          ))}
+        </Fragment>
+      ))}
+    </>
   );
 }
 
@@ -132,6 +176,7 @@ export function TransportCard({ booking, emailId, calendarActions }: BookingCard
   const kindLabel = booking.kind === "flight" ? t("kind_flight") : booking.kind === "train" ? t("kind_train") : t("kind_bus");
   const name = booking.kind === "flight" ? t("region_flight") : booking.kind === "train" ? t("region_train") : t("region_bus");
   const title = routeTitle(booking);
+  const runs = routeRuns(booking);
   const cancelled = booking.status === "cancelled";
   return (
     <CardShell
@@ -140,19 +185,10 @@ export function TransportCard({ booking, emailId, calendarActions }: BookingCard
       icon={TRANSPORT_ICON[booking.kind]}
       cancelled={cancelled}
       eyebrow={eyebrowText(kindLabel, booking.provider, title)}
-      title={title}
+      title={<RouteTitle runs={runs} />}
+      titleLabel={runs.map((run) => run.reduce((from, to) => t("route", { from, to }))).join(", ")}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={hasActions(booking, calendarActions) ? (
-        <BookingActions
-          booking={booking}
-          calendarActions={calendarActions}
-          links={<>
-            <CardLink link={booking.links.checkin} label={t("link_check_in")} emailId={emailId} />
-            <CardLink link={booking.links.manage} label={t("link_manage")} emailId={emailId} />
-            <CardLink link={booking.links.ticket} label={t("link_ticket")} emailId={emailId} />
-          </>}
-        />
-      ) : undefined}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.checkin, label: t("link_check_in") }, { link: booking.links.manage, label: t("link_manage") }, { link: booking.links.ticket, label: t("link_ticket") }])}
     >
       <div className="flex flex-col gap-2 min-w-0">
         {booking.legs.map((leg, i) => (
@@ -208,16 +244,7 @@ export function LodgingCard({ booking, emailId, calendarActions }: BookingCardPr
       eyebrow={eyebrowText(t("kind_lodging"), booking.provider, booking.name)}
       title={booking.name}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={hasActions(booking, calendarActions) ? (
-        <BookingActions
-          booking={booking}
-          calendarActions={calendarActions}
-          links={<>
-            <CardLink link={booking.links.manage} label={t("link_manage")} emailId={emailId} />
-            <CardLink link={booking.links.checkin} label={t("link_check_in")} emailId={emailId} />
-          </>}
-        />
-      ) : undefined}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }, { link: booking.links.checkin, label: t("link_check_in") }])}
     >
       {address && <MetaRow icon={MapPin}>{address}</MetaRow>}
       <StayEnd label={t("check_in_label")} at={booking.checkin} edge="from" />
@@ -243,13 +270,7 @@ export function RentalCarCard({ booking, emailId, calendarActions }: BookingCard
       eyebrow={eyebrowText(t("kind_rentalcar"), booking.provider, title)}
       title={title}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={hasActions(booking, calendarActions) ? (
-        <BookingActions
-          booking={booking}
-          calendarActions={calendarActions}
-          links={<CardLink link={booking.links.manage} label={t("link_manage")} emailId={emailId} />}
-        />
-      ) : undefined}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }])}
     >
       <MetaRow icon={Clock}>
         <span>{t("pickup")} </span>
@@ -286,16 +307,7 @@ export function EventCard({ booking, emailId, calendarActions }: BookingCardProp
       eyebrow={eyebrowText(t("kind_event"), booking.provider, booking.name)}
       title={booking.name}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={hasActions(booking, calendarActions) ? (
-        <BookingActions
-          booking={booking}
-          calendarActions={calendarActions}
-          links={<>
-            <CardLink link={booking.links.ticket} label={t("link_ticket")} emailId={emailId} />
-            <CardLink link={booking.links.manage} label={t("link_manage")} emailId={emailId} />
-          </>}
-        />
-      ) : undefined}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.ticket, label: t("link_ticket") }, { link: booking.links.manage, label: t("link_manage") }])}
     >
       <MetaRow icon={Clock}>
         <When at={booking.start} />
@@ -310,7 +322,7 @@ export function EventCard({ booking, emailId, calendarActions }: BookingCardProp
       {booking.tickets.length > 0 && (
         <MetaRow icon={Ticket}>
           <span>{t("tickets")}: </span>
-          <span className="font-mono break-all">{booking.tickets.join(", ")}</span>
+          <bdi dir="ltr" className="font-mono break-all" data-testid="structured-mail-tickets">{booking.tickets.join(", ")}</bdi>
         </MetaRow>
       )}
       <PassengersRow names={booking.passengers} />
@@ -331,13 +343,7 @@ export function RestaurantCard({ booking, emailId, calendarActions }: BookingCar
       eyebrow={eyebrowText(t("kind_restaurant"), booking.provider, booking.name)}
       title={booking.name}
       pills={booking.status && booking.status !== "confirmed" ? <BookingStatusPill status={booking.status} /> : undefined}
-      actions={hasActions(booking, calendarActions) ? (
-        <BookingActions
-          booking={booking}
-          calendarActions={calendarActions}
-          links={<CardLink link={booking.links.manage} label={t("link_manage")} emailId={emailId} />}
-        />
-      ) : undefined}
+      actions={bookingActions(booking, calendarActions, emailId, [{ link: booking.links.manage, label: t("link_manage") }])}
     >
       <MetaRow icon={Clock}><When at={booking.start} /></MetaRow>
       {address && <MetaRow icon={MapPin}>{address}</MetaRow>}

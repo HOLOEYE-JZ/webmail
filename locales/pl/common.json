@@ -835,7 +835,8 @@
       "total": "Razem {total}",
       "expected_by": "Dostawa do {date}",
       "local_time": "czas lokalny",
-      "local_time_title": "Czas lokalny w danym miejscu, nie w Twojej strefie czasowej"
+      "local_time_title": "Czas lokalny w danym miejscu, nie w Twojej strefie czasowej",
+      "route": "{from} – {to}"
     },
     "mv_position": "{index} z {total}",
     "plugin_panel_show": "Pokaż panel wtyczki",
