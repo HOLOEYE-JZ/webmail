@@ -47,6 +47,7 @@ export const LOCALE_LOADERS: Record<string, () => Promise<Messages>> = {
   th: () => import('@/locales/th/common.json').then((m) => m.default),
   tr: () => import('@/locales/tr/common.json').then((m) => m.default),
   uk: () => import('@/locales/uk/common.json').then((m) => m.default),
+  vi: () => import('@/locales/vi/common.json').then((m) => m.default),
   zh: () => import('@/locales/zh/common.json').then((m) => m.default),
   'zh-TW': () => import('@/locales/zh-TW/common.json').then((m) => m.default),
 };
