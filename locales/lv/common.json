@@ -5963,6 +5963,7 @@
     "updated": "Kalendārs atjaunināts",
     "removed": "Noņemts no jūsu kalendāra",
     "action_failed": "Neizdevās mainīt kalendāru. Mēģiniet vēlreiz.",
+    "blocked": "Spraudnis apturēja šīs kalendāra izmaiņas.",
     "title": {
       "rental_car": "Nomas auto",
       "rental_car_company": "Nomas auto: {company}"

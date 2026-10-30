@@ -5963,6 +5963,7 @@
     "updated": "Agenda bijgewerkt",
     "removed": "Uit je agenda verwijderd",
     "action_failed": "Je agenda kon niet worden gewijzigd. Probeer het opnieuw.",
+    "blocked": "Een plug-in heeft deze agendawijziging tegengehouden.",
     "title": {
       "rental_car": "Huurauto",
       "rental_car_company": "Huurauto: {company}"

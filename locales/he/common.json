@@ -5964,6 +5964,7 @@
     "updated": "היומן עודכן",
     "removed": "הוסר מהיומן שלך",
     "action_failed": "לא ניתן היה לשנות את היומן. נסה שוב.",
+    "blocked": "תוסף עצר את השינוי הזה ביומן.",
     "title": {
       "rental_car": "רכב שכור",
       "rental_car_company": "רכב שכור: {company}"

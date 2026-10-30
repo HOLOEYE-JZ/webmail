@@ -5963,6 +5963,7 @@
     "updated": "Takvim güncellendi",
     "removed": "Takviminizden kaldırıldı",
     "action_failed": "Takviminiz değiştirilemedi. Tekrar deneyin.",
+    "blocked": "Bir eklenti bu takvim değişikliğini durdurdu.",
     "title": {
       "rental_car": "Kiralık araç",
       "rental_car_company": "Kiralık araç: {company}"

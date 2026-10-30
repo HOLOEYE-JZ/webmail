@@ -5963,6 +5963,7 @@
     "updated": "S’ha actualitzat el calendari",
     "removed": "S’ha tret del vostre calendari",
     "action_failed": "No s’ha pogut modificar el calendari. Torneu-ho a provar.",
+    "blocked": "Un connector ha impedit aquest canvi al calendari.",
     "title": {
       "rental_car": "Cotxe de lloguer",
       "rental_car_company": "Cotxe de lloguer: {company}"

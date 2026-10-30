@@ -5963,6 +5963,7 @@
     "updated": "Kalender opdateret",
     "removed": "Fjernet fra din kalender",
     "action_failed": "Din kalender kunne ikke ændres. Prøv igen.",
+    "blocked": "Et plugin stoppede denne ændring i kalenderen.",
     "title": {
       "rental_car": "Lejebil",
       "rental_car_company": "Lejebil: {company}"

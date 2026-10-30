@@ -5963,6 +5963,7 @@
     "updated": "日历已更新",
     "removed": "已从你的日历中移除",
     "action_failed": "无法更改你的日历，请重试。",
+    "blocked": "某个插件阻止了此日历更改。",
     "title": {
       "rental_car": "租车",
       "rental_car_company": "租车：{company}"

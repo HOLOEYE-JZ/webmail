@@ -5963,6 +5963,7 @@
     "updated": "Naptár frissítve",
     "removed": "Eltávolítva a naptáradból",
     "action_failed": "Nem sikerült módosítani a naptárat. Próbáld újra.",
+    "blocked": "Egy bővítmény megakadályozta ezt a naptárváltozást.",
     "title": {
       "rental_car": "Bérautó",
       "rental_car_company": "Bérautó: {company}"

@@ -5963,6 +5963,7 @@
     "updated": "Calendario actualizado",
     "removed": "Quitado de tu calendario",
     "action_failed": "No se pudo cambiar tu calendario. Inténtalo de nuevo.",
+    "blocked": "Un complemento ha impedido este cambio en el calendario.",
     "title": {
       "rental_car": "Coche de alquiler",
       "rental_car_company": "Coche de alquiler: {company}"

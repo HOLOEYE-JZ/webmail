@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import {
@@ -53,14 +53,25 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
   const [picker, setPicker] = useState<PickerPosition | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
+  // An action was started from here: once it is done, focus goes to its
+  // outcome instead of being lost with the button or picker that vanished.
+  const focusAfterAction = useRef(false);
 
   const closePicker = useCallback(() => setPicker(null), []);
+  const pickerOpen = picker !== null;
 
   useEffect(() => {
-    if (!picker) return;
+    if (!pickerOpen) return;
+    pickerRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
     const onPointer = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Node;
       if (pickerRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
+      closePicker();
+    };
+    // Scrolling the list itself must not close it; scrolling the page moves the trigger away.
+    const onScroll = (event: Event) => {
+      if (event.target instanceof Node && pickerRef.current?.contains(event.target)) return;
       closePicker();
     };
     const onKey = (event: KeyboardEvent) => {
@@ -69,19 +80,50 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
         triggerRef.current?.focus();
       }
     };
-    window.addEventListener('scroll', closePicker, true);
+    window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', closePicker);
     document.addEventListener('mousedown', onPointer);
     document.addEventListener('touchstart', onPointer);
     document.addEventListener('keydown', onKey);
     return () => {
-      window.removeEventListener('scroll', closePicker, true);
+      window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', closePicker);
       document.removeEventListener('mousedown', onPointer);
       document.removeEventListener('touchstart', onPointer);
       document.removeEventListener('keydown', onKey);
     };
-  }, [picker, closePicker]);
+  }, [pickerOpen, closePicker]);
+
+  useEffect(() => {
+    if (busy || !focusAfterAction.current) return;
+    focusAfterAction.current = false;
+    const row = rowRef.current;
+    if (!row) return;
+    const target = row.querySelector<HTMLElement>('[role="alert"]')
+      ?? row.querySelector<HTMLElement>('[role="status"]')
+      ?? row.querySelector<HTMLElement>('button');
+    target?.focus();
+  }, [busy, status, notice, error]);
+
+  const onMenuKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(pickerRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    if (items.length === 0) return;
+    const at = items.indexOf(document.activeElement as HTMLElement);
+    let next: number | null = null;
+    if (event.key === 'ArrowDown') next = at < 0 ? 0 : (at + 1) % items.length;
+    else if (event.key === 'ArrowUp') next = at < 0 ? items.length - 1 : (at - 1 + items.length) % items.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = items.length - 1;
+    else if (event.key === 'Tab') closePicker();
+    if (next === null) return;
+    event.preventDefault();
+    items[next].focus();
+  };
+
+  const act = (action: () => Promise<void>) => {
+    focusAfterAction.current = true;
+    void action();
+  };
 
   if (status === 'hidden' || status === 'loading') return null;
   // A cancelled booking with nothing in the calendar has no action; only the
@@ -90,7 +132,7 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
 
   const onAdd = () => {
     if (calendars.length <= 1) {
-      void calendar.add(calendars[0]?.id);
+      act(() => calendar.add(calendars[0]?.id));
       return;
     }
     if (picker) {
@@ -101,10 +143,11 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
   };
 
   const noticeText = notice === 'added' ? t('added') : notice === 'updated' ? t('updated') : notice === 'removed' ? t('removed') : null;
+  const blocked = notice === 'blocked';
   const showView = status === 'in-calendar' || status === 'update';
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div ref={rowRef} className="flex flex-wrap items-center gap-1.5">
       {status === 'add' && (
         <>
           <button
@@ -125,20 +168,22 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
               ref={pickerRef}
               role="menu"
               aria-label={t('select_calendar')}
+              onKeyDown={onMenuKey}
               className="fixed bg-background rounded-lg shadow-lg border border-border z-50 py-1 overflow-y-auto"
               style={{ top: picker.top, left: picker.left, right: picker.right, maxHeight: picker.maxHeight, width: `min(${PICKER_WIDTH}px, calc(100vw - ${2 * EDGE}px))` }}
             >
-              <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground">{t('select_calendar')}</div>
+              <div role="presentation" className="px-3 py-1.5 text-xs font-medium text-muted-foreground">{t('select_calendar')}</div>
               {calendars.map((cal) => (
                 <button
                   key={cal.id}
                   type="button"
                   role="menuitem"
+                  tabIndex={-1}
                   onClick={() => {
                     closePicker();
-                    void calendar.add(cal.id);
+                    act(() => calendar.add(cal.id));
                   }}
-                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted flex items-center gap-2 min-h-[36px]"
+                  className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted focus:bg-muted focus:outline-none flex items-center gap-2 min-h-[36px]"
                 >
                   <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: sanitizeColor(cal.color) }} />
                   <span className="truncate text-foreground">{cal.name}</span>
@@ -151,7 +196,7 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
       )}
 
       {status === 'update' && (
-        <button type="button" onClick={() => void calendar.update()} disabled={busy} className={BUTTON}>
+        <button type="button" onClick={() => act(calendar.update)} disabled={busy} className={BUTTON}>
           <CalendarCheck className="w-3.5 h-3.5" />
           {t('update_in_calendar')}
         </button>
@@ -160,7 +205,7 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
       {status === 'remove' && (
         <button
           type="button"
-          onClick={() => void calendar.remove()}
+          onClick={() => act(calendar.remove)}
           disabled={busy}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive px-3 py-1.5 rounded-md border border-border hover:border-destructive/30 hover:bg-destructive/10 transition-colors min-h-[36px] disabled:opacity-50"
         >
@@ -174,7 +219,11 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
       )}
 
       {noticeText && (
-        <span role="status" className="rounded-full bg-success/15 px-2 py-0.5 text-[0.6875rem] font-medium text-success">{noticeText}</span>
+        <span role="status" tabIndex={-1} className="rounded-full bg-success/15 px-2 py-0.5 text-[0.6875rem] font-medium text-success focus:outline-none">{noticeText}</span>
+      )}
+
+      {blocked && (
+        <span role="status" tabIndex={-1} className="rounded-full bg-muted px-2 py-0.5 text-[0.6875rem] font-medium text-muted-foreground focus:outline-none">{t('blocked')}</span>
       )}
 
       {showView && (
@@ -192,7 +241,7 @@ export function BookingCalendarActions({ booking, email }: { booking: Structured
       {busy && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
 
       {error && (
-        <p role="alert" className="basis-full text-xs text-destructive">{error}</p>
+        <p role="alert" tabIndex={-1} className="basis-full text-xs text-destructive focus:outline-none">{error}</p>
       )}
     </div>
   );

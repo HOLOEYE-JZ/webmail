@@ -5963,6 +5963,7 @@
     "updated": "Kalendář aktualizován",
     "removed": "Odebráno z vašeho kalendáře",
     "action_failed": "Kalendář se nepodařilo změnit. Zkuste to znovu.",
+    "blocked": "Tuto změnu kalendáře zastavil plugin.",
     "title": {
       "rental_car": "Pronájem auta",
       "rental_car_company": "Pronájem auta: {company}"

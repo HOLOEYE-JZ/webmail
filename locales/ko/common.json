@@ -5963,6 +5963,7 @@
     "updated": "캘린더가 업데이트되었어요",
     "removed": "캘린더에서 제거되었어요",
     "action_failed": "캘린더를 변경할 수 없어요. 다시 시도해 주세요.",
+    "blocked": "플러그인이 이 캘린더 변경을 막았어요.",
     "title": {
       "rental_car": "렌터카",
       "rental_car_company": "렌터카: {company}"

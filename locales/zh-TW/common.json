@@ -5963,6 +5963,7 @@
     "updated": "行事曆已更新",
     "removed": "已從您的行事曆移除",
     "action_failed": "無法變更您的行事曆，請再試一次。",
+    "blocked": "某個外掛程式阻止了此行事曆變更。",
     "title": {
       "rental_car": "租車",
       "rental_car_company": "租車：{company}"

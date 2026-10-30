@@ -5963,6 +5963,7 @@
     "updated": "Kalendár bol aktualizovaný",
     "removed": "Odstránené z vášho kalendára",
     "action_failed": "Kalendár sa nepodarilo zmeniť. Skúste to znova.",
+    "blocked": "Túto zmenu kalendára zastavil doplnok.",
     "title": {
       "rental_car": "Prenájom auta",
       "rental_car_company": "Prenájom auta: {company}"

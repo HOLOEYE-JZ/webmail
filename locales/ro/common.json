@@ -5963,6 +5963,7 @@
     "updated": "Calendar actualizat",
     "removed": "Eliminat din calendarul dvs.",
     "action_failed": "Calendarul nu a putut fi modificat. Încercați din nou.",
+    "blocked": "Un plugin a oprit această modificare în calendar.",
     "title": {
       "rental_car": "Mașină închiriată",
       "rental_car_company": "Mașină închiriată: {company}"

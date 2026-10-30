@@ -41,8 +41,8 @@ export interface BookingCalendar {
   busy: boolean;
   /** What went wrong with the last action, in the user's language. */
   error: string | null;
-  /** What the last action did, for a short confirmation. */
-  notice: 'added' | 'updated' | 'removed' | null;
+  /** What the last action did, for a short confirmation; `blocked` when a plugin stopped it. */
+  notice: 'added' | 'updated' | 'removed' | 'blocked' | null;
   /** Add every live event, into `calendarId` or the default calendar. */
   add: (calendarId?: string) => Promise<void>;
   /** Add the missing live events, update the changed ones, remove the cancelled ones. */
@@ -51,6 +51,13 @@ export interface BookingCalendar {
   remove: () => Promise<void>;
   viewInCalendar: () => void;
 }
+
+/**
+ * Uids whose events a card removed in this session. Another card for the
+ * same booking (a conversation showing two of its mails) may still hold the
+ * event from its own lookup; this tells it the event is gone.
+ */
+const removedUids = new Set<string>();
 
 type Lookup = { key: string; failed: false; events: Record<string, CalendarEvent | null> } | { key: string; failed: true };
 
@@ -174,6 +181,7 @@ export function useBookingCalendar(booking: StructuredCard | null | undefined, e
         const events: Record<string, CalendarEvent | null> = {};
         uids.forEach((uid, i) => {
           events[uid] = results[i].find((e) => e.uid === uid && !e.recurrenceId) ?? null;
+          if (events[uid]) removedUids.delete(uid);
         });
         setLookup({ key: uidKey, failed: false, events });
         const hits = Object.values(events).filter((e): e is CalendarEvent => e !== null);
@@ -200,11 +208,14 @@ export function useBookingCalendar(booking: StructuredCard | null | undefined, e
 
   const known = lookup && lookup.key === uidKey && !lookup.failed ? lookup.events : null;
   const existingOf = useCallback((uid: string): CalendarEvent | null => {
+    if (removedUids.has(uid)) return null;
     const stored = known?.[uid];
-    if (!stored) return null;
     // The store's copy of the same event is fresher after a change elsewhere.
-    return storeEvents.find((e) => e.id === stored.id) ?? stored;
-  }, [known, storeEvents]);
+    if (stored) return storeEvents.find((e) => e.id === stored.id) ?? stored;
+    // Added since the lookup, maybe by another card for the same booking.
+    return storeEvents.find((e) => e.uid === uid && !e.recurrenceId && !e.isShared
+      && (!e.localAccountId || e.localAccountId === activeAccountId)) ?? null;
+  }, [known, storeEvents, activeAccountId]);
 
   const plan = useMemo<Plan>(() => {
     if (!active) return { status: 'hidden', live: [], stale: [] };
@@ -219,14 +230,17 @@ export function useBookingCalendar(booking: StructuredCard | null | undefined, e
     setLookup((prev) => (prev && !prev.failed && prev.key === uidKey ? { ...prev, events: { ...prev.events, [uid]: event } } : prev));
   }, [uidKey]);
 
-  /** Run one action; on failure say why and look the events up again. */
+  /**
+   * Run one action. `work` resolves to false when a plugin stopped a step,
+   * which is said as such; on failure say why and look the events up again.
+   */
   const run = useCallback(async (done: NonNullable<BookingCalendar['notice']>, work: () => Promise<boolean>) => {
     if (!client || busy) return;
     setBusy(true);
     setError(null);
     setNotice(null);
     try {
-      if (await work()) setNotice(done);
+      setNotice((await work()) ? done : 'blocked');
     } catch (err) {
       setError(describeError(err, t('action_failed')));
       setRefresh((n) => n + 1);
@@ -239,9 +253,16 @@ export function useBookingCalendar(booking: StructuredCard | null | undefined, e
     if (!client) return false;
     for (const { slot, existing } of plan.live) {
       if (existing) continue;
+      // createEvent answers null both when a plugin stops it and when the
+      // server refuses (the uid exists after all, say); only the latter sets
+      // the store's error.
+      useCalendarStore.setState({ error: null });
       const created = await createEvent(client, { ...slot.event, calendarIds: { [calendarId]: true } });
-      // null: refused (a plugin, or the server, e.g. the uid exists after all).
-      if (!created) throw new Error('create failed');
+      if (!created) {
+        if (useCalendarStore.getState().error) throw new Error('create failed');
+        return false;
+      }
+      removedUids.delete(slot.uid);
       remember(slot.uid, created);
     }
     return true;
@@ -250,7 +271,16 @@ export function useBookingCalendar(booking: StructuredCard | null | undefined, e
   const removeStale = useCallback(async (): Promise<boolean> => {
     if (!client) return false;
     for (const { slot, existing } of plan.stale) {
-      if (!(await deleteEvent(client, existing.id))) return false;
+      // Marked before the store drops the event, so other cards that
+      // re-render on that change already see it gone.
+      removedUids.add(slot.uid);
+      let removed = false;
+      try {
+        removed = await deleteEvent(client, existing.id);
+      } finally {
+        if (!removed) removedUids.delete(slot.uid);
+      }
+      if (!removed) return false;
       remember(slot.uid, null);
     }
     return true;
@@ -266,7 +296,9 @@ export function useBookingCalendar(booking: StructuredCard | null | undefined, e
     if (!client) return false;
     for (const { slot, existing } of plan.live) {
       if (!existing || !eventNeedsUpdate(existing, slot.event as Partial<CalendarEvent>)) continue;
-      const patch = bookingEventPatch(existing, slot.event as Partial<CalendarEvent>);
+      // Only what moved; title and notes the user changed stay.
+      const patch = bookingEventPatch(existing, slot.event as Partial<CalendarEvent>, senderDomain);
+      if (Object.keys(patch).length === 0) continue;
       if (!(await updateEvent(client, existing.id, patch))) return false;
       const updated = { ...existing, ...patch } as CalendarEvent;
       remember(slot.uid, updated);
@@ -281,7 +313,7 @@ export function useBookingCalendar(booking: StructuredCard | null | undefined, e
       if (!(await createMissing(target))) return false;
     }
     return removeStale();
-  }), [run, client, plan.live, targets, updateEvent, remember, createMissing, removeStale]);
+  }), [run, client, plan.live, senderDomain, targets, updateEvent, remember, createMissing, removeStale]);
 
   const remove = useCallback(() => run('removed', removeStale), [run, removeStale]);
 

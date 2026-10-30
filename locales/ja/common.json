@@ -5963,6 +5963,7 @@
     "updated": "カレンダーを更新しました",
     "removed": "カレンダーから削除しました",
     "action_failed": "カレンダーを変更できませんでした。もう一度お試しください。",
+    "blocked": "プラグインがこのカレンダーの変更を止めました。",
     "title": {
       "rental_car": "レンタカー",
       "rental_car_company": "レンタカー: {company}"

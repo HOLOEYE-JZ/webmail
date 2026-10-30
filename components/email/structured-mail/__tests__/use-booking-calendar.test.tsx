@@ -77,7 +77,11 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
   client.queryCalendarEvents.mockReset();
   calendarHolds([]);
-  createEvent.mockReset().mockImplementation(async (_client, event: Partial<CalendarEvent>) => ({ ...event, id: `new-${event.uid}` }));
+  createEvent.mockReset().mockImplementation(async (_client, event: Partial<CalendarEvent>) => {
+    const created = { ...event, id: `new-${event.uid}` } as CalendarEvent;
+    useCalendarStore.setState((s) => ({ events: [...s.events, created] }));
+    return created;
+  });
   updateEvent.mockReset().mockResolvedValue(true);
   deleteEvent.mockReset().mockResolvedValue(true);
   setCalendarGate(true);
@@ -148,6 +152,9 @@ describe('useBookingCalendar', () => {
     const [, id, patch, scheduling] = updateEvent.mock.calls[0];
     expect(id).toBe('e1');
     expect(patch).toMatchObject({ start: '2026-12-01T12:40:00', timeZone: 'Europe/Berlin', duration: 'PT8H55M' });
+    // The stored description isn't the generated one any more: title and notes stay the user's.
+    expect(patch).not.toHaveProperty('title');
+    expect(patch).not.toHaveProperty('description');
     expect(scheduling).toBeUndefined();
     expect(result.current.status).toBe('in-calendar');
   });
@@ -241,11 +248,59 @@ describe('useBookingCalendar', () => {
   });
 
   it('says why an add failed', async () => {
-    createEvent.mockResolvedValue(null);
+    createEvent.mockImplementation(async () => {
+      useCalendarStore.setState({ error: 'Failed to create event' });
+      return null;
+    });
     const { result } = await settled(await bookingFrom([OUT]));
     await act(() => result.current.add());
     expect(result.current.error).toBe('action_failed');
     expect(result.current.status).toBe('add');
+  });
+
+  it('says so when a plugin stops an add, an update or a removal', async () => {
+    createEvent.mockResolvedValue(null);
+    const fresh = await settled(await bookingFrom([OUT]));
+    await act(() => fresh.result.current.add());
+    expect(fresh.result.current).toMatchObject({ notice: 'blocked', error: null, status: 'add' });
+
+    const [old] = bookingToEvents(await bookingFrom([OUT]), { senderDomain: 'lufthansa.com' });
+    calendarHolds([stored(old, 'e1')]);
+    updateEvent.mockResolvedValue(false);
+    const moved = await settled(await bookingFrom([OUT_MOVED]));
+    await act(() => moved.result.current.update());
+    expect(moved.result.current).toMatchObject({ notice: 'blocked', status: 'update' });
+
+    deleteEvent.mockResolvedValue(false);
+    const cancelled = await settled(await bookingFrom([OUT_CANCELLED]));
+    await act(() => cancelled.result.current.remove());
+    expect(cancelled.result.current).toMatchObject({ notice: 'blocked', status: 'remove' });
+  });
+
+  it('shows a booking added from another card for the same booking as in the calendar', async () => {
+    const booking = await bookingFrom([OUT]);
+    const first = await settled(booking);
+    const second = await settled(await bookingFrom([OUT]));
+    expect(first.result.current.status).toBe('add');
+    expect(second.result.current.status).toBe('add');
+    await act(() => second.result.current.add());
+    expect(second.result.current.status).toBe('in-calendar');
+    await waitFor(() => expect(first.result.current.status).toBe('in-calendar'));
+    expect(createEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a booking removed from another card as gone', async () => {
+    const [old] = bookingToEvents(await bookingFrom([OUT]), { senderDomain: 'lufthansa.com' });
+    calendarHolds([stored(old, 'e1')]);
+    deleteEvent.mockImplementation(async (_client, id: string) => {
+      useCalendarStore.setState((s) => ({ events: s.events.filter((e) => e.id !== id) }));
+      return true;
+    });
+    const first = await settled(await bookingFrom([OUT_CANCELLED]));
+    const second = await settled(await bookingFrom([OUT_CANCELLED]));
+    expect(first.result.current.status).toBe('remove');
+    await act(() => second.result.current.remove());
+    await waitFor(() => expect(first.result.current.status).toBe('cancelled'));
   });
 });
 
@@ -270,6 +325,53 @@ describe('BookingCalendarActions', () => {
     await waitFor(() => expect(createEvent).toHaveBeenCalledTimes(1));
     expect(createEvent.mock.calls[0][1]).toMatchObject({ calendarIds: { Work: true } });
     expect(await screen.findByText('added')).toBeTruthy();
+  });
+
+  async function openPicker() {
+    useCalendarStore.setState({ calendars: [cal('Personal', { isDefault: true }), cal('Work'), cal('Travel')] });
+    render(<BookingCalendarActions booking={await bookingFrom([OUT])} email={EMAIL} />);
+    const trigger = await screen.findByRole('button', { name: /add_to_calendar/ });
+    fireEvent.click(trigger);
+    return { trigger, menu: screen.getByRole('menu') };
+  }
+
+  it('moves focus into the picker and through it with the arrow keys, Home and End', async () => {
+    const { menu } = await openPicker();
+    const items = screen.getAllByRole('menuitem');
+    expect(document.activeElement).toBe(items[0]);
+    fireEvent.keyDown(menu, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(items[1]);
+    fireEvent.keyDown(menu, { key: 'End' });
+    expect(document.activeElement).toBe(items[2]);
+    fireEvent.keyDown(menu, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(items[0]);
+    fireEvent.keyDown(menu, { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(items[2]);
+    fireEvent.keyDown(menu, { key: 'Home' });
+    expect(document.activeElement).toBe(items[0]);
+    expect(menu.querySelector('div')?.getAttribute('role')).toBe('presentation');
+  });
+
+  it('closes the picker on Escape and gives focus back to its button', async () => {
+    const { trigger, menu } = await openPicker();
+    fireEvent.keyDown(menu, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('stays open while its own list scrolls, and closes when the page scrolls', async () => {
+    const { menu } = await openPicker();
+    fireEvent.scroll(menu);
+    expect(screen.queryByRole('menu')).not.toBeNull();
+    fireEvent.scroll(window);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('puts focus on the outcome after a pick', async () => {
+    await openPicker();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Work' }));
+    await waitFor(() => expect(document.activeElement?.getAttribute('role')).toBe('status'));
+    expect(document.activeElement?.textContent).toBe('added');
   });
 
   it('keeps the picker inside a 390 px wide screen when the button sits at the right edge', async () => {

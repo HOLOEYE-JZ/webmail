@@ -5963,6 +5963,7 @@
     "updated": "Calendrier mis à jour",
     "removed": "Retiré de votre calendrier",
     "action_failed": "Impossible de modifier votre calendrier. Réessayez.",
+    "blocked": "Un plugin a empêché cette modification du calendrier.",
     "title": {
       "rental_car": "Voiture de location",
       "rental_car_company": "Voiture de location : {company}"

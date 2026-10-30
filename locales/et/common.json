@@ -5963,6 +5963,7 @@
     "updated": "Kalender uuendatud",
     "removed": "Eemaldatud sinu kalendrist",
     "action_failed": "Kalendrit ei õnnestunud muuta. Proovi uuesti.",
+    "blocked": "Pistikprogramm peatas selle kalendrimuudatuse.",
     "title": {
       "rental_car": "Rendiauto",
       "rental_car_company": "Rendiauto: {company}"

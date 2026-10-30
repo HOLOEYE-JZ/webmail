@@ -5963,6 +5963,7 @@
     "updated": "Zaktualizowano kalendarz",
     "removed": "Usunięto z Twojego kalendarza",
     "action_failed": "Nie udało się zmienić kalendarza. Spróbuj ponownie.",
+    "blocked": "Wtyczka zablokowała tę zmianę w kalendarzu.",
     "title": {
       "rental_car": "Wynajem samochodu",
       "rental_car_company": "Wynajem samochodu: {company}"
