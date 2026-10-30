@@ -40,6 +40,7 @@ function versionRow(v: DirectoryVersion) {
     sha256: v.sha256,
     yanked: v.yanked,
     changelog: v.changelog ?? null,
+    notes: v.notes ?? null,
     downloads: v.downloads ?? 0,
     signed: !!v.signature,
     commit: v.provenance?.source?.commit ?? null,

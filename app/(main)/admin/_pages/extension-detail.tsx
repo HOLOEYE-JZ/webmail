@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { Puzzle, SwatchBook, Loader2, Eye, EyeOff, Lock, RotateCcw, Trash2, Shield, ShieldAlert, Store, Upload } from '@/components/icons';
 import { apiFetch } from '@/lib/browser-navigation';
 import { adminPath } from '@/lib/admin/admin-nav';
@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { useExtensionIcons } from './use-extension-icons';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { ChangelogNotes } from '@/components/admin/changelog';
 
 export interface ConfigField {
   type: 'string' | 'secret' | 'boolean' | 'number' | 'select';
@@ -54,6 +55,10 @@ export interface ExtensionEntry {
   source?: { kind: 'marketplace'; slug: string; directoryUrl: string } | { kind: 'upload' };
   /** Versions kept on this server for a rollback, most recently replaced first. */
   previousVersions?: string[];
+  /** The installed version's changelog, kept from a marketplace install. */
+  changelog?: string;
+  /** The changelogs of the kept versions that have one, by version. */
+  previousChangelogs?: Record<string, string>;
   /** Loaded from the dev plugins directory rather than installed. */
   dev?: boolean;
   configSchema?: Record<string, ConfigField>;
@@ -233,7 +238,8 @@ export function ExtensionDetailPage({ kind, id }: Props) {
     if (!entry) return;
     const ok = await confirm({
       title: `Roll back to v${version}?`,
-      message: `"${entry.name}" v${version} replaces v${entry.version}. The copy kept on this server is used.`,
+      message: `"${entry.name}" v${version} replaces v${entry.version}. The copy kept on this server is used.`
+        + (entry.changelog ? ` What v${entry.version} changed, listed under Versions, is undone.` : ''),
       confirmText: 'Roll back',
       cancelText: 'Cancel',
     });
@@ -405,16 +411,16 @@ export function ExtensionDetailPage({ kind, id }: Props) {
         )}
 
         <SettingsSection id="versions" title="Versions" description={previous.length === 0 ? 'No earlier version is kept on this server.' : 'Earlier versions kept on this server can be put back without the directory.'}>
-          <SettingItem label="Installed">
+          <VersionRow label="Installed" changelog={entry.changelog} notesLabel={`What's new in v${entry.version}`}>
             <span className="font-mono text-sm text-foreground">v{entry.version}</span>
-          </SettingItem>
+          </VersionRow>
           {previous.map((version) => (
-            <SettingItem key={version} label={`v${version}`} description="Kept on this server">
+            <VersionRow key={version} label={`v${version}`} description="Kept on this server" changelog={entry.previousChangelogs?.[version]} notesLabel="Changelog">
               <Button variant="outline" size="sm" className="gap-1.5" disabled={busy !== null} onClick={() => void rollback(version)}>
                 {busy === `rollback:${version}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                 Roll back
               </Button>
-            </SettingItem>
+            </VersionRow>
           ))}
         </SettingsSection>
 
@@ -457,6 +463,31 @@ export function ExtensionDetailPage({ kind, id }: Props) {
         onDiscard={() => { setFormValues(savedValues); setAvailabilityDraft({}); }}
         saveLabel="Save"
       />
+    </div>
+  );
+}
+
+/** A row of the Versions section: like a SettingItem, with the version's changelog under its label. */
+function VersionRow({ label, description, changelog, notesLabel, children }: {
+  label: string;
+  description?: string;
+  changelog?: string;
+  notesLabel: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2 border-b border-border py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <div className="min-w-0 flex-1 sm:pe-4">
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
+        {changelog && (
+          <details className="mt-1.5">
+            <summary className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">{notesLabel}</summary>
+            <ChangelogNotes markdown={changelog} className="mt-2" />
+          </details>
+        )}
+      </div>
+      <div className="flex-shrink-0">{children}</div>
     </div>
   );
 }

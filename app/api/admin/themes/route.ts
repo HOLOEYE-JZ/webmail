@@ -11,7 +11,7 @@ import {
   type ServerTheme,
 } from '@/lib/admin/plugin-registry';
 import { forgetExtensionInPolicy } from '@/lib/admin/extension-cleanup';
-import { listHistory } from '@/lib/admin/extension-history';
+import { keptVersions, listHistory } from '@/lib/admin/extension-history';
 
 import { readThemePackage } from '@/lib/extension-package';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
@@ -27,8 +27,7 @@ export async function GET(request: NextRequest) {
     const registry = await getThemeRegistry();
     const themes = await Promise.all(registry.themes.map(async t => ({
       ...t,
-      // Versions this server still has a copy of (lib/admin/extension-history.ts).
-      previousVersions: (await listHistory('theme', t.id).catch(() => [])).map(h => h.version),
+      ...keptVersions(await listHistory('theme', t.id).catch(() => [])),
     })));
     return NextResponse.json(themes, {
       headers: { 'Cache-Control': 'no-store' },

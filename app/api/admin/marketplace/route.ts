@@ -236,6 +236,8 @@ export async function POST(request: NextRequest) {
     }
 
     const source = { kind: 'marketplace' as const, slug, directoryUrl };
+    // Kept with the install, and so with its rollback copy later.
+    const notes = typeof meta.changelog === 'string' && meta.changelog.trim() ? { changelog: meta.changelog.slice(0, 20_000) } : {};
     const installExtras = {
       signature: signature.status,
       channel: meta.channel,
@@ -282,6 +284,7 @@ export async function POST(request: NextRequest) {
         installedAt: existingTheme?.installedAt ?? now,
         updatedAt: now,
         source,
+        ...notes,
       };
 
       await saveTheme(theme, css, skin);
@@ -357,6 +360,7 @@ export async function POST(request: NextRequest) {
       ...(manifest.locales ? { locales: manifest.locales } : {}),
       ...(manifest.credentials ? { credentials: manifest.credentials } : {}),
       source,
+      ...notes,
     };
 
     await savePlugin(plugin, code);

@@ -13,11 +13,13 @@ import {
   installedExtensions,
   v2Url,
   type DirectoryAdvisory,
+  type DirectoryChangelogEntry,
   type DirectoryVersion,
 } from '@/lib/admin/marketplace-directory';
 
 export interface UpdatesAnswer {
-  updates: Array<DirectoryVersion & { slug: string; currentVersion: string; changelog: string | null }>;
+  /** `changelogs` is missing from directories older than 2026-10-30; `changelog` is then the offered version's alone. */
+  updates: Array<DirectoryVersion & { slug: string; currentVersion: string; changelog: string | null; changelogs?: DirectoryChangelogEntry[] }>;
   yanked: Array<{ slug: string; version: string; reason: string | null; at: string }>;
   deprecated: Array<{ slug: string; message: string | null; replacement: string | null }>;
   suspended: string[];
