@@ -1,6 +1,7 @@
 import type { Email } from '@/lib/jmap/types';
 import type { StructuredCard } from '@/lib/structured-mail';
 import type { EmailBlobContext } from '@/stores/email-store';
+import { pkpassSource } from './pkpass-source';
 
 /**
  * Card sources beyond the HTML markup, read asynchronously once a trusted
@@ -20,5 +21,5 @@ export interface CardSourceContext {
 
 export type CardSource = (context: CardSourceContext) => Promise<StructuredCard[]>;
 
-/** Registered sources; each one appends itself here. */
-export const CARD_SOURCES: CardSource[] = [];
+/** Registered sources: Apple Wallet passes. */
+export const CARD_SOURCES: CardSource[] = [pkpassSource];
