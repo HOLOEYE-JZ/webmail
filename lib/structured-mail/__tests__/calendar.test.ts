@@ -350,6 +350,16 @@ describe('bookingEventUid', () => {
     expect(bookingEventUid(nameOnly, 'lufthansa.com')).not.toBe(bookingEventUid(short, 'lufthansa.com'));
   });
 
+  it('ignores leading zeros of the flight number, so a boarding pass finds the markup event', async () => {
+    const times: [string, string] = ['2026-12-01T10:15:00+01:00', '2026-12-01T13:05:00-05:00'];
+    const padded = (await booking(lh(times, { number: '0072' }))) as TransportBooking;
+    const plain = (await booking(lh(times, { number: '72' }))) as TransportBooking;
+    expect(padded.legs[0].number).toBe('0072');
+    expect(bookingEventUid(padded, 'lufthansa.com')).toBe(bookingEventUid(plain, 'lufthansa.com'));
+    const other = await booking(lh(times, { number: '720' }));
+    expect(bookingEventUid(other, 'lufthansa.com')).not.toBe(bookingEventUid(plain, 'lufthansa.com'));
+  });
+
   it('adds the departure date only when there is no reference', async () => {
     const noRef = (time: [string, string]) => ({ ...lh(time), reservationNumber: undefined });
     const day1 = await booking(noRef(['2026-12-01T10:15:00+01:00', '2026-12-01T13:05:00-05:00']));

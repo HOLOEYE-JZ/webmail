@@ -103,7 +103,8 @@ function legParts(booking: TransportBooking, leg: TransportLeg, withDate: boolea
   return [
     booking.reference,
     leg.carrierCode ?? leg.carrier,
-    leg.number,
+    // "LX0072" in the markup is flight 72 on the boarding pass (legKey does the same).
+    norm(leg.number).replace(/^0+(?=\d)/, ''),
     leg.departure.place.code ?? leg.departure.place.name,
     ...(withDate || !booking.reference ? [leg.departure.at.date] : []),
   ];
