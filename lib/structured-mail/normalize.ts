@@ -357,7 +357,9 @@ function parcel(p: Obj, source: CardSource): Shipment {
   const carrier = nameOf(p.carrier) ?? nameOf(p.provider);
   const trackingNumber = str(p.trackingNumber);
   const trackingUrl = link(p.trackingUrl);
-  const expectedBy = lenientDate(p.expectedArrivalUntil) ?? lenientDate(p.expectedArrivalFrom);
+  // Only the latest bound is an "arrives by" date; expectedArrivalFrom is the
+  // earliest one and would promise too much.
+  const expectedBy = lenientDate(p.expectedArrivalUntil);
   const shipped: Parcel = {
     ...(carrier ? { carrier } : {}),
     ...(trackingNumber ? { trackingNumber } : {}),

@@ -185,6 +185,13 @@ describe('normalizeItems', () => {
     });
   });
 
+  it('takes the expected arrival only from its latest bound', () => {
+    const parcel = (extra: Record<string, unknown>) => norm({ '@context': ctx, '@type': 'ParcelDelivery', trackingNumber: '1', carrier: 'DHL', ...extra })[0] as Shipment;
+    // The earliest possible delivery day is not an "arrives by" date.
+    expect(parcel({ expectedArrivalFrom: '2026-11-03' }).parcels[0].expectedBy).toBeUndefined();
+    expect(parcel({ expectedArrivalFrom: '2026-11-03', expectedArrivalUntil: '2026-11-05' }).parcels[0].expectedBy).toEqual({ date: '2026-11-05' });
+  });
+
   it('drops types it does not read', () => {
     expect(norm(
       { '@context': ctx, '@type': 'PromotionCard', image: 'https://x.example.com/a.png' },
