@@ -409,7 +409,11 @@ export function cardKey(card: StructuredCard): string {
   }
 }
 
-/** A leg's identity inside a booking: carrier, number, departure day and place. */
+/**
+ * A leg's identity inside a booking: carrier, number, departure day and place.
+ * Leading zeros of the number don't count (BA0123 in a mail, 123 in its
+ * Wallet pass).
+ */
 export function legKey(leg: TransportLeg): string {
-  return [lower(leg.carrierCode ?? leg.carrier), lower(leg.number), leg.departure.at.date, lower(leg.departure.place.code ?? leg.departure.place.name)].join('|');
+  return [lower(leg.carrierCode ?? leg.carrier), lower(leg.number).replace(/^0+(?=\d)/, ''), leg.departure.at.date, lower(leg.departure.place.code ?? leg.departure.place.name)].join('|');
 }

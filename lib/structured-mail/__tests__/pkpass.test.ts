@@ -69,6 +69,18 @@ describe('passToCards', () => {
     expect(merged[0].passengers).toEqual(['Jana Beispiel']);
   });
 
+  it('merges with markup that pads the flight number with zeros (LX0072 and flightNumber 72)', async () => {
+    const pass = await cardsFrom(boardingPass({ ...AIR_SEMANTICS, flightNumber: 72, flightCode: 'LX72' }));
+    const markup = readStructuredMail(MARKUP.replace('"flightNumber":"LX1072"', '"flightNumber":"LX0072"'), CTX);
+    const merged = mergeCandidates([...markup, ...pass].map((card) => ({ card, problems: [] }))) as TransportBooking[];
+    expect(merged).toHaveLength(1);
+    expect(merged[0].legs).toHaveLength(1);
+    const { confirmationNumber: _ref, ...noRef } = AIR_SEMANTICS;
+    const [unreferenced] = await cardsFrom(boardingPass({ ...noRef, flightNumber: 72, flightCode: 'LX72' }));
+    const [markupLeg] = readStructuredMail(MARKUP.replace('"reservationNumber":"PK7Q2Z",', '').replace('"flightNumber":"LX1072"', '"flightNumber":"LX0072"'), CTX);
+    expect(unreferenced.key).toBe(markupLeg.key);
+  });
+
   it('keys a pass without confirmation number by its leg, like markup without one', async () => {
     const { confirmationNumber: _ref, ...semantics } = AIR_SEMANTICS;
     const [card] = await cardsFrom(boardingPass(semantics));
