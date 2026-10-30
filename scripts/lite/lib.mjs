@@ -121,8 +121,9 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/fetch-ical",
   "/api/caldav/discover",
   "/api/webdav",
-  // Sender favicons - disabled in Lite (initials fallback).
+  // Sender favicons and BIMI logos - disabled in Lite (initials fallback).
   "/api/favicon",
+  "/api/bimi",
   // Web push relay paths (relative to the *relay* origin, not this host).
   "/api/push/vapid-public-key",
   "/api/push/register",
