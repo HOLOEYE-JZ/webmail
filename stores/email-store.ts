@@ -37,7 +37,7 @@ import type { StorageQuota } from "@/lib/quota";
 import { isArchiveActionEnabled } from "@/lib/archive-gate";
 import {
   READ_FILTER, UNREAD_FILTER, UNREAD_SECTION_SIZE, andFilters, isUnreadFirstView, mergeUnreadSection,
-  sectionFromUnreadRows, unreadSectionRowCount, withoutReached, type UnreadSection,
+  openSectionRows, sectionFromUnreadRows, unreadSectionRowCount, withoutReached, type UnreadSection,
 } from "@/lib/unread-first";
 
 type ScheduledSubmissionMetadata = {
@@ -4193,12 +4193,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           getMessageListOrderFor(mailbox?.role),
         );
         // A kept row this page reached is back in order, and so is a row
-        // of the Unread section that was read since.
+        // of the Unread section that was read since, but for the open
+        // conversation's (openSectionRows).
         const reached = new Set(result.emails.map(e => e.id));
         if (outOfOrder > 0 && [...retained].some(id => reached.has(id))) {
           set({ retainedInViewIds: new Set([...get().retainedInViewIds].filter(id => !reached.has(id))) });
         }
-        const unreadSection = withoutReached(get().unreadSection, reached);
+        const open = get().selectedEmail;
+        const unreadSection = withoutReached(
+          get().unreadSection,
+          reached,
+          openSectionRows(get().emails, get().unreadSection, open ? threadKeyFor(open) : null),
+        );
         if (unreadSection !== get().unreadSection) set({ unreadSection });
       }
 
@@ -6915,6 +6921,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const previousTotal = get().totalEmails;
       const insertedCount = Math.max((result.total || 0) - previousTotal, 0);
 
+      // The open conversation's rows of the Unread section stay there, read
+      // since or not (openSectionRows), so the read mail's page leaves them out.
+      const openEmail = get().selectedEmail;
+      const openInSection = openSectionRows(currentEmails, get().unreadSection, openEmail ? threadKeyFor(openEmail) : null);
+      const openInPage = openInSection.size > 0 ? result.emails.filter(e => openInSection.has(e.id)).length : 0;
+      if (openInPage > 0) result = { ...result, emails: result.emails.filter(e => !openInSection.has(e.id)) };
+
       // Only notify for genuinely new incoming mail in the Inbox.
       // Without these guards the toast/sound also fires when sending,
       // saving drafts, or moving/deleting the top message in any mailbox,
@@ -7040,11 +7053,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const effectiveTotal = (result.total || 0) + retainedAddedCount;
         // hasMore should reflect whether there are still more emails beyond
         // what we have loaded, using the fresh total from the server. The
-        // Unread section's rows are not part of that total.
+        // Unread section's rows are not part of that total, but for the open
+        // conversation's the page had (openInPage).
         // A total below the page it came with is one the server did not give:
         // then only a full page tells that more may follow (#1364).
-        const hasMore = (result.total || 0) >= result.emails.length
-          ? merged.length - sectionRows.length < effectiveTotal
+        const hasMore = (result.total || 0) >= result.emails.length + openInPage
+          ? merged.length - sectionRows.length + openInPage < effectiveTotal
           : result.hasMore;
 
         // Invalidate thread email caches for threads whose composition changed
