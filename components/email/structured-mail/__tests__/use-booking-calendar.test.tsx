@@ -272,6 +272,24 @@ describe('BookingCalendarActions', () => {
     expect(await screen.findByText('added')).toBeTruthy();
   });
 
+  it('keeps the picker inside a 390 px wide screen when the button sits at the right edge', async () => {
+    useCalendarStore.setState({ calendars: [cal('Personal', { isDefault: true }), cal('Work')] });
+    const width = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    try {
+      render(<BookingCalendarActions booking={await bookingFrom([OUT])} email={EMAIL} />);
+      const button = await screen.findByRole('button', { name: /add_to_calendar/ });
+      button.getBoundingClientRect = () => ({ left: 300, right: 382, top: 500, bottom: 536, width: 82, height: 36, x: 300, y: 500, toJSON: () => ({}) });
+      fireEvent.click(button);
+      const menu = screen.getByRole('menu');
+      const left = parseFloat(menu.style.left);
+      expect(left).toBeGreaterThanOrEqual(8);
+      expect(left + 208).toBeLessThanOrEqual(390 - 8);
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
+    }
+  });
+
   it('adds straight away when there is one calendar to choose, then shows the pill and the way to the calendar', async () => {
     const booking = await bookingFrom([OUT]);
     const { rerender } = render(<BookingCalendarActions booking={booking} email={EMAIL} />);
