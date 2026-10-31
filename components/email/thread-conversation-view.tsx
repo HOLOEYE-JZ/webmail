@@ -66,7 +66,7 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePluginRenderedBody } from "@/hooks/use-plugin-rendered-body";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { AttachmentPluginMenu, ReaderAboveQuoteSlot } from "./reader-plugin-surfaces";
-import { useNoThirdPartyTraffic } from "@/hooks/use-third-party-mode";
+import { useRemoteContentBlockedByOrg } from "@/hooks/use-third-party-mode";
 import { ConversationHeaderActions, type ConversationActions } from "./conversation-header-actions";
 
 export type ConversationAttachmentHandler = (
@@ -107,8 +107,9 @@ export function useConversationExternalContent() {
   const addToTrustedSendersBook = useContactStore((state) => state.addToTrustedSendersBook);
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
   const [allowedIds, setAllowedIds] = useState<Set<string>>(new Set());
-  // No third-party traffic (#903): nothing remote loads and nothing offers to.
-  const remoteBlockedByOrg = useNoThirdPartyTraffic();
+  // No third-party traffic (#903), or the organisation locked "block":
+  // nothing remote loads and nothing offers to.
+  const remoteBlockedByOrg = useRemoteContentBlockedByOrg();
 
   const allow = useCallback((emailId: string) => {
     setAllowedIds(prev => new Set(prev).add(emailId));
@@ -542,7 +543,7 @@ export function ConversationEmailBody({
   bodyStyle,
   className,
 }: ConversationEmailBodyProps) {
-  const remoteBlockedByOrg = useNoThirdPartyTraffic();
+  const remoteBlockedByOrg = useRemoteContentBlockedByOrg();
   const t = useTranslations();
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
