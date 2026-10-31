@@ -353,6 +353,8 @@ interface EmailComposerProps {
     to?: { email?: string; name?: string }[];
     cc?: { email?: string; name?: string }[];
     bcc?: { email?: string; name?: string }[];
+    /** Addresses the original was delivered to, from lib/reply-identity deliveryAddresses (#1353). */
+    deliveredTo?: string[];
     subject?: string;
     body?: string;
     htmlBody?: string;
@@ -1362,6 +1364,10 @@ export function EmailComposer({
       cc: replyTo?.cc,
       bcc: replyTo?.bcc,
     };
+    // Where the message was delivered (Delivered-To and friends, #1353). Tried
+    // after each To/Cc/Bcc step below, so a catch-all address in To still
+    // beats the mailbox Stalwart delivered it to.
+    const deliveredTo = replyTo?.deliveredTo;
 
     // Own-identity match: unconditional, since it only ever selects one of the
     // user's own configured addresses.
@@ -1380,7 +1386,7 @@ export function EmailComposer({
     if (autoSelectReplyIdentity && mode !== 'forward') {
       // Without custom From the catch-all rewrite has nothing to write into.
       const matchMode = customFromEnabled ? replyIdentityMatch : 'exact';
-      const resolved = resolveReplyFrom(sourceAccountIdentities, recipients, matchMode);
+      const resolved = resolveReplyFrom(sourceAccountIdentities, { ...recipients, deliveredTo }, matchMode);
       if (resolved) {
         setSelectedIdentityId(resolved.identityId);
         if (resolved.overrideEmail && !fromOverrideEnabled) {
@@ -1390,6 +1396,14 @@ export function EmailComposer({
         }
         return;
       }
+    }
+
+    // A delivery address that is one of the user's identities: unconditional,
+    // like the own-identity match above.
+    const deliveredIdentityId = findReplyIdentityId(sourceAccountIdentities, { deliveredTo });
+    if (deliveredIdentityId) {
+      setSelectedIdentityId(deliveredIdentityId);
+      return;
     }
 
     // Nothing on the message's account matched, but it is not the active one:
@@ -1417,6 +1431,7 @@ export function EmailComposer({
     mode,
     replyTo?.bcc,
     replyTo?.cc,
+    replyTo?.deliveredTo,
     replyTo?.from,
     replyTo?.to,
     selectedIdentityId,

@@ -35,6 +35,7 @@ export interface ProReplyContext {
   to?: { email?: string; name?: string }[];
   cc?: { email?: string; name?: string }[];
   bcc?: { email?: string; name?: string }[];
+  deliveredTo?: string[];
   subject?: string;
   body?: string;
   htmlBody?: string;

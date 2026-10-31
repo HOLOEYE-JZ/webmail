@@ -9,6 +9,7 @@ import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext, type Ema
 import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { findDraftIdentityIdForLogin } from "@/lib/draft-source";
+import { deliveryAddresses } from "@/lib/reply-identity";
 import { useSettingsStore } from "@/stores/settings-store";
 import { toast } from "@/stores/toast-store";
 import { useProTabStore, type ProComposeTabData, type ProEmailTabData, type ProReplyContext } from "@/stores/pro-tab-store";
@@ -73,6 +74,7 @@ function buildReplyContext(email: Email): ProReplyContext {
     to: email.to,
     cc: email.cc,
     bcc: email.bcc,
+    deliveredTo: deliveryAddresses(email.headers),
     subject: email.subject,
     ...getQuoteBodies(email),
     receivedAt: email.receivedAt,

@@ -123,7 +123,7 @@ import { prepareQuickReply, type QuickReplyQuestion } from "@/lib/outgoing/quick
 import enMessages from "@/locales/en/common.json";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
-import { resolveComposeAccountEmail } from "@/lib/reply-identity";
+import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
@@ -1319,6 +1319,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       to: selectedEmail.to,
       cc: selectedEmail.cc,
       bcc: selectedEmail.bcc,
+      deliveredTo: deliveryAddresses(selectedEmail.headers),
       subject: selectedEmail.subject,
       ...getQuoteBodies(selectedEmail),
       receivedAt: selectedEmail.receivedAt,
@@ -4787,6 +4788,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           to: composerSourceEmail.to,
           cc: composerSourceEmail.cc,
           bcc: composerSourceEmail.bcc,
+          deliveredTo: deliveryAddresses(composerSourceEmail.headers),
           subject: composerSourceEmail.subject,
           ...getQuoteBodies(composerSourceEmail),
           receivedAt: composerSourceEmail.receivedAt,
