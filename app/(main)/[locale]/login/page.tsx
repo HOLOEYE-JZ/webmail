@@ -195,7 +195,7 @@ function LoginPageContent() {
   // handed over before the user confirms it (lib/auth/mobile-handoff.ts).
   const rawMobileState = searchParams.get("mobile_state") ?? "";
   // App builds that send a PKCE challenge get a one-time code in the link
-  // instead of the sign-in (docs/mobile-handoff.md). A malformed challenge
+  // instead of the sign-in (bulwarkmail.org/docs/development/mobile-handoff). A malformed challenge
   // makes this no hand-off at all: falling back to the fragment would put
   // the password in the link the app asked to keep it out of. Lite has no
   // server to park the sign-in on and keeps handing over in the fragment.

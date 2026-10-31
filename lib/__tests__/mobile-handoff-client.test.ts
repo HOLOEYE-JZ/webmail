@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The browser side of the code hand-off (docs/mobile-handoff.md): parking a
+// The browser side of the code hand-off (bulwarkmail.org/docs/development/mobile-handoff): parking a
 // password sign-in, and confirming an SSO one, each give the app link with
 // only the code. A failure gives no link at all, never the old fragment.
 

@@ -68,7 +68,7 @@ describe('signedInLoginAction', () => {
 });
 
 describe('code hand-off link', () => {
-  // docs/mobile-handoff.md: an app that sent a challenge gets a link with
+  // bulwarkmail.org/docs/development/mobile-handoff: an app that sent a challenge gets a link with
   // the one-time code and its state, in the query, and nothing else.
   it('carries only the code and the state', () => {
     const url = new URL(buildMobileHandoffCodeUrl(MOBILE_HANDOFF_REDIRECT_URI, 'ab'.repeat(32), 'st&ate=1'));

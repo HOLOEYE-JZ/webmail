@@ -3,7 +3,7 @@ import { createHash } from 'crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// The code hand-off to the mobile app (docs/mobile-handoff.md): the browser
+// The code hand-off to the mobile app (bulwarkmail.org/docs/development/mobile-handoff): the browser
 // parks the sign-in (/api/auth/handoff/create, or /api/auth/sso/complete plus
 // /api/auth/handoff/confirm), the app link carries only a code, and the app
 // redeems it with its PKCE verifier (/api/auth/handoff/redeem). Wrong

@@ -8,7 +8,7 @@ interface MobileHandoffConsentProps {
   /** The app link the browser will open, with the credential material in its fragment. */
   url: string | null;
   /**
-   * For the code hand-off (docs/mobile-handoff.md): makes the code live on
+   * For the code hand-off (bulwarkmail.org/docs/development/mobile-handoff): makes the code live on
    * confirmation and returns the link to open, or null when that failed.
    * Shows the dialog on its own, without `url`.
    */

@@ -173,7 +173,7 @@ function OAuthCallbackInner() {
             const data = await res.json();
             if (typeof data.mobile_handoff_code === "string" && data.mobile_handoff_code) {
               // The app sent a PKCE challenge: the server kept the tokens and
-              // the link carries only a one-time code (docs/mobile-handoff.md).
+              // the link carries only a one-time code (bulwarkmail.org/docs/development/mobile-handoff).
               // The code starts working when the user confirms.
               const handoffCode: string = data.mobile_handoff_code;
               const handoffState = typeof data.mobile_state === "string" ? data.mobile_state : mobileState ?? "";

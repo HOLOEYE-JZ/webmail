@@ -150,7 +150,7 @@ describe('/api/auth/sso/complete for the mobile app handoff', () => {
 });
 
 describe('/api/auth/sso/complete for an app that sent a PKCE challenge', () => {
-  // docs/mobile-handoff.md: the tokens stay on the server and the page gets
+  // bulwarkmail.org/docs/development/mobile-handoff: the tokens stay on the server and the page gets
   // only a one-time code for the app link.
   const VERIFIER = 'x'.repeat(50);
   const CHALLENGE = createHash('sha256').update(VERIFIER).digest('base64url');

@@ -38,7 +38,7 @@ export function buildMobileHandoffUrl(target: string, fragment: Record<string, s
  * The sign-in is parked on the server (lib/auth/handoff-store.ts) and the
  * link carries a one-time code the app redeems with its verifier at
  * /api/auth/handoff/redeem. Older builds send no challenge and keep getting
- * the fragment above. Contract: docs/mobile-handoff.md.
+ * the fragment above. Contract: bulwarkmail.org/docs/development/mobile-handoff.
  */
 export function isMobileCodeChallenge(value: unknown): value is string {
   return typeof value === 'string' && /^[A-Za-z0-9_-]{43}$/.test(value);

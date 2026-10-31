@@ -54,7 +54,7 @@ describe('MobileHandoffConsent', () => {
 });
 
 describe('MobileHandoffConsent with a code hand-off', () => {
-  // docs/mobile-handoff.md: the code only goes live when the user confirms,
+  // bulwarkmail.org/docs/development/mobile-handoff: the code only goes live when the user confirms,
   // so the link is resolved on confirmation, not before.
   const CODE_URL = 'bulwarkmobile://auth/callback?code=abc&state=m-1';
 

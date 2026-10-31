@@ -13,7 +13,7 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 // from its callback link with the PKCE verifier behind the challenge it sent
 // to the login page, and gets the sign-in the browser parked for it: the
 // same fields older builds read from the link's fragment
-// (lib/auth/handoff-store.ts, docs/mobile-handoff.md).
+// (lib/auth/handoff-store.ts, bulwarkmail.org/docs/development/mobile-handoff).
 //
 // The code and verifier are the only credentials, so this route is
 // unauthenticated (the app has no webmail cookies). Every failure is a 400

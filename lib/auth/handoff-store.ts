@@ -4,7 +4,7 @@ import { isMobileCodeChallenge } from '@/lib/auth/mobile-handoff';
 import { createFailureBudget } from '@/lib/auth/verify-budget';
 
 // One-time codes for the browser sign-in hand-off to the mobile app
-// (lib/auth/mobile-handoff.ts, docs/mobile-handoff.md). The app opens the
+// (lib/auth/mobile-handoff.ts, bulwarkmail.org/docs/development/mobile-handoff). The app opens the
 // login page with a PKCE `mobile_code_challenge`; once the user has signed in
 // and confirmed, the sign-in (an OAuth bundle, or username + password) is
 // parked here and the browser opens the app's callback link with nothing but

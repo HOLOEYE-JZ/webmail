@@ -8,7 +8,7 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 // was opened by the app with a `mobile_code_challenge`; after the user signed
 // in and confirmed, it parks the sign-in here and opens the app's callback
 // link with the returned code instead of the password
-// (lib/auth/handoff-store.ts, docs/mobile-handoff.md).
+// (lib/auth/handoff-store.ts, bulwarkmail.org/docs/development/mobile-handoff).
 //
 // The page already checked the password against the mail server when it
 // signed in, and the old hand-off put whatever the page held into the link
