@@ -21,7 +21,8 @@ import { getSenderVerification, extractListHeaders } from '@/lib/email-headers';
 import { findVerificationCode } from '@/lib/verification-code';
 import { findCalendarAttachment } from '@/lib/calendar-invitation';
 import { mentionFromLink } from '@/lib/recipient-mentions';
-import { KEYWORD_PALETTE } from '@/stores/settings-store';
+import { KEYWORD_PALETTE, useSettingsStore } from '@/stores/settings-store';
+import { seedDemoPreferences, DEMO_SEED_KEY } from '../demo-preferences';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
 const work = getDemoData('work');
@@ -319,5 +320,18 @@ describe('demo client: account scope', () => {
     expect(new Set(all).size).toBe(all.length);
     const { emails: inbox } = await client.getEmails(undefined, SUPPORT_ACCOUNT_ID);
     expect(inbox.every((e) => Object.keys(e.mailboxIds).some((id) => id.startsWith('demo-support-')))).toBe(true);
+  });
+});
+
+// What the website's audience screenshots show in action
+// (local-data/website-audiences-plan.md, section 8).
+describe('demo fixtures: audience screenshots', () => {
+  it('a returning visitor gets Nora\'s details for the organisation signature', () => {
+    // Seeded with the previous version: the new details must still arrive.
+    localStorage.setItem(DEMO_SEED_KEY, '2026-10');
+    seedDemoPreferences();
+    expect(useSettingsStore.getState().signatureDetails).toEqual({
+      title: 'Engineering Lead', department: 'Platform', phone: '+49 30 555 0199', mobile: '',
+    });
   });
 });
