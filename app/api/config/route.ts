@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger';
 import { configManager } from '@/lib/admin/config-manager';
 import { parseJmapServers, redactJmapServers } from '@/lib/admin/jmap-servers';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
-import { getOauthScopes } from '@/lib/oauth/tokens';
+import { getOauthResource, getOauthScopes } from '@/lib/oauth/tokens';
 import { httpOrMailtoOrEmpty, httpUrlOrEmpty } from '@/lib/config-validation';
 import {
   matchDomainBranding,
@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
       oauthClientId: configManager.get<string>('oauthClientId', ''),
       oauthIssuerUrl: configManager.get<string>('oauthIssuerUrl', ''),
       oauthScopes: getOauthScopes(),
+      oauthResource: getOauthResource(),
       rememberMeEnabled: hasSessionSecret(),
       settingsSyncEnabled: configManager.get<boolean>('settingsSyncEnabled', false) && hasSessionSecret(),
       stalwartFeaturesEnabled,

@@ -17,6 +17,7 @@ export interface ConfigData {
   oauthClientId: string;
   oauthIssuerUrl: string;
   oauthScopes: string;
+  oauthResource: string;
   rememberMeEnabled: boolean;
   settingsSyncEnabled: boolean;
   stalwartFeaturesEnabled: boolean;
@@ -171,6 +172,7 @@ export function useConfig(): AppConfig {
     oauthClientId: configCache?.oauthClientId || '',
     oauthIssuerUrl: configCache?.oauthIssuerUrl || '',
     oauthScopes: configCache?.oauthScopes || '',
+    oauthResource: configCache?.oauthResource || '',
     rememberMeEnabled: configCache?.rememberMeEnabled || false,
     settingsSyncEnabled: configCache?.settingsSyncEnabled || false,
     stalwartFeaturesEnabled: configCache?.stalwartFeaturesEnabled ?? true,
@@ -223,6 +225,7 @@ export function useConfig(): AppConfig {
         oauthClientId: configCache.oauthClientId,
         oauthIssuerUrl: configCache.oauthIssuerUrl,
         oauthScopes: configCache.oauthScopes,
+        oauthResource: configCache.oauthResource,
         rememberMeEnabled: configCache.rememberMeEnabled,
         settingsSyncEnabled: configCache.settingsSyncEnabled,
         stalwartFeaturesEnabled: configCache.stalwartFeaturesEnabled,
@@ -276,6 +279,7 @@ export function useConfig(): AppConfig {
           oauthClientId: data.oauthClientId,
           oauthIssuerUrl: data.oauthIssuerUrl,
           oauthScopes: data.oauthScopes,
+          oauthResource: data.oauthResource,
           rememberMeEnabled: data.rememberMeEnabled,
           settingsSyncEnabled: data.settingsSyncEnabled,
           stalwartFeaturesEnabled: data.stalwartFeaturesEnabled,

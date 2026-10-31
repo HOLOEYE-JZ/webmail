@@ -36,7 +36,7 @@ vi.mock('@/lib/oauth/pkce-server', () => ({
   generateStateServer: () => 'state-123',
 }));
 
-const getRequiredConfig = vi.fn((_serverId?: string | null) => ({
+const getRequiredConfig = vi.fn((_serverId?: string | null): { clientId: string; discoveryUrl: string; resource?: string } => ({
   clientId: 'client',
   discoveryUrl: 'https://idp.example.com',
 }));
@@ -136,6 +136,23 @@ describe('sso start route', () => {
     const url = new URL(body.authorize_url);
     expect(url.searchParams.has('prompt')).toBe(false);
     expect(url.searchParams.has('max_age')).toBe(false);
+  });
+
+  it('sends the configured RFC 8707 resource with the authorization request (#1461)', async () => {
+    getRequiredConfig.mockReturnValueOnce({
+      clientId: 'client',
+      discoveryUrl: 'https://idp.example.com',
+      resource: 'https://mail.example.com',
+    });
+    const { body } = await callRoute({ redirect_uri: 'https://mail.example.com/auth/callback' });
+
+    expect(new URL(body.authorize_url).searchParams.get('resource')).toBe('https://mail.example.com');
+  });
+
+  it('sends no resource when none applies', async () => {
+    const { body } = await callRoute({ redirect_uri: 'https://mail.example.com/auth/callback' });
+
+    expect(new URL(body.authorize_url).searchParams.has('resource')).toBe(false);
   });
 });
 

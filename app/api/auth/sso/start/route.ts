@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid redirect_uri' }, { status: 400 });
     }
 
-    const { clientId, discoveryUrl } = getRequiredConfig(serverId);
+    const { clientId, discoveryUrl, resource } = getRequiredConfig(serverId);
     const metadata = await discoverOAuth(discoveryUrl, { validateEndpoint: getDiscoveryValidator(discoveryUrl) });
 
     if (!metadata?.authorization_endpoint) {
@@ -164,6 +164,10 @@ export async function POST(request: NextRequest) {
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('code_challenge_method', 'S256');
+    // RFC 8707: ask for a token for the configured API (#1461).
+    if (resource) {
+      authUrl.searchParams.set('resource', resource);
+    }
 
     if (locale) {
       authUrl.searchParams.set('ui_locales', locale);
