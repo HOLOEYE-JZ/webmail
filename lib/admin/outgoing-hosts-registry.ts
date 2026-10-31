@@ -40,7 +40,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     files: ['lib/telemetry/types.ts'],
     side: 'server',
     usedBy: 'Anonymous daily heartbeat, sent only after an admin turned telemetry on.',
-    off: 'Off by default. BULWARK_TELEMETRY=off, or Admin > Telemetry.',
+    off: 'Off by default. BULWARK_TELEMETRY=off, or System > Usage stats (switch it off or clear the collector URL).',
     inMode: 'Never sent, whatever the telemetry setting says.',
     lite: false,
   },
@@ -51,7 +51,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     side: 'server',
     usedBy: 'Hourly check for a newer Bulwark release, shown to admins.',
     off: 'BULWARK_UPDATE_CHECK=off, or BULWARK_UPDATE_CHECK_URL= (empty).',
-    inMode: 'Not checked; Admin > Version says why. Checks resume when the switch goes off.',
+    inMode: 'Not checked; System > Updates says why. Checks resume when the switch goes off.',
     lite: false,
   },
   {
