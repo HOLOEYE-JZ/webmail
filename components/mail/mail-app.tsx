@@ -2150,6 +2150,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     requestDsn?: boolean;
     requireTls?: boolean;
     priority?: MessagePriority;
+    composerId?: string;
   }) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
     if (!client) return false;
