@@ -389,7 +389,9 @@ export function MvListToolbar({
     });
 
   return (
-    <div className="flex items-center gap-1 h-12 px-2 shrink-0">
+    // 5px in, so select-all's box sits over the rows' boxes: a row draws its
+    // 18px box 16px in (12px row padding + 4px), centred at 25px (#1473).
+    <div className="flex items-center gap-1 h-12 ps-[5px] pe-2 shrink-0">
       <button
         type="button"
         role="checkbox"
