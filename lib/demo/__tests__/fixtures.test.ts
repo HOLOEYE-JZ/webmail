@@ -27,6 +27,7 @@ import { PRINCIPAL } from '../fixtures/directory';
 import { confirmGroups } from '@/lib/plugin-sandbox/account-kind';
 import { summarizeDelegates } from '@/lib/delegation/delegation';
 import { MAILBOX_PRESETS } from '@/lib/jmap/share-rights';
+import { principalLabel, shareRecipientNames } from '@/hooks/use-share-recipient-labels';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
 const work = getDemoData('work');
@@ -388,5 +389,20 @@ describe('demo fixtures: audience screenshots', () => {
     expect(await client.getMailboxShareWith(sent.id)).toEqual({ [PRINCIPAL.bob]: MAILBOX_PRESETS.read });
     await client.setMailboxShare(sent.id, PRINCIPAL.bob, null);
     expect(await client.getMailboxShareWith(sent.id)).toBeNull();
+  });
+
+  it('the calendar list has Alice\'s Beacon team calendar under her name, and Work shared with her', async () => {
+    const client = new DemoJMAPClient('work');
+    const calendars = await client.getAllCalendars();
+    const team = calendars.find((c) => c.name === 'Beacon team')!;
+    expect(team).toMatchObject({ isShared: true, accountId: PRINCIPAL.alice, accountName: ALICE.name });
+    expect(work.calendarEvents.some((e) => e.calendarIds[team.id])).toBe(true);
+
+    const own = calendars.find((c) => c.name === 'Work')!;
+    expect(own.isShared).toBeFalsy();
+    const labels = new Map((await client.getPrincipals()).map((p) => [p.id, principalLabel(p)]));
+    expect(shareRecipientNames(own.shareWith, labels)).toEqual([`${ALICE.email} (${ALICE.name})`]);
+    const [alice] = summarizeDelegates((await client.getShareTargets()).targets, [client.getAccountId()]);
+    expect(alice.calendars.shared).toBe(1);
   });
 });
