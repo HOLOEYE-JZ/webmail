@@ -19,6 +19,7 @@ import { ReadingMask } from "./reading-mask";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
+import { measureEmailFrameHeight } from "@/lib/email-frame-height";
 import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth, type FitOptions } from "@/lib/email-fit-width";
 import { hasFullBleedCanvas } from "@/lib/email-full-bleed";
@@ -3458,8 +3459,8 @@ export function EmailViewer({
         }
 
         // Auto-resize iframe to fit content
-        // Measure max(documentElement, body): a height:100% wrapper can leave
-        // documentElement.scrollHeight short while the real content lives in body.
+        // measureEmailFrameHeight reads the content, not the frame: the root's
+        // scrollHeight alone never shrinks below the frame's height (#1474).
         // The document as last measured. Re-measuring is not free: the fit
         // first clears its own transform and width, which dirties the layout,
         // so the read after it lays the whole mail out again. Reading the
@@ -3479,9 +3480,7 @@ export function EmailViewer({
           // the layout height, and the transform doesn't shrink the measured
           // (layout) height, so the iframe box has to be scaled by hand.
           const scale = fitEmailBodyWidth(doc, fitBodyToWidthRef.current);
-          const height = Math.ceil(
-            Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight) * scale
-          );
+          const height = Math.ceil(measureEmailFrameHeight(doc) * scale);
           iframe.style.height = height + 'px';
           lastBodyHeightRef.current = height;
           measured = sizes();
