@@ -66,7 +66,7 @@ export class DemoJMAPClient implements IJMAPClient {
   /** Bulwark's shared Inbox metadata by account and key; only accounts listed here have any. */
   private metadata: Record<string, Record<string, unknown>>;
   /** The same for each account's private metadata. */
-  private privateMetadata: Record<string, Record<string, unknown>> = {};
+  private ownMetadata: Record<string, Record<string, unknown>> = {};
   private blobStore = new Map<string, Blob>();
   private scheduledSubmissions = new Map<string, { id: string; emailId: string; identityId: string; sendAt: string; undoStatus: 'pending' | 'final' | 'canceled'; isSmime: boolean }>();
   private connectionCallback: ((connected: boolean) => void) | null = null;
@@ -347,7 +347,7 @@ export class DemoJMAPClient implements IJMAPClient {
 
   async getBulwarkMetadata(accountId?: string, options?: { private?: boolean }): Promise<Record<string, unknown> | null> {
     if (!this.supportsBulwarkMetadata(accountId)) return null;
-    const store = options?.private ? this.privateMetadata : this.metadata;
+    const store = options?.private ? this.ownMetadata : this.metadata;
     return structuredClone(store[accountId!] ?? {});
   }
 
@@ -356,7 +356,7 @@ export class DemoJMAPClient implements IJMAPClient {
     if (value !== null && metadataValueBytes(value) > MAX_METADATA_ENTRY_BYTES) {
       throw new MetadataTooLargeError(`The entry is larger than ${MAX_METADATA_ENTRY_BYTES} bytes`);
     }
-    const store = options?.private ? this.privateMetadata : this.metadata;
+    const store = options?.private ? this.ownMetadata : this.metadata;
     const entries = (store[accountId!] ??= {});
     if (value === null) delete entries[key];
     else entries[key] = structuredClone(value);
