@@ -36,6 +36,16 @@ function List({ ids, initial: active }: { ids: string[]; initial?: string }) {
 
 const option = (name: string) => screen.getByRole('row', { name });
 
+/** Lays rows out at these tops in a 200px tall view; 60px each. */
+function mockRowTops(tops: Record<string, number>) {
+  return vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    const id = this.getAttribute('data-row-key');
+    const top = id ? tops[id] : 0;
+    const height = id ? 60 : 200;
+    return { top, bottom: top + height, left: 0, right: 100, width: 100, height, x: 0, y: top, toJSON() {} } as DOMRect;
+  });
+}
+
 describe('message list as one widget', () => {
   it('names a row in one sentence and skips what does not apply', () => {
     expect(rowLabel(['unread', 'Anna Berg', 'Budget', false, null, '', 'Has attachment'])).toBe('unread, Anna Berg, Budget, Has attachment');
@@ -80,6 +90,40 @@ describe('message list as one widget', () => {
     expect(document.activeElement).toBe(option('row b'));
     expect(option('row b')).toHaveAttribute('tabindex', '0');
     expect(option('row a')).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('leaves the focus alone when rows scroll in or out', () => {
+    const { rerender } = render(<List ids={['a', 'b', 'c']} initial="a" />);
+    act(() => option('row c').focus());
+    rerender(<List ids={['b', 'c']} initial="a" />);
+    expect(document.activeElement).toBe(option('row c'));
+    rerender(<List ids={['a', 'b', 'c']} initial="a" />);
+    expect(document.activeElement).toBe(option('row c'));
+  });
+
+  it('hands the focus to a row in view when the open message is scrolled out of it', () => {
+    const rect = mockRowTops({ a: -300, b: 20, c: 80 });
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    try {
+      render(<List ids={['a', 'b', 'c']} initial="a" />);
+      act(() => screen.getByTestId('scroller').focus());
+      expect(document.activeElement).toBe(option('row b'));
+      expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    } finally {
+      rect.mockRestore();
+      focus.mockRestore();
+    }
+  });
+
+  it('puts the Tab stop on the first row in view when nothing is open', () => {
+    const rect = mockRowTops({ a: -300, b: 20 });
+    try {
+      render(<List ids={['a', 'b']} />);
+      expect(option('row b')).toHaveAttribute('tabindex', '0');
+      expect(option('row a')).toHaveAttribute('tabindex', '-1');
+    } finally {
+      rect.mockRestore();
+    }
   });
 
   it('never pulls the focus out of another part of the page', () => {
