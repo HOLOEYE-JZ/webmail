@@ -269,18 +269,21 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN || "";
-
+  let parentOrigin: string;
   let locale: string;
   let nonce: string | undefined;
   let themeColorConfigured: boolean;
   if (IS_LITE) {
     // Static export: no request, no nonce, no admin config.
+    parentOrigin = process.env.NEXT_PUBLIC_PARENT_ORIGIN || "";
     locale = defaultLocale;
     nonce = undefined;
     themeColorConfigured = false;
   } else {
     await configManager.ensureLoaded();
+    // Admin setting, then NEXT_PUBLIC_PARENT_ORIGIN, read per request. The
+    // iframe bridge only posts to the origin named in this meta tag.
+    parentOrigin = configManager.get<string>("parentOrigin", "") || "";
     locale = await resolveRequestLocale();
     nonce = (await headers()).get("x-nonce") ?? "";
     themeColorConfigured = await hasExplicitThemeColor();
