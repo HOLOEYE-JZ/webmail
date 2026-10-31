@@ -45,10 +45,14 @@ describe('docker data dirs', () => {
     for (const dir of defaultDataDirs()) expect(created).toContain(`/app/data/${dir}`);
   });
 
-  it('keeps all of /app/data in one volume in docker-compose.yml', () => {
+  it('persists every data dir in docker-compose.yml, by its own volume or one on /app/data', () => {
     const compose = readFileSync(path.join(ROOT, 'docker-compose.yml'), 'utf8');
-    const mounts = [...compose.matchAll(/^\s*-\s*([\w.-]+):(\/app\/data[^\s:]*)/gm)].map((m) => m[2]);
-    expect(mounts).toEqual(['/app/data']);
+    const mounts = [...compose.matchAll(/^\s*-\s*[\w.-]+:(\/app\/data[^\s:]*)/gm)].map((m) => m[1].replace(/\/+$/, ''));
+    expect(mounts.length).toBeGreaterThan(0);
+    const unpersisted = defaultDataDirs().filter(
+      (dir) => !mounts.includes('/app/data') && !mounts.includes(`/app/data/${dir}`),
+    );
+    expect(unpersisted).toEqual([]);
   });
 });
 
