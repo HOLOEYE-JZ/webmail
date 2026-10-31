@@ -887,7 +887,7 @@ describe('ThreadListItem hover actions', () => {
     expect(screen.getByTestId('hover-action-delete')).toBeTruthy();
   });
 
-  // Tabbing to a row's checkbox shows them too (group-focus-within), so they
+  // Tabbing to a row's checkbox shows them too (group-has-[:focus-visible]), so they
   // have to be there without a pointer.
   it.each([
     ['a single message', () => groupEmailsByThread([makeEmail()])[0]],

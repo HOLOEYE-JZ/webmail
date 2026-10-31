@@ -37,3 +37,15 @@ describe('row quick action placement', () => {
     expect(el.className).not.toContain('h-10');
   });
 });
+
+// Clicking a row focuses the row, so group-focus-within kept the actions on
+// the open message after the pointer left it. Only keyboard focus on a control
+// inside the row may show them.
+describe('row quick action visibility', () => {
+  it.each(['inline', 'floating'])('shows the %s actions on hover and keyboard focus only', (mode) => {
+    useSettingsStore.setState({ hoverActionsMode: mode } as never);
+    const classes = toolbar().className.split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(['hidden', 'group-hover:flex', 'group-has-[:focus-visible]:flex']));
+    expect(classes).not.toContain('group-focus-within:flex');
+  });
+});
