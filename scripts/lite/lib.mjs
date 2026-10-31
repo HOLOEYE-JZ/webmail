@@ -100,6 +100,11 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/auth/reauth/sso/complete",
   "/api/auth/pair/create",
   "/api/auth/pair/status",
+  // Mobile sign-in hand-off with a code (login page, SSO callback) - skipped
+  // in Lite, which has no server to park the sign-in on and hands over in
+  // the fragment.
+  "/api/auth/handoff/create",
+  "/api/auth/handoff/confirm",
   "/api/auth/totp-token-exchange",
   "/api/auth/session",
   "/api/auth/verify",

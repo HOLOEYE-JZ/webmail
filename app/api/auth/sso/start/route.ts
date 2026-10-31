@@ -12,7 +12,7 @@ import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { configManager } from '@/lib/admin/config-manager';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
-import { mobileHandoffTarget } from '@/lib/auth/mobile-handoff';
+import { isMobileCodeChallenge, mobileHandoffTarget } from '@/lib/auth/mobile-handoff';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE = 300; // 5 minutes
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
       server_id: bodyServerId,
       mobile_redirect_uri: rawMobileRedirectUri,
       mobile_state: rawMobileState,
+      mobile_code_challenge: rawMobileCodeChallenge,
       purpose: rawPurpose,
       slot: rawSlot,
       remember,
@@ -73,6 +74,15 @@ export async function POST(request: NextRequest) {
       typeof rawMobileState === 'string' && rawMobileState ? rawMobileState : null;
     if (mobileRedirectUri && !mobileHandoffTarget(mobileRedirectUri)) {
       return NextResponse.json({ error: 'Invalid mobile_redirect_uri' }, { status: 400 });
+    }
+    // An app build that sends a PKCE challenge gets a one-time code instead
+    // of the tokens (lib/auth/handoff-store.ts). A malformed one is refused
+    // rather than ignored, which would hand the tokens over in the link.
+    const mobileCodeChallenge = mobileRedirectUri && rawMobileCodeChallenge != null && rawMobileCodeChallenge !== ''
+      ? rawMobileCodeChallenge
+      : null;
+    if (mobileCodeChallenge !== null && !isMobileCodeChallenge(mobileCodeChallenge)) {
+      return NextResponse.json({ error: 'Invalid mobile_code_challenge' }, { status: 400 });
     }
 
     const cookieStore = await cookies();
@@ -125,6 +135,7 @@ export async function POST(request: NextRequest) {
       ...(serverId ? { server_id: serverId } : {}),
       ...(mobileRedirectUri ? { mobile_redirect_uri: mobileRedirectUri } : {}),
       ...(mobileState ? { mobile_state: mobileState } : {}),
+      ...(mobileCodeChallenge ? { mobile_code_challenge: mobileCodeChallenge } : {}),
       // The re-auth completes into a grant for the phone paired to this slot.
       ...(isReauth ? { purpose: 'reauth', slot: reauthSlot } : {}),
       // "Remember me" left unticked: /complete writes cookies that end with

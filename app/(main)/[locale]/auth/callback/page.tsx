@@ -11,6 +11,7 @@ import { Loader2, AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { buildMobileHandoffUrl, mobileHandoffTarget } from "@/lib/auth/mobile-handoff";
+import { confirmMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 
 function OAuthCallbackInner() {
@@ -22,7 +23,11 @@ function OAuthCallbackInner() {
   const [error, setError] = useState<string | null>(null);
   // A sign-in started for the mobile app, waiting for the user to confirm
   // the handoff (lib/auth/mobile-handoff.ts).
-  const [pendingHandoff, setPendingHandoff] = useState<{ url: string; username: string } | null>(null);
+  const [pendingHandoff, setPendingHandoff] = useState<{
+    url: string | null;
+    resolveUrl?: () => Promise<string | null>;
+    username: string;
+  } | null>(null);
   // The authorization code is single-use. React's development double effect
   // ran this twice: the second pass no longer saw the pairing re-auth flag
   // (the first had removed it) and spent the code on the login flow instead.
@@ -166,6 +171,27 @@ function OAuthCallbackInner() {
               return;
             }
             const data = await res.json();
+            if (typeof data.mobile_handoff_code === "string" && data.mobile_handoff_code) {
+              // The app sent a PKCE challenge: the server kept the tokens and
+              // the link carries only a one-time code (docs/mobile-handoff.md).
+              // The code starts working when the user confirms.
+              const handoffCode: string = data.mobile_handoff_code;
+              const handoffState = typeof data.mobile_state === "string" ? data.mobile_state : mobileState ?? "";
+              try {
+                sessionStorage.removeItem("mobile_redirect_uri");
+                sessionStorage.removeItem("mobile_state");
+              } catch { /* ignore */ }
+              setPendingHandoff({
+                url: null,
+                resolveUrl: () => confirmMobileHandoffCodeUrl({
+                  target: mobileRedirectUri,
+                  code: handoffCode,
+                  state: handoffState,
+                }),
+                username: typeof data.server_url === "string" ? data.server_url : "",
+              });
+              return;
+            }
             const serverUrl = data.server_url as string | undefined;
             const accessToken = data.access_token as string | undefined;
             const tokenEndpoint = data.token_endpoint as string | undefined;
@@ -235,7 +261,12 @@ function OAuthCallbackInner() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
         <MobileHandoffConsent
           url={pendingHandoff.url}
+          resolveUrl={pendingHandoff.resolveUrl ?? null}
           username={pendingHandoff.username}
+          onError={() => {
+            setPendingHandoff(null);
+            setError("token_exchange_failed");
+          }}
           onCancel={() => {
             setPendingHandoff(null);
             router.push(toRouterPath(`${getPathPrefix(params.locale as string)}/${params.locale}/login`));

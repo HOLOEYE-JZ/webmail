@@ -22,8 +22,12 @@ vi.mock('@/lib/logger', () => ({
   logger: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() },
 }));
 
+const encrypted = vi.hoisted(() => ({ last: null as Record<string, unknown> | null }));
 vi.mock('@/lib/auth/crypto', () => ({
-  encryptPayload: () => 'encrypted',
+  encryptPayload: (payload: Record<string, unknown>) => {
+    encrypted.last = payload;
+    return 'encrypted';
+  },
 }));
 
 vi.mock('@/lib/oauth/pkce-server', () => ({
@@ -132,5 +136,46 @@ describe('sso start route', () => {
     const url = new URL(body.authorize_url);
     expect(url.searchParams.has('prompt')).toBe(false);
     expect(url.searchParams.has('max_age')).toBe(false);
+  });
+});
+
+describe('sso start for the mobile app', () => {
+  const CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
+  const mobile = (extra: Record<string, unknown> = {}) => callRoute({
+    redirect_uri: 'https://mail.example.com/auth/callback',
+    mobile_redirect_uri: 'bulwarkmobile://auth/callback',
+    mobile_state: 'm-1',
+    ...extra,
+  });
+
+  beforeEach(() => {
+    encrypted.last = null;
+  });
+
+  it('keeps the PKCE challenge of the app for the complete route', async () => {
+    const { status } = await mobile({ mobile_code_challenge: CHALLENGE });
+    expect(status).toBe(200);
+    expect(encrypted.last).toMatchObject({
+      mobile_redirect_uri: 'bulwarkmobile://auth/callback',
+      mobile_state: 'm-1',
+      mobile_code_challenge: CHALLENGE,
+    });
+  });
+
+  it('refuses a malformed challenge instead of falling back to handing over tokens', async () => {
+    const { status } = await mobile({ mobile_code_challenge: 'plain-text' });
+    expect(status).toBe(400);
+    expect(encrypted.last).toBeNull();
+  });
+
+  it('starts as before without a challenge', async () => {
+    const { status } = await mobile();
+    expect(status).toBe(200);
+    expect(encrypted.last).not.toHaveProperty('mobile_code_challenge');
+  });
+
+  it('drops a challenge sent without the app callback', async () => {
+    await callRoute({ redirect_uri: 'https://mail.example.com/auth/callback', mobile_code_challenge: CHALLENGE });
+    expect(encrypted.last).not.toHaveProperty('mobile_code_challenge');
   });
 });
