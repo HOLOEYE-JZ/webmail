@@ -916,27 +916,31 @@ export function MvExpandedConversationCard({
             {showDetails ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
           </button>
         </span>
-        {onReply && (
-          <button
-            type="button"
-            onClick={() => onReply(email)}
-            className="grid place-items-center w-10 h-10 -my-2 -me-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
-            title={t('tooltips.reply')}
-            aria-label={t('reply')}
-          >
-            <Reply className="w-5 h-5" />
-          </button>
-        )}
-        {onReplyAll && !email.keywords?.$draft && !email.isScheduled && (
-          <button
-            type="button"
-            onClick={() => onReplyAll(email)}
-            className="grid place-items-center w-10 h-10 -my-2 -me-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
-            title={t('tooltips.reply_all')}
-            aria-label={t('reply_all')}
-          >
-            <ReplyAll className="w-5 h-5" />
-          </button>
+        {(onReply || onReplyAll) && !email.keywords?.$draft && !email.isScheduled && (
+          <span className="flex items-center gap-1 -my-2 -me-2 flex-shrink-0" data-mv-conversation-actions="">
+            {onReply && (
+              <button
+                type="button"
+                onClick={() => onReply(email)}
+                className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                title={t('tooltips.reply')}
+                aria-label={t('reply')}
+              >
+                <Reply className="w-5 h-5" />
+              </button>
+            )}
+            {onReplyAll && (
+              <button
+                type="button"
+                onClick={() => onReplyAll(email)}
+                className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                title={t('tooltips.reply_all')}
+                aria-label={t('reply_all')}
+              >
+                <ReplyAll className="w-5 h-5" />
+              </button>
+            )}
+          </span>
         )}
       </div>
       {email.isScheduled && (
