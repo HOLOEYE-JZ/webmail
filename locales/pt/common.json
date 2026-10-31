@@ -2013,8 +2013,8 @@
         "unsupported": "A conta atual não anuncia suporte a envio atrasado. A configuração continuará salva para outras contas."
       },
       "return_to_list_after_action": {
-        "label": "Voltar à lista após eliminar, arquivar ou marcar como não lido",
-        "description": "Depois de eliminar, arquivar ou marcar como não lida a mensagem aberta, voltar à lista de mensagens em vez de abrir a mensagem seguinte."
+        "label": "Voltar à lista após eliminar, arquivar, mover ou marcar como não lido",
+        "description": "Depois de eliminar, arquivar, mover, reportar como spam ou marcar como não lida a mensagem aberta, voltar à lista de mensagens em vez de abrir a mensagem seguinte."
       },
       "swipe_right_action": {
         "label": "Ação ao deslizar para a direita (celular)",

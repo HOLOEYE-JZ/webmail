@@ -2013,8 +2013,8 @@
         "unsupported": "Das aktuelle Konto meldet keine Unterstützung für verzögertes Senden. Die Einstellung bleibt für andere Konten gespeichert."
       },
       "return_to_list_after_action": {
-        "label": "Nach Löschen, Archivieren oder Ungelesen-Markieren zur Liste zurückkehren",
-        "description": "Nach dem Löschen, Archivieren oder Als-ungelesen-Markieren der geöffneten E-Mail zurück zur Liste, statt die nächste E-Mail zu öffnen."
+        "label": "Nach Löschen, Archivieren, Verschieben oder Ungelesen-Markieren zur Liste zurückkehren",
+        "description": "Nach dem Löschen, Archivieren, Verschieben, Als-Spam-Melden oder Als-ungelesen-Markieren der geöffneten E-Mail zurück zur Liste, statt die nächste E-Mail zu öffnen."
       },
       "swipe_right_action": {
         "label": "Aktion beim Wischen nach rechts (mobil)",

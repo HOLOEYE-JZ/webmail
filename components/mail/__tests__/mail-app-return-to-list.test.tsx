@@ -22,11 +22,19 @@ vi.mock('next/dynamic', () => ({ default: (load: () => Promise<React.ComponentTy
     return <Suspense fallback={null}><Component {...props} /></Suspense>;
   };
 } }));
+type ViewerProps = {
+  onArchive?: () => void; onDelete?: () => void; onMoveToMailbox?: (mailboxId: string) => void;
+  onMarkAsSpam?: () => void; onUndoSpam?: () => void; onRemoveFromFolder?: () => void;
+};
 vi.mock('@/components/email/email-viewer', () => ({
-  EmailViewer: ({ onArchive, onDelete }: { onArchive?: () => void; onDelete?: () => void }) => (
+  EmailViewer: ({ onArchive, onDelete, onMoveToMailbox, onMarkAsSpam, onUndoSpam, onRemoveFromFolder }: ViewerProps) => (
     <>
       <button onClick={() => onArchive?.()}>stub archive</button>
       <button onClick={() => onDelete?.()}>stub delete</button>
+      <button onClick={() => onMoveToMailbox?.('work')}>stub move</button>
+      <button onClick={() => onMarkAsSpam?.()}>stub spam</button>
+      <button onClick={() => onUndoSpam?.()}>stub not spam</button>
+      {onRemoveFromFolder && <button onClick={onRemoveFromFolder}>stub remove from folder</button>}
     </>
   ),
 }));
@@ -64,12 +72,20 @@ function mailbox(id: string, role: string): Mailbox {
     id, name: role, role, sortOrder: 0, totalEmails: 3, unreadEmails: 0, totalThreads: 3, unreadThreads: 0, isSubscribed: true,
   } as Mailbox;
 }
-const folders = [mailbox('inbox', 'inbox'), mailbox('archive', 'archive'), mailbox('trash', 'trash')];
-const row = (id: string, minute: number) => ({
+const folders = [
+  mailbox('inbox', 'inbox'), mailbox('archive', 'archive'), mailbox('trash', 'trash'),
+  mailbox('junk', 'junk'), mailbox('work', ''),
+];
+const row = (id: string, minute: number, mailboxIds: Record<string, boolean> = { inbox: true }) => ({
   id, threadId: `t-${id}`, subject: id, receivedAt: new Date(Date.UTC(2026, 9, 31, 10, minute)).toISOString(),
-  keywords: { $seen: true }, mailboxIds: { inbox: true },
+  keywords: { $seen: true }, mailboxIds,
 }) as unknown as Email;
 const inbox = () => [row('m1', 30), row('m2', 20), row('m3', 10)];
+
+/** Opens `rows[0]` of `folder`. */
+function showFolder(folder: string, rows: Email[]) {
+  useEmailStore.setState({ emails: rows, selectedEmail: rows[0], selectedMailbox: folder } as never);
+}
 
 let client: Record<string, ReturnType<typeof vi.fn> | (() => unknown)>;
 let fetchEmailContent: ReturnType<typeof vi.fn>;
@@ -94,6 +110,9 @@ beforeEach(() => {
     moveEmail: vi.fn().mockResolvedValue(undefined),
     moveToTrash: vi.fn().mockResolvedValue(undefined),
     markAsRead: vi.fn().mockResolvedValue(undefined),
+    markAsSpam: vi.fn().mockResolvedValue(undefined),
+    undoSpam: vi.fn().mockResolvedValue(undefined),
+    removeEmailsFromMailbox: vi.fn().mockResolvedValue(undefined),
   };
   useAuthStore.setState({
     isAuthenticated: true, isLoading: false, client: client as never, activeAccountId: 'login-a', identities: [],
@@ -190,6 +209,67 @@ describe.each([
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
     expect(selectedId()).toBe('m1');
     expect(client.moveToTrash).not.toHaveBeenCalled();
+  });
+});
+
+describe.each([
+  ['Mountain View', { interfaceLayout: 'mountain-view' }],
+  ['the default layout', { interfaceLayout: 'default' }],
+])('Moving the open message out of the folder in %s', (_name, layout) => {
+  beforeEach(() => useSettingsStore.setState(layout as never));
+
+  async function click(label: string) {
+    render(<MailApp />);
+    fireEvent.click(await screen.findByText(label, {}, { timeout: 5000 }));
+  }
+  async function expectBackInList() {
+    await waitFor(() => expect(useEmailStore.getState().emails.map((e) => e.id)).toEqual(['m2', 'm3']));
+    expect(selectedId()).toBeNull();
+    expect(opened).not.toContain('m2');
+  }
+
+  it('goes back to the list after Move to', async () => {
+    await click('stub move');
+    await waitFor(() => expect(client.moveEmail).toHaveBeenCalledWith('m1', 'work', undefined));
+    await expectBackInList();
+  });
+
+  it('goes back to the list after Report spam', async () => {
+    await click('stub spam');
+    await waitFor(() => expect(client.markAsSpam).toHaveBeenCalledWith('m1', undefined, false));
+    await expectBackInList();
+  });
+
+  it('goes back to the list after Not spam in Junk', async () => {
+    const junk = { junk: true };
+    showFolder('junk', [row('m1', 30, junk), row('m2', 20, junk), row('m3', 10, junk)]);
+    await click('stub not spam');
+    await waitFor(() => expect(client.undoSpam).toHaveBeenCalledWith('m1', 'inbox', undefined));
+    await expectBackInList();
+  });
+
+  it('goes back to the list after Remove from this folder', async () => {
+    showFolder('inbox', [row('m1', 30, { inbox: true, work: true }), row('m2', 20), row('m3', 10)]);
+    await click('stub remove from folder');
+    await waitFor(() => expect(client.removeEmailsFromMailbox).toHaveBeenCalledWith(['m1'], 'inbox', undefined));
+    await expectBackInList();
+  });
+
+  it('opens the next message after Move to with the setting off', async () => {
+    useSettingsStore.setState({ returnToListAfterAction: false } as never);
+    await click('stub move');
+    await waitFor(() => expect(selectedId()).toBe('m2'));
+  });
+
+  // The Unread filter drops a message once it is read; the store then finds
+  // the open message through the selection (#695).
+  it('still reports a message as spam that the list no longer holds', async () => {
+    const [m1, ...rest] = inbox();
+    useEmailStore.setState({ emails: rest, selectedEmail: m1 } as never);
+    await click('stub spam');
+    await waitFor(() => expect(client.markAsSpam).toHaveBeenCalledWith('m1', undefined, false));
+    await waitFor(() => expect(selectedId()).toBeNull());
+    expect(opened).not.toContain('m2');
   });
 });
 

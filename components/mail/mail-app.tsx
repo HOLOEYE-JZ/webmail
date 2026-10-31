@@ -2918,15 +2918,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     clearSelection(); // only on success - a vetoed/no-op attempt keeps the selection
   };
 
-  // Deleting or archiving the open message returns to the list (Gmail-style),
-  // not the next email, unless the user turned the setting off. Called once
+  // Taking the open message out of the folder (delete, archive, move, spam,
+  // not spam, remove from folder) returns to the list (Gmail-style), not the
+  // next email, unless the user turned the setting off. Called once
   // the action is confirmed and right before the store removes the row: with
   // nothing selected its remove-and-advance opens nothing, so the next message
   // is not loaded and marked read on the way. A Mountain View cursor is no
-  // open message and moves on to the next row. (#1458)
+  // open message and moves on to the next row. A message the list no longer
+  // holds (a quick filter dropped it) stays selected: the store finds it
+  // through the selection (#695), and with no row to go on from it opens
+  // nothing after it anyway. (#1458)
   const leaveIfOpen = (email: Email) => {
-    const open = useEmailStore.getState().selectedEmail;
-    if (!open || emailKeyFor(open) !== emailKeyFor(email) || (mvShell && cursorOnly)) return;
+    const { selectedEmail: open, emails: rows } = useEmailStore.getState();
+    const key = emailKeyFor(email);
+    if (!open || emailKeyFor(open) !== key || (mvShell && cursorOnly)) return;
+    if (!rows.some((row) => emailKeyFor(row) === key)) return;
     if (useSettingsStore.getState().returnToListAfterAction) handleMobileBack();
   };
 
@@ -3118,6 +3124,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const email = useEmailStore.getState().emails.find(e => (emailKey ? emailKeyFor(e) === emailKey : e.id === emailId));
     const restore = email ? restoreBatchesFor([email], client) : null;
     const receipts: CrossAccountMoveReceipt[] = [];
+    if (email) leaveIfOpen(email);
     try {
       if (!(await moveToMailboxCrossAware(client, emailId, mailboxId, emailKey, receipts))) return;
       toastWithUndo(
@@ -3150,6 +3157,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // Undo puts it back in its own folders, read state included, as every
     // other Undo does.
     const restore = restoreBatchesFor([emailToMark], client);
+    leaveIfOpen(emailToMark);
     try {
       if (!(await markAsSpam(client, emailToMark.id, emailKeyFor(emailToMark)))) return;
       toastWithUndo(t('email_viewer.spam.toast_success'), undoMoveAction(client, restore, undo));
@@ -3163,6 +3171,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!client || !emailToRestore) return;
 
     const restore = restoreBatchesFor([emailToRestore], client);
+    leaveIfOpen(emailToRestore);
     try {
       if (!(await undoSpam(client, emailToRestore.id, emailKeyFor(emailToRestore)))) return;
       toastWithUndo(t('email_viewer.spam.toast_not_spam_success'), undoMoveAction(client, restore, undo));
@@ -5613,10 +5622,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     mailboxes={mailboxes}
                     selectedMailbox={selectedMailbox}
                     onMoveToMailbox={async (mailboxId) => {
-                      if (selectedEmail) await handleMoveToMailbox(selectedEmail.id, mailboxId);
+                      if (selectedEmail) await handleMoveToMailbox(selectedEmail.id, mailboxId, emailKeyFor(selectedEmail));
                     }}
                     onRemoveFromFolder={openEmailCanLeaveFolder ? () => {
-                      if (selectedEmail) void removeFromFolder([selectedEmail]);
+                      if (!selectedEmail) return;
+                      leaveIfOpen(selectedEmail);
+                      void removeFromFolder([selectedEmail]);
                     } : undefined}
                     className={isMobile ? "flex-1" : undefined}
                   />

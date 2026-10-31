@@ -2013,8 +2013,8 @@
         "unsupported": "Geçerli hesap gecikmeli gönderim desteği bildirmiyor. Ayar diğer hesaplar için kaydedilmeye devam eder."
       },
       "return_to_list_after_action": {
-        "label": "Silme, arşivleme veya okunmadı olarak işaretlemeden sonra listeye dön",
-        "description": "Açık iletiyi sildikten, arşivledikten veya okunmadı olarak işaretledikten sonra, sonraki iletiyi açmak yerine ileti listesine dön."
+        "label": "Silme, arşivleme, taşıma veya okunmadı olarak işaretlemeden sonra listeye dön",
+        "description": "Açık iletiyi sildikten, arşivledikten, taşıdıktan, spam olarak bildirdikten veya okunmadı olarak işaretledikten sonra, sonraki iletiyi açmak yerine ileti listesine dön."
       },
       "swipe_right_action": {
         "label": "Sağa kaydırma eylemi (mobil)",

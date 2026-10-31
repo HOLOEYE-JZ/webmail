@@ -2016,8 +2016,8 @@
         "unsupported": "Contul curent nu indică faptul că acceptă trimiterea amânată. Setarea este totuși salvată pentru alte conturi."
       },
       "return_to_list_after_action": {
-        "label": "Revenire la listă după ștergere, arhivare sau marcare ca necitit",
-        "description": "După ștergerea, arhivarea sau marcarea mesajului deschis ca necitit, reveniți la lista de mesaje în loc să deschideți mesajul următor."
+        "label": "Revenire la listă după ștergere, arhivare, mutare sau marcare ca necitit",
+        "description": "După ștergerea, arhivarea, mutarea, raportarea ca spam sau marcarea mesajului deschis ca necitit, reveniți la lista de mesaje în loc să deschideți mesajul următor."
       },
       "swipe_right_action": {
         "label": "Acțiune la glisare spre dreapta (mobil)",

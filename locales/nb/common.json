@@ -2016,8 +2016,8 @@
         "unsupported": "Denne kontoen støtter ikke forsinket sending. Innstillingen lagres likevel for andre kontoer."
       },
       "return_to_list_after_action": {
-        "label": "Gå tilbake til listen etter sletting, arkivering eller merking som ulest",
-        "description": "Gå tilbake til meldingslisten i stedet for å åpne neste melding etter at du har slettet eller arkivert den åpne meldingen eller merket den som ulest."
+        "label": "Gå tilbake til listen etter sletting, arkivering, flytting eller merking som ulest",
+        "description": "Gå tilbake til meldingslisten i stedet for å åpne neste melding etter at du har slettet, arkivert, flyttet eller rapportert den åpne meldingen som søppelpost eller merket den som ulest."
       },
       "swipe_right_action": {
         "label": "Handling ved sveip mot høyre (mobil)",

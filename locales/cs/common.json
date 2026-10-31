@@ -2013,8 +2013,8 @@
         "unsupported": "Aktuální účet neoznamuje podporu odloženého odeslání. Nastavení zůstane uloženo pro jiné účty."
       },
       "return_to_list_after_action": {
-        "label": "Návrat do seznamu po smazání, archivaci nebo označení jako nepřečtené",
-        "description": "Po smazání, archivaci nebo označení otevřené zprávy jako nepřečtené se vrátit do seznamu zpráv místo otevření následující zprávy."
+        "label": "Návrat do seznamu po smazání, archivaci, přesunutí nebo označení jako nepřečtené",
+        "description": "Po smazání, archivaci, přesunutí, nahlášení jako spam nebo označení otevřené zprávy jako nepřečtené se vrátit do seznamu zpráv místo otevření následující zprávy."
       },
       "swipe_right_action": {
         "label": "Akce při přejetí doprava (mobil)",
