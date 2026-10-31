@@ -20,6 +20,9 @@ const DENSITY_PREVIEW: Record<Density, { py: string; gap: string; showAvatar: bo
 
 function DensityPreview({ density }: { density: Density }) {
   const cfg = DENSITY_PREVIEW[density];
+  // The list leaves the preview line out when Show preview is off, so the
+  // sample does too.
+  const showPreview = useSettingsStore((state) => state.showPreview) && cfg.showPreview;
   const rows = [
     { unread: true,  sender: 'Alice Johnson',  subject: 'Project update - Q1 roadmap', preview: 'Here are the latest numbers from…' },
     { unread: false, sender: 'Bob Smith',       subject: 'Re: Meeting notes',           preview: 'Thanks, will review and get back...' },
@@ -53,7 +56,7 @@ function DensityPreview({ density }: { density: Density }) {
             <div className={cn("truncate", row.unread ? "font-medium text-foreground" : "text-foreground")}>
               {row.subject}
             </div>
-            {cfg.showPreview && (
+            {showPreview && (
               <div className="truncate text-muted-foreground">{row.preview}</div>
             )}
           </div>
