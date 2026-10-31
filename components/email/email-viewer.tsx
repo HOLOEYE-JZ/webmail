@@ -5338,6 +5338,32 @@ export function EmailViewer({
                 </div>
               )}
             </div>
+            {/* Mountain View phone: reply from the top of the message, not
+                only from the row under a long body (#1475). */}
+            {mvMobileViewer && !isDraft && !isScheduled && (
+              <span className="flex items-center -my-2 -me-2 flex-shrink-0" data-mv-mobile-sender-actions="">
+                <button
+                  type="button"
+                  onClick={() => onReply?.()}
+                  className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  title={t('tooltips.reply')}
+                  aria-label={t('reply')}
+                >
+                  <Reply className="w-5 h-5" />
+                </button>
+                {onReplyAll && (
+                  <button
+                    type="button"
+                    onClick={onReplyAll}
+                    className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    title={t('tooltips.reply_all')}
+                    aria-label={t('reply_all')}
+                  >
+                    <ReplyAll className="w-5 h-5" />
+                  </button>
+                )}
+              </span>
+            )}
           </div>
         </div>
 
