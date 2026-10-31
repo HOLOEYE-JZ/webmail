@@ -2572,6 +2572,8 @@
       "group_by_letter_label": "İlk harfe göre grupla",
       "sort_by_last_name_label": "Soyada göre sırala",
       "sort_by_last_name_description": "Aile üyeleri bir arada görünsün diye kişi listesini soyada göre sıralar",
+      "show_directory_label": "Dizini göster",
+      "show_directory_description": "Posta sunucusundaki hesapları ve grupları Kişiler altında \"Dizin\" bölümünde listeler",
       "group_by_letter_description": "Kişi listesinde alfabetik bölüm başlıkları göster",
       "import_label": "Kişileri İçe Aktar",
       "import_description": "Kişileri bir vCard (.vcf) dosyasından içe aktarın",

@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "연락처 목록에 알파벳순 섹션 헤더 표시",
       "group_by_letter_label": "첫 글자로 그룹화",
       "sort_by_last_name_label": "성으로 정렬",
-      "sort_by_last_name_description": "가족 구성원이 함께 표시되도록 연락처 목록을 성 기준으로 정렬합니다"
+      "sort_by_last_name_description": "가족 구성원이 함께 표시되도록 연락처 목록을 성 기준으로 정렬합니다",
+      "show_directory_label": "디렉터리 표시",
+      "show_directory_description": "연락처의 \"디렉터리\"에 메일 서버의 계정과 그룹을 표시합니다"
     },
     "calendar_management": {
       "delete_title": "캘린더를 삭제할까요?",

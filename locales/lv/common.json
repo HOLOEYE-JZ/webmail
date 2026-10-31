@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Rādīt alfabētiskos sadaļu virsrakstus kontaktu sarakstā",
       "group_by_letter_label": "Grupēt pēc pirmā burta",
       "sort_by_last_name_label": "Kārtot pēc uzvārda",
-      "sort_by_last_name_description": "Kārtot kontaktu sarakstu pēc uzvārda, lai ģimenes locekļi būtu kopā"
+      "sort_by_last_name_description": "Kārtot kontaktu sarakstu pēc uzvārda, lai ģimenes locekļi būtu kopā",
+      "show_directory_label": "Rādīt katalogu",
+      "show_directory_description": "Rādīt pasta servera kontus un grupas sadaļā “Katalogs” kontaktos"
     },
     "calendar_management": {
       "delete_title": "Dzēst kalendāru?",

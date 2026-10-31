@@ -2579,6 +2579,8 @@
       "group_by_letter_label": "Zoskupiť podľa prvého písmena",
       "sort_by_last_name_label": "Zoradiť podľa priezviska",
       "sort_by_last_name_description": "Zoradiť zoznam kontaktov podľa priezviska, aby členovia rodiny boli pri sebe",
+      "show_directory_label": "Zobraziť adresár organizácie",
+      "show_directory_description": "Zobraziť účty a skupiny na poštovom serveri v Kontaktoch pod položkou „Adresár organizácie“",
       "group_by_letter_description": "Zobraziť abecedné záhlavia sekcií v zozname kontaktov",
       "import_label": "Importovať kontakty",
       "import_description": "Importovať kontakty zo súboru vCard (.vcf)",

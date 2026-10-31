@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Alphabetische Abschnittsüberschriften in der Kontaktliste anzeigen",
       "group_by_letter_label": "Nach Anfangsbuchstaben gruppieren",
       "sort_by_last_name_label": "Nach Nachname sortieren",
-      "sort_by_last_name_description": "Kontaktliste nach Nachnamen ordnen, damit Familienmitglieder zusammenstehen"
+      "sort_by_last_name_description": "Kontaktliste nach Nachnamen ordnen, damit Familienmitglieder zusammenstehen",
+      "show_directory_label": "Verzeichnis anzeigen",
+      "show_directory_description": "Zeigt die Konten und Gruppen auf dem Mailserver unter „Verzeichnis“ in den Kontakten"
     },
     "calendar_management": {
       "delete_title": "Kalender löschen?",

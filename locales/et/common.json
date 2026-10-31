@@ -2580,6 +2580,8 @@
       "group_by_letter_description": "Näita kontaktide loendis tähestikulisi jaotisepealkirju",
       "sort_by_last_name_label": "Sordi perekonnanime järgi",
       "sort_by_last_name_description": "Järjesta kontaktide loend perekonnanime järgi, et pereliikmed oleksid koos",
+      "show_directory_label": "Näita kataloogi",
+      "show_directory_description": "Näita meiliserveri kontosid ja rühmi Kontaktide all jaotises „Kataloog“",
       "import_label": "Impordi kontaktid",
       "import_description": "Impordi kontaktid vCard (.vcf) failist",
       "export_label": "Ekspordi kontaktid",

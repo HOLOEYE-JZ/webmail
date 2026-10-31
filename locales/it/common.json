@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Mostra intestazioni alfabetiche nell'elenco dei contatti",
       "group_by_letter_label": "Raggruppa per prima lettera",
       "sort_by_last_name_label": "Ordina per cognome",
-      "sort_by_last_name_description": "Ordina l'elenco dei contatti per cognome così i familiari compaiono insieme"
+      "sort_by_last_name_description": "Ordina l'elenco dei contatti per cognome così i familiari compaiono insieme",
+      "show_directory_label": "Mostra la rubrica aziendale",
+      "show_directory_description": "Elenca gli account e i gruppi del server di posta sotto \"Rubrica aziendale\" in Contatti"
     },
     "calendar_management": {
       "delete_title": "Eliminare il calendario?",

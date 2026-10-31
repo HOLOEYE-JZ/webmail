@@ -2579,6 +2579,8 @@
       "group_by_letter_label": "Grupați după prima literă",
       "sort_by_last_name_label": "Sortare după nume de familie",
       "sort_by_last_name_description": "Ordonați lista de contacte după numele de familie, astfel încât membrii familiei să apară împreună",
+      "show_directory_label": "Afișează directorul",
+      "show_directory_description": "Afișează conturile și grupurile de pe serverul de e-mail la „Director” în Contacte",
       "group_by_letter_description": "Afișați titlurile secțiunilor în ordine alfabetică în lista de contacte",
       "import_label": "Importați contactele",
       "import_description": "Importați contactele dintr-un fișier „vCard” (.vcf)",

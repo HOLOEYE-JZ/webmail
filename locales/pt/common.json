@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Mostrar cabeçalhos de seção alfabéticos na lista de contatos",
       "group_by_letter_label": "Agrupar pela primeira letra",
       "sort_by_last_name_label": "Ordenar por sobrenome",
-      "sort_by_last_name_description": "Ordenar a lista de contatos por sobrenome para que os membros da família apareçam juntos"
+      "sort_by_last_name_description": "Ordenar a lista de contatos por sobrenome para que os membros da família apareçam juntos",
+      "show_directory_label": "Mostrar o diretório",
+      "show_directory_description": "Lista as contas e os grupos do servidor de e-mail em \"Diretório\" nos Contatos"
     },
     "calendar_management": {
       "delete_title": "Eliminar o calendário?",

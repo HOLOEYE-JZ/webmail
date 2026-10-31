@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "在联系人列表中显示按字母顺序排列的分节标题",
       "group_by_letter_label": "按首字母分组",
       "sort_by_last_name_label": "按姓氏排序",
-      "sort_by_last_name_description": "按姓氏排列联系人列表，使家庭成员显示在一起"
+      "sort_by_last_name_description": "按姓氏排列联系人列表，使家庭成员显示在一起",
+      "show_directory_label": "显示通讯录目录",
+      "show_directory_description": "在联系人的“通讯录目录”中列出邮件服务器上的账户和群组"
     },
     "calendar_management": {
       "delete_title": "删除日历?",

@@ -2579,6 +2579,8 @@
       "group_by_letter_label": "التجميع حسب الحرف الأول",
       "sort_by_last_name_label": "الترتيب حسب اسم العائلة",
       "sort_by_last_name_description": "ترتيب قائمة جهات الاتصال حسب اسم العائلة بحيث يظهر أفراد العائلة معًا",
+      "show_directory_label": "إظهار الدليل",
+      "show_directory_description": "عرض الحسابات والمجموعات الموجودة على خادم البريد تحت \"الدليل\" في جهات الاتصال",
       "group_by_letter_description": "إظهار عناوين أقسام أبجدية في قائمة جهات الاتصال",
       "import_label": "استيراد جهات الاتصال",
       "import_description": "استيراد جهات الاتصال من ملف vCard (‎.vcf)",

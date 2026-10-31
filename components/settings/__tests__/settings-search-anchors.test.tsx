@@ -61,7 +61,7 @@ const pages = {
 const OVERRIDES: Record<string, () => unknown> = {
   getAccountId: () => 'acc', getSieveAccountId: () => 'acc', getUsername: () => 'user@example.com',
   getSharedAccounts: () => [], getSieveAccounts: () => [], getSieveCapabilities: () => null,
-  hasAccountCapability: () => false, supportsCalendars: () => true, supportsFiles: () => true, hasDelayedSend: () => true,
+  hasAccountCapability: () => false, supportsCalendars: () => true, supportsPrincipals: () => true, supportsFiles: () => true, hasDelayedSend: () => true,
   // Sharing and Recover deleted items read these on open.
   getShareTargets: async () => ({ targets: [], failed: [] }), listPrincipals: async () => ({ principals: [], status: 'ok' }),
   getPrincipals: async () => [], listArchivedEmails: async () => ({ items: [], nextPosition: null }),

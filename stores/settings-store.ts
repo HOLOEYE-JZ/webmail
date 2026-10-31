@@ -633,6 +633,9 @@ interface SettingsState extends AccessibilitySettings {
   // Sort (and group) the contact list by surname instead of given name so
   // family members sit together (#963).
   sortContactsByLastName: boolean;
+  // The Directory entry in the Contacts sidebar (#1457). Autocomplete, the
+  // share dialog and free/busy use the directory either way.
+  showContactsDirectory: boolean;
 
   // Files: view, sort and icons (Settings > Files)
   filesSettings: FilesSettings;
@@ -939,6 +942,7 @@ const DEFAULT_SETTINGS = {
   // Contacts Display
   groupContactsByLetter: true,
   sortContactsByLastName: false,
+  showContactsDirectory: true,
 
   // Files
   filesSettings: DEFAULT_FILES_SETTINGS,
@@ -1349,6 +1353,7 @@ export const useSettingsStore = create<SettingsState>()(
           sharedCalendarColors: state.sharedCalendarColors,
           groupContactsByLetter: state.groupContactsByLetter,
           sortContactsByLastName: state.sortContactsByLastName,
+          showContactsDirectory: state.showContactsDirectory,
           filesSettings: state.filesSettings,
           expandedFilterView: state.expandedFilterView,
           showTimeInMonthView: state.showTimeInMonthView,

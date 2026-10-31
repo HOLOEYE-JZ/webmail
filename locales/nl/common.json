@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Toon alfabetische sectiekoppen in de contactenlijst",
       "group_by_letter_label": "Groeperen op eerste letter",
       "sort_by_last_name_label": "Sorteren op achternaam",
-      "sort_by_last_name_description": "Sorteer de contactenlijst op achternaam zodat gezinsleden bij elkaar staan"
+      "sort_by_last_name_description": "Sorteer de contactenlijst op achternaam zodat gezinsleden bij elkaar staan",
+      "show_directory_label": "Adresboek van de organisatie tonen",
+      "show_directory_description": "Toon de accounts en groepen op de mailserver onder \"Adresboek van de organisatie\" in Contacten"
     },
     "calendar_management": {
       "delete_title": "Agenda verwijderen?",

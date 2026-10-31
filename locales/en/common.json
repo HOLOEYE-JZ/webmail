@@ -2580,6 +2580,8 @@
       "group_by_letter_description": "Show alphabetical section headers in the contact list",
       "sort_by_last_name_label": "Sort by last name",
       "sort_by_last_name_description": "Order the contact list by surname so family members appear together",
+      "show_directory_label": "Show the directory",
+      "show_directory_description": "List the accounts and groups on your mail server under Directory in Contacts",
       "import_label": "Import contacts",
       "import_description": "Import contacts from a vCard (.vcf) file",
       "export_label": "Export contacts",

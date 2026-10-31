@@ -326,6 +326,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   contacts: [
     { label: 'settings.contacts.group_by_letter_label' },
     { label: 'settings.contacts.sort_by_last_name_label' },
+    { label: 'settings.contacts.show_directory_label' },
     { label: 'settings.contacts.import_label' },
     { label: 'settings.contacts.export_label' },
     { label: 'settings.contacts.manage_title' },

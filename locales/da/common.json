@@ -2575,6 +2575,8 @@
       "group_by_letter_label": "Gruppér efter første bogstav",
       "sort_by_last_name_label": "Sortér efter efternavn",
       "sort_by_last_name_description": "Sortér kontaktlisten efter efternavn, så familiemedlemmer står samlet",
+      "show_directory_label": "Vis adressefortegnelsen",
+      "show_directory_description": "Vis kontiene og grupperne på mailserveren under \"Adressefortegnelse\" i Kontakter",
       "group_by_letter_description": "Vis alfabetiske sektionsoverskrifter i kontaktlisten",
       "import_label": "Importér kontakter",
       "import_description": "Importér kontakter fra en vCard-fil (.vcf)",

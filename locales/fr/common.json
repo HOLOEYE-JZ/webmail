@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Afficher des en-têtes alphabétiques dans la liste de contacts",
       "group_by_letter_label": "Grouper par première lettre",
       "sort_by_last_name_label": "Trier par nom de famille",
-      "sort_by_last_name_description": "Classer la liste des contacts par nom de famille pour regrouper les membres d'une même famille"
+      "sort_by_last_name_description": "Classer la liste des contacts par nom de famille pour regrouper les membres d'une même famille",
+      "show_directory_label": "Afficher l’annuaire",
+      "show_directory_description": "Affiche les comptes et groupes du serveur de messagerie sous « Annuaire » dans Contacts"
     },
     "calendar_management": {
       "delete_title": "Supprimer le calendrier ?",

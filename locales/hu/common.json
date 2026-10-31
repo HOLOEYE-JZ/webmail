@@ -2575,6 +2575,8 @@
       "group_by_letter_label": "Csoportosítás kezdőbetű szerint",
       "sort_by_last_name_label": "Rendezés vezetéknév szerint",
       "sort_by_last_name_description": "A névjegylista vezetéknév szerinti rendezése, hogy a családtagok egymás mellett legyenek",
+      "show_directory_label": "Címtár megjelenítése",
+      "show_directory_description": "A levelezőszerver fiókjainak és csoportjainak megjelenítése a Névjegyek „Címtár” részében",
       "group_by_letter_description": "ABC sorrendű fejléc mutatása a névjegy listában",
       "import_label": "Névjegyek importálása",
       "import_description": "Névjegyek importálása vCard (.vcf) fájlból",
