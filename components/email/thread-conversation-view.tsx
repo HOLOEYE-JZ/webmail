@@ -16,7 +16,7 @@ import { BookingCalendarActions } from "./structured-mail/booking-calendar-actio
 import { useStructuredMail } from "./structured-mail/use-structured-mail";
 import { attachmentIcon } from "./attachment-chips";
 import { ExternalSenderChip } from "./external-sender-chip";
-import { collectReferencedCids, isEmbeddedInBody, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
+import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
 import { mailLanguage } from "@/lib/mail-language";
@@ -754,9 +754,10 @@ export function ConversationEmailBody({
 
   // Parts the body embeds via cid: stay out of the attachment row while the
   // user hides inline images - the desktop viewer's rule, shared through
-  // lib/attachment-visibility.ts so the two views cannot drift apart.
+  // lib/attachment-visibility.ts so the two views cannot drift apart. The
+  // report parts of a bounce or read receipt never show.
   const visibleAttachments = useMemo(() => {
-    const attachments = email.attachments ?? [];
+    const attachments = (email.attachments ?? []).filter(att => !isReportPart(att.type));
     if (!hideInlineImageAttachments) return attachments;
     const bodyCids = collectReferencedCids(getRenderableHtmlBody(email));
     return attachments.filter(att => !isEmbeddedInBody(att, bodyCids));

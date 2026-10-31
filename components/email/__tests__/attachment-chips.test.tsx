@@ -36,6 +36,18 @@ describe("realAttachments", () => {
     expect(realAttachments([att({ name: undefined })])).toEqual([]);
   });
 
+  it("drops the report part of a bounce, which the reader does not list either", () => {
+    // A forwarded bounce: both parts named "attachment" by the forward, but
+    // only the original message is something the reader shows.
+    const original = att({ partId: "3", blobId: "b3", name: "attachment", type: "message/rfc822" });
+    const out = realAttachments([
+      att({ partId: "2", blobId: "b2", name: "attachment", type: "message/delivery-status" }),
+      original,
+      att({ partId: "4", blobId: "b4", name: "receipt", type: "Message/Disposition-Notification" }),
+    ]);
+    expect(out).toEqual([original]);
+  });
+
   it("keeps genuine attachments in order", () => {
     const a = att({ partId: "1", blobId: "b1", name: "a.pdf" });
     const b = att({ partId: "2", blobId: "b2", name: "b.xlsx", type: "application/vnd.ms-excel" });

@@ -142,7 +142,8 @@ import { composeTextStyle, composeTextStyleCss } from "@/components/email/font-s
 import { buildMentionCandidates, type MentionCandidate } from "@/lib/recipient-mentions";
 import { describeRecipientChanges, recipientDisplayName, type RecipientChange, type RecipientFields } from "@/lib/recipient-announcements";
 import { announce as announceStatus } from "@/lib/announce";
-import { normalizeCid } from "@/lib/attachment-visibility";
+import { isReportPart, normalizeCid } from "@/lib/attachment-visibility";
+import { unnamedAttachmentName } from "@/lib/attachment-name";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
 import { isRecipientMentionActive } from "@/components/email/recipient-mention";
 import type { Editor } from "@tiptap/react";
@@ -953,7 +954,7 @@ export function EmailComposer({
       return initialData.attachments
         .filter(att => !!att.blobId)
         .map(att => ({
-          name: att.name || 'attachment',
+          name: att.name || unnamedAttachmentName(att.type),
           type: att.type || 'application/octet-stream',
           size: att.size,
           blobId: att.blobId,
@@ -979,8 +980,13 @@ export function EmailComposer({
           embeddedCids.has(normalizeCid(att.cid)) ||
           (att.disposition === 'inline' && (att.type || '').startsWith('image/'))
         )))
+        // A bounce's delivery status or a receipt's disposition is no file
+        // anyone attached; the reader does not list it, so it stays behind.
+        .filter(att => !isReportPart(att.type))
+        // A part without a name goes out under the one the reader showed
+        // ("Email.eml" for the original message of a bounce).
         .map(att => ({
-          name: att.name || 'attachment',
+          name: att.name || unnamedAttachmentName(att.type),
           type: att.type || 'application/octet-stream',
           size: att.size,
           blobId: att.blobId,
@@ -2702,7 +2708,7 @@ export function EmailComposer({
                 // Uploads that finished during the save are not in this version.
                 if (!att.blobId || att.uploading || !savedBlobIds.has(att.blobId)) return att;
                 const idx = freshParts.findIndex((p, i) =>
-                  !claimed.has(i) && (p.name || 'attachment') === att.name && p.size === att.size);
+                  !claimed.has(i) && (p.name || unnamedAttachmentName(p.type)) === att.name && p.size === att.size);
                 if (idx === -1) return att;
                 claimed.add(idx);
                 return { ...att, blobId: freshParts[idx].blobId, fromDraftPart: true };

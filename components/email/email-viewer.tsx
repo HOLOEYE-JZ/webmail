@@ -16,12 +16,12 @@ import { ReadAloudBar } from "./read-aloud-bar";
 import { attachmentIcon } from "./attachment-chips";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { ReadingMask } from "./reading-mask";
-import { collectReferencedCids, isEmbeddedInBody, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
+import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
+import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth, type FitOptions } from "@/lib/email-fit-width";
 import { hasFullBleedCanvas } from "@/lib/email-full-bleed";
-import { stripBidiControls } from "@/lib/bidi";
 import { withBasePath } from "@/lib/browser-navigation";
 import { buildContactsPath } from "@/lib/deep-links";
 import { Button } from "@/components/ui/button";
@@ -277,44 +277,6 @@ interface EmailViewerProps {
   selectedMailbox?: string;
   className?: string;
 }
-
-const MIME_TYPE_LABELS: Record<string, string> = {
-  'application/pdf': 'Document.pdf',
-  'application/zip': 'Archive.zip',
-  'application/x-zip-compressed': 'Archive.zip',
-  'application/gzip': 'Archive.gz',
-  'application/x-rar-compressed': 'Archive.rar',
-  'application/x-7z-compressed': 'Archive.7z',
-  'application/msword': 'Document.doc',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Document.docx',
-  'application/vnd.ms-excel': 'Spreadsheet.xls',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Spreadsheet.xlsx',
-  'application/vnd.ms-powerpoint': 'Presentation.ppt',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'Presentation.pptx',
-  'text/plain': 'Text.txt',
-  'text/html': 'Document.html',
-  'text/csv': 'Data.csv',
-  'application/json': 'Data.json',
-  'application/xml': 'Data.xml',
-  'application/octet-stream': 'Attachment',
-  'message/rfc822': 'Email.eml',
-};
-
-const getAttachmentDisplayName = (name: string | null | undefined, mimeType?: string): string => {
-  // Without directional overrides, which would show `report‮fdp.exe`
-  // as `reportexe.pdf` (the download name is cleaned separately).
-  if (name) return stripBidiControls(name);
-  if (mimeType) {
-    const label = MIME_TYPE_LABELS[mimeType.toLowerCase()];
-    if (label) return label;
-    const sub = mimeType.split('/')[1];
-    if (sub) {
-      const clean = sub.replace(/^x-/, '').replace(/^vnd\./, '');
-      return `Attachment.${clean}`;
-    }
-  }
-  return 'Attachment';
-};
 
 // Helper function to format recipients with contextual display
 const _formatRecipients = (
@@ -2629,7 +2591,7 @@ export function EmailViewer({
       .filter(att => !(hideInlineImageAttachments && isEmbeddedInBody(att, bodyCids)))
       // Hide machine-readable report parts (MDN read-receipts, DSN bounce
       // reports). These are required MIME parts, not real user attachments.
-      .filter(att => att.type !== 'message/disposition-notification' && att.type !== 'message/delivery-status')
+      .filter(att => !isReportPart(att.type))
       .map((attachment, index) => ({
         id: attachment.blobId || `${attachment.name || 'attachment'}-${index}`,
         name: attachment.name || null,

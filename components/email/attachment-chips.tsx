@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { FileText, FileSpreadsheet, FileImage, FileVideo, FileAudio, FileArchive, File as FileIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { stripBidiControls } from "@/lib/bidi";
+import { isReportPart } from "@/lib/attachment-visibility";
 import type { Attachment, Email } from "@/lib/jmap/types";
 import type { LoadListAttachments } from "@/lib/list-attachments";
 
@@ -12,12 +13,13 @@ import type { LoadListAttachments } from "@/lib/list-attachments";
  * pixels, spacers a couple of hundred bytes each — none of which anyone
  * wants to download. Only parts the sender actually attached belong in
  * the list, so anything marked inline or referenced by a Content-ID is
- * dropped.
+ * dropped, and so are the report parts of a bounce or read receipt, which
+ * the reader does not list either.
  */
 export function realAttachments(attachments?: Attachment[]): Attachment[] {
   if (!attachments?.length) return [];
   return attachments.filter(
-    (a) => a.disposition !== "inline" && !a.cid && !!a.name,
+    (a) => a.disposition !== "inline" && !a.cid && !!a.name && !isReportPart(a.type),
   );
 }
 
