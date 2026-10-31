@@ -1140,7 +1140,9 @@ optgroup {
 }
 
 /* Selected and hovered rows fill the pill; a folder with unread mail reads
-   bold, the way the message rows do. Icons are 20px with an 18px gap. */
+   bold, the way the message rows do. Bold means unread only: the pill alone
+   marks the open folder, so a selected folder without unread mail stays
+   regular (#1469). Icons are 20px with an 18px gap. */
 [data-interface-layout="mountain-view"] [data-mv-nav-row] {
   font-size: 0.875rem;
   color: var(--color-foreground);
@@ -1151,7 +1153,7 @@ optgroup {
 [data-interface-layout="mountain-view"] [data-mv-nav-row][data-selected="true"] {
   background-color: var(--mv-nav-selected);
   color: var(--color-foreground);
-  font-weight: 700;
+  font-weight: 400;
 }
 [data-interface-layout="mountain-view"] [data-mv-nav-row][data-has-unread] {
   font-weight: 700;

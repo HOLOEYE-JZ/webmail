@@ -125,6 +125,12 @@ export interface SendEmailResult {
    */
   submissionAccountId?: string;
   /**
+   * JMAP account the sent message (`emailId`) lies in: a shared or group
+   * account when sent from its identity. Ids repeat across accounts, so the
+   * id alone does not name the message.
+   */
+  emailAccountId?: string;
+  /**
    * Set when the submission succeeded but a post-send step was rejected
    * (the implicit onSuccessUpdateEmail filing patch, or destroying the
    * old draft). The mail left the server - callers should warn, not fail.

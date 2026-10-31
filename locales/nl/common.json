@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Toon alfabetische sectiekoppen in de contactenlijst",
       "group_by_letter_label": "Groeperen op eerste letter",
       "sort_by_last_name_label": "Sorteren op achternaam",
-      "sort_by_last_name_description": "Sorteer de contactenlijst op achternaam zodat gezinsleden bij elkaar staan"
+      "sort_by_last_name_description": "Sorteer de contactenlijst op achternaam zodat gezinsleden bij elkaar staan",
+      "show_directory_label": "Adresboek van de organisatie tonen",
+      "show_directory_description": "Toon de accounts en groepen op de mailserver onder \"Adresboek van de organisatie\" in Contacten"
     },
     "calendar_management": {
       "delete_title": "Agenda verwijderen?",
@@ -4498,6 +4500,11 @@
       "show_time_in_month_view_desc": "Evenementtijden weergeven in de maandkalenderweergave",
       "tinted_events": "Lichte afspraakkleuren",
       "tinted_events_desc": "Toon afspraken als een lichte tint van hun agendakleur met een gekleurde balk aan het begin, zoals in Outlook en op afdrukken, in plaats van volle blokken.",
+      "month_timed_events": "Afspraken met tijd in maandweergave",
+      "month_timed_events_desc": "Hoe afspraken met een begintijd eruitzien in de maandweergave. Afspraken voor de hele dag en meerdaagse afspraken blijven balken.",
+      "month_timed_events_bar": "Balk",
+      "month_timed_events_text": "Gekleurde tekst",
+      "month_timed_events_dot": "Stip en tekst",
       "show_week_numbers": "Weeknummers weergeven",
       "show_week_numbers_desc": "Weeknummers weergeven in de minikalender",
       "calendar_free_scroll": "Vrij scrollen",

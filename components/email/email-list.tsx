@@ -50,8 +50,9 @@ import { PluginActions, useFolderAccountKind } from "@/components/plugins/plugin
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
 import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
 import { unreadSectionRowCount } from "@/lib/unread-first";
+import type { OpenableEmail } from "@/lib/plugin-sandbox/open-email";
 import { MvListSectionHeader } from "./mv-list-section-header";
-import { type OpenableEmail, PluginSearchResults } from "./plugin-search-results";
+import { PluginSearchResults } from "./plugin-search-results";
 import { commonTagScope } from "@/hooks/use-account-tags";
 import { TrashRecoveryLink } from "./trash-recovery-link";
 

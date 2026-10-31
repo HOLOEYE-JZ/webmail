@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Mostrar cabeçalhos de seção alfabéticos na lista de contatos",
       "group_by_letter_label": "Agrupar pela primeira letra",
       "sort_by_last_name_label": "Ordenar por sobrenome",
-      "sort_by_last_name_description": "Ordenar a lista de contatos por sobrenome para que os membros da família apareçam juntos"
+      "sort_by_last_name_description": "Ordenar a lista de contatos por sobrenome para que os membros da família apareçam juntos",
+      "show_directory_label": "Mostrar o diretório",
+      "show_directory_description": "Lista as contas e os grupos do servidor de e-mail em \"Diretório\" nos Contatos"
     },
     "calendar_management": {
       "delete_title": "Eliminar o calendário?",
@@ -4498,6 +4500,11 @@
       "show_time_in_month_view_desc": "Exibir horários dos eventos na visualização mensal do calendário",
       "tinted_events": "Cores de evento claras",
       "tinted_events_desc": "Mostrar os eventos com um tom claro da cor do calendário e uma barra colorida no início, como no Outlook e na impressão, em vez de blocos sólidos.",
+      "month_timed_events": "Eventos com hora na vista mensal",
+      "month_timed_events_desc": "Como aparecem na vista mensal os eventos com hora de início. Eventos de dia inteiro e de vários dias continuam a ser barras.",
+      "month_timed_events_bar": "Barra",
+      "month_timed_events_text": "Texto colorido",
+      "month_timed_events_dot": "Ponto e texto",
       "show_week_numbers": "Mostrar números da semana",
       "show_week_numbers_desc": "Exibir números da semana no minicalendário",
       "calendar_free_scroll": "Deslocamento livre",

@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Rādīt alfabētiskos sadaļu virsrakstus kontaktu sarakstā",
       "group_by_letter_label": "Grupēt pēc pirmā burta",
       "sort_by_last_name_label": "Kārtot pēc uzvārda",
-      "sort_by_last_name_description": "Kārtot kontaktu sarakstu pēc uzvārda, lai ģimenes locekļi būtu kopā"
+      "sort_by_last_name_description": "Kārtot kontaktu sarakstu pēc uzvārda, lai ģimenes locekļi būtu kopā",
+      "show_directory_label": "Rādīt katalogu",
+      "show_directory_description": "Rādīt pasta servera kontus un grupas sadaļā “Katalogs” kontaktos"
     },
     "calendar_management": {
       "delete_title": "Dzēst kalendāru?",
@@ -4497,6 +4499,11 @@
       "show_time_in_month_view_desc": "Rādīt pasākuma laiku mēneša kalendārā",
       "tinted_events": "Gaišas notikumu krāsas",
       "tinted_events_desc": "Rādīt notikumus kalendāra krāsas gaišā tonī ar krāsainu joslu sākumā, kā Outlook un izdrukās, nevis kā pilnus blokus.",
+      "month_timed_events": "Notikumi ar laiku mēneša skatā",
+      "month_timed_events_desc": "Kā mēneša skatā izskatās notikumi ar sākuma laiku. Visas dienas un vairāku dienu notikumi paliek joslas.",
+      "month_timed_events_bar": "Josla",
+      "month_timed_events_text": "Krāsains teksts",
+      "month_timed_events_dot": "Punkts un teksts",
       "show_week_numbers": "Rādīt nedēļu numurus",
       "show_week_numbers_desc": "Rādīt nedēļu numurus mini kalendārā",
       "calendar_free_scroll": "Brīva ritināšana",

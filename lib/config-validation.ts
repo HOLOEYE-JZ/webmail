@@ -34,6 +34,7 @@ const configValidators = {
   oauthClientId: isString,
   oauthIssuerUrl: isString,
   oauthScopes: isString,
+  oauthResource: isString,
   rememberMeEnabled: isBoolean,
   settingsSyncEnabled: isBoolean,
   stalwartFeaturesEnabled: isBoolean,

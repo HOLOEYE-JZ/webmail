@@ -67,9 +67,14 @@ const PROXY_SKIP_PATTERN = /^\/(?:api|_next)(?:\/|$)/;
  * path; the proxy is skipped only when both are one of these exactly.
  * next.config.ts gives them the headers the proxy would have set.
  * A literal: Next reads it at build time.
+ *
+ * The bare "/" entry is for sub-path installs: Next glues the base path in
+ * front of each source, so the second pattern only matches /webmail/... and
+ * never /webmail itself. That request then skipped the locale redirect and
+ * ended on a 404 (#1455).
  */
 export const config = {
-  matcher: ["/((?!api/webdav$|api/plugin-proxy$|api/wopi/files/[^/]+/contents$).*)"],
+  matcher: ["/", "/((?!api/webdav$|api/plugin-proxy$|api/wopi/files/[^/]+/contents$).*)"],
 };
 
 // What Next serves from public/: a single dotted segment at the root

@@ -242,6 +242,41 @@ export interface ResolvedJmapIdentity {
   accountName: string;
 }
 
+export interface JmapSessionIdentity {
+  /** Normalized server URL. */
+  serverUrl: string;
+  /**
+   * The addresses the session names for the credential, lowercased: its
+   * `username` and the name of its primary mail account. Shared and group
+   * accounts are left out.
+   */
+  addresses: string[];
+}
+
+/**
+ * Who `authHeader` signs in as, read from the server's JMAP session alone:
+ * for a credential that comes with no username claim, such as the mobile
+ * app's access token. One request; throws {@link JmapAuthVerificationError}
+ * like {@link verifyJmapAuth} when the server refuses it.
+ */
+export async function fetchJmapSessionIdentity(
+  serverUrl: string,
+  authHeader: string,
+  options: VerifyJmapAuthOptions = {},
+): Promise<JmapSessionIdentity> {
+  const { serverUrl: normalizedServerUrl, session } = await fetchVerifiedSession(serverUrl, authHeader, options);
+  const addresses = new Set<string>();
+  if (session.username) addresses.add(session.username);
+  const mailAccountId = session.primaryAccounts?.['urn:ietf:params:jmap:mail'];
+  const mailAccount = typeof mailAccountId === 'string' ? session.accounts[mailAccountId] : undefined;
+  const accountName = (mailAccount as { name?: unknown } | undefined)?.name;
+  if (typeof accountName === 'string') addresses.add(accountName);
+  return {
+    serverUrl: normalizedServerUrl,
+    addresses: [...addresses].map((a) => a.trim().toLowerCase()).filter(Boolean),
+  };
+}
+
 /** {@link verifyJmapIdentity}, also returning the account name to key per-user data on. */
 export async function resolveJmapIdentity(
   serverUrl: string,

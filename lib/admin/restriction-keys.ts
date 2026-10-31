@@ -77,6 +77,15 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
   { key: 'emailNotificationsEnabled', label: 'Email Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'calendarNotificationsEnabled', label: 'Calendar Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'pushNotifyInboxOnly', label: 'Inbox-only Push Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: false },
+  {
+    key: 'showContactsDirectory',
+    label: 'Directory in Contacts',
+    description: 'Off hides the Directory entry that lists the accounts and groups on the mail server. Recipient suggestions, sharing and free/busy still use the directory.',
+    category: 'Contacts',
+    type: 'boolean',
+    page: 'policy',
+    defaultValue: true,
+  },
   { key: 'debugMode', label: 'Debug Mode', category: 'Advanced', type: 'boolean', page: 'policy', defaultValue: false },
   {
     key: 'signature',

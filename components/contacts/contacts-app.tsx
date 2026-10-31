@@ -24,6 +24,7 @@ import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { exportContacts } from "@/components/contacts/contact-export";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail, type DirectoryEntry } from "@/stores/contact-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { inlineContactMedia, type ContactSaveOptions } from "@/lib/contact-media";
 import { getContactPhotoClient } from "@/hooks/use-contact-photo";
 import { savePendingMailto } from "@/lib/protocol-handlers/session";
@@ -155,7 +156,11 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const [directorySelection, setDirectorySelection] = useState<Set<string>>(() => new Set());
   const [openDirectoryKey, setOpenDirectoryKey] = useState<string | null>(null);
   const directoryPrincipals = useContactStore((s) => s.directoryPrincipals);
-  const showDirectory = !!client?.supportsPrincipals();
+  const directoryStatus = useContactStore((s) => s.directoryStatus);
+  const showContactsDirectory = useSettingsStore((s) => s.showContactsDirectory);
+  // Hidden when the user turned it off, and when the server refuses to list
+  // its directory (Stalwart 1.0 for normal users): there's nothing to browse.
+  const showDirectory = !!client?.supportsPrincipals() && showContactsDirectory && directoryStatus !== "forbidden";
   const hasFetched = useRef(false);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const isMobile = useIsMobile();
@@ -459,6 +464,17 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }));
     return books.size === 1 ? [...books][0] : null;
   }, [movingContactIds, contacts]);
+
+  // The directory went away while open (turned off, or the server refused
+  // to list it): back to all contacts.
+  useEffect(() => {
+    if (!showDirectory && activeCategory === "directory") {
+      setActiveCategory("all");
+      setDirectorySelection(new Set());
+      setOpenDirectoryKey(null);
+      setView("list");
+    }
+  }, [showDirectory, activeCategory]);
 
   // Deleting a category only takes a label off contacts: no question, an Undo (R3).
   const deleteCategory = useDeleteCategory();

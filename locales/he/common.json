@@ -2548,6 +2548,8 @@
       "group_by_letter_label": "קבוצה לפי אות ראשונה",
       "sort_by_last_name_label": "מיון לפי שם משפחה",
       "sort_by_last_name_description": "סידור רשימת אנשי הקשר לפי שם משפחה כך שבני אותה משפחה יופיעו יחד",
+      "show_directory_label": "הצג את הספרייה",
+      "show_directory_description": "הצגת החשבונות והקבוצות בשרת הדואר תחת \"ספרייה\" באנשי הקשר",
       "group_by_letter_description": "הצג כותרות חלקים אלפביתיים ברשימת אנשי הקשר"
     },
     "calendar_management": {
@@ -4416,6 +4418,11 @@
       "show_time_in_month_view_desc": "הצג זמני אירועים בתצוגת לוח השנה של החודש",
       "tinted_events": "צבעי אירועים בהירים",
       "tinted_events_desc": "הצגת אירועים בגוון בהיר של צבע היומן עם פס צבעוני בהתחלה, כמו ב-Outlook ובהדפסה, במקום בלוקים מלאים.",
+      "month_timed_events": "אירועים עם שעה בתצוגת חודש",
+      "month_timed_events_desc": "איך אירועים עם שעת התחלה מוצגים בתצוגת החודש. אירועים של יום שלם ושל כמה ימים נשארים פסים.",
+      "month_timed_events_bar": "פס",
+      "month_timed_events_text": "טקסט צבעוני",
+      "month_timed_events_dot": "נקודה וטקסט",
       "show_week_numbers": "הצג מספרי שבוע",
       "show_week_numbers_desc": "הצג מספרי שבוע במיני-לוח שנה",
       "calendar_free_scroll": "גלילה חופשית",

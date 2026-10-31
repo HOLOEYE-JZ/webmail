@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "연락처 목록에 알파벳순 섹션 헤더 표시",
       "group_by_letter_label": "첫 글자로 그룹화",
       "sort_by_last_name_label": "성으로 정렬",
-      "sort_by_last_name_description": "가족 구성원이 함께 표시되도록 연락처 목록을 성 기준으로 정렬합니다"
+      "sort_by_last_name_description": "가족 구성원이 함께 표시되도록 연락처 목록을 성 기준으로 정렬합니다",
+      "show_directory_label": "디렉터리 표시",
+      "show_directory_description": "연락처의 \"디렉터리\"에 메일 서버의 계정과 그룹을 표시합니다"
     },
     "calendar_management": {
       "delete_title": "캘린더를 삭제할까요?",
@@ -4498,6 +4500,11 @@
       "show_time_in_month_view_desc": "월간 캘린더에서도 일정 시간을 표시해요",
       "tinted_events": "연한 일정 색상",
       "tinted_events_desc": "일정을 꽉 찬 블록 대신 Outlook이나 인쇄본처럼 캘린더 색상의 연한 색조와 앞쪽의 색상 막대로 표시합니다.",
+      "month_timed_events": "월 보기의 시간 지정 일정",
+      "month_timed_events_desc": "월 보기에서 시작 시간이 있는 일정을 표시하는 방식입니다. 종일 일정과 여러 날 일정은 막대로 유지됩니다.",
+      "month_timed_events_bar": "막대",
+      "month_timed_events_text": "색상 텍스트",
+      "month_timed_events_dot": "점과 텍스트",
       "show_week_numbers": "주 차 번호 표시",
       "show_week_numbers_desc": "미니 캘린더에 1년 중 몇 주 차인지 표시해요",
       "calendar_free_scroll": "자유 스크롤",

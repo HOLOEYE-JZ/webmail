@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Pokaż alfabetyczne nagłówki sekcji na liście kontaktów",
       "group_by_letter_label": "Grupuj według pierwszej litery",
       "sort_by_last_name_label": "Sortuj według nazwiska",
-      "sort_by_last_name_description": "Uporządkuj listę kontaktów według nazwiska, aby członkowie rodziny byli obok siebie"
+      "sort_by_last_name_description": "Uporządkuj listę kontaktów według nazwiska, aby członkowie rodziny byli obok siebie",
+      "show_directory_label": "Pokaż katalog",
+      "show_directory_description": "Wyświetla konta i grupy z serwera poczty w sekcji „Katalog” w Kontaktach"
     },
     "calendar_management": {
       "delete_title": "Usunąć kalendarz?",
@@ -4498,6 +4500,11 @@
       "show_time_in_month_view_desc": "Wyświetlaj godziny wydarzeń w miesięcznym widoku kalendarza",
       "tinted_events": "Jasne kolory wydarzeń",
       "tinted_events_desc": "Pokazuj wydarzenia w jasnym odcieniu koloru kalendarza z kolorowym paskiem na początku, jak w Outlooku i na wydruku, zamiast pełnych bloków.",
+      "month_timed_events": "Wydarzenia z godziną w widoku miesiąca",
+      "month_timed_events_desc": "Jak wyglądają w widoku miesiąca wydarzenia z godziną rozpoczęcia. Wydarzenia całodniowe i wielodniowe pozostają paskami.",
+      "month_timed_events_bar": "Pasek",
+      "month_timed_events_text": "Kolorowy tekst",
+      "month_timed_events_dot": "Kropka i tekst",
       "show_week_numbers": "Pokaż numery tygodni",
       "show_week_numbers_desc": "Wyświetlaj numery tygodni w mini-kalendarzu",
       "calendar_free_scroll": "Swobodne przewijanie",

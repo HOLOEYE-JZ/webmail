@@ -34,6 +34,7 @@ import {
 import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId, type ProSplitSide } from "@/stores/pro-tab-store";
 import { cn } from "@/lib/utils";
 import { getPathPrefix } from "@/lib/browser-navigation";
+import { onOpenEmail, proEmailTabOpener } from "@/lib/plugin-sandbox/open-email";
 
 import { MailApp } from "@/components/mail/mail-app";
 import { CalendarApp } from "@/components/calendar/calendar-app";
@@ -332,6 +333,12 @@ export default function ProHome() {
     window.addEventListener('keydown', onSearchShortcut);
     return () => window.removeEventListener('keydown', onSearchShortcut);
   }, []);
+
+  // A plugin opening a message (api.ui.openEmail) gets an email tab, as a
+  // message link does here: the mail tab stays mounted while hidden, so its
+  // reader is not one the user would see.
+  const loadingTitle = t('common.loading');
+  useEffect(() => onOpenEmail(proEmailTabOpener(loadingTitle)), [loadingTitle]);
 
   const handleRailNavigate = (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') => {
     openTab(itemId);

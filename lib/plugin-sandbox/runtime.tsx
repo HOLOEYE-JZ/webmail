@@ -164,9 +164,57 @@ function applyHostFeatures(next: HostFeaturesView | undefined): void {
 const pendingCallbacks = new Map<string, { resolve: (v: unknown) => void; reject: (err: Error) => void }>();
 const hookHandlers: Record<string, (...args: unknown[]) => unknown> = {};
 
-function sendToHost(msg: SandboxToHost): void {
+function sendToHost(msg: SandboxToHost, transfer?: Transferable[]): void {
   if (!parentWindow || !parentOrigin) return;
-  parentWindow.postMessage(msg, parentOrigin);
+  if (transfer) parentWindow.postMessage(msg, parentOrigin, transfer);
+  else parentWindow.postMessage(msg, parentOrigin);
+}
+
+// ─── Activity reports ────────────────────────────────────────
+
+/**
+ * Input that counts as the user being here for the host's idle timeout: the
+ * host window's own list (components/session/session-timeout-guard.tsx),
+ * which input in this frame never reaches. Focus doesn't count there and
+ * doesn't here: a focused frame left alone would keep the session open.
+ */
+const ACTIVITY_EVENTS = ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel'] as const;
+
+/**
+ * At most one report this often. The idle limit is whole minutes, so a
+ * report up to 15 s late costs at most 15 s of it, while a user working in
+ * the frame sends no more than four messages a minute.
+ */
+export const ACTIVITY_REPORT_MS = 15_000;
+
+let reportActivity: (() => void) | null = null;
+let lastActivityReport = -Infinity;
+
+function onUserInput(event: Event): void {
+  // A plugin can dispatch events, but not trusted ones.
+  if (!event.isTrusted || !reportActivity) return;
+  const at = Date.now();
+  if (at - lastActivityReport < ACTIVITY_REPORT_MS) return;
+  lastActivityReport = at;
+  reportActivity();
+}
+
+/**
+ * The port reports go through, handed to the host with 'sandbox-ready',
+ * before any plugin code runs. The plugin shares this frame and can post to
+ * the host as the runtime does, but it never sees this port, and the host
+ * counts only what comes through it. `postMessage` is bound now, so a
+ * plugin patching MessagePort.prototype later doesn't get hold of the port.
+ * (A privileged, same-origin plugin can reach the host page anyway.)
+ */
+function openActivityPort(): MessagePort | null {
+  if (typeof MessageChannel === 'undefined') return null;
+  const channel = new MessageChannel();
+  const post = channel.port1.postMessage.bind(channel.port1);
+  reportActivity = () => {
+    try { post(null); } catch { /* host gone */ }
+  };
+  return channel.port2;
 }
 
 // ─── Host binding ────────────────────────────────────────────
@@ -682,6 +730,17 @@ function buildPluginApi(manifest: PluginManifest) {
        */
       openPage: (pageId: string, path?: string) =>
         callApi('ui.openPage', [pageId, path]) as Promise<boolean>,
+      /**
+       * Opens a message in the reader of this tab, as a click on it in the
+       * list does: in place on the mail page, in an email tab in the Pro
+       * shell, else the tab loads the message's link (at most 5 times a
+       * minute). `accountId` names the JMAP account holding it (a shared or
+       * group account); the signed-in account's own when missing. Rejects
+       * when no account of the user reads it, the account has no such
+       * message, or the mail page could not open it. Needs `email:read`.
+       */
+      openEmail: (email: { id: string; accountId?: string }) =>
+        callApi('ui.openEmail', [email]) as Promise<void>,
       /**
        * The header of this plugin's sidebar section (the host draws it like
        * Folders and Tags), e.g. a translated "Upcoming birthdays". null goes
@@ -1465,16 +1524,19 @@ export function startSandboxRuntime(): () => void {
     () => !!parentWindow,
   );
   window.addEventListener('message', handleHostMessage);
+  for (const event of ACTIVITY_EVENTS) window.addEventListener(event, onUserInput, { capture: true, passive: true });
   // Initial ping, targeted at the host origin so it can only land on the
   // page that framed us. Guard at module scope so React strict mode's
   // double-invoke doesn't re-post (and so a re-post can't race with the
   // parent's init reply).
   if (!readyPosted) {
     readyPosted = true;
-    sendToHost({ type: 'sandbox-ready' });
+    const activityPort = openActivityPort();
+    sendToHost({ type: 'sandbox-ready' }, activityPort ? [activityPort] : undefined);
   }
   return () => {
     window.removeEventListener('message', handleHostMessage);
+    for (const event of ACTIVITY_EVENTS) window.removeEventListener(event, onUserInput, { capture: true });
   };
 }
 

@@ -18,6 +18,7 @@ import { attachmentIcon } from "./attachment-chips";
 import { ExternalSenderChip } from "./external-sender-chip";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
+import { measureEmailFrameHeight } from "@/lib/email-frame-height";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
 import { mailLanguage } from "@/lib/mail-language";
 import { htmlToReadableText } from "@/lib/html-to-readable-text";
@@ -851,8 +852,7 @@ export function ConversationEmailBody({
         // leaves the layout height untouched, so scale the box by hand.
         // Phones always; any screen with "Fit wide mail" on.
         const scale = fitEmailBodyWidth(doc, reading.fitWidth ? mailFitOptions(true, true) : {});
-        const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
-        iframe.style.height = Math.ceil(height * scale) + 'px';
+        iframe.style.height = Math.ceil(measureEmailFrameHeight(doc) * scale) + 'px';
       };
       resize();
       const ro = new ResizeObserver(resize);

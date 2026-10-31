@@ -1322,6 +1322,11 @@ function SidebarImpl({
   // it is: it shows icons only, and hiding half of them behind a word would
   // leave a control with no room to put it.
   const mvFlat = mvShell && !isCollapsed;
+  // Under the collapsible unified section the folders need a heading of their
+  // own; without one they read as part of that section, and collapsing it
+  // seemed to leave half of it behind (#1470).
+  const unifiedSectionShown = showUnified || anyCrossViewEnabled;
+  const mvFoldersHeadless = mvFlat && !unifiedSectionShown;
   const isPrimaryFolder = (node: MailboxNode) =>
     node.role === 'inbox' || node.role === 'sent' || node.role === 'drafts';
   // Everywhere else the folders the user made sit in a "Your folders" section
@@ -1763,7 +1768,7 @@ function SidebarImpl({
 
       {/* Mailbox List */}
       <nav aria-label={t("folders")} className="flex-1 overflow-y-auto" data-tour="sidebar" data-folder-nav="" data-pane="folders">
-        {(showUnified || showCrossUnread || showCrossStarred || showCrossAll) && (
+        {unifiedSectionShown && (
           <div>
             <SidebarSectionHeader
               label={t(crossAccountActive ? "all_accounts" : "unified_mailbox")}
@@ -1892,7 +1897,7 @@ function SidebarImpl({
           })
         ) : (
           <div onContextMenu={handleFoldersHeaderContextMenu}>
-            {!mvFlat && (
+            {!mvFoldersHeadless && (
               <SidebarSectionHeader
                 label={t("folders")}
                 expanded={foldersExpanded}
@@ -1900,10 +1905,10 @@ function SidebarImpl({
                 onSettings={openFolderSettings}
                 settingsTitle={t('settings')}
                 isCollapsed={isCollapsed}
-                first={!showUnified}
+                first={!unifiedSectionShown}
               />
             )}
-            {(mvFlat || (foldersExpanded && !isCollapsed) || isCollapsed) && (
+            {(mvFoldersHeadless || (foldersExpanded && !isCollapsed) || isCollapsed) && (
               <>
                 {mailboxes.length === 0 ? (
                   <div className="px-4 py-2 text-sm text-muted-foreground">

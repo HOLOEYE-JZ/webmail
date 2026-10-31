@@ -296,6 +296,8 @@ interface EmailComposerProps {
     requireTls?: boolean;
     /** Importance / X-Priority; absent for normal (#970). */
     priority?: MessagePriority;
+    /** The id plugins know this composer by, for onAfterEmailSend. */
+    composerId?: string;
   }) => void | false | Promise<void | false>;
   onScheduledSendCreated?: () => void | Promise<void>;
   onClose?: () => void;
@@ -351,6 +353,8 @@ interface EmailComposerProps {
     to?: { email?: string; name?: string }[];
     cc?: { email?: string; name?: string }[];
     bcc?: { email?: string; name?: string }[];
+    /** Addresses the original was delivered to, from lib/reply-identity deliveryAddresses (#1353). */
+    deliveredTo?: string[];
     subject?: string;
     body?: string;
     htmlBody?: string;
@@ -933,6 +937,14 @@ export function EmailComposer({
   const draftLocalAccountIdRef = useRef<string | undefined>(initialData?.draftLocalAccountId);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveCloseAttemptRef = useRef<{ cancelled: boolean; saving: boolean } | null>(null);
+  const [isSavingAndClosing, setIsSavingAndClosing] = useState(false);
+  const [isWaitingToSave, setIsWaitingToSave] = useState(false);
+  // Only the close attempt is cancelled here; uploads keep their existing
+  // removal/teardown behavior. A replaced composer must not save or close later.
+  useEffect(() => () => {
+    if (saveCloseAttemptRef.current) saveCloseAttemptRef.current.cancelled = true;
+  }, []);
   const lastSavedDataRef = useRef<string>("");
   // Tracks the currently-running saveDraft so concurrent callers (autosave
   // timer + send button) serialize instead of issuing parallel destroy/create
@@ -1352,6 +1364,10 @@ export function EmailComposer({
       cc: replyTo?.cc,
       bcc: replyTo?.bcc,
     };
+    // Where the message was delivered (Delivered-To and friends, #1353). Tried
+    // after each To/Cc/Bcc step below, so a catch-all address in To still
+    // beats the mailbox Stalwart delivered it to.
+    const deliveredTo = replyTo?.deliveredTo;
 
     // Own-identity match: unconditional, since it only ever selects one of the
     // user's own configured addresses.
@@ -1370,7 +1386,7 @@ export function EmailComposer({
     if (autoSelectReplyIdentity && mode !== 'forward') {
       // Without custom From the catch-all rewrite has nothing to write into.
       const matchMode = customFromEnabled ? replyIdentityMatch : 'exact';
-      const resolved = resolveReplyFrom(sourceAccountIdentities, recipients, matchMode);
+      const resolved = resolveReplyFrom(sourceAccountIdentities, { ...recipients, deliveredTo }, matchMode);
       if (resolved) {
         setSelectedIdentityId(resolved.identityId);
         if (resolved.overrideEmail && !fromOverrideEnabled) {
@@ -1380,6 +1396,14 @@ export function EmailComposer({
         }
         return;
       }
+    }
+
+    // A delivery address that is one of the user's identities: unconditional,
+    // like the own-identity match above.
+    const deliveredIdentityId = findReplyIdentityId(sourceAccountIdentities, { deliveredTo });
+    if (deliveredIdentityId) {
+      setSelectedIdentityId(deliveredIdentityId);
+      return;
     }
 
     // Nothing on the message's account matched, but it is not the active one:
@@ -1407,6 +1431,7 @@ export function EmailComposer({
     mode,
     replyTo?.bcc,
     replyTo?.cc,
+    replyTo?.deliveredTo,
     replyTo?.from,
     replyTo?.to,
     selectedIdentityId,
@@ -1671,7 +1696,7 @@ export function EmailComposer({
   }, [priority]);
 
   // Ref to latest saveDraft for use in event handlers with stale closures
-  const saveDraftRef = useRef<() => Promise<string | null>>(() => Promise.resolve(null));
+  const saveDraftRef = useRef<(opts?: { auto?: boolean; announce?: boolean }) => Promise<string | null>>(() => Promise.resolve(null));
 
   // Set by the explicit close paths (clean close, save-and-close, discard) so
   // the unmount auto-save below doesn't fire and stash a stale pendingDraft
@@ -3054,6 +3079,10 @@ export function EmailComposer({
       clearTimeout(saveTimeoutRef.current);
     }
 
+    // Save and close owns the final save while it waits for uploads.
+    // Upload progress and completion must not schedule a competing autosave.
+    if (saveCloseAttemptRef.current) return;
+
     // Don't auto-save if nothing has changed from initial state
     if (!isDirtyRef.current) {
       return;
@@ -3667,6 +3696,7 @@ export function EmailComposer({
           requireTls: requireTls || undefined,
           priority: priority !== 'normal' ? priority : undefined,
           delayedUntil: effectiveDelayedUntil,
+          composerId: pluginComposerIdRef.current ?? undefined,
         });
         // Not when nothing went: no host, or one that sent nothing.
         if (draftElsewhere && onSend && outcome !== false) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);
@@ -3776,35 +3806,69 @@ export function EmailComposer({
     emitClose();
   };
 
+  const cancelSaveAndClose = () => {
+    const attempt = saveCloseAttemptRef.current;
+    if (!attempt || attempt.saving) return;
+    attempt.cancelled = true;
+    saveCloseAttemptRef.current = null;
+    sendCancelledRef.current = false;
+    setIsWaitingToSave(false);
+    setIsSavingAndClosing(false);
+  };
+
   const handleSaveDraftAndClose = async () => {
+    if (saveCloseAttemptRef.current) return;
+    const attempt = { cancelled: false, saving: false };
+    saveCloseAttemptRef.current = attempt;
     sendCancelledRef.current = true;
-    explicitCloseRef.current = true;
+    setIsSavingAndClosing(true);
     setShowCloseDialog(false);
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
     }
-    // Close whatever the save does. When the request stalled, this await never
-    // settled and onClose never ran, so the composer stayed mounted and the next
-    // close attempt just re-opened this dialog - Discard was the only way out
-    // (#702). Requests carry a deadline now, so a broken save resolves.
     try {
-      await saveDraft({ announce: true });
-      if (saveFailedRef.current) {
-        // The server never took the draft. Clearing stateRef here would drop the
-        // message on the floor with nothing but a toast, so leave the text in
-        // place and let the unmount stash hand it to the host's "continue draft"
-        // slot - the same path an implicit close uses.
+      setIsWaitingToSave(attachmentsRef.current.some(att => att.uploading));
+      // Queued files also have uploading:true. Removed files leave the list,
+      // so intentional cancellation does not become an upload failure.
+      const result = await waitForPendingUploads(
+        () => attachmentsRef.current,
+        () => attempt.cancelled,
+      );
+      // The helper can finish its loop just as the user cancels the wait.
+      if (attempt.cancelled) return;
+      setIsWaitingToSave(false);
+      if (result === 'failed') {
         toast.error(t('save_failed'));
-        explicitCloseRef.current = false;
-      } else {
-        stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+        afterCloseRef.current = null;
+        return;
       }
-    } finally {
+
+      attempt.saving = true;
+      // Read the latest text/identity as well as the confirmed attachment IDs:
+      // the user can keep editing or remove files while uploads are pending.
+      const savedId = await saveDraftRef.current({ announce: true });
+      if (attempt.cancelled) return;
+      if (saveFailedRef.current || !savedId) {
+        toast.error(t('save_failed'));
+        afterCloseRef.current = null;
+        return;
+      }
+      explicitCloseRef.current = true;
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
       emitClose();
+    } finally {
+      if (saveCloseAttemptRef.current === attempt) {
+        saveCloseAttemptRef.current = null;
+        if (!explicitCloseRef.current) sendCancelledRef.current = false;
+        setIsWaitingToSave(false);
+        setIsSavingAndClosing(false);
+      }
     }
   };
 
   const handleDiscardAndClose = () => {
+    cancelSaveAndClose();
     sendCancelledRef.current = true;
     explicitCloseRef.current = true;
     setShowCloseDialog(false);
@@ -3829,6 +3893,8 @@ export function EmailComposer({
   // a scheduled message reopened with "Cancel and edit". It used to share the
   // X button's path, which closed such a composer and kept the draft.
   const handleDiscardClick = () => {
+    if (saveCloseAttemptRef.current?.saving) return;
+    cancelSaveAndClose();
     if (!isDirtyRef.current && !draftIdRef.current) {
       cleanClose();
       return;
@@ -3839,10 +3905,13 @@ export function EmailComposer({
   };
 
   const handleClose = (afterClose?: () => void) => {
+    if (saveCloseAttemptRef.current?.saving) return;
+    cancelSaveAndClose();
     afterCloseRef.current = afterClose ?? null;
     const savedAlready = draftIdRef.current !== null
       && changeVersionRef.current === savedVersionRef.current
-      && !saveFailedRef.current;
+      && !saveFailedRef.current
+      && !attachmentsRef.current.some(att => att.uploading || att.error);
     if (isDirtyRef.current && !savedAlready) {
       setCloseDialogKind('close');
       setShowCloseDialog(true);
@@ -3902,6 +3971,12 @@ export function EmailComposer({
       if (isRecipientMentionActive(editorRef.current)) return;
       e.preventDefault();
       handleClose();
+      return;
+    }
+
+    // Match the disabled Send controls while Save and close owns the draft.
+    if (isSavingAndClosing) {
+      e.preventDefault();
       return;
     }
 
@@ -4060,7 +4135,7 @@ export function EmailComposer({
           <div className="relative inline-flex md:hidden">
             <Button
               onClick={() => handleSend()}
-              disabled={!canSend || isSending}
+              disabled={!canSend || isSending || isSavingAndClosing}
               title={getSendTooltip()}
               size="sm"
               data-testid="composer-send"
@@ -4073,7 +4148,7 @@ export function EmailComposer({
               type="button"
               onMouseDown={(e) => { if (showSendMenu) e.stopPropagation(); }}
               onClick={toggleSendMenu}
-              disabled={!canSend || isSending}
+              disabled={!canSend || isSending || isSavingAndClosing}
               title={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
               aria-label={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
               size="sm"
@@ -4087,7 +4162,7 @@ export function EmailComposer({
         ) : (
           <Button
             onClick={() => handleSend()}
-            disabled={!canSend || isSending}
+            disabled={!canSend || isSending || isSavingAndClosing}
             title={getSendTooltip()}
             size="sm"
             data-testid="composer-send"
@@ -4515,6 +4590,15 @@ export function EmailComposer({
       </div>
       </div>
 
+        {isWaitingToSave && (
+          <div className="flex items-center justify-between gap-2 px-4 py-2 border-t shrink-0" data-testid="composer-save-upload-wait">
+            <span role="status" className="text-sm text-muted-foreground">{t('attachment_uploading')}</span>
+            <Button variant="outline" size="sm" onClick={() => {
+              cancelSaveAndClose();
+              afterCloseRef.current = null;
+            }}>{t('cancel')}</Button>
+          </div>
+        )}
         {/* Attachments */}
         {attachments.length > 0 && (
           <div className="px-4 py-2 border-t shrink-0">
@@ -4829,7 +4913,7 @@ export function EmailComposer({
               <div data-mv-send={mvWindow ? "" : undefined} className="relative hidden md:inline-flex">
                 <Button
                   onClick={() => handleSend()}
-                  disabled={!canSend || isSending}
+                  disabled={!canSend || isSending || isSavingAndClosing}
                   title={getSendTooltip()}
                   data-testid="composer-send"
                   className="rounded-e-none border-e border-primary-foreground/20"
@@ -4841,7 +4925,7 @@ export function EmailComposer({
                   type="button"
                   onMouseDown={(e) => { if (showSendMenu) e.stopPropagation(); }}
                   onClick={toggleSendMenu}
-                  disabled={!canSend || isSending}
+                  disabled={!canSend || isSending || isSavingAndClosing}
                   title={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
                   aria-label={composerClient?.hasDelayedSend() ? t('schedule_send') : tViewer('more_actions')}
                   className="rounded-s-none px-2"
@@ -4854,7 +4938,7 @@ export function EmailComposer({
             ) : (
               <Button
                 onClick={() => handleSend()}
-                disabled={!canSend || isSending}
+                disabled={!canSend || isSending || isSavingAndClosing}
                 title={getSendTooltip()}
                 data-testid="composer-send"
                 data-mv-send={mvWindow ? "" : undefined}
@@ -4942,7 +5026,7 @@ export function EmailComposer({
         onSchedule={(delayedUntil) => handleSend({ delayedUntil })}
         supported={!!composerClient?.hasDelayedSend()}
         maxDelayedSend={composerClient?.getMaxDelayedSend() ?? 0}
-        disabled={!canSend || isSending}
+        disabled={!canSend || isSending || isSavingAndClosing}
       />
 
       <Dialog

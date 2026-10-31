@@ -64,6 +64,7 @@ import { doAccountDataGet, doAccountDataSet, doUserFindPeople, doUserGetMailAcco
 import { setSectionTitle } from './section-titles';
 import { requestPanel } from './panel-requests';
 import { requestPageNavigation } from './page-navigation';
+import { requestOpenEmail } from './open-email';
 import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerReplaceBody, doComposerReplaceSelection } from './host-api-composer';
 import { pluginAllowed, wkdAllowed } from '../outgoing-hosts';
 
@@ -244,6 +245,8 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'ui.setPages': 'ui:app-page',
   // Move the tab to one of the plugin's own pages (never anywhere else).
   'ui.openPage': 'ui:app-page',
+  // Opening a message shows its content, as reading it does.
+  'ui.openEmail': 'email:read',
   'ui.setSectionTitle': 'ui:sidebar-widget',
   // Open, close or toggle the panel the plugin's slot sits in; the panel's
   // own permission is checked per call (see the slot catalogue).
@@ -2011,6 +2014,7 @@ export async function dispatchApiCall(
     case 'ui.setDayLabels': setDayLabels(plugin.id, plugin.name, checkDayLabels(args[0])); return undefined;
     case 'ui.setPages': setPluginPages(plugin.id, plugin.name, checkPages(args[0])); return undefined;
     case 'ui.openPage': return requestPageNavigation(plugin.id, args[0], args[1]);
+    case 'ui.openEmail': return requestOpenEmail(plugin, args[0]);
     case 'ui.setSectionTitle': setSectionTitle(plugin.id, args[0]); return undefined;
     case 'ui.setPanel': {
       const slot = args[0];

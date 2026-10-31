@@ -80,7 +80,7 @@ export const HOOK_CATALOG = {
   onBeforeEmailSend: H('mail-send', 'intercept', 'email:send', 'OutgoingEmail', 'when Send is pressed; a handler that fails or times out stops the send'),
   onTransformOutgoingEmail: H('mail-send', 'transform', 'email:send', 'OutgoingEmail', 'right before the message is submitted'),
   onComposeSend: H('mail-send', 'takeover', 'email:send', 'ComposeSendRequest', 'at the start of sending; may send the message itself'),
-  onAfterEmailSend: H('mail-send', 'observer', 'email:read', '{ emailId, submissionId, to, cc, bcc, subject, scheduledFor }', 'after the server accepted the message'),
+  onAfterEmailSend: H('mail-send', 'observer', 'email:read', '{ emailId, accountId, submissionId, to, cc, bcc, subject, scheduledFor, composerId }', 'after the server accepted the message'),
 
   // ─── Mail: organizing ──────────────────────────────────────
   onBeforeEmailDelete: H('mail-organize', 'intercept', 'email:write', '{ emailIds, permanent }', 'before messages are deleted or moved to Trash'),
@@ -94,8 +94,8 @@ export const HOOK_CATALOG = {
   onEmailSpamToggle: H('mail-organize', 'observer', 'email:read', '{ emailIds, spam }', 'after messages were marked as spam or not spam'),
   onBeforeEmailReadStateChange: H('mail-organize', 'intercept', 'email:write', '{ emailIds, read }', 'before messages are marked read or unread'),
   onEmailReadStateChange: H('mail-organize', 'observer', 'email:read', '{ emailIds, read }', 'after messages were marked read or unread'),
-  onBeforeEmailStarToggle: H('mail-organize', 'intercept', 'email:write', '{ emailIds, starred }', 'before messages are starred or unstarred'),
-  onEmailStarToggle: H('mail-organize', 'observer', 'email:read', '{ emailIds, starred }', 'after messages were starred or unstarred'),
+  onBeforeEmailStarToggle: H('mail-organize', 'intercept', 'email:write', '{ emailIds, starred, accountId }', 'before messages are starred or unstarred; `accountId` names the messages\' account when it is not the user\'s own (a team or shared mailbox)'),
+  onEmailStarToggle: H('mail-organize', 'observer', 'email:read', '{ emailIds, starred, accountId }', 'after messages were starred or unstarred; `accountId` as on onBeforeEmailStarToggle'),
   onBeforeEmailKeywordChange: H('mail-organize', 'intercept', 'email:write', '{ emailIds, added: string[], removed: string[] }', 'before tags or other keywords are changed'),
   onEmailKeywordChange: H('mail-organize', 'observer', 'email:read', '{ emailIds, added: string[], removed: string[] }', 'after tags or other keywords changed'),
   onBeforeEmailCategorize: H('mail-organize', 'intercept', 'email:read', 'EmailCategorizeContext', 'before messages are moved to another inbox tab'),

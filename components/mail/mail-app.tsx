@@ -123,7 +123,7 @@ import { prepareQuickReply, type QuickReplyQuestion } from "@/lib/outgoing/quick
 import enMessages from "@/locales/en/common.json";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
-import { resolveComposeAccountEmail } from "@/lib/reply-identity";
+import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
@@ -138,6 +138,7 @@ import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { consumePendingMailto, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
 import { INTERNAL_MAILTO_EVENT, type ParsedMailto } from "@/lib/protocol-handlers/mailto";
 import { PLUGIN_REPLY_EVENT, type PluginReplyRequest } from "@/lib/plugin-sandbox/host-api-compose";
+import { onOpenEmail, type OpenEmailHandler, type OpenEmailOutcome } from "@/lib/plugin-sandbox/open-email";
 import { mailtoComposerDraft } from "./mailto-draft";
 import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
@@ -469,6 +470,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     fetchEmailContent,
     isUnifiedView,
     unifiedRole,
+    listQueryTotal,
     scheduledEmails,
     scheduledTotal,
     scheduledTotalByAccount,
@@ -556,6 +558,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     fetchEmailContent: state.fetchEmailContent,
     isUnifiedView: state.isUnifiedView,
     unifiedRole: state.unifiedRole,
+    listQueryTotal: state.totalEmails,
     scheduledEmails: state.scheduledEmails,
     scheduledTotal: state.scheduledTotal,
     scheduledTotalByAccount: state.scheduledTotalByAccount,
@@ -1316,6 +1319,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       to: selectedEmail.to,
       cc: selectedEmail.cc,
       bcc: selectedEmail.bcc,
+      deliveredTo: deliveryAddresses(selectedEmail.headers),
       subject: selectedEmail.subject,
       ...getQuoteBodies(selectedEmail),
       receivedAt: selectedEmail.receivedAt,
@@ -2150,6 +2154,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     requestDsn?: boolean;
     requireTls?: boolean;
     priority?: MessagePriority;
+    composerId?: string;
   }) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
     if (!client) return false;
@@ -2732,6 +2737,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     window.addEventListener(PLUGIN_REPLY_EVENT, onPluginReply);
     return () => window.removeEventListener(PLUGIN_REPLY_EVENT, onPluginReply);
   }, []);
+
+  // A plugin opening a message (api.ui.openEmail), as a click on a search
+  // result entry naming one does: handleEmailSelect, set once it is defined.
+  // Not inside the Pro shell, which keeps this tab mounted while hidden and
+  // opens the message in an email tab instead (pro/page.tsx).
+  const pluginOpenEmailRef = useRef<OpenEmailHandler | null>(null);
+  useEffect(() => {
+    if (isEmbedded) return;
+    return onOpenEmail(async (email) => (
+      pluginOpenEmailRef.current ? pluginOpenEmailRef.current(email) : new Error('the mail page is not ready')
+    ));
+  }, [isEmbedded]);
 
   const handleForward = async () => {
     if (selectedEmail) {
@@ -3779,8 +3796,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleLogout = logout;
 
+  // Mountain View shows an open message in place of the list, so a search
+  // started while reading would fill a list nobody can see. Close the
+  // message first and show the results, as its back button would. (#1468)
+  const showSearchResults = () => {
+    if (!mvShell || cursorOnly || !useEmailStore.getState().selectedEmail) return;
+    selectEmail(null);
+  };
+
   const handleSearch = async (query: string) => {
     if (!client) return;
+    showSearchResults();
     // Nothing the mail view renders from is written before the request has
     // left (see afterRequestDispatch): searchEmails records the query itself,
     // and the history entry only feeds the suggestion dropdown.
@@ -3799,6 +3825,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // dropped rather than ANDed into the query as a full-text term.
   const handleSelectContactSuggestion = async (contact: ContactSuggestion, field: ContactSearchField) => {
     if (!client) return;
+    showSearchResults();
     setSearchQuery("");
     setSearchFilters({ [field]: contact.email });
     await advancedSearch(client);
@@ -3842,6 +3869,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleAdvancedSearch = async () => {
     if (!client) return;
+    showSearchResults();
     await advancedSearch(client);
   };
 
@@ -4455,8 +4483,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleEmailSelect = async (
     email: { id: string } & Partial<Pick<Email, 'sourceClientAccountId' | 'sourceAccountId'>>,
-  ) => {
-    if (!client || !email) return;
+  ): Promise<OpenEmailOutcome> => {
+    if (!client || !email) return new Error('the mail page is not ready');
     setCursorOnly(false);
 
     // If composing, suspend the composer (unmount will trigger onSaveState).
@@ -4527,7 +4555,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (!fetchClient) {
         console.warn('[mail-app] No connected client for email source');
         if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(previousEmail);
-        return;
+        return new Error('no connected login reaches the account');
       }
 
       // Mountain View shows the message inside its conversation: fetch that
@@ -4537,7 +4565,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         : null;
       // The request a mouse press on the row already started, if any.
       const fullEmail = await requestEmailContent(fetchClient, email.id, accountId);
-      if (openSeq !== emailOpenSeqRef.current) return;
+      if (openSeq !== emailOpenSeqRef.current) return fullEmail ? 'opened' : 'missing';
       if (fullEmail) {
         const scheduledSubmissionByEmailId = useEmailStore.getState().scheduledSubmissionByEmailId;
         const annotated = annotateScheduledEmail(fullEmail, scheduledSubmissionByEmailId);
@@ -4575,7 +4603,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             conversationPrefetch,
             new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
           ]);
-          if (openSeq !== emailOpenSeqRef.current) return;
+          if (openSeq !== emailOpenSeqRef.current) return 'opened';
           if (conversation !== undefined) setMvConversationResult(conversation ? {
             emails: conversation, source, threadId: fullEmail.threadId,
           } : null);
@@ -4583,14 +4611,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // One write: the message, and the end of its loading state.
         finishOpenEmail(fullEmail);
         // Mark-as-read logic is now handled by useEffect
-      } else {
-        abandonOpenEmail(previousEmail);
+        return 'opened';
       }
+      abandonOpenEmail(previousEmail);
+      return 'missing';
     } catch (error) {
       console.error('Failed to fetch email content:', error);
       if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(previousEmail);
+      return error instanceof Error ? error : new Error(String(error));
     }
   };
+
+  pluginOpenEmailRef.current = handleEmailSelect;
 
   // Handle back navigation from viewer on mobile.
   // Reset to list state directly. We can't just call window.history.back()
@@ -4756,6 +4788,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           to: composerSourceEmail.to,
           cc: composerSourceEmail.cc,
           bcc: composerSourceEmail.bcc,
+          deliveredTo: deliveryAddresses(composerSourceEmail.headers),
           subject: composerSourceEmail.subject,
           ...getQuoteBodies(composerSourceEmail),
           receivedAt: composerSourceEmail.receivedAt,
@@ -5607,7 +5640,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onNavigatePrev={handleNavigatePrev}
                     mvPosition={mvShell && selectedEmailIndex >= 0 ? {
                       index: selectedEmailIndex + 1,
-                      total: Math.max(activeEmails.length, mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails ?? 0),
+                      // A unified view has no folder count; its accounts' query totals stand in (#1471).
+                      total: Math.max(activeEmails.length, mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails ?? (isUnifiedView ? listQueryTotal : 0)),
                     } : undefined}
                     mvFolderName={mvShell && !isScheduledView && !isUnifiedView ? currentMailboxName : undefined}
                     mvConversation={mvConversationView ? mvConversation ?? undefined : undefined}

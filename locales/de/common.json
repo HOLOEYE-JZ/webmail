@@ -2582,7 +2582,9 @@
       "group_by_letter_description": "Alphabetische Abschnittsüberschriften in der Kontaktliste anzeigen",
       "group_by_letter_label": "Nach Anfangsbuchstaben gruppieren",
       "sort_by_last_name_label": "Nach Nachname sortieren",
-      "sort_by_last_name_description": "Kontaktliste nach Nachnamen ordnen, damit Familienmitglieder zusammenstehen"
+      "sort_by_last_name_description": "Kontaktliste nach Nachnamen ordnen, damit Familienmitglieder zusammenstehen",
+      "show_directory_label": "Verzeichnis anzeigen",
+      "show_directory_description": "Zeigt die Konten und Gruppen auf dem Mailserver unter „Verzeichnis“ in den Kontakten"
     },
     "calendar_management": {
       "delete_title": "Kalender löschen?",
@@ -4498,6 +4500,11 @@
       "show_time_in_month_view_desc": "Ereigniszeiten in der Monatskalenderansicht anzeigen",
       "tinted_events": "Helle Terminfarben",
       "tinted_events_desc": "Termine als helle Tönung ihrer Kalenderfarbe mit farbigem Balken am Anfang anzeigen, wie in Outlook und im Ausdruck, statt als volle Farbflächen.",
+      "month_timed_events": "Termine mit Uhrzeit in der Monatsansicht",
+      "month_timed_events_desc": "So erscheinen Termine mit Startzeit in der Monatsansicht. Ganztägige und mehrtägige Termine bleiben Balken.",
+      "month_timed_events_bar": "Balken",
+      "month_timed_events_text": "Farbiger Text",
+      "month_timed_events_dot": "Punkt und Text",
       "show_week_numbers": "Kalenderwochen anzeigen",
       "show_week_numbers_desc": "Kalenderwochen im Minikalender anzeigen",
       "calendar_free_scroll": "Freies Scrollen",
