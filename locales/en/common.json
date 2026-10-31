@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Install {appName}",
-    "description": "Install our app for quick access and offline support.",
+    "description": "Install our app for quick access.",
     "not_now": "Not now",
     "install": "Install",
     "dont_remind": "Don't remind me again",

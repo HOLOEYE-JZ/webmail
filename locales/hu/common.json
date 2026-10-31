@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "{appName} telepítése",
-    "description": "Telepítsd az alkalmazásunkat a gyors eléréshez és offline támogatáshoz.",
+    "description": "Telepítsd az alkalmazásunkat a gyors eléréshez.",
     "not_now": "Később",
     "install": "Telepítés",
     "dont_remind": "Ne emlékeztess többet",

@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Instal·la {appName}",
-    "description": "Instal·leu la nostra aplicació per a un accés ràpid i compatibilitat sense connexió.",
+    "description": "Instal·leu la nostra aplicació per a un accés ràpid.",
     "not_now": "Ara no",
     "install": "Instal·la",
     "dont_remind": "No m'ho tornis a recordar",

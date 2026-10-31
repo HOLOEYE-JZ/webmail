@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Instalați {appName}",
-    "description": "Instalați aplicația noastră pentru acces rapid și asistență offline.",
+    "description": "Instalați aplicația noastră pentru acces rapid.",
     "not_now": "Nu acum",
     "install": "Instalați",
     "dont_remind": "Nu-mi mai reaminti",

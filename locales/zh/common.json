@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "安装 {appName}",
-    "description": "安装我们的应用，以获得快速访问和离线支持。",
+    "description": "安装我们的应用，以获得快速访问。",
     "not_now": "暂不",
     "install": "安装",
     "dont_remind": "不再提醒",

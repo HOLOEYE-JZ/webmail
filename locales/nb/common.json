@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Installer {appName}",
-    "description": "Installer appen for rask tilgang og støtte for bruk uten nett.",
+    "description": "Installer appen for rask tilgang.",
     "not_now": "Ikke nå",
     "install": "Installer",
     "dont_remind": "Ikke minn meg på det igjen",

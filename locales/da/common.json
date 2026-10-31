@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Installer {appName}",
-    "description": "Installer vores app for hurtig adgang og offline-understøttelse.",
+    "description": "Installer vores app for hurtig adgang.",
     "not_now": "Ikke nu",
     "install": "Installer",
     "dont_remind": "Påmind mig ikke igen",

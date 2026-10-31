@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Zainstaluj {appName}",
-    "description": "Zainstaluj naszą aplikację, aby uzyskać szybki dostęp i obsługę offline.",
+    "description": "Zainstaluj naszą aplikację, aby uzyskać szybki dostęp.",
     "not_now": "Nie teraz",
     "install": "Zainstaluj",
     "dont_remind": "Nie przypominaj mi więcej",

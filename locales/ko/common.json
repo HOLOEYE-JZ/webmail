@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "{appName} 설치",
-    "description": "빠른 액세스와 오프라인 지원을 위해 앱을 설치하세요.",
+    "description": "빠르게 액세스하려면 앱을 설치하세요.",
     "not_now": "나중에",
     "install": "설치",
     "dont_remind": "다시 알리지 않음",

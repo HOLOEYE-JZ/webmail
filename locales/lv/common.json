@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Instalēt {appName}",
-    "description": "Instalējiet mūsu lietotni ātrai piekļuvei un bezsaistes atbalstam.",
+    "description": "Instalējiet mūsu lietotni ātrai piekļuvei.",
     "not_now": "Ne tagad",
     "install": "Instalēt",
     "dont_remind": "Vairs man neatgādināt",

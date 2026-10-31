@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "{appName} installeren",
-    "description": "Installeer onze app voor snelle toegang en offline-ondersteuning.",
+    "description": "Installeer onze app voor snelle toegang.",
     "not_now": "Niet nu",
     "install": "Installeren",
     "dont_remind": "Niet meer herinneren",

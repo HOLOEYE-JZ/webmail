@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Nainštalovať {appName}",
-    "description": "Nainštalujte si našu aplikáciu pre rýchly prístup a podporu offline.",
+    "description": "Nainštalujte si našu aplikáciu pre rýchly prístup.",
     "not_now": "Teraz nie",
     "install": "Nainštalovať",
     "dont_remind": "Viac mi to nepripomínať",

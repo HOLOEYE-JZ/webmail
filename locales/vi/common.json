@@ -5415,7 +5415,7 @@
   },
   "pwa_install": {
     "title": "Cài đặt {appName}",
-    "description": "Cài đặt ứng dụng của chúng tôi để truy cập nhanh và hỗ trợ ngoại tuyến.",
+    "description": "Cài đặt ứng dụng của chúng tôi để truy cập nhanh.",
     "not_now": "Không phải bây giờ",
     "install": "Cài đặt",
     "dont_remind": "Đừng nhắc tôi nữa",
