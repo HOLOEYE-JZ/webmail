@@ -4871,7 +4871,6 @@
     "any_size": "Libovolná velikost",
     "larger_than_mb": "Větší než {size} MB",
     "custom_size": "Vlastní velikost",
-    "done": "Hotovo",
     "name_or_address": "Jméno nebo adresa"
   },
   "welcome": {

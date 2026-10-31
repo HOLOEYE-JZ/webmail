@@ -4871,7 +4871,6 @@
     "any_size": "Любой размер",
     "larger_than_mb": "Больше {size} МБ",
     "custom_size": "Свой размер",
-    "done": "Готово",
     "name_or_address": "Имя или адрес"
   },
   "welcome": {

@@ -4871,7 +4871,6 @@
     "any_size": "任意大小",
     "larger_than_mb": "大于 {size} MB",
     "custom_size": "自定义大小",
-    "done": "完成",
     "name_or_address": "姓名或地址"
   },
   "welcome": {

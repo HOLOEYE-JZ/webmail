@@ -5001,7 +5001,6 @@
     "any_size": "Any size",
     "larger_than_mb": "Larger than {size} MB",
     "custom_size": "Custom size",
-    "done": "Done",
     "name_or_address": "Name or address"
   },
   "welcome": {

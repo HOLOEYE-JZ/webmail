@@ -5001,7 +5001,6 @@
     "any_size": "Alle størrelser",
     "larger_than_mb": "Større enn {size} MB",
     "custom_size": "Egendefinert størrelse",
-    "done": "Ferdig",
     "name_or_address": "Navn eller adresse"
   },
   "welcome": {

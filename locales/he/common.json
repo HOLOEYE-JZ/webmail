@@ -4789,7 +4789,6 @@
     "any_size": "כל גודל",
     "larger_than_mb": "גדול מ-{size} MB",
     "custom_size": "גודל מותאם",
-    "done": "סיום",
     "name_or_address": "שם או כתובת"
   },
   "welcome": {

@@ -4871,7 +4871,6 @@
     "any_size": "모든 크기",
     "larger_than_mb": "{size}MB 초과",
     "custom_size": "크기 직접 지정",
-    "done": "완료",
     "name_or_address": "이름 또는 주소"
   },
   "welcome": {

@@ -4871,7 +4871,6 @@
     "any_size": "サイズ指定なし",
     "larger_than_mb": "{size} MB より大きい",
     "custom_size": "サイズを指定",
-    "done": "完了",
     "name_or_address": "名前またはアドレス"
   },
   "welcome": {

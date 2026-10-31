@@ -1036,7 +1036,6 @@
     "any_size": "ทุกขนาด",
     "larger_than_mb": "ใหญ่กว่า {size} MB",
     "custom_size": "กำหนดขนาดเอง",
-    "done": "เสร็จสิ้น",
     "name_or_address": "ชื่อหรือที่อยู่"
   },
   "global_search": {

@@ -4871,7 +4871,6 @@
     "any_size": "Beliebig",
     "larger_than_mb": "Größer als {size} MB",
     "custom_size": "Eigene Größe",
-    "done": "Fertig",
     "name_or_address": "Name oder Adresse"
   },
   "welcome": {
