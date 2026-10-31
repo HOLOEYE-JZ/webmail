@@ -286,7 +286,9 @@ function SidebarRowCounts({
           e.stopPropagation();
           onUnreadClick();
         }}
-        className={cn(unreadClass, "inline-flex items-center justify-center min-w-6 min-h-6 -my-1 cursor-pointer hover:underline rounded-sm focus-visible:outline-hidden")}
+        // 24px to hit, with a short count at the end of it, next to the
+        // slash and the total, not in the middle with a gap before them.
+        className={cn(unreadClass, "inline-flex items-center justify-end min-w-6 min-h-6 -my-1 cursor-pointer hover:underline rounded-sm focus-visible:outline-hidden")}
         title={t('unread_filter', { count: unreadCount })}
         aria-label={t('unread_filter', { count: unreadCount })}
       >

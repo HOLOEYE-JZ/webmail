@@ -71,6 +71,17 @@ describe('folder list from the keyboard', () => {
     const { container } = render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" onUnreadFilterClick={() => {}} onCreateFolder={() => {}} />);
     expect(container.querySelectorAll('button button, button [role="button"]')).toHaveLength(0);
   });
+
+  it('keeps a one-digit unread count next to the total in its 24px target', () => {
+    useSettingsStore.setState({ hideAccountSwitcher: true } as never);
+    const withUnread = mailboxes.map((m) => ({ ...m, unreadEmails: 4, totalEmails: 7 }) as Mailbox);
+    render(<Sidebar mailboxes={withUnread} selectedMailbox="inbox" onUnreadFilterClick={() => {}} />);
+    const unread = row('travel').querySelector<HTMLElement>('[data-testid="folder-counts"] button')!;
+    expect(unread.textContent).toBe('4');
+    expect(unread.className).toContain('min-w-6');
+    expect(unread.className).toContain('justify-end');
+    expect(unread.className).not.toContain('justify-center');
+  });
 });
 
 describe('folder list on touch', () => {
