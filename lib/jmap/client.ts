@@ -44,6 +44,7 @@ import { parseAuthenticationResults } from "@/lib/email-headers";
 import { IS_LITE_STALWART } from "@/lib/lite";
 import { toStorageQuota, type JMAPQuota, type StorageQuota } from "@/lib/quota";
 import { messagePriorityHeaders, type MessagePriority } from "@/lib/message-priority";
+import { attachmentParts, HTML_PART_ID, relatedBodyStructure, TEXT_PART_ID, type OutgoingBodyPart } from "./outgoing-body";
 
 // Cap for the follow-up Email/get issued when a displayed body part comes
 // back truncated at the normal 256000-byte limit (see refetchTruncatedBodyValues
@@ -4703,9 +4704,10 @@ export class JMAPClient implements IJMAPClient {
       keywords: Record<string, boolean>;
       mailboxIds: Record<string, boolean>;
       bodyValues: Record<string, { value: string }>;
-      textBody: { partId: string; type?: string }[];
+      textBody?: { partId: string; type?: string }[];
       htmlBody?: { partId: string; type: string }[];
-      attachments?: { blobId: string; type: string; name: string; disposition: string; cid?: string }[];
+      attachments?: OutgoingBodyPart[];
+      bodyStructure?: OutgoingBodyPart;
       inReplyTo?: string[];
       references?: string[];
       [header: `header:${string}`]: string;
@@ -4740,14 +4742,15 @@ export class JMAPClient implements IJMAPClient {
       ...messagePriorityHeaders(options?.priority),
     };
 
-    if (attachments?.length) {
-      emailData.attachments = attachments.map(att => ({
-        blobId: att.blobId,
-        type: att.type,
-        name: att.name,
-        disposition: att.disposition ?? "attachment",
-        ...(att.cid ? { cid: att.cid } : {}),
-      }));
+    // Images the HTML shows by cid: go into a multipart/related beside it
+    // (#1451), so the draft and the mail sent from it display them.
+    const draftStructure = relatedBodyStructure(htmlBody, attachments);
+    if (draftStructure) {
+      delete emailData.textBody;
+      delete emailData.htmlBody;
+      emailData.bodyStructure = draftStructure;
+    } else if (attachments?.length) {
+      emailData.attachments = attachmentParts(attachments);
     }
 
     // Destroy the previous draft version only AFTER the replacement was
@@ -4941,27 +4944,32 @@ export class JMAPClient implements IJMAPClient {
 
     Object.assign(emailCreate, messagePriorityHeaders(options?.priority));
 
-    if (htmlBody) {
-      // Send as multipart/alternative with both text and HTML
+    // Images the HTML shows by cid: go into a multipart/related beside it,
+    // or recipients don't see them (#1451).
+    const sendStructure = relatedBodyStructure(htmlBody, attachments);
+    if (sendStructure) {
       emailCreate.bodyValues = {
-        "text": { value: body },
-        "html": { value: htmlBody },
+        [TEXT_PART_ID]: { value: body },
+        [HTML_PART_ID]: { value: htmlBody },
       };
-      emailCreate.textBody = [{ partId: "text", type: "text/plain" }];
-      emailCreate.htmlBody = [{ partId: "html", type: "text/html" }];
+      emailCreate.bodyStructure = sendStructure;
     } else {
-      emailCreate.bodyValues = { "1": { value: body } };
-      emailCreate.textBody = [{ partId: "1", type: "text/plain" }];
-    }
+      if (htmlBody) {
+        // Send as multipart/alternative with both text and HTML
+        emailCreate.bodyValues = {
+          "text": { value: body },
+          "html": { value: htmlBody },
+        };
+        emailCreate.textBody = [{ partId: "text", type: "text/plain" }];
+        emailCreate.htmlBody = [{ partId: "html", type: "text/html" }];
+      } else {
+        emailCreate.bodyValues = { "1": { value: body } };
+        emailCreate.textBody = [{ partId: "1", type: "text/plain" }];
+      }
 
-    if (attachments?.length) {
-      emailCreate.attachments = attachments.map(att => ({
-        blobId: att.blobId,
-        type: att.type,
-        name: att.name,
-        disposition: att.disposition ?? "attachment",
-        ...(att.cid ? { cid: att.cid } : {}),
-      }));
+      if (attachments?.length) {
+        emailCreate.attachments = attachmentParts(attachments);
+      }
     }
 
     const methodCalls: JMAPMethodCall[] = [];
