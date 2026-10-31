@@ -11,6 +11,7 @@ import { createDemoSieveScripts, createDemoSieveCapabilities, createDemoSieveCon
 import { createDemoFileNodes } from './fixtures/files';
 import { createDemoVacationResponse } from './fixtures/vacation';
 import { NORA, NORA_PERSONAL } from './fixtures/people';
+import { createDemoMailboxShares } from './fixtures/directory';
 
 import type { Email, EmailAddress, Mailbox, ContactCard, AddressBook, Calendar, CalendarEvent, CalendarTask, Identity, VacationResponse, FileNode, SharedAccount } from '@/lib/jmap/types';
 import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
@@ -64,6 +65,11 @@ export function demoSharedAccounts(profile: DemoProfile): SharedAccount[] {
   ];
 }
 
+/** The folders with the grants Nora gave on them (fixtures/directory.ts). */
+function withShares(mailboxes: Mailbox[], shares: Record<string, Mailbox['shareWith']>): Mailbox[] {
+  return mailboxes.map((mb) => (shares[mb.id] ? { ...mb, shareWith: shares[mb.id] } : mb));
+}
+
 /** Return a fresh deep-cloned copy of all demo data for one profile. */
 export function getDemoData(profile: DemoProfile = 'work'): DemoData {
   if (profile === 'personal') {
@@ -98,7 +104,7 @@ export function getDemoData(profile: DemoProfile = 'work'): DemoData {
     accountId: DEMO_WORK_ACCOUNT_ID,
     username: NORA.email,
     self: { name: NORA.name, email: NORA.email },
-    mailboxes: createDemoMailboxes(),
+    mailboxes: withShares(createDemoMailboxes(), createDemoMailboxShares()),
     sharedMailboxes: { [SUPPORT_ACCOUNT_ID]: { name: SUPPORT_ACCOUNT_NAME, mailboxes: createDemoSupportMailboxes() } },
     emails: [...createDemoEmails(), ...createDemoSupportEmails()],
     contacts: createDemoContacts(),

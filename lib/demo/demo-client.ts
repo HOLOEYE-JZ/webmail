@@ -1,6 +1,9 @@
 import type { IJMAPClient, KeywordDiscoveryResult, KeywordMigration } from '@/lib/jmap/client-interface';
-import type { AccountInfo, Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarTask, FileNode, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
+import type { AccountInfo, Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarRights, CalendarTask, FileNode, FileNodeRights, MailboxRights, Principal, PrincipalListing, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
 import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
+import type { ShareChange, ShareChangeResult, ShareTarget } from '@/lib/jmap/share-batch';
+import type { AnyRights, ShareKind } from '@/lib/jmap/share-rights';
+import { createDemoPrincipals } from './fixtures/directory';
 import { getDemoData, demoSharedAccounts, type DemoData, type DemoProfile } from './demo-data';
 import { generateDemoId } from './demo-utils';
 import { DEMO_ASSETS } from './fixtures/assets';
@@ -43,6 +46,8 @@ export const DEMO_SIMULATE_KEY = 'bulwark-demo-simulate';
 export class DemoJMAPClient implements IJMAPClient {
   private data: DemoData;
   private readonly profile: DemoProfile;
+  /** The server's directory: the Meridian Labs cast for the work login, nobody for the personal one. */
+  private readonly principals: Principal[];
   private blobStore = new Map<string, Blob>();
   private scheduledSubmissions = new Map<string, { id: string; emailId: string; identityId: string; sendAt: string; undoStatus: 'pending' | 'final' | 'canceled'; isSmime: boolean }>();
   private connectionCallback: ((connected: boolean) => void) | null = null;
@@ -53,6 +58,7 @@ export class DemoJMAPClient implements IJMAPClient {
   constructor(profile: DemoProfile = 'work') {
     this.profile = profile;
     this.data = getDemoData(profile);
+    this.principals = profile === 'personal' ? [] : createDemoPrincipals();
     // Fixtures carry raw headers the way a server sends them; derive the
     // parsed fields the viewer reads, as JMAPClient.parseEmailHeaders does.
     for (const email of this.data.emails) {
@@ -147,6 +153,8 @@ export class DemoJMAPClient implements IJMAPClient {
         'urn:ietf:params:jmap:calendars': {},
         'urn:ietf:params:jmap:sieve': {},
         'urn:ietf:params:jmap:files': {},
+        'urn:ietf:params:jmap:principals': {},
+        'urn:ietf:params:jmap:mail:share': {},
       }),
     };
   }
@@ -166,10 +174,114 @@ export class DemoJMAPClient implements IJMAPClient {
   supportsCalendars(): boolean { return !this.isPersonal; }
   supportsSieve(): boolean { return !this.isPersonal; }
   supportsFiles(): boolean { return !this.isPersonal; }
-  supportsPrincipals(): boolean { return false; }
-  async getPrincipals(): Promise<never[]> { return []; }
-  async setCalendarShare(): Promise<void> { /* demo: no-op */ }
-  async setAddressBookShare(): Promise<void> { /* demo: no-op */ }
+
+  // ── Directory and sharing (RFC 9670 principals, mail:share) ───
+  // The work login's server has a directory (fixtures/directory.ts) and
+  // keeps `shareWith` on Nora's folders, calendars, address books and files.
+  // The personal login's server has neither.
+
+  supportsPrincipals(): boolean { return !this.isPersonal; }
+
+  async getPrincipals(): Promise<Principal[]> {
+    return this.principals.map((p) => ({ ...p }));
+  }
+
+  async listPrincipals(): Promise<PrincipalListing> {
+    return { principals: await this.getPrincipals(), status: 'ok' };
+  }
+
+  /** "individual" or "group" by id, as Principal/get answers; Support is a group. */
+  async getPrincipalTypes(ids: string[]): Promise<Record<string, string> | null> {
+    if (!this.supportsPrincipals()) return ids.length === 0 ? {} : null;
+    const wanted = new Set(ids);
+    return Object.fromEntries(this.principals.filter((p) => wanted.has(p.id)).map((p) => [p.id, p.type]));
+  }
+
+  async findPrincipalByEmail(email: string): Promise<{ principal: Principal | null; status: 'ok' | 'forbidden' | 'error' }> {
+    if (!this.supportsPrincipals()) return { principal: null, status: 'error' };
+    const wanted = email.trim().toLowerCase();
+    const principal = this.principals.find((p) => p.email?.toLowerCase() === wanted || p.name.toLowerCase() === wanted);
+    return { principal: principal ? { ...principal } : null, status: 'ok' };
+  }
+
+  supportsMailboxSharing(accountId?: string): boolean {
+    return this.supportsPrincipals() && (!accountId || accountId === this.data.accountId);
+  }
+
+  async getMailboxShareWith(mailboxId: string, accountId?: string): Promise<Record<string, MailboxRights> | null> {
+    const mailbox = this.ownShareItem('mailbox', mailboxId, accountId);
+    if (!mailbox) throw new Error('Folder not found');
+    return mailbox.shareWith ? structuredClone(mailbox.shareWith) as Record<string, MailboxRights> : null;
+  }
+
+  async setMailboxShare(mailboxId: string, principalId: string, rights: MailboxRights | null, accountId?: string): Promise<void> {
+    this.setShare('mailbox', mailboxId, principalId, rights, accountId);
+  }
+
+  async setCalendarShare(calendarId: string, principalId: string, rights: CalendarRights | null, targetAccountId?: string): Promise<void> {
+    this.setShare('calendar', calendarId, principalId, rights, targetAccountId);
+  }
+
+  async setAddressBookShare(addressBookId: string, principalId: string, rights: AddressBookRights | null, targetAccountId?: string): Promise<void> {
+    this.setShare('addressBook', addressBookId, principalId, rights, targetAccountId);
+  }
+
+  /** Every folder, calendar and address book of Nora's own account, and the files she shared. */
+  async getShareTargets(include: { calendars?: boolean; contacts?: boolean; files?: boolean } = {}): Promise<{ targets: ShareTarget[]; failed: ShareKind[] }> {
+    if (!this.supportsPrincipals()) return { targets: [], failed: [] };
+    const accountId = this.data.accountId;
+    const grants = (shareWith: Record<string, AnyRights> | null | undefined) => structuredClone(shareWith ?? {});
+    const targets: ShareTarget[] = this.data.mailboxes.map((mb) => ({
+      kind: 'mailbox', accountId, id: mb.id, name: mb.name, role: mb.role ?? null, parentId: mb.parentId ?? null, shareWith: grants(mb.shareWith),
+    }));
+    if (include.calendars !== false && this.supportsCalendars()) {
+      for (const cal of this.data.calendars.filter((c) => !c.isShared)) {
+        targets.push({ kind: 'calendar', accountId, id: cal.id, name: cal.name, isDefault: cal.isDefault, shareWith: grants(cal.shareWith) });
+      }
+    }
+    if (include.contacts !== false && this.supportsContacts()) {
+      for (const book of this.data.addressBooks.filter((b) => !b.isShared)) {
+        targets.push({ kind: 'addressBook', accountId, id: book.id, name: book.name, isDefault: book.isDefault, shareWith: grants(book.shareWith) });
+      }
+    }
+    if (include.files !== false && this.supportsFiles()) {
+      for (const node of this.data.fileNodes.filter((n) => Object.keys(n.shareWith ?? {}).length > 0)) {
+        targets.push({ kind: 'file', accountId, id: node.id, name: node.name, parentId: node.parentId ?? null, shareWith: grants(node.shareWith) });
+      }
+    }
+    return { targets, failed: [] };
+  }
+
+  /** Grants and revokes, each with a result, as the server's /set answers would give them. */
+  async applyShareChanges(changes: ShareChange[]): Promise<ShareChangeResult[]> {
+    return changes.map((change) => {
+      if (!this.ownShareItem(change.kind, change.id, change.accountId)) return { change, ok: false, error: 'notFound' };
+      this.setShare(change.kind, change.id, change.principalId, change.rights, change.accountId);
+      return { change, ok: true };
+    });
+  }
+
+  /** One of Nora's own shareable items, or null (another account's, or unknown). */
+  private ownShareItem(kind: ShareKind, id: string, accountId?: string): { shareWith?: Record<string, AnyRights> | null } | null {
+    if (!this.supportsPrincipals() || (accountId && accountId !== this.data.accountId)) return null;
+    const own = <T extends { id: string; originalId?: string; isShared?: boolean }>(list: T[]) =>
+      list.find((item) => !item.isShared && (item.id === id || item.originalId === id)) ?? null;
+    switch (kind) {
+      case 'mailbox': return own(this.data.mailboxes);
+      case 'calendar': return own(this.data.calendars);
+      case 'addressBook': return own(this.data.addressBooks);
+      case 'file': return this.data.fileNodes.find((n) => n.id === id) ?? null;
+    }
+  }
+
+  private setShare(kind: ShareKind, id: string, principalId: string, rights: AnyRights | null, accountId?: string): void {
+    const item = this.ownShareItem(kind, id, accountId);
+    if (!item) throw new Error('Not found');
+    const next = { ...(item.shareWith ?? {}) };
+    if (rights) next[principalId] = { ...rights };
+    else delete next[principalId];
+    item.shareWith = Object.keys(next).length > 0 ? next : null;
+  }
 
   // ── Push / state ──────────────────────────────────────────────
 
@@ -1412,7 +1524,9 @@ export class DemoJMAPClient implements IJMAPClient {
     return [...this.data.fileNodes];
   }
 
-  async setFileNodeShare(): Promise<void> { /* demo: no-op */ }
+  async setFileNodeShare(fileNodeId: string, principalId: string, rights: FileNodeRights | null, targetAccountId?: string): Promise<void> {
+    this.setShare('file', fileNodeId, principalId, rights, targetAccountId);
+  }
 
   async getFileNodes(ids: string[] | null): Promise<FileNode[]> {
     if (ids === null) return [...this.data.fileNodes];

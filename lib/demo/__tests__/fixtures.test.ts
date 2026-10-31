@@ -12,7 +12,7 @@ import path from 'node:path';
 import { getDemoData } from '../demo-data';
 import { DemoJMAPClient } from '../demo-client';
 import { DEMO_ASSETS } from '../fixtures/assets';
-import { PORTRAITS, NORA, NORA_PERSONAL, ALICE, BOB } from '../fixtures/people';
+import { PORTRAITS, NORA, NORA_PERSONAL, ALICE, BOB, PRIYA } from '../fixtures/people';
 import { GONOGO_INVITE_BLOB, GONOGO_UID } from '../fixtures/emails';
 import { GONOGO_EVENT_ID, createGoNoGoInvitationIcs } from '../fixtures/calendars';
 import { SUPPORT_ACCOUNT_ID, SMB, MB } from '../fixtures/mailboxes';
@@ -23,6 +23,10 @@ import { findCalendarAttachment } from '@/lib/calendar-invitation';
 import { mentionFromLink } from '@/lib/recipient-mentions';
 import { KEYWORD_PALETTE, useSettingsStore } from '@/stores/settings-store';
 import { seedDemoPreferences, DEMO_SEED_KEY } from '../demo-preferences';
+import { PRINCIPAL } from '../fixtures/directory';
+import { confirmGroups } from '@/lib/plugin-sandbox/account-kind';
+import { summarizeDelegates } from '@/lib/delegation/delegation';
+import { MAILBOX_PRESETS } from '@/lib/jmap/share-rights';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
 const work = getDemoData('work');
@@ -345,5 +349,44 @@ describe('demo fixtures: audience screenshots', () => {
     expect(from).toBeGreaterThanOrEqual(new Date(trip.utcStart!).getTime());
     expect(to).toBeLessThanOrEqual(new Date(trip.utcEnd!).getTime());
     expect(reply.textBody).toContain('Lisbon');
+  });
+
+  it('the server confirms the Support mailbox as a group, the way plugins and shared tags ask', async () => {
+    const client = new DemoJMAPClient('work');
+    expect(client.supportsPrincipals()).toBe(true);
+    expect(await client.getPrincipalTypes([SUPPORT_ACCOUNT_ID, PRINCIPAL.alice])).toEqual({ [SUPPORT_ACCOUNT_ID]: 'group', [PRINCIPAL.alice]: 'individual' });
+    expect([...await confirmGroups(client)]).toEqual([SUPPORT_ACCOUNT_ID]);
+    // Nora's principal is her own account, so she is never her own delegate.
+    expect(PRINCIPAL.nora).toBe(client.getAccountId());
+  });
+
+  it('the directory lists the Meridian colleagues and finds them by address', async () => {
+    const client = new DemoJMAPClient('work');
+    const { principals, status } = await client.listPrincipals();
+    expect(status).toBe('ok');
+    for (const person of [ALICE, BOB, PRIYA]) expect(principals.some((p) => p.email === person.email && p.type === 'individual'), person.name).toBe(true);
+    expect((await client.findPrincipalByEmail(` ${ALICE.email.toUpperCase()} `)).principal?.id).toBe(PRINCIPAL.alice);
+    expect((await client.findPrincipalByEmail('tomas.ferreira@lumenlogistics.example')).principal).toBeNull();
+    expect(new DemoJMAPClient('personal').supportsPrincipals()).toBe(false);
+  });
+
+  it('Settings > Sharing lists Alice with read access to the Inbox, and a new grant sticks', async () => {
+    const client = new DemoJMAPClient('work');
+    // The gate in components/settings/settings-app.tsx.
+    expect(!!client.getShareTargets && client.supportsPrincipals() && client.supportsMailboxSharing()).toBe(true);
+    const { targets, failed } = await client.getShareTargets();
+    expect(failed).toEqual([]);
+    const [alice, ...others] = summarizeDelegates(targets, [client.getAccountId()]);
+    expect(others).toEqual([]);
+    expect(alice.principalId).toBe(PRINCIPAL.alice);
+    expect(alice.level).toBe('read');
+    expect(alice.mail).toMatchObject({ shared: 1, inbox: true });
+
+    const sent = targets.find((t) => t.kind === 'mailbox' && t.role === 'sent')!;
+    const [result] = await client.applyShareChanges([{ kind: 'mailbox', accountId: sent.accountId, id: sent.id, name: sent.name, principalId: PRINCIPAL.bob, rights: MAILBOX_PRESETS.read }]);
+    expect(result.ok).toBe(true);
+    expect(await client.getMailboxShareWith(sent.id)).toEqual({ [PRINCIPAL.bob]: MAILBOX_PRESETS.read });
+    await client.setMailboxShare(sent.id, PRINCIPAL.bob, null);
+    expect(await client.getMailboxShareWith(sent.id)).toBeNull();
   });
 });
