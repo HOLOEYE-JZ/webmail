@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { prepareQuickReply } from '@/lib/outgoing/quick-reply';
+import { prepareQuickReply, type QuickReplyQuestion, type QuickReplyQuestions } from '@/lib/outgoing/quick-reply';
 import { registerOutgoingFinalizer, registerPreSendCheck, resetSendPipeline } from '@/lib/outgoing/send-pipeline';
 import type { Identity } from '@/lib/jmap/types';
 
@@ -41,5 +41,69 @@ describe('prepareQuickReply', () => {
   it('sends nothing when a check says no', async () => {
     registerPreSendCheck('no', 10, () => false);
     expect(await prepareQuickReply(input(text))).toBeNull();
+  });
+});
+
+// The composer warns about placeholders and forgotten attachments and asks
+// "Send this message?" when that is on. Quick reply went out without any of
+// them, an admin-enforced send confirmation included.
+describe('prepareQuickReply warnings', () => {
+  const words = [{ before: ['your'], after: [], unfinished: ['TODO'] }];
+  const questions = (answer: boolean, overrides: Partial<QuickReplyQuestions> = {}) => {
+    const asked: QuickReplyQuestion[] = [];
+    return {
+      asked,
+      questions: {
+        placeholderWords: words,
+        attachmentKeywords: ['attached', 'anbei'],
+        confirmSend: false,
+        ask: async (q: QuickReplyQuestion) => { asked.push(q); return answer; },
+        ...overrides,
+      } satisfies QuickReplyQuestions,
+    };
+  };
+  const reply = (body: string, q: QuickReplyQuestions) => prepareQuickReply({ ...input(text), body, questions: q });
+
+  it('asks about unfilled placeholders and stops on "back"', async () => {
+    const { asked, questions: q } = questions(false);
+    expect(await reply('See you at [TIME]. TODO', q)).toBeNull();
+    expect(asked).toEqual([{ kind: 'placeholders', found: ['[TIME]', 'TODO'] }]);
+  });
+
+  it('asks about a forgotten attachment and stops on "back"', async () => {
+    const { asked, questions: q } = questions(false);
+    expect(await reply('Die Datei ist anbei.', q)).toBeNull();
+    expect(asked).toEqual([{ kind: 'attachment', keyword: 'anbei' }]);
+  });
+
+  it('asks before sending when send confirmation is on, after the pre-send checks', async () => {
+    const order: string[] = [];
+    registerPreSendCheck('external', 10, () => { order.push('check'); return true; });
+    const { questions: q } = questions(false, { confirmSend: true });
+    const ask = async (question: QuickReplyQuestion) => { order.push(question.kind); return false; };
+    expect(await reply('Thanks!', { ...q, ask })).toBeNull();
+    expect(order).toEqual(['check', 'send']);
+  });
+
+  it('sends when every question is answered with "send anyway"', async () => {
+    const { asked, questions: q } = questions(true, { confirmSend: true });
+    const out = await reply('[TIME] works, file attached', q);
+    expect(out?.text).toContain('[TIME] works, file attached');
+    expect(asked.map((a) => a.kind)).toEqual(['placeholders', 'attachment', 'send']);
+  });
+
+  it('asks nothing for a plain reply, or when the warnings are off', async () => {
+    const { asked, questions: q } = questions(false);
+    expect(await reply('Thanks, see you then.', q)).not.toBeNull();
+    const off = questions(false, { placeholderWords: null, attachmentKeywords: null });
+    expect(await reply('[TIME], attached', off.questions)).not.toBeNull();
+    expect([...asked, ...off.asked]).toEqual([]);
+  });
+
+  it('leaves the signature out of the placeholder check', async () => {
+    const signed = { ...text, textSignature: 'Me\n[YOUR TITLE]' } as Identity;
+    const { asked, questions: q } = questions(false);
+    expect(await prepareQuickReply({ ...input(signed), body: 'Thanks!', questions: q })).not.toBeNull();
+    expect(asked).toEqual([]);
   });
 });

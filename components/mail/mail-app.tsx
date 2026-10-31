@@ -119,7 +119,8 @@ import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { WopiEditor } from "@/components/files/wopi-editor";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { isFilePreviewable } from "@/lib/file-preview";
-import { prepareQuickReply } from "@/lib/outgoing/quick-reply";
+import { prepareQuickReply, type QuickReplyQuestion } from "@/lib/outgoing/quick-reply";
+import enMessages from "@/locales/en/common.json";
 import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
 import { resolveComposeAccountEmail } from "@/lib/reply-identity";
@@ -4032,16 +4033,50 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const signatureIdentity = (sendingIdentity?.htmlSignature || sendingIdentity?.textSignature)
       ? sendingIdentity
       : primaryIdentity;
-    // The same checks and finalisers as the composer's send
+    // The same warnings, checks and finalisers as the composer's send
     // (lib/outgoing/send-pipeline.ts): a quick reply is no way around them.
+    const settings = useSettingsStore.getState();
+    const askBeforeQuickReply = (question: QuickReplyQuestion) => {
+      switch (question.kind) {
+        case 'placeholders':
+          return confirmDialog({
+            title: t('email_composer.placeholder_warning.title'),
+            message: `${t('email_composer.placeholder_warning.message')} ${t('email_composer.placeholder_warning.found')}: ${question.found.join(', ')}`,
+            confirmText: t('email_composer.placeholder_warning.send_anyway'),
+            cancelText: t('email_composer.placeholder_warning.back'),
+          });
+        case 'attachment':
+          return confirmDialog({
+            title: t('email_composer.forgot_attachment.title'),
+            message: t('email_composer.forgot_attachment.message', { keyword: question.keyword }),
+            confirmText: t('email_composer.forgot_attachment.send_anyway'),
+            cancelText: t('email_composer.forgot_attachment.back'),
+          });
+        case 'send':
+          return confirmDialog({
+            title: t('email_composer.send_confirm.title'),
+            message: t('email_composer.send_confirm.message', { count: recipients.length }),
+            confirmText: t('email_composer.send'),
+          });
+      }
+    };
     const prepared = await prepareQuickReply({
       body,
       signatureIdentity,
       sendingIdentity,
-      separator: useSettingsStore.getState().signatureSeparatorEnabled,
+      separator: settings.signatureSeparatorEnabled,
       to: recipients,
       fromEmail: headerFromEmail,
       identityId: sendingIdentity?.id,
+      questions: {
+        // The fill-in words of the UI language and of English, as the composer.
+        placeholderWords: settings.placeholderWarningEnabled
+          ? [enMessages.email_composer.placeholder_words, t.raw('email_composer.placeholder_words')]
+          : null,
+        attachmentKeywords: settings.attachmentReminderEnabled ? settings.attachmentReminderKeywords : null,
+        confirmSend: settings.sendConfirmation,
+        ask: askBeforeQuickReply,
+      },
     });
     if (!prepared) return false;
     const { html: finalHtmlBody, text: finalBody } = prepared;
