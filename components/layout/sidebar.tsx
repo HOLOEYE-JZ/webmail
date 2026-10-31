@@ -1005,7 +1005,7 @@ function SharedAccountTags({
   );
 }
 
-function DemoBanner() {
+function DemoBanner({ ruled }: { ruled: boolean }) {
   const t = useTranslations('sidebar');
   const { isDemoMode, loginDemo } = useAuthStore(useShallow((state) => ({ isDemoMode: state.isDemoMode, loginDemo: state.loginDemo })));
   const { startTour, resetTourCompletion } = useTour();
@@ -1029,41 +1029,30 @@ function DemoBanner() {
     setTimeout(() => startTour(), 100);
   };
 
+  // One line in the sidebar's own style, like a section header: muted label,
+  // the header's small icon buttons, no tinted block. Icon-only because
+  // "Tour" and "Reset" run long in several locales and the line is narrow.
+  const buttonClass = "-my-0.5 h-6 w-6 rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground";
   return (
     <div
       data-tour="demo-banner"
       className={cn(
-        "flex flex-col gap-1.5 w-full px-3 py-2 text-xs",
-        "bg-primary/10 dark:bg-primary/10 text-primary",
+        "flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground",
+        ruled && "border-b border-border",
       )}
     >
-      <div className="flex items-center gap-2">
-        <FlaskConical className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="truncate font-medium">{t("demo_banner")}</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <button
-          onClick={handleStartTour}
-          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.625rem] font-medium bg-primary/10 hover:bg-primary/20 transition-colors"
-          title={t("demo_tour")}
-        >
-          <PlayCircle className="w-3 h-3" />
-          {t("demo_tour")}
-        </button>
-        <button
-          onClick={handleReset}
-          disabled={isResetting}
-          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.625rem] font-medium bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
-          title={t("demo_reset")}
-        >
-          {isResetting ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
-          ) : (
-            <RotateCcw className="w-3 h-3" />
-          )}
-          {t("demo_reset")}
-        </button>
-      </div>
+      <FlaskConical className="w-4 h-4 flex-shrink-0" />
+      <span className="flex-1 truncate">{t("demo_banner")}</span>
+      <IconButton label={t("demo_tour")} onClick={handleStartTour} className={buttonClass}>
+        <PlayCircle className="w-3.5 h-3.5" />
+      </IconButton>
+      <IconButton label={t("demo_reset")} onClick={handleReset} disabled={isResetting} className={buttonClass}>
+        {isResetting ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <RotateCcw className="w-3.5 h-3.5" />
+        )}
+      </IconButton>
     </div>
   );
 }
@@ -1766,7 +1755,8 @@ function SidebarImpl({
         </div>
       )}
 
-      {!isCollapsed && <DemoBanner />}
+      {/* No rule under it on Mountain View's canvas, which has none. */}
+      {!isCollapsed && <DemoBanner ruled={!mvShell} />}
       {!isCollapsed && <VacationBanner />}
 
       {/* Mailbox List */}
