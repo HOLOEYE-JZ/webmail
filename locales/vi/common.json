@@ -3367,7 +3367,7 @@
       "row_url_required": "Máy chủ #{index}: URL là bắt buộc",
       "row_url_scheme": "Máy chủ #{index}: URL phải bắt đầu bằng http:// hoặc https://",
       "stalwart": "Kích hoạt các tính năng dành riêng cho Stalwart",
-      "stalwart_hint": "Bổ sung tính năng đổi mật khẩu và quản lý bộ lọc Sieve. Có thể bật an toàn trên các máy chủ khác."
+      "stalwart_hint": "Bổ sung trang Bảo mật (mật khẩu, xác thực hai yếu tố và mật khẩu ứng dụng) cùng tính năng khôi phục mục đã xóa. Có thể bật an toàn trên các máy chủ khác."
     },
     "auth": {
       "title": "Xác thực",

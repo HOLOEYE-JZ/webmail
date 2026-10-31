@@ -3355,7 +3355,7 @@
       "row_url_required": "{index}. szerver: az URL kötelező",
       "row_url_scheme": "{index}. szerver: az URL-nek http:// vagy https:// előtaggal kell kezdődnie",
       "stalwart": "Stalwart-specifikus funkciók bekapcsolása",
-      "stalwart_hint": "Jelszómódosítást és Sieve-szűrők kezelését ad hozzá. Más szervereken is nyugodtan bekapcsolható."
+      "stalwart_hint": "Hozzáadja a Biztonság oldalt (jelszó, kétlépcsős azonosítás és alkalmazásjelszavak) és a törölt elemek visszaállítását. Más szervereken is nyugodtan bekapcsolható."
     },
     "auth": {
       "title": "Hitelesítés",

@@ -3355,7 +3355,7 @@
       "row_url_required": "Server #{index}: the URL is required",
       "row_url_scheme": "Server #{index}: the URL must start with http:// or https://",
       "stalwart": "Enable Stalwart-specific features",
-      "stalwart_hint": "Adds password change and Sieve filter management. Safe to enable on other servers."
+      "stalwart_hint": "Adds the Security page (password, two-factor authentication and app passwords) and recovering deleted items. Safe to enable on other servers."
     },
     "auth": {
       "title": "Authentication",

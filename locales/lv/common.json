@@ -3355,7 +3355,7 @@
       "row_url_required": "Serveris Nr. {index}: URL ir obligāts",
       "row_url_scheme": "Serveris Nr. {index}: URL jāsākas ar http:// vai https://",
       "stalwart": "Iespējot Stalwart specifiskās funkcijas",
-      "stalwart_hint": "Pievieno paroles maiņu un Sieve filtru pārvaldību. Droši var iespējot arī citiem serveriem."
+      "stalwart_hint": "Pievieno lapu Drošība (parole, divfaktoru autentifikācija un lietotņu paroles) un dzēsto vienumu atjaunošanu. Droši var iespējot arī citiem serveriem."
     },
     "auth": {
       "title": "Autentifikācija",

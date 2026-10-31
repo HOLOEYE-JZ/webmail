@@ -3355,7 +3355,7 @@
       "row_url_required": "Serverul nr. {index}: URL-ul este obligatoriu",
       "row_url_scheme": "Serverul nr. {index}: URL-ul trebuie să înceapă cu http:// sau https://",
       "stalwart": "Activați funcțiile specifice Stalwart",
-      "stalwart_hint": "Adaugă schimbarea parolei și gestionarea filtrelor Sieve. Poate fi activat fără risc și pe alte servere."
+      "stalwart_hint": "Adaugă pagina Securitate (parolă, autentificare în doi pași și parole pentru aplicații) și recuperarea elementelor șterse. Poate fi activat fără risc și pe alte servere."
     },
     "auth": {
       "title": "Autentificare",

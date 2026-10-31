@@ -3355,7 +3355,7 @@
       "row_url_required": "Serwer nr {index}: adres URL jest wymagany",
       "row_url_scheme": "Serwer nr {index}: adres URL musi zaczynać się od http:// lub https://",
       "stalwart": "Włącz funkcje specyficzne dla Stalwart",
-      "stalwart_hint": "Dodaje zmianę hasła i zarządzanie filtrami Sieve. Można bezpiecznie włączyć także na innych serwerach."
+      "stalwart_hint": "Dodaje stronę Bezpieczeństwo (hasło, uwierzytelnianie dwuskładnikowe i hasła aplikacji) oraz odzyskiwanie usuniętych elementów. Można bezpiecznie włączyć także na innych serwerach."
     },
     "auth": {
       "title": "Uwierzytelnianie",

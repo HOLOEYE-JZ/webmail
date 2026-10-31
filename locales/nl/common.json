@@ -3355,7 +3355,7 @@
       "row_url_required": "Server #{index}: de URL is verplicht",
       "row_url_scheme": "Server #{index}: de URL moet beginnen met http:// of https://",
       "stalwart": "Stalwart-specifieke functies inschakelen",
-      "stalwart_hint": "Voegt wachtwoord wijzigen en het beheer van Sieve-filters toe. Kan zonder risico ook bij andere servers aan."
+      "stalwart_hint": "Voegt de pagina Beveiliging (wachtwoord, tweestapsverificatie en app-wachtwoorden) en het herstellen van verwijderde items toe. Kan zonder risico ook bij andere servers aan."
     },
     "auth": {
       "title": "Aanmelden",

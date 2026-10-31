@@ -3355,7 +3355,7 @@
       "row_url_required": "サーバー {index}: URL は必須です",
       "row_url_scheme": "サーバー {index}: URL は http:// または https:// で始める必要があります",
       "stalwart": "Stalwart 固有の機能を有効にする",
-      "stalwart_hint": "パスワード変更と Sieve フィルターの管理を追加します。ほかのサーバーで有効にしても問題ありません。"
+      "stalwart_hint": "セキュリティページ（パスワード、2 段階認証、アプリパスワード）と削除したアイテムの復元を追加します。ほかのサーバーで有効にしても問題ありません。"
     },
     "auth": {
       "title": "認証",

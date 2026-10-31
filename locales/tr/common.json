@@ -3355,7 +3355,7 @@
       "row_url_required": "Sunucu {index}: URL gerekli",
       "row_url_scheme": "Sunucu {index}: URL http:// veya https:// ile başlamalı",
       "stalwart": "Stalwart’a özel özellikleri etkinleştir",
-      "stalwart_hint": "Parola değiştirme ve Sieve filtre yönetimi ekler. Diğer sunucularda da güvenle etkinleştirilebilir."
+      "stalwart_hint": "Güvenlik sayfasını (parola, iki adımlı doğrulama ve uygulama parolaları) ve silinen öğeleri kurtarmayı ekler. Diğer sunucularda da güvenle etkinleştirilebilir."
     },
     "auth": {
       "title": "Kimlik doğrulama",

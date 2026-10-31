@@ -3355,7 +3355,7 @@
       "row_url_required": "伺服器 {index}：URL 為必填",
       "row_url_scheme": "伺服器 {index}：URL 必須以 http:// 或 https:// 開頭",
       "stalwart": "啟用 Stalwart 專屬功能",
-      "stalwart_hint": "新增變更密碼與 Sieve 篩選器管理。在其他伺服器上啟用也沒有問題。"
+      "stalwart_hint": "新增「安全」頁面（密碼、雙重驗證與應用程式密碼）及復原已刪除項目。在其他伺服器上啟用也沒有問題。"
     },
     "auth": {
       "title": "驗證",

@@ -3355,7 +3355,7 @@
       "row_url_required": "서버 {index}: URL은 필수예요",
       "row_url_scheme": "서버 {index}: URL은 http:// 또는 https://로 시작해야 해요",
       "stalwart": "Stalwart 전용 기능 사용",
-      "stalwart_hint": "비밀번호 변경과 Sieve 필터 관리를 추가해요. 다른 서버에서 켜도 문제없어요."
+      "stalwart_hint": "보안 페이지(비밀번호, 2단계 인증, 앱 비밀번호)와 삭제된 항목 복구를 추가해요. 다른 서버에서 켜도 문제없어요."
     },
     "auth": {
       "title": "인증",

@@ -3355,7 +3355,7 @@
       "row_url_required": "Server nr {index}: URL on kohustuslik",
       "row_url_scheme": "Server nr {index}: URL peab algama http:// või https://",
       "stalwart": "Luba Stalwarti-põhised funktsioonid",
-      "stalwart_hint": "Lisab parooli muutmise ja Sieve-filtrite haldamise. Võib ohutult lubada ka teistel serveritel."
+      "stalwart_hint": "Lisab lehe Turvalisus (parool, kaheastmeline autentimine ja rakenduste paroolid) ning kustutatud üksuste taastamise. Võib ohutult lubada ka teistel serveritel."
     },
     "auth": {
       "title": "Autentimine",

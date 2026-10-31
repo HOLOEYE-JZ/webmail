@@ -3355,7 +3355,7 @@
       "row_url_required": "Servidor núm. {index}: l’URL és obligatori",
       "row_url_scheme": "Servidor núm. {index}: l’URL ha de començar per http:// o https://",
       "stalwart": "Activa les funcions pròpies de Stalwart",
-      "stalwart_hint": "Afegeix el canvi de contrasenya i la gestió de filtres Sieve. Es pot activar sense risc en altres servidors."
+      "stalwart_hint": "Afegeix la pàgina de Seguretat (contrasenya, autenticació en dos passos i contrasenyes d’aplicació) i la recuperació d’elements suprimits. Es pot activar sense risc en altres servidors."
     },
     "auth": {
       "title": "Autenticació",

@@ -3355,7 +3355,7 @@
       "row_url_required": "Server nr. {index}: URL-en er påkrevd",
       "row_url_scheme": "Server nr. {index}: URL-en må begynne med http:// eller https://",
       "stalwart": "Slå på Stalwart-spesifikke funksjoner",
-      "stalwart_hint": "Legger til endring av passord og administrasjon av Sieve-filtre. Trygt å slå på også for andre servere."
+      "stalwart_hint": "Legger til siden Sikkerhet (passord, tofaktorautentisering og app-passord) og gjenoppretting av slettede elementer. Trygt å slå på også for andre servere."
     },
     "auth": {
       "title": "Autentisering",

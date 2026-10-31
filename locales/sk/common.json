@@ -3355,7 +3355,7 @@
       "row_url_required": "Server č. {index}: URL je povinná",
       "row_url_scheme": "Server č. {index}: URL musí začínať http:// alebo https://",
       "stalwart": "Zapnúť funkcie špecifické pre Stalwart",
-      "stalwart_hint": "Pridá zmenu hesla a správu filtrov Sieve. Bezpečne sa dá zapnúť aj pri iných serveroch."
+      "stalwart_hint": "Pridá stránku Zabezpečenie (heslo, dvojstupňové overenie a heslá aplikácií) a obnovu odstránených položiek. Bezpečne sa dá zapnúť aj pri iných serveroch."
     },
     "auth": {
       "title": "Overovanie",

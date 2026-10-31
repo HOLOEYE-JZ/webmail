@@ -3355,7 +3355,7 @@
       "row_url_required": "Server nr. {index}: URL’en er påkrævet",
       "row_url_scheme": "Server nr. {index}: URL’en skal starte med http:// eller https://",
       "stalwart": "Slå Stalwart-specifikke funktioner til",
-      "stalwart_hint": "Tilføjer ændring af adgangskode og håndtering af Sieve-filtre. Kan uden risiko slås til på andre servere."
+      "stalwart_hint": "Tilføjer siden Sikkerhed (adgangskode, totrinsbekræftelse og app-adgangskoder) og gendannelse af slettede elementer. Kan uden risiko slås til på andre servere."
     },
     "auth": {
       "title": "Godkendelse",

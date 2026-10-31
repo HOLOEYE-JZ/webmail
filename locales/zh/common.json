@@ -3355,7 +3355,7 @@
       "row_url_required": "服务器 {index}：URL 为必填项",
       "row_url_scheme": "服务器 {index}：URL 必须以 http:// 或 https:// 开头",
       "stalwart": "启用 Stalwart 专属功能",
-      "stalwart_hint": "添加修改密码和 Sieve 过滤器管理。在其他服务器上启用也没有问题。"
+      "stalwart_hint": "添加“安全”页面（密码、双重验证和应用专用密码）以及恢复已删除项目。在其他服务器上启用也没有问题。"
     },
     "auth": {
       "title": "认证",

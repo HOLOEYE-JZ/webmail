@@ -3355,7 +3355,7 @@
       "row_url_required": "Servidor n.º {index}: la URL es obligatoria",
       "row_url_scheme": "Servidor n.º {index}: la URL debe empezar por http:// o https://",
       "stalwart": "Activar las funciones propias de Stalwart",
-      "stalwart_hint": "Añade el cambio de contraseña y la gestión de filtros Sieve. Se puede activar sin problema en otros servidores."
+      "stalwart_hint": "Añade la página Seguridad (contraseña, verificación en dos pasos y contraseñas de aplicación) y la recuperación de elementos eliminados. Se puede activar sin problema en otros servidores."
     },
     "auth": {
       "title": "Autenticación",
