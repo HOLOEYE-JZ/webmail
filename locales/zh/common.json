@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "统一邮箱",
-        "description": "显示所有已连接账户的合并文件夹（收件箱、已发送等）",
+        "description": "显示当前账户及其共享文件夹的合并文件夹（收件箱、已发送等）。只有在有内容可合并时才会显示此部分：开启跨所有账户合并且连接了多个账户、在下方包含群组收件箱，或开启全部邮件、未读或加星标。这三项是单独的选项，需由管理员开启后才会出现。",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "服务器 {index}：URL 为必填项",
       "row_url_scheme": "服务器 {index}：URL 必须以 http:// 或 https:// 开头",
       "stalwart": "启用 Stalwart 专属功能",
-      "stalwart_hint": "添加修改密码和 Sieve 过滤器管理。在其他服务器上启用也没有问题。"
+      "stalwart_hint": "添加“安全”页面（密码、双重验证和应用专用密码）以及恢复已删除项目。在其他服务器上启用也没有问题。"
     },
     "auth": {
       "title": "认证",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "安装 {appName}",
-    "description": "安装我们的应用，以获得快速访问和离线支持。",
+    "description": "安装我们的应用，以获得快速访问。",
     "not_now": "暂不",
     "install": "安装",
     "dont_remind": "不再提醒",

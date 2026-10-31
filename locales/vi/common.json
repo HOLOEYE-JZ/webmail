@@ -1518,7 +1518,7 @@
       },
       "unified_mailbox": {
         "label": "Hộp thư hợp nhất",
-        "description": "Hiển thị các thư mục gộp (Hộp thư đến, Đã gửi, v.v.) của tài khoản đang hoạt động và các thư mục được chia sẻ với tài khoản đó. Cần có nhiều hơn một tài khoản đã kết nối (hoặc thêm hộp thư nhóm bên dưới) thì thư mục mới xuất hiện ở đây. Nếu chỉ có một tài khoản, tùy chọn này chỉ thêm tiêu đề mục. Các mục Tất cả thư / Chưa đọc / Được gắn sao bên dưới là tùy chọn riêng, chỉ xuất hiện khi quản trị viên bật.",
+        "description": "Hiển thị các thư mục gộp (Hộp thư đến, Đã gửi, v.v.) của tài khoản đang hoạt động và các thư mục được chia sẻ với tài khoản đó. Mục này chỉ xuất hiện khi có gì đó để gộp: bật \"Trên tất cả tài khoản\" và có nhiều hơn một tài khoản đã kết nối, thêm hộp thư nhóm bên dưới, hoặc bật Tất cả thư, Chưa đọc hay Được gắn sao. Ba mục này là tùy chọn riêng, chỉ xuất hiện khi quản trị viên bật.",
         "cross_account": {
           "label": "Trên tất cả tài khoản",
           "description": "Gộp hộp thư hợp nhất của mọi tài khoản đã kết nối thay vì chỉ giới hạn ở tài khoản đang hoạt động."
@@ -3367,7 +3367,7 @@
       "row_url_required": "Máy chủ #{index}: URL là bắt buộc",
       "row_url_scheme": "Máy chủ #{index}: URL phải bắt đầu bằng http:// hoặc https://",
       "stalwart": "Kích hoạt các tính năng dành riêng cho Stalwart",
-      "stalwart_hint": "Bổ sung tính năng đổi mật khẩu và quản lý bộ lọc Sieve. Có thể bật an toàn trên các máy chủ khác."
+      "stalwart_hint": "Bổ sung trang Bảo mật (mật khẩu, xác thực hai yếu tố và mật khẩu ứng dụng) cùng tính năng khôi phục mục đã xóa. Có thể bật an toàn trên các máy chủ khác."
     },
     "auth": {
       "title": "Xác thực",
@@ -5415,7 +5415,7 @@
   },
   "pwa_install": {
     "title": "Cài đặt {appName}",
-    "description": "Cài đặt ứng dụng của chúng tôi để truy cập nhanh và hỗ trợ ngoại tuyến.",
+    "description": "Cài đặt ứng dụng của chúng tôi để truy cập nhanh.",
     "not_now": "Không phải bây giờ",
     "install": "Cài đặt",
     "dont_remind": "Đừng nhắc tôi nữa",

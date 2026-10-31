@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Samlet postkasse",
-        "description": "Vis samlede mapper (Indbakke, Sendt osv.) på tværs af alle tilknyttede konti",
+        "description": "Vis samlede mapper (Indbakke, Sendt osv.) for den aktive konto og dens delte mapper. Sektionen vises kun, når der er noget at samle: sammenlægning på tværs af alle konti er slået til med mere end én tilknyttet konto, en gruppepostkasse er inkluderet nedenfor, eller Al post, Ulæste eller Med stjerne er slået til. De tre er særskilte valg, som først vises, når din administrator slår dem til.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Server nr. {index}: URL’en er påkrævet",
       "row_url_scheme": "Server nr. {index}: URL’en skal starte med http:// eller https://",
       "stalwart": "Slå Stalwart-specifikke funktioner til",
-      "stalwart_hint": "Tilføjer ændring af adgangskode og håndtering af Sieve-filtre. Kan uden risiko slås til på andre servere."
+      "stalwart_hint": "Tilføjer siden Sikkerhed (adgangskode, totrinsbekræftelse og app-adgangskoder) og gendannelse af slettede elementer. Kan uden risiko slås til på andre servere."
     },
     "auth": {
       "title": "Godkendelse",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Installer {appName}",
-    "description": "Installer vores app for hurtig adgang og offline-understøttelse.",
+    "description": "Installer vores app for hurtig adgang.",
     "not_now": "Ikke nu",
     "install": "Installer",
     "dont_remind": "Påmind mig ikke igen",

@@ -100,6 +100,7 @@ import {
   type ScrollWindowState, type ScrollWindowViewProps,
 } from "@/lib/calendar-scroll-window";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
+import { IS_LITE } from "@/lib/lite";
 import { findMeetingLink } from "@/lib/event-links";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -144,6 +145,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   useDocumentTitle(tSidebar("calendar"));
   const tWebcalAction = useTranslations("calendar.webcal_action");
   const { demoMode } = useConfig();
+  // Subscriptions fetch the feed through /api/fetch-ical, which the demo has no
+  // mail server for and the Lite static build does not have at all.
+  const canSubscribe = !demoMode && !IS_LITE;
   const tDeepLink = useTranslations("deep_link");
   const isMobile = useIsMobile();
   const isDesktop = useIsDesktop();
@@ -1643,7 +1647,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       when: () => mode !== normalizedViewMode && (mode !== "tasks" || enableCalendarTasks),
     })),
     { id: "import", label: t("toolbar.import"), icon: Upload, run: () => setShowImportModal(true), when: () => !demoMode },
-    { id: "subscribe", label: t("toolbar.subscribe"), icon: Globe, run: () => setShowSubscriptionModal(true), when: () => !demoMode },
+    { id: "subscribe", label: t("toolbar.subscribe"), icon: Globe, run: () => setShowSubscriptionModal(true), when: () => canSubscribe },
     { id: "refresh", label: tCommon("refresh"), icon: RefreshCw, shortcut: "F5", run: () => { void refreshCalendar(); } },
   ], isEmbedded ? isFocusedProTab : !proInterfaceActive);
 
@@ -1786,12 +1790,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               <span className="block text-xs text-muted-foreground mt-0.5">{tWebcalAction("import_description")}</span>
             </span>
           </Button>
-          <Button variant="outline" className="w-full justify-start h-auto py-3" onClick={handleSubscribeWebcal}>
-            <span className="text-start">
-              <span className="block font-medium">{tWebcalAction("subscribe_title")}</span>
-              <span className="block text-xs text-muted-foreground mt-0.5">{tWebcalAction("subscribe_description")}</span>
-            </span>
-          </Button>
+          {!IS_LITE && (
+            <Button variant="outline" className="w-full justify-start h-auto py-3" onClick={handleSubscribeWebcal}>
+              <span className="text-start">
+                <span className="block font-medium">{tWebcalAction("subscribe_title")}</span>
+                <span className="block text-xs text-muted-foreground mt-0.5">{tWebcalAction("subscribe_description")}</span>
+              </span>
+            </Button>
+          )}
         </div>
     </Dialog>
   ) : null;
@@ -2016,7 +2022,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       onCreateEvent={openCreateForView}
       createLabel={createLabel}
       onImport={demoMode ? undefined : () => setShowImportModal(true)}
-      onSubscribe={demoMode ? undefined : () => setShowSubscriptionModal(true)}
+      onSubscribe={canSubscribe ? () => setShowSubscriptionModal(true) : undefined}
       onRefresh={() => { void refreshCalendar(); }}
       onPrint={() => { void requestPrint({ kind: "calendar-view" }); }}
       isMobile={isMobile}
@@ -2197,7 +2203,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 }
               } : undefined}
               onCreateCalendar={client ? () => setShowCreateCalendar(true) : undefined}
-              onSubscribe={demoMode ? undefined : () => setShowSubscriptionModal(true)}
+              onSubscribe={canSubscribe ? () => setShowSubscriptionModal(true) : undefined}
               onEditSubscription={(subId) => setEditingSubscription(subId)}
               client={client}
               multiAccountMode={multiAccountEnabled && accountClients.length > 1}

@@ -577,7 +577,6 @@ interface SettingsState extends AccessibilitySettings {
   swipeLeftAction: SwipeAction; // Mobile: action when a list row is swiped left
 
   // Composer
-  autoSaveDraftInterval: number; // milliseconds
   sendConfirmation: boolean;
   quickReplyEnabled: boolean;
   defaultReplyMode: ReplyMode;
@@ -805,6 +804,12 @@ interface SettingsState extends AccessibilitySettings {
   ) => void;
   resetToDefaults: () => void;
   /**
+   * Forgets the user's own value for each of `keys`: the setting loses its
+   * "chosen by the user" mark and takes the admin default (policy.defaults)
+   * again, or the built-in one when the admin set none.
+   */
+  resetSettings: (keys: readonly string[]) => void;
+  /**
    * Applies the admin policy (#1248): `policy.defaults` to every setting the
    * user has not chosen, and a locked restriction's value to its setting
    * whatever the user chose. Runs when the policy loads and after every
@@ -902,7 +907,6 @@ const DEFAULT_SETTINGS = {
   swipeLeftAction: 'delete' as SwipeAction,
 
   // Composer
-  autoSaveDraftInterval: 60000, // 1 minute
   sendConfirmation: false,
   quickReplyEnabled: true,
   defaultReplyMode: 'reply' as ReplyMode,
@@ -1331,7 +1335,6 @@ export const useSettingsStore = create<SettingsState>()(
           swipeLeftAction: state.swipeLeftAction,
           disableThreading: state.disableThreading,
           trustedSenders: state.trustedSenders,
-          autoSaveDraftInterval: state.autoSaveDraftInterval,
           sendConfirmation: state.sendConfirmation,
           quickReplyEnabled: state.quickReplyEnabled,
           defaultReplyMode: state.defaultReplyMode,
@@ -1493,6 +1496,26 @@ export const useSettingsStore = create<SettingsState>()(
         applyAdminPolicyPatch();
         applyVisualSettings();
         void settingsHooks.onSettingsReset.emit({});
+      },
+
+      resetSettings: (keys) => {
+        const own = keys.filter((key) => hasOwn(DEFAULT_SETTINGS, key) && key !== 'explicitSettings' && !BOOKKEEPING_SETTING_KEYS.has(key));
+        if (own.length === 0) return;
+        const before = get() as unknown as Record<string, unknown>;
+        const previous = Object.fromEntries(own.map((key) => [key, before[key]]));
+        const dropped = new Set(own);
+        set({
+          ...Object.fromEntries(own.map((key) => [key, builtInDefault(key)])),
+          explicitSettings: get().explicitSettings.filter((key) => !dropped.has(key)),
+        } as Partial<SettingsState>);
+        applyAdminPolicyPatch();
+        applyVisualSettings();
+        const after = get() as unknown as Record<string, unknown>;
+        for (const key of own) {
+          if (after[key] !== previous[key]) {
+            void settingsHooks.onSettingChange.emit({ key, value: after[key], previous: previous[key] });
+          }
+        }
       },
 
       exportSettings: (opts) => {
@@ -1971,6 +1994,8 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
           state.protocolOpenMode = state.protocolMailtoOpenMode;
         }
         delete state.protocolMailtoOpenMode;
+        // Never read: drafts save 2 s after the last change.
+        delete state.autoSaveDraftInterval;
         // v4: `dateFormat` was repurposed from 'regional'|'iso'|'custom' to
         // 'smart'|'relative'|'full'. The old setting was never read anywhere,
         // so every persisted value maps to the new default.

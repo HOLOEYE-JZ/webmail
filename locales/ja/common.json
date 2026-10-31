@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "統合メールボックス",
-        "description": "接続されたすべてのアカウントの統合フォルダ（受信トレイ、送信済みなど）を表示",
+        "description": "アクティブなアカウントとその共有フォルダーの統合フォルダー（受信トレイ、送信済みなど）を表示します。このセクションは、まとめる対象があるときだけ表示されます。すべてのアカウントの統合がオンで複数のアカウントが接続されている場合、下でグループ受信トレイを含めている場合、またはすべてのメール・未読・スター付きのいずれかがオンの場合です。この 3 つは個別のオプションで、管理者がオンにするまで表示されません。",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "サーバー {index}: URL は必須です",
       "row_url_scheme": "サーバー {index}: URL は http:// または https:// で始める必要があります",
       "stalwart": "Stalwart 固有の機能を有効にする",
-      "stalwart_hint": "パスワード変更と Sieve フィルターの管理を追加します。ほかのサーバーで有効にしても問題ありません。"
+      "stalwart_hint": "セキュリティページ（パスワード、2 段階認証、アプリパスワード）と削除したアイテムの復元を追加します。ほかのサーバーで有効にしても問題ありません。"
     },
     "auth": {
       "title": "認証",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "{appName} をインストール",
-    "description": "素早いアクセスとオフライン対応のため、アプリをインストールしましょう。",
+    "description": "素早くアクセスできるよう、アプリをインストールしましょう。",
     "not_now": "後で",
     "install": "インストール",
     "dont_remind": "今後表示しない",

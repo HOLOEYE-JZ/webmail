@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Gecombineerd postvak",
-        "description": "Gecombineerde mappen (Postvak IN, Verzonden, enz.) van alle verbonden accounts weergeven",
+        "description": "Gecombineerde mappen (Postvak IN, Verzonden, enz.) tonen voor het actieve account en zijn gedeelde mappen. Het onderdeel verschijnt alleen als er iets te combineren valt: samenvoegen over alle accounts staat aan en er is meer dan één account verbonden, hieronder is een groepspostvak meegenomen, of Alle e-mail, Ongelezen of Met ster staat aan. Die drie zijn aparte opties die pas verschijnen als je beheerder ze aanzet.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Server #{index}: de URL is verplicht",
       "row_url_scheme": "Server #{index}: de URL moet beginnen met http:// of https://",
       "stalwart": "Stalwart-specifieke functies inschakelen",
-      "stalwart_hint": "Voegt wachtwoord wijzigen en het beheer van Sieve-filters toe. Kan zonder risico ook bij andere servers aan."
+      "stalwart_hint": "Voegt de pagina Beveiliging (wachtwoord, tweestapsverificatie en app-wachtwoorden) en het herstellen van verwijderde items toe. Kan zonder risico ook bij andere servers aan."
     },
     "auth": {
       "title": "Aanmelden",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "{appName} installeren",
-    "description": "Installeer onze app voor snelle toegang en offline-ondersteuning.",
+    "description": "Installeer onze app voor snelle toegang.",
     "not_now": "Niet nu",
     "install": "Installeren",
     "dont_remind": "Niet meer herinneren",

@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Gemeinsames Postfach",
-        "description": "Kombinierte Ordner (Posteingang, Gesendet usw.) für alle verbundenen Konten anzeigen",
+        "description": "Kombinierte Ordner (Posteingang, Gesendet usw.) für das aktive Konto und seine geteilten Ordner anzeigen. Der Bereich erscheint erst, wenn es etwas zu kombinieren gibt: „Über alle Konten“ ist an und mehr als ein Konto verbunden, unten ist ein Gruppenpostfach einbezogen, oder Alle Mails, Ungelesen oder Markiert ist an. Diese drei sind eigene Optionen, die erst erscheinen, wenn die Administration sie freischaltet.",
         "cross_account": {
           "label": "Über alle Konten",
           "description": "Den vereinheitlichten Posteingang über alle verbundenen Konten zusammenführen, statt beim aktiven Konto zu bleiben."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Server #{index}: Die URL ist erforderlich",
       "row_url_scheme": "Server #{index}: Die URL muss mit http:// oder https:// beginnen",
       "stalwart": "Stalwart-spezifische Funktionen aktivieren",
-      "stalwart_hint": "Fügt Passwortänderung und die Verwaltung von Sieve-Filtern hinzu. Kann auch bei anderen Servern bedenkenlos aktiviert werden."
+      "stalwart_hint": "Fügt die Seite Sicherheit (Passwort, Zwei-Faktor-Anmeldung und App-Passwörter) und das Wiederherstellen gelöschter Elemente hinzu. Kann auch bei anderen Servern bedenkenlos aktiviert werden."
     },
     "auth": {
       "title": "Anmeldung",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "{appName} installieren",
-    "description": "Installiere unsere App für schnellen Zugriff und Offline-Unterstützung.",
+    "description": "Installiere unsere App für schnellen Zugriff.",
     "not_now": "Nicht jetzt",
     "install": "Installieren",
     "dont_remind": "Nicht mehr erinnern",

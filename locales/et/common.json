@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Ühendatud postkast",
-        "description": "Kuva aktiivse konto ja selle jagatud kaustade ühendatud kaustad (Saabunud, Saadetud jne).",
+        "description": "Kuva aktiivse konto ja selle jagatud kaustade ühendatud kaustad (Saabunud, Saadetud jne). Jaotis ilmub ainult siis, kui on midagi ühendada: „Kõigi kontode ulatuses“ on sees ja ühendatud on rohkem kui üks konto, allpool on kaasatud rühma postkast või Kõik kirjad, Lugemata või Tärniga on sees. Need kolm on eraldi valikud, mis ilmuvad alles siis, kui administraator need sisse lülitab.",
         "cross_account": {
           "label": "Kõigi kontode ulatuses",
           "description": "Ühenda ühendatud postkast kõigi lisatud kontode ulatuses, mitte ainult aktiivse konto piires."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Server nr {index}: URL on kohustuslik",
       "row_url_scheme": "Server nr {index}: URL peab algama http:// või https://",
       "stalwart": "Luba Stalwarti-põhised funktsioonid",
-      "stalwart_hint": "Lisab parooli muutmise ja Sieve-filtrite haldamise. Võib ohutult lubada ka teistel serveritel."
+      "stalwart_hint": "Lisab lehe Turvalisus (parool, kaheastmeline autentimine ja rakenduste paroolid) ning kustutatud üksuste taastamise. Võib ohutult lubada ka teistel serveritel."
     },
     "auth": {
       "title": "Autentimine",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Paigalda {appName}",
-    "description": "Paigalda meie rakendus kiireks ligipääsuks ja võrguühenduseta kasutamiseks.",
+    "description": "Paigalda meie rakendus kiireks ligipääsuks.",
     "not_now": "Mitte praegu",
     "install": "Paigalda",
     "dont_remind": "Ära tuleta enam meelde",

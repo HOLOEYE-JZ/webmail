@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Zjednotená schránka",
-        "description": "Zobrazovať zlúčené priečinky (Doručené, Odoslané atd.) zo všetkých pripojených účtov",
+        "description": "Zobrazovať zlúčené priečinky (Doručené, Odoslané atď.) aktívneho účtu a jeho zdieľaných priečinkov. Sekcia sa zobrazí, len keď je čo zlučovať: je zapnuté „Naprieč všetkými účtami“ a pripojený je viac ako jeden účet, nižšie je zahrnutá skupinová schránka, alebo je zapnutá Všetka pošta, Neprečítané či S hviezdičkou. Tieto tri sú samostatné voľby, ktoré sa zobrazia až potom, čo ich zapne správca.",
         "cross_account": {
           "label": "Naprieč všetkými účtami",
           "description": "Zlúčiť zjednotenú schránku naprieč všetkými pripojenými účtami namiesto zotrvania v aktívnom účte."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Server č. {index}: URL je povinná",
       "row_url_scheme": "Server č. {index}: URL musí začínať http:// alebo https://",
       "stalwart": "Zapnúť funkcie špecifické pre Stalwart",
-      "stalwart_hint": "Pridá zmenu hesla a správu filtrov Sieve. Bezpečne sa dá zapnúť aj pri iných serveroch."
+      "stalwart_hint": "Pridá stránku Zabezpečenie (heslo, dvojstupňové overenie a heslá aplikácií) a obnovu odstránených položiek. Bezpečne sa dá zapnúť aj pri iných serveroch."
     },
     "auth": {
       "title": "Overovanie",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Nainštalovať {appName}",
-    "description": "Nainštalujte si našu aplikáciu pre rýchly prístup a podporu offline.",
+    "description": "Nainštalujte si našu aplikáciu pre rýchly prístup.",
     "not_now": "Teraz nie",
     "install": "Nainštalovať",
     "dont_remind": "Viac mi to nepripomínať",

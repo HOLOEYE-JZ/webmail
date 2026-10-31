@@ -119,7 +119,7 @@ describe('impersonation handoff', () => {
     const put = await readSession();
     expect(put.status).toBe(200);
     const body = await put.json();
-    expect(body).toEqual({ serverUrl: 'https://mail.example.org', username: 'alice@example.org', password: APP_SECRET, signedInAt: expect.any(Number) });
+    expect(body).toEqual({ serverUrl: 'https://mail.example.org', username: 'alice@example.org', password: APP_SECRET, signedInAt: expect.any(Number), impersonated: true });
     expect(JSON.stringify(body)).not.toContain(MASTER_PASSWORD);
     expect([...jar.values()].join()).not.toContain(MASTER_PASSWORD);
   });
@@ -200,6 +200,28 @@ describe('impersonation handoff', () => {
     const res = await impersonate();
     expect(res.headers.get('location')).toBe('/?impersonated=1');
     expect(jar.get('jmap_impersonated')).toBe('1');
+  });
+
+  it('tells the browser the handoff session is an impersonation, which the username no longer shows', async () => {
+    await impersonate();
+    const { GET } = await import('@/app/api/auth/session/route');
+    const get = await GET(new NextRequest('https://webmail.example/api/auth/session'));
+    expect(await get.json()).toMatchObject({ username: 'alice@example.org', impersonated: true });
+  });
+
+  it('does not mark a session the user signed in to themselves', async () => {
+    const { encryptSession } = await import('@/lib/auth/crypto');
+    jar.set('jmap_session', encryptSession('https://mail.example.org', 'alice@example.org', 'her-own-password'));
+    const put = await readSession();
+    expect((await put.json()).impersonated).toBeUndefined();
+  });
+
+  it('does not mark another mailbox signed in to after the handoff', async () => {
+    await impersonate();
+    const { encryptSession } = await import('@/lib/auth/crypto');
+    jar.set('jmap_session', encryptSession('https://mail.example.org', 'bob@example.org', 'bobs-password'));
+    const put = await readSession();
+    expect((await put.json()).impersonated).toBeUndefined();
   });
 
   it('will not return a session that still holds the master password', async () => {

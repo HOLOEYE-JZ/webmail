@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Egységes postafiók",
-        "description": "Összevont mappák (Beérkező, Elküldött, stb.) megjelenítése az összes csatlakoztatott fiók között",
+        "description": "Összevont mappák (Beérkező, Elküldött stb.) megjelenítése az aktív fiókhoz és a megosztott mappáihoz. A szakasz csak akkor jelenik meg, ha van mit összevonni: be van kapcsolva az összes fiók összevonása, és egynél több fiók csatlakozik, lent egy csoportos postafiók is bele van foglalva, vagy be van kapcsolva az Összes levél, az Olvasatlan vagy a Csillagozott. Ez a három külön beállítás, és csak akkor jelenik meg, ha a rendszergazda bekapcsolja.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "{index}. szerver: az URL kötelező",
       "row_url_scheme": "{index}. szerver: az URL-nek http:// vagy https:// előtaggal kell kezdődnie",
       "stalwart": "Stalwart-specifikus funkciók bekapcsolása",
-      "stalwart_hint": "Jelszómódosítást és Sieve-szűrők kezelését ad hozzá. Más szervereken is nyugodtan bekapcsolható."
+      "stalwart_hint": "Hozzáadja a Biztonság oldalt (jelszó, kétlépcsős azonosítás és alkalmazásjelszavak) és a törölt elemek visszaállítását. Más szervereken is nyugodtan bekapcsolható."
     },
     "auth": {
       "title": "Hitelesítés",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "{appName} telepítése",
-    "description": "Telepítsd az alkalmazásunkat a gyors eléréshez és offline támogatáshoz.",
+    "description": "Telepítsd az alkalmazásunkat a gyors eléréshez.",
     "not_now": "Később",
     "install": "Telepítés",
     "dont_remind": "Ne emlékeztess többet",

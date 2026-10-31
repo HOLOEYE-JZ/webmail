@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Apvienotā pastkaste",
-        "description": "Rādīt apvienotās mapes (Iesūtne, Nosūtītie u.c.) no visiem pievienotajiem kontiem",
+        "description": "Rādīt apvienotās mapes (Iesūtne, Nosūtītie u.c.) aktīvajam kontam un tā koplietotajām mapēm. Sadaļa parādās tikai tad, kad ir ko apvienot: ir ieslēgta visu kontu apvienošana un pievienots vairāk nekā viens konts, zemāk ir iekļauta grupas pastkaste, vai ir ieslēgtas Visas vēstules, Nelasītie vai Ar zvaigzni. Šīs trīs ir atsevišķas iespējas, kas parādās tikai pēc tam, kad tās ieslēdz administrators.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Serveris Nr. {index}: URL ir obligāts",
       "row_url_scheme": "Serveris Nr. {index}: URL jāsākas ar http:// vai https://",
       "stalwart": "Iespējot Stalwart specifiskās funkcijas",
-      "stalwart_hint": "Pievieno paroles maiņu un Sieve filtru pārvaldību. Droši var iespējot arī citiem serveriem."
+      "stalwart_hint": "Pievieno lapu Drošība (parole, divfaktoru autentifikācija un lietotņu paroles) un dzēsto vienumu atjaunošanu. Droši var iespējot arī citiem serveriem."
     },
     "auth": {
       "title": "Autentifikācija",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Instalēt {appName}",
-    "description": "Instalējiet mūsu lietotni ātrai piekļuvei un bezsaistes atbalstam.",
+    "description": "Instalējiet mūsu lietotni ātrai piekļuvei.",
     "not_now": "Ne tagad",
     "install": "Instalēt",
     "dont_remind": "Vairs man neatgādināt",

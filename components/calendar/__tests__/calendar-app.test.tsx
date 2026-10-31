@@ -28,6 +28,11 @@ vi.mock('@/hooks/use-account-principal-emails', () => ({ useAccountPrincipalEmai
 vi.mock('../participant-availability', () => ({ ParticipantAvailability: () => null }));
 const config = vi.hoisted(() => ({ demoMode: false }));
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => config }));
+const lite = vi.hoisted(() => ({ on: false }));
+vi.mock('@/lib/lite', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/lite')>()),
+  get IS_LITE() { return lite.on; },
+}));
 
 import { CalendarApp } from '../calendar-app';
 import { useRegisteredCommandGroups } from '@/lib/command-registry';
@@ -738,6 +743,21 @@ describe('CalendarApp in the demo', () => {
       expect(screen.queryByRole('menuitem', { name: 'toolbar.subscribe' })).toBeNull();
     } finally {
       config.demoMode = false;
+    }
+  });
+});
+
+describe('CalendarApp in Lite', () => {
+  it('leaves Subscribe out, since the static build has no feed proxy', async () => {
+    lite.on = true;
+    try {
+      render(<><CalendarApp /><PaletteGroups /></>);
+      fireEvent.click(screen.getByRole('button', { name: 'toolbar.more' }));
+      expect(await screen.findByRole('menuitem', { name: 'toolbar.import' })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'toolbar.subscribe' })).toBeNull();
+      expect(screen.getByTestId('palette').textContent).not.toContain('toolbar.subscribe');
+    } finally {
+      lite.on = false;
     }
   });
 });

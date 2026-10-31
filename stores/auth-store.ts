@@ -507,9 +507,13 @@ async function exchangeOAuthCode(params: {
  * Credentials a remembered session signs back in with: the password (Basic
  * auth), or the access token of a token login (Bearer auth).
  */
-type RememberedSession =
+type RememberedSession = (
   | { serverUrl: string; username: string; password: string; token?: undefined }
-  | { serverUrl: string; username: string; token: string; password?: undefined };
+  | { serverUrl: string; username: string; token: string; password?: undefined }
+) & {
+  /** The session an impersonation handoff opened (set by the server). */
+  impersonated?: boolean;
+};
 
 /** A client for remembered credentials. */
 function clientForSession(session: RememberedSession): JMAPClient {
@@ -2817,7 +2821,11 @@ export const useAuthStore = create<AuthState>()(
                   await client.connect();
                   clients.set(account.id, client);
                   await contextSync;
-                  accountStore.updateAccount(account.id, { isConnected: true, hasError: false });
+                  accountStore.updateAccount(account.id, {
+                    isConnected: true,
+                    hasError: false,
+                    impersonated: session.impersonated === true,
+                  });
                   void syncAccountDisplayName(account.id, client);
                 } else if (res.status >= 500) {
                   throw new TransientAuthError('Session restore failed', res.status);

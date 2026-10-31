@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Birleşik Posta Kutusu",
-        "description": "Bağlı tüm hesaplardaki birleşik klasörleri (Gelen Kutusu, Gönderilenler vb.) göster",
+        "description": "Etkin hesabın ve paylaşılan klasörlerinin birleşik klasörlerini (Gelen Kutusu, Gönderilenler vb.) göster. Bölüm yalnızca birleştirilecek bir şey olduğunda görünür: tüm hesapları birleştirme açıksa ve birden fazla hesap bağlıysa, aşağıda bir grup gelen kutusu dahil edilmişse ya da Tüm postalar, Okunmamış veya Yıldızlı açıksa. Bu üçü ayrı seçeneklerdir ve yalnızca yöneticiniz açtıktan sonra görünür.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Sunucu {index}: URL gerekli",
       "row_url_scheme": "Sunucu {index}: URL http:// veya https:// ile başlamalı",
       "stalwart": "Stalwart’a özel özellikleri etkinleştir",
-      "stalwart_hint": "Parola değiştirme ve Sieve filtre yönetimi ekler. Diğer sunucularda da güvenle etkinleştirilebilir."
+      "stalwart_hint": "Güvenlik sayfasını (parola, iki adımlı doğrulama ve uygulama parolaları) ve silinen öğeleri kurtarmayı ekler. Diğer sunucularda da güvenle etkinleştirilebilir."
     },
     "auth": {
       "title": "Kimlik doğrulama",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "{appName} uygulamasını yükle",
-    "description": "Hızlı erişim ve çevrimdışı destek için uygulamamızı yükleyin.",
+    "description": "Hızlı erişim için uygulamamızı yükleyin.",
     "not_now": "Şimdi değil",
     "install": "Yükle",
     "dont_remind": "Bir daha hatırlatma",

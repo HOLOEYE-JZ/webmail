@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Wspólna skrzynka",
-        "description": "Wyświetlaj połączone foldery (Odebrane, Wysłane itp.) ze wszystkich połączonych kont",
+        "description": "Wyświetlaj połączone foldery (Odebrane, Wysłane itp.) aktywnego konta i jego udostępnionych folderów. Sekcja pojawia się tylko wtedy, gdy jest co połączyć: włączone jest łączenie wszystkich kont i połączono więcej niż jedno konto, poniżej uwzględniono skrzynkę grupową albo włączono Całą pocztę, Nieprzeczytane lub Oznaczone gwiazdką. Te trzy to osobne opcje, które pojawiają się dopiero wtedy, gdy włączy je administrator.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Serwer nr {index}: adres URL jest wymagany",
       "row_url_scheme": "Serwer nr {index}: adres URL musi zaczynać się od http:// lub https://",
       "stalwart": "Włącz funkcje specyficzne dla Stalwart",
-      "stalwart_hint": "Dodaje zmianę hasła i zarządzanie filtrami Sieve. Można bezpiecznie włączyć także na innych serwerach."
+      "stalwart_hint": "Dodaje stronę Bezpieczeństwo (hasło, uwierzytelnianie dwuskładnikowe i hasła aplikacji) oraz odzyskiwanie usuniętych elementów. Można bezpiecznie włączyć także na innych serwerach."
     },
     "auth": {
       "title": "Uwierzytelnianie",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Zainstaluj {appName}",
-    "description": "Zainstaluj naszą aplikację, aby uzyskać szybki dostęp i obsługę offline.",
+    "description": "Zainstaluj naszą aplikację, aby uzyskać szybki dostęp.",
     "not_now": "Nie teraz",
     "install": "Zainstaluj",
     "dont_remind": "Nie przypominaj mi więcej",

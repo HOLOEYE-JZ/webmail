@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Unified mailbox",
-        "description": "Show combined folders (Inbox, Sent, etc.) for the active account and its shared folders. Needs more than one connected account (or a group inbox included below) before any folders appear here - with just one account, this only adds the section header. The All mail / Unread / Starred entries below are separate, admin-gated options that won't show up until your admin turns them on.",
+        "description": "Show combined folders (Inbox, Sent, etc.) for the active account and its shared folders. The section only appears when there is something to combine: \"Across all accounts\" is on with more than one account connected, a group inbox is included below, or All mail, Unread or Starred is on. Those three are separate options that only show up once your admin turns them on.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Server #{index}: the URL is required",
       "row_url_scheme": "Server #{index}: the URL must start with http:// or https://",
       "stalwart": "Enable Stalwart-specific features",
-      "stalwart_hint": "Adds password change and Sieve filter management. Safe to enable on other servers."
+      "stalwart_hint": "Adds the Security page (password, two-factor authentication and app passwords) and recovering deleted items. Safe to enable on other servers."
     },
     "auth": {
       "title": "Authentication",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Install {appName}",
-    "description": "Install our app for quick access and offline support.",
+    "description": "Install our app for quick access.",
     "not_now": "Not now",
     "install": "Install",
     "dont_remind": "Don't remind me again",

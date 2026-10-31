@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Samlet postkasse",
-        "description": "Vis kombinerte mapper (innboks, sendt osv.) for den aktive kontoen og dens delte mapper.",
+        "description": "Vis kombinerte mapper (innboks, sendt osv.) for den aktive kontoen og dens delte mapper. Delen vises bare når det er noe å kombinere: «På tvers av alle kontoer» er på og mer enn én konto er tilkoblet, en gruppeinnboks er tatt med nedenfor, eller All e-post, Ulest eller Stjernemerket er på. Disse tre er egne valg som bare vises når administratoren slår dem på.",
         "cross_account": {
           "label": "På tvers av alle kontoer",
           "description": "Slå sammen den samlede postkassen på tvers av alle tilkoblede kontoer, i stedet for å begrense den til den aktive kontoen."
@@ -3355,7 +3355,7 @@
       "row_url_required": "Server nr. {index}: URL-en er påkrevd",
       "row_url_scheme": "Server nr. {index}: URL-en må begynne med http:// eller https://",
       "stalwart": "Slå på Stalwart-spesifikke funksjoner",
-      "stalwart_hint": "Legger til endring av passord og administrasjon av Sieve-filtre. Trygt å slå på også for andre servere."
+      "stalwart_hint": "Legger til siden Sikkerhet (passord, tofaktorautentisering og app-passord) og gjenoppretting av slettede elementer. Trygt å slå på også for andre servere."
     },
     "auth": {
       "title": "Autentisering",
@@ -5403,7 +5403,7 @@
   },
   "pwa_install": {
     "title": "Installer {appName}",
-    "description": "Installer appen for rask tilgang og støtte for bruk uten nett.",
+    "description": "Installer appen for rask tilgang.",
     "not_now": "Ikke nå",
     "install": "Installer",
     "dont_remind": "Ikke minn meg på det igjen",
