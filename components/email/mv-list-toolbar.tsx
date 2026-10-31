@@ -39,6 +39,7 @@ import { getEmailTagIds } from "@/lib/thread-utils";
 import { cn, type MailboxNode } from "@/lib/utils";
 import { PluginActions } from "@/components/plugins/plugin-actions";
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
+import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
 import { commonTagScope } from "@/hooks/use-account-tags";
 
 interface MvListToolbarProps {
@@ -156,6 +157,7 @@ export function MvListToolbar({
   })));
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const later = useTimeoutWhileMounted();
   // The ⋮, Move to and Tag menus are the ContextMenu, as every menu (R6).
   const overflowMenu = useContextMenu<null>();
   const menuOpen = overflowMenu.contextMenu.isOpen;
@@ -217,7 +219,7 @@ export function MvListToolbar({
         }
       }
     } finally {
-      setTimeout(() => setIsProcessing(false), 400);
+      later(() => setIsProcessing(false), 400);
     }
   };
 

@@ -48,6 +48,7 @@ import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { PluginListFilters } from "./plugin-list-filters";
 import { PluginActions, useFolderAccountKind } from "@/components/plugins/plugin-actions";
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
+import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
 import { unreadSectionRowCount } from "@/lib/unread-first";
 import { MvListSectionHeader } from "./mv-list-section-header";
 import { type OpenableEmail, PluginSearchResults } from "./plugin-search-results";
@@ -382,6 +383,7 @@ export function EmailList({
   const [sourceEmail, setSourceEmail] = useState<Email | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const later = useTimeoutWhileMounted();
   const parentRef = useRef<HTMLDivElement>(null);
   const batchToolbarRef = useRef<HTMLDivElement>(null);
   // The batch toolbar sits above the scroll container, so as it animates
@@ -557,7 +559,7 @@ export function EmailList({
     try {
       await removeFromFolder(resolveSelectedEmails(useEmailStore.getState()));
     } finally {
-      setTimeout(() => setIsProcessing(false), 500);
+      later(() => setIsProcessing(false), 500);
     }
   };
   const listSlotProps = useMemo(
@@ -584,7 +586,7 @@ export function EmailList({
     try {
       await markSelectionRead(read);
     } finally {
-      setTimeout(() => setIsProcessing(false), 500);
+      later(() => setIsProcessing(false), 500);
     }
   };
 
@@ -631,7 +633,7 @@ export function EmailList({
     } catch {
       toast.error(tSpam('error_not_spam'));
     } finally {
-      setTimeout(() => setIsProcessing(false), 500);
+      later(() => setIsProcessing(false), 500);
     }
   };
 
@@ -647,7 +649,7 @@ export function EmailList({
     } catch {
       toast.error(tSpam('error'));
     } finally {
-      setTimeout(() => setIsProcessing(false), 500);
+      later(() => setIsProcessing(false), 500);
     }
   };
 
@@ -667,7 +669,7 @@ export function EmailList({
         undo: undoMoveAction(client, restore, undo),
       });
     } finally {
-      setTimeout(() => setIsProcessing(false), 500);
+      later(() => setIsProcessing(false), 500);
     }
   };
 
@@ -686,7 +688,7 @@ export function EmailList({
         undo: undoMoveAction(client, restore, undo, receipts),
       });
     } finally {
-      setTimeout(() => setIsProcessing(false), 500);
+      later(() => setIsProcessing(false), 500);
     }
   };
 
@@ -724,7 +726,7 @@ export function EmailList({
         undo: undoMoveAction(client, restore, undo),
       });
     } finally {
-      setTimeout(() => setIsProcessing(false), 500);
+      later(() => setIsProcessing(false), 500);
     }
   };
 
@@ -746,7 +748,7 @@ export function EmailList({
     try {
       await emptyMailbox(client, currentMailbox.id);
     } finally {
-      setTimeout(() => setIsProcessing(false), 500);
+      later(() => setIsProcessing(false), 500);
     }
   };
 

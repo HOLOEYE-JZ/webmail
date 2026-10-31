@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { KEYWORD_PREFIX } from '@/lib/thread-utils';
@@ -337,5 +337,26 @@ describe('MvListToolbar removal confirmations', () => {
     fireEvent.click(screen.getByLabelText('archive'));
     await waitFor(() => expect(batchArchive).toHaveBeenCalledTimes(1));
     expect(screen.queryByRole('alertdialog')).toBeNull();
+  });
+
+  it('leaves no timer running once it is gone', async () => {
+    // The buttons stay disabled for a moment after an action. A bare timer
+    // for that outlived the toolbar and reached React after the test
+    // environment was torn down ("window is not defined", failing CI).
+    vi.useFakeTimers();
+    try {
+      useSettingsStore.setState({ confirmArchive: false } as never);
+      const { unmount } = render(<MvListToolbar loadedCount={2} onRefresh={() => {}} />);
+      await act(async () => {
+        fireEvent.click(screen.getByLabelText('archive'));
+      });
+      expect(batchArchive).toHaveBeenCalledTimes(1);
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+      unmount();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
