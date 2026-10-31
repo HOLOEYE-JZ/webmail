@@ -9,18 +9,31 @@ services:
     env_file:
       - .env.local
     volumes:
-      # Encrypted user settings (SETTINGS_DATA_DIR).
-      - bulwark-settings:/app/data/settings
-      # Admin configuration: config.json, policy.json, admin.json (passwordHash),
-      # plugins, themes, branding uploads (ADMIN_CONFIG_DIR). Can be mounted
-      # read-only after running the setup wizard - append `:ro` to lock it.
-      - bulwark-admin:/app/data/admin
-      # Admin runtime state: admin-state.json (login timestamps), audit.log,
-      # setup token (ADMIN_STATE_DIR). Always read-write.
-      - bulwark-admin-state:/app/data/admin-state
-      # Anonymous telemetry: instance id, consent state, login HMACs (TELEMETRY_DATA_DIR).
-      # Persisting this preserves the admin's consent choice and stable instance id across upgrades.
-      - bulwark-telemetry:/app/data/telemetry
+      # Everything Bulwark keeps, in one volume:
+      #   settings/        encrypted user settings (SETTINGS_DATA_DIR)
+      #   admin/           config.json, policy.json, admin.json, plugins, themes,
+      #                    branding uploads (ADMIN_CONFIG_DIR)
+      #   admin-state/     login timestamps, audit.log, setup token (ADMIN_STATE_DIR)
+      #   plugin-secrets/  users' plugin credentials (PLUGIN_SECRETS_DIR)
+      #   telemetry/       instance id and usage stats consent (TELEMETRY_DATA_DIR)
+      #   version-check/   result of the last update check
+      #
+      # To lock the admin config after the setup wizard, give admin/ its own
+      # mount with `:ro` and set ADMIN_CONFIG_READONLY=true.
+      #
+      # Upgrading from the four volumes this file used to have
+      # (bulwark-settings, bulwark-admin, bulwark-admin-state,
+      # bulwark-telemetry)? Copy them into the new one before the first start,
+      # or the wizard runs again. With the project name from `docker volume ls`:
+      #   docker compose down && docker compose create
+      #   docker run --rm -v <project>_bulwark-settings:/old/settings \
+      #     -v <project>_bulwark-admin:/old/admin \
+      #     -v <project>_bulwark-admin-state:/old/admin-state \
+      #     -v <project>_bulwark-telemetry:/old/telemetry \
+      #     -v <project>_bulwark-data:/new alpine \
+      #     sh -c 'cp -a /old/. /new/ && chown -R 1001:1001 /new'
+      #   docker compose up -d
+      - bulwark-data:/app/data
     healthcheck:
       test:
         [
@@ -38,7 +51,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  bulwark-settings:
-  bulwark-admin:
-  bulwark-admin-state:
-  bulwark-telemetry:
+  bulwark-data:

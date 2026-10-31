@@ -56,7 +56,13 @@ RUN apk upgrade --no-cache && \
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-RUN mkdir -p /app/.next/cache /app/data/settings /app/data/admin /app/data/admin-state /app/data/telemetry && \
+# Every data dir exists up front and belongs to the runtime user, so a fresh
+# volume on /app/data (Docker copies these into it) or on any one of them is
+# writable. plugin-secrets holds users' plugin credentials, version-check the
+# result of the last update check.
+RUN mkdir -p /app/.next/cache /app/data/settings /app/data/admin /app/data/admin-state \
+      /app/data/telemetry /app/data/plugin-secrets /app/data/version-check && \
+    chmod 700 /app/data/plugin-secrets && \
     chown -R nextjs:nodejs /app/.next/cache /app/data
 USER nextjs
 EXPOSE 3000
