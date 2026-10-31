@@ -51,6 +51,9 @@ const SAME_ORIGIN = { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors',
 type Call = { url: string; auth: string | null; body: unknown };
 let calls: Call[];
 let createResult: Record<string, unknown>;
+// The mailbox's app passwords, as x:AppPassword/get lists them; null makes the
+// listing fail.
+let existing: { id: string; description: string; expiresAt?: string }[] | null;
 
 function stalwartFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = String(input);
@@ -64,6 +67,11 @@ function stalwartFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Re
     }));
   }
   const method = (body as { methodCalls: [string, Record<string, unknown>, string][] }).methodCalls[0];
+  if (method[0] === 'x:AppPassword/get') {
+    return Promise.resolve(Response.json({
+      methodResponses: [existing ? ['x:AppPassword/get', { list: existing }, '0'] : ['error', { type: 'serverFail' }, '0']],
+    }));
+  }
   if (method[1].create) {
     return Promise.resolve(Response.json({ methodResponses: [['x:AppPassword/set', createResult, '0']] }));
   }
@@ -96,6 +104,7 @@ describe('impersonation handoff', () => {
     jar.clear();
     calls = [];
     createResult = { created: { imp: { id: 'cred-1', secret: APP_SECRET } } };
+    existing = [];
     vi.stubGlobal('fetch', vi.fn(stalwartFetch));
   });
 
@@ -121,7 +130,7 @@ describe('impersonation handoff', () => {
 
     const masterAuth = `Basic ${Buffer.from(`alice@example.org%master@example.org:${MASTER_PASSWORD}`).toString('base64')}`;
     expect(calls.every((c) => c.auth === masterAuth)).toBe(true);
-    const create = calls.find((c) => c.url.endsWith('/jmap/'))!.body as {
+    const create = calls.find((c) => c.url.endsWith('/jmap/') && JSON.stringify(c.body).includes('"create"'))!.body as {
       methodCalls: [string, { accountId: string; create: { imp: { expiresAt: string } } }, string][];
     };
     const [method, args] = create.methodCalls[0];
@@ -134,6 +143,33 @@ describe('impersonation handoff', () => {
     const expires = Date.parse(args.create.imp.expiresAt);
     expect(expires - before).toBeGreaterThan(7 * 3600_000);
     expect(expires).toBeLessThanOrEqual(after + 8 * 3600_000);
+  });
+
+  it("deletes the mailbox's expired handoff app passwords before making a new one", async () => {
+    const past = '2026-01-01T00:00:00Z';
+    const future = new Date(Date.now() + 3600_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+    existing = [
+      { id: 'old-1', description: 'Support session aaa', expiresAt: past },
+      { id: 'old-2', description: 'Support session bbb', expiresAt: past },
+      { id: 'live', description: 'Support session ccc', expiresAt: future },
+      { id: 'theirs', description: 'Thunderbird on the laptop', expiresAt: past },
+      { id: 'forever', description: 'Support session ddd' },
+    ];
+    const res = await impersonate();
+    expect(res.status).toBe(303);
+
+    const jmap = calls.filter((c) => c.url.endsWith('/jmap/')).map((c) =>
+      (c.body as { methodCalls: [string, Record<string, unknown>, string][] }).methodCalls[0]);
+    expect(jmap.map(([name]) => name)).toEqual(['x:AppPassword/get', 'x:AppPassword/set', 'x:AppPassword/set']);
+    expect(jmap[1][1].destroy).toEqual(['old-1', 'old-2']);
+    expect(jmap[2][1].create).toBeDefined();
+  });
+
+  it('still hands over a session when the expired ones cannot be listed', async () => {
+    existing = null;
+    const res = await impersonate();
+    expect(res.status).toBe(303);
+    expect(calls.some((c) => JSON.stringify(c.body ?? null).includes('"destroy"'))).toBe(false);
   });
 
   it('refuses the handoff when Stalwart does not create the app password', async () => {
