@@ -1,10 +1,80 @@
 # Changelog
 
-## Unreleased
+## 1.19.1 (2026-10-31)
+
+1.19.1 shows a card above booking, shipping and order mail, with the times, tracking and status that matter, and can put a booking in the calendar and keep it up to date. Mail that passes DMARC shows the sender's BIMI logo as its icon. Archiving, moving and reporting spam from an open message now follow "Return to list", archiving in unread first opens the next unread message, and a shared mailbox sends through its own identity. Plugins can forward a message to an address the user allowed and print a page they made, and new mail plays the Involved sound by default.
+
+Thank you for your donations:
+
+- _You? [Become a sponsor!](https://github.com/sponsors/bulwarkmail)_
+
+**One-time**
+
+- [@systemflair](https://github.com/systemflair)
+- [@bultester](https://github.com/bultester)
+- Anonymous
+- Anonymous
+- Anonymous
+
+**Monthly**
+
+- [@Focus-On-Agency](https://github.com/Focus-On-Agency)
+- Anonymous
+- [@superspacehosting](https://github.com/superspacehosting)
+- [@naokton](https://github.com/naokton)
+- [@yerTools](https://github.com/yerTools)
+- [@jsaathof](https://github.com/jsaathof)
+- [@berkersal](https://github.com/berkersal)
+- [@NABarnes](https://github.com/NABarnes)
+- [@felixzieger](https://github.com/felixzieger)
+- [@pr0ton11](https://github.com/pr0ton11)
+- [@fpauser](https://github.com/fpauser)
+- [@proxforge](https://github.com/proxforge)
+- [@spss20](https://github.com/spss20)
+- [@elgringoYan](https://github.com/elgringoYan)
+- [@pauladams8](https://github.com/pauladams8)
+- [@djpriest](https://github.com/djpriest)
+- [@umakers](https://github.com/umakers)
+- [@zplizzi](https://github.com/zplizzi)
+- [@jeremiah](https://github.com/jeremiah)
+- [@Theoretisch1337](https://github.com/Theoretisch1337)
+- [@svandive](https://github.com/svandive)
+- [@HiltMundell](https://github.com/HiltMundell)
+
+### Changes
+
+- **Notifications**: New mail plays the Involved sound by default instead of the beep. If you never picked a sound you get Involved too; a sound you chose stays
+- **Appearance**: List rows are no longer tinted with their first tag's colour by default. If you turned "Tint list rows by tag color" on yourself it stays on
 
 ### Features
 
 - **Mail**: Booking, shipping and order mail that carries schema.org markup gets a card above the message: route and local times for flights, trains and buses, check-in and check-out for hotels, rental cars, events and restaurants, tracking for parcels and status for orders, with copy buttons and links that show where they lead. Flights, hotels and the other bookings can be added to a calendar you pick; a later mail about the same booking offers to update the event and a cancellation to remove it. Apple Wallet boarding passes and event tickets attached to a mail give the same cards. Cards appear only when the receiving server verified the sender's domain, never for forwarded mail, and everything is read in the browser without contacting airlines or carriers. Admins can turn them off under Policy
+- **Mail**: Mail that passes DMARC for its From domain shows the sender's BIMI logo as the sender icon, with a check mark beside the name when a Verified Mark or Common Mark Certificate backs it. Bulwark checks the record and the certificate itself, since Stalwart doesn't do BIMI. A contact photo still comes first, and logos follow the sender icons setting and stay off when third-party traffic is turned off. Admins can limit logos to certificate-backed ones with "Require a mark certificate" or `BIMI_REQUIRE_CERTIFICATE`
+- **Mail**: Expanded message headers in Mountain View have Reply all next to Reply (#1404, thanks @pcatapan)
+- **Accessibility**: Each preset on the Accessibility page shows a small picture of what it changes
+- **Admin**: On Stalwart 1.0, Auto-configure OAuth also registers a client for Bulwark Mobile, so the app signs in as a first-party client and gets the account security settings (#1459, thanks @Chaoskjell44)
+- **Admin**: The marketplace shows the changelog of every version an update brings, not only the newest, and a rollback lists what it undoes
+- **Plugins**: `api.email.forward` forwards a message with its attachments, from team mailboxes too, under the new `email:forward` permission. The user allows each address once, and can see and remove allowed addresses in Settings > Add-ons. A forward goes through the same checks and undo delay as a normal send
+- **Plugins**: `api.ui.print` prints a page the plugin made, such as a readable invoice, without scripts or network access. The UI kit has a `Table` for line items and totals, and admin settings of type string can ask for a multi-line box with `multiline: true`
+
+### Fixes
+
+- **Mail**: Archiving, moving or reporting the open message as spam returns to the list when "Return to list after delete, archive, move or mark unread" is on, in Mountain View too (#1458, thanks @cmess0822)
+- **Mail**: Archiving in unread first opens the next unread message instead of the first read one (#1453, thanks @ottsch)
+- **Mail**: Search results can be moved into the folder that is open (#1452, thanks @sandrobraendli)
+- **Mail**: A message sent from a shared mailbox uses that mailbox's identity for its From address, so the server no longer takes the envelope sender from one of your own identities (#1450, thanks @robinbohnen)
+- **Mail**: Mountain View no longer offers Reply on drafts and scheduled messages in a conversation (#1404)
+- **Mail**: Quick reply asks the same questions as the composer before sending: unfilled placeholders, a forgotten attachment and "Confirm before sending"
+- **Mail**: The delivery report of a bounce or read receipt no longer shows as an attachment chip in the list or goes along when the message is forwarded
+- **Mail**: The message list no longer jumps back while you scroll, the quick actions on the open message hide once the pointer leaves it, and a one-digit unread count stays next to the folder's total
+- **Mail**: When two accounts have the same name, the account switcher shows the address as the title
+- **Themes**: Unread mail stands out in Flat fields with a tint and a bar beside the avatar
+- **Settings**: The density sample leaves out the preview line while "Show preview text" is off, and the search filter panel's button says Search instead of Done
+- **Sidebar**: The gear and plus buttons in the header no longer run into the folder row below, and demo mode shows as a plain row instead of a tinted box
+- **Accessibility**: With reduce motion, menus open in place instead of flashing in the corner first
+- **Plugins**: Badges show on message rows drawn before the plugin started, and dev plugins whose dependencies only declare `main` or reach for Node built-ins now bundle
+- **Server**: `npm start` listens on the `HOSTNAME` and `PORT` from `.env.local` (#1441, thanks @garceri)
+- **Demo**: Replies sent in demo mode show in the conversation they answer, and the personal demo account has contact photos
 
 ## 1.19.0 (2026-10-29)
 
