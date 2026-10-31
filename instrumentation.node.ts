@@ -56,8 +56,9 @@ migrateLegacyAdminLayout()
     }
   })
   .then(async () => {
-    // Anonymous telemetry - on by default. Admins can disable via the
-    // admin UI, the BULWARK_TELEMETRY env var, or by clearing the endpoint.
+    // Anonymous telemetry, off by default. Admins turn it on in the admin UI
+    // or with BULWARK_TELEMETRY=on; BULWARK_TELEMETRY=off or an empty
+    // collector URL keeps it from sending.
     // See https://bulwarkmail.org/docs/legal/privacy/telemetry
     const { startScheduler, markProcessStart } = await import("./lib/telemetry");
     markProcessStart();

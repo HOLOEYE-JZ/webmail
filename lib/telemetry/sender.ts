@@ -24,7 +24,9 @@ export async function sendOnce(opts?: { reason?: string }): Promise<{
   // a manual "send now" before any request (#903).
   const { consent, source, state } = await effectiveConsent();
   if (consent !== 'on') return { ok: false, error: `consent ${consent} (source ${source})` };
-  const endpoint = state.endpoint || DEFAULT_ENDPOINT;
+  // A cleared collector URL is stored as '' and switches sending off; only a
+  // state file without the field at all gets the project's collector.
+  const endpoint = state.endpoint ?? DEFAULT_ENDPOINT;
   if (!endpointEnabled(endpoint)) return { ok: false, error: 'endpoint blank' };
 
   // Re-check at fetch time: defeats DNS rebinding, and catches the case
@@ -86,6 +88,10 @@ export async function startScheduler(): Promise<void> {
     return;
   }
   const state = await loadState();
+  if (!endpointEnabled(state.endpoint ?? DEFAULT_ENDPOINT)) {
+    logger.info('telemetry: scheduler not started', { consent, endpoint: 'blank' });
+    return;
+  }
   // If we have a next-scheduled time in the future use it; otherwise schedule
   // FIRST_DELAY_MS out. This means after a restart we don't fire immediately.
   let delay = FIRST_DELAY_MS;
@@ -105,7 +111,7 @@ export async function stopScheduler(): Promise<void> {
   currentTimer = null;
 }
 
-// Called when consent flips on/off via the UI.
+// Called when consent flips on/off or the collector URL changes via the UI.
 export async function reschedule(): Promise<void> {
   await stopScheduler();
   await startScheduler();

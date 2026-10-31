@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       {
         consent,
         consentSource: source,
-        endpoint: state.endpoint || DEFAULT_ENDPOINT,
+        endpoint: state.endpoint ?? DEFAULT_ENDPOINT,
         consentedAt: state.consentedAt,
         lastSentAt: state.lastSentAt,
         nextScheduledAt: state.nextScheduledAt,
@@ -115,8 +115,10 @@ export async function POST(request: NextRequest) {
       }
       const state = await loadState();
       const before = state.endpoint;
-      state.endpoint = trimmed || DEFAULT_ENDPOINT;
+      // Empty means no collector: heartbeats stop until a URL is set again.
+      state.endpoint = trimmed;
       await saveState(state);
+      await reschedule();
       await auditLog('telemetry.set-endpoint', { from: before, to: state.endpoint }, ip);
       return NextResponse.json({ ok: true, endpoint: state.endpoint });
     }

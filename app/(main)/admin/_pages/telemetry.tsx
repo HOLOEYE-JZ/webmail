@@ -148,7 +148,8 @@ export function TelemetryPage() {
 
   const consentDescription = [
     status.consent === 'pending' && 'Initialising - no heartbeats sent yet.',
-    status.consent === 'on' && 'Heartbeats are enabled. Thanks for helping us improve!',
+    status.consent === 'on' && status.endpoint && 'Heartbeats are enabled. Thanks for helping us improve!',
+    status.consent === 'on' && !status.endpoint && 'Heartbeats are on, but none are sent because the collector URL is empty.',
     status.consent === 'off' && 'Heartbeats are off (default).',
     noThirdParty && 'Locked off: no third-party traffic is on (Organisation > Security).',
     envOverridden && !noThirdParty && 'Locked by the BULWARK_TELEMETRY env var.',
@@ -216,14 +217,14 @@ export function TelemetryPage() {
         <SettingsSection
           id="endpoint"
           title="Endpoint"
-          description="Where heartbeats are sent. Defaults to the project's collector. Point at your own collector (open source at bulwarkmail/dashboard) or clear this field to disable sending."
+          description={`Where heartbeats are sent. The project's collector is ${status.defaultEndpoint}. Point at your own collector (open source at bulwarkmail/dashboard), or clear this field to stop sending.`}
         >
           <SettingItem label="Collector URL">
             <input
               type="url"
               value={endpointDraft}
               onChange={(e) => { setEndpointDraft(e.target.value); setMessage(null); }}
-              placeholder={status.defaultEndpoint}
+              placeholder="Empty: no heartbeats are sent"
               aria-label="Collector URL"
               autoComplete="off"
               spellCheck={false}
