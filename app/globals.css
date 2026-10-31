@@ -755,9 +755,12 @@ optgroup {
     animation-iteration-count: 1 !important;
     /* Every element transitions `all` by default once it has a duration.
        Visibility is left out: a transition from hidden would keep a newly
-       shown menu or dialog hidden for a frame, and focus() would miss it. */
-    transition-property: all, visibility !important;
-    transition-duration: 0.01ms, 0s !important;
+       shown menu or dialog hidden for a frame, and focus() would miss it.
+       So is the position: Chrome paints a transition's first frame at its
+       start value, and a menu placed from script flashed where it was
+       measured (a submenu in the window's top-left corner). */
+    transition-property: all, visibility, top, right, bottom, left !important;
+    transition-duration: 0.01ms, 0s, 0s, 0s, 0s, 0s !important;
     scroll-behavior: auto !important;
   }
 }
@@ -768,8 +771,8 @@ optgroup {
 [data-motion="reduce"] *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
-  transition-property: all, visibility !important;
-  transition-duration: 0.01ms, 0s !important;
+  transition-property: all, visibility, top, right, bottom, left !important;
+  transition-duration: 0.01ms, 0s, 0s, 0s, 0s, 0s !important;
   scroll-behavior: auto !important;
 }
 
