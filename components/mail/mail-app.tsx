@@ -138,6 +138,7 @@ import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { consumePendingMailto, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
 import { INTERNAL_MAILTO_EVENT, type ParsedMailto } from "@/lib/protocol-handlers/mailto";
 import { PLUGIN_REPLY_EVENT, type PluginReplyRequest } from "@/lib/plugin-sandbox/host-api-compose";
+import { onOpenEmail, type OpenEmailHandler, type OpenEmailOutcome } from "@/lib/plugin-sandbox/open-email";
 import { mailtoComposerDraft } from "./mailto-draft";
 import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
@@ -2734,6 +2735,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return () => window.removeEventListener(PLUGIN_REPLY_EVENT, onPluginReply);
   }, []);
 
+  // A plugin opening a message (api.ui.openEmail), as a click on a search
+  // result entry naming one does: handleEmailSelect, set once it is defined.
+  // Not inside the Pro shell, which keeps this tab mounted while hidden and
+  // opens the message in an email tab instead (pro/page.tsx).
+  const pluginOpenEmailRef = useRef<OpenEmailHandler | null>(null);
+  useEffect(() => {
+    if (isEmbedded) return;
+    return onOpenEmail(async (email) => (
+      pluginOpenEmailRef.current ? pluginOpenEmailRef.current(email) : new Error('the mail page is not ready')
+    ));
+  }, [isEmbedded]);
+
   const handleForward = async () => {
     if (selectedEmail) {
       const formerSelected = { ...selectedEmail };
@@ -4467,8 +4480,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleEmailSelect = async (
     email: { id: string } & Partial<Pick<Email, 'sourceClientAccountId' | 'sourceAccountId'>>,
-  ) => {
-    if (!client || !email) return;
+  ): Promise<OpenEmailOutcome> => {
+    if (!client || !email) return new Error('the mail page is not ready');
     setCursorOnly(false);
 
     // If composing, suspend the composer (unmount will trigger onSaveState).
@@ -4539,7 +4552,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (!fetchClient) {
         console.warn('[mail-app] No connected client for email source');
         if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(previousEmail);
-        return;
+        return new Error('no connected login reaches the account');
       }
 
       // Mountain View shows the message inside its conversation: fetch that
@@ -4549,7 +4562,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         : null;
       // The request a mouse press on the row already started, if any.
       const fullEmail = await requestEmailContent(fetchClient, email.id, accountId);
-      if (openSeq !== emailOpenSeqRef.current) return;
+      if (openSeq !== emailOpenSeqRef.current) return fullEmail ? 'opened' : 'missing';
       if (fullEmail) {
         const scheduledSubmissionByEmailId = useEmailStore.getState().scheduledSubmissionByEmailId;
         const annotated = annotateScheduledEmail(fullEmail, scheduledSubmissionByEmailId);
@@ -4587,7 +4600,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             conversationPrefetch,
             new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), MV_CONVERSATION_WAIT_MS)),
           ]);
-          if (openSeq !== emailOpenSeqRef.current) return;
+          if (openSeq !== emailOpenSeqRef.current) return 'opened';
           if (conversation !== undefined) setMvConversationResult(conversation ? {
             emails: conversation, source, threadId: fullEmail.threadId,
           } : null);
@@ -4595,14 +4608,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // One write: the message, and the end of its loading state.
         finishOpenEmail(fullEmail);
         // Mark-as-read logic is now handled by useEffect
-      } else {
-        abandonOpenEmail(previousEmail);
+        return 'opened';
       }
+      abandonOpenEmail(previousEmail);
+      return 'missing';
     } catch (error) {
       console.error('Failed to fetch email content:', error);
       if (openSeq === emailOpenSeqRef.current) abandonOpenEmail(previousEmail);
+      return error instanceof Error ? error : new Error(String(error));
     }
   };
+
+  pluginOpenEmailRef.current = handleEmailSelect;
 
   // Handle back navigation from viewer on mobile.
   // Reset to list state directly. We can't just call window.history.back()
