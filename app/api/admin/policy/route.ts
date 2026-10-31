@@ -5,18 +5,27 @@ import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { POLICY_DOMAINS_HEADER, POLICY_SCOPE_HEADER, type SettingsPolicy } from '@/lib/admin/types';
 import { canSeeInstanceDetails, signedInIdentity } from '@/lib/auth/instance-details';
+import { bearerIdentity } from '@/lib/auth/bearer-identity';
 import { scopesVisibleTo } from '@/lib/admin/policy-scopes';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 
 /**
  * GET /api/admin/policy - Get settings policy (NOT admin-protected - users read this;
  * visitors who are not signed in get the subset the login page needs)
+ *
+ * Clients without a webmail session (the mobile app) sign in with
+ * `Authorization: Bearer <JMAP access token>` for the configured mail server
+ * and get what a signed-in user of that account gets here
+ * (lib/auth/bearer-identity.ts). A token that doesn't check out gets the
+ * public subset, as without one.
  */
 export async function GET(request: NextRequest) {
   try {
     await configManager.ensureLoaded();
     const policy = configManager.getPolicy();
     if (!(await canSeeInstanceDetails(request))) {
+      const tokenIdentity = await bearerIdentity(request);
+      if (tokenIdentity) return userPolicyResponse(policy, tokenIdentity.addresses);
       // The login page needs the theme policy and gates; the plugin lists,
       // push relays and sidebar app URLs map the deployment and are only
       // used after signing in, when the client fetches the policy again.
@@ -42,22 +51,25 @@ export async function GET(request: NextRequest) {
     // Without a session secret the server can't tell who is asking and
     // answers with all of them (documented).
     const identity = await signedInIdentity();
-    const filtered = identity !== null && !identity.admin;
-    const scopes = filtered
-      ? scopesVisibleTo(policy.scopes ?? [], identity.addresses)
-      : policy.scopes ?? [];
-    // Which domains the scopes were picked for, so a browser that signs in
-    // to an account of another domain knows to fetch again.
-    const domains = filtered
-      ? [...new Set(identity.addresses.map((a) => a.slice(a.lastIndexOf('@') + 1)).filter(Boolean))].join(',')
-      : null;
-    return NextResponse.json({ ...policy, scopes }, {
-      headers: { 'Cache-Control': 'no-store', ...(domains !== null ? { [POLICY_DOMAINS_HEADER]: domains } : {}) },
+    if (identity !== null && !identity.admin) return userPolicyResponse(policy, identity.addresses);
+    return NextResponse.json({ ...policy, scopes: policy.scopes ?? [] }, {
+      headers: { 'Cache-Control': 'no-store' },
     });
   } catch (error) {
     logger.error('Policy read error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+/** The policy for a signed-in user who is not the admin, with the addresses they sign in with. */
+function userPolicyResponse(policy: SettingsPolicy, addresses: string[]): NextResponse {
+  const scopes = scopesVisibleTo(policy.scopes ?? [], addresses);
+  // Which domains the scopes were picked for, so a browser that signs in
+  // to an account of another domain knows to fetch again.
+  const domains = [...new Set(addresses.filter((a) => a.includes('@')).map((a) => a.slice(a.lastIndexOf('@') + 1)).filter(Boolean))].join(',');
+  return NextResponse.json({ ...policy, scopes }, {
+    headers: { 'Cache-Control': 'no-store', [POLICY_DOMAINS_HEADER]: domains },
+  });
 }
 
 /**
