@@ -32,6 +32,7 @@ import { checkAvailabilityAccess, lookUpAvailability } from '@/lib/jmap/free-bus
 import { availabilityFor } from '@/components/calendar/participant-availability';
 import { demoAt } from '../demo-utils';
 import type { BusyPeriod } from '@/lib/jmap/types';
+import { useRecoveryStore } from '@/stores/recovery-store';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
 const work = getDemoData('work');
@@ -432,5 +433,34 @@ describe('demo fixtures: audience screenshots', () => {
     // The team meetings on the calendar count too: everyone is in the Beacon weekly at 10:00.
     const weekly = (id: string) => availabilityFor((answers[id] as { periods: BusyPeriod[] }).periods, new Date(demoAt(0, 10)), new Date(demoAt(0, 11)));
     expect(ids.map(weekly)).toEqual(['busy', 'busy', 'busy']);
+  });
+
+  it('Recover deleted items lists four deleted messages, newest first, and puts one back in the Inbox', async () => {
+    const client = new DemoJMAPClient('work');
+    // What stores/recovery-store.ts asks before Settings shows the page.
+    expect(await useRecoveryStore.getState().detect(client, 'fixture-test|demo-account', { force: true })).toBe(true);
+    expect(await client.hasArchivedEmail!(undefined, { days: 30 })).toBe(true);
+    const { items, nextPosition } = await client.listArchivedEmails!(undefined, { days: 30 });
+    expect(nextPosition).toBeNull();
+    expect(items.map((i) => i.subject)).toEqual([
+      'Beacon budget v2: infra line items',
+      'Canary tenants: final list',
+      'Infra Weekly #212: rollbacks, retries and one very long postmortem',
+      'Launch post: first draft',
+    ]);
+    expect(items[0]).toMatchObject({ fromName: PRIYA.name, fromEmail: PRIYA.email, accountId: client.getAccountId() });
+    // None of them is still in a folder.
+    const known = new Set(work.emails.map((e) => e.messageId));
+    for (const item of items) expect(known.has(`<${item.id.replace('archived-', '')}@meridianlabs.example>`), item.subject).toBe(false);
+
+    const [result] = await client.restoreArchivedItems!([items[0].id]);
+    expect(result.ok).toBe(true);
+    const { emails } = await client.getEmails(MB.inbox);
+    const back = emails.find((e) => e.subject === items[0].subject)!;
+    expect(back).toBeDefined();
+    expect(back.keywords).toEqual({});
+    expect((await client.listArchivedEmails!(undefined, { days: 30 })).items).toHaveLength(3);
+    expect((await client.restoreArchivedItems!([items[0].id]))[0]).toMatchObject({ ok: false, type: 'notFound' });
+    expect(new DemoJMAPClient('personal').advertisesArchivedItems!()).toBe(false);
   });
 });

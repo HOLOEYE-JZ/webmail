@@ -7,6 +7,11 @@ import { createDemoPrincipals } from './fixtures/directory';
 import { createDemoBusyBlocks } from './fixtures/availability';
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';
 import { parseDurationSeconds } from '@/lib/calendar-event-normalization';
+import { createDemoArchivedItems, type DemoArchivedItem } from './fixtures/archive';
+import {
+  hasArchivedEmail as hasArchivedEmailIn, listArchivedEmailsPaged,
+  type ArchiveIo, type ArchiveListResult, type ArchiveQueryPage, type RestoreResult,
+} from '@/lib/recovery/archived-items';
 import { getDemoData, demoSharedAccounts, type DemoData, type DemoProfile } from './demo-data';
 import { generateDemoId } from './demo-utils';
 import { DEMO_ASSETS } from './fixtures/assets';
@@ -51,6 +56,8 @@ export class DemoJMAPClient implements IJMAPClient {
   private readonly profile: DemoProfile;
   /** The server's directory: the Meridian Labs cast for the work login, nobody for the personal one. */
   private readonly principals: Principal[];
+  /** Mail deleted for good that the server still keeps (Recover deleted items). */
+  private archive: DemoArchivedItem[];
   private blobStore = new Map<string, Blob>();
   private scheduledSubmissions = new Map<string, { id: string; emailId: string; identityId: string; sendAt: string; undoStatus: 'pending' | 'final' | 'canceled'; isSmime: boolean }>();
   private connectionCallback: ((connected: boolean) => void) | null = null;
@@ -62,6 +69,7 @@ export class DemoJMAPClient implements IJMAPClient {
     this.profile = profile;
     this.data = getDemoData(profile);
     this.principals = profile === 'personal' ? [] : createDemoPrincipals();
+    this.archive = profile === 'personal' ? [] : createDemoArchivedItems(this.data.accountId);
     // Fixtures carry raw headers the way a server sends them; derive the
     // parsed fields the viewer reads, as JMAPClient.parseEmailHeaders does.
     for (const email of this.data.emails) {
@@ -1743,6 +1751,77 @@ export class DemoJMAPClient implements IJMAPClient {
     email.mailboxIds = { [draftMailboxId]: true };
     email.keywords.$draft = true;
     this.recalcMailboxCounts();
+  }
+
+  // ── Recover deleted items (x:ArchivedItem, lib/recovery/archived-items.ts) ──
+  // As on Stalwart Enterprise with archiveDeletedItemsFor set: the work
+  // account keeps what Nora deleted for good (fixtures/archive.ts).
+
+  advertisesArchivedItems(accountId?: string): boolean {
+    return !this.isPersonal && (!accountId || accountId === this.data.accountId);
+  }
+
+  /** x:ArchivedItem/query: newest first, paged; `total` with calculateTotal. */
+  async queryArchivedItemIds(accountId?: string, options: { position?: number; limit?: number; calculateTotal?: boolean } = {}): Promise<ArchiveQueryPage> {
+    const id = accountId || this.data.accountId;
+    if (!this.advertisesArchivedItems(id)) {
+      throw Object.assign(new Error('Archived items are not available for this account'), { type: 'forbidden' });
+    }
+    const ids = this.archive
+      .filter((a) => a.item.accountId === id)
+      .sort((a, b) => b.item.archivedAt.localeCompare(a.item.archivedAt))
+      .map((a) => a.item.id);
+    const position = options.position ?? 0;
+    return {
+      ids: ids.slice(position, options.limit ? position + options.limit : undefined),
+      total: options.calculateTotal ? ids.length : null,
+    };
+  }
+
+  private archiveIo(accountId: string): ArchiveIo {
+    return {
+      query: (position, limit) => this.queryArchivedItemIds(accountId, { position, limit, calculateTotal: true }),
+      // x:ArchivedItem/get
+      get: async (ids) => ids.flatMap((id) => {
+        const found = this.archive.find((a) => a.item.id === id);
+        return found ? [structuredClone(found.item)] : [];
+      }),
+    };
+  }
+
+  async listArchivedEmails(accountId?: string, options: { days?: number; startPosition?: number } = {}): Promise<ArchiveListResult> {
+    const id = accountId || this.data.accountId;
+    return listArchivedEmailsPaged(this.archiveIo(id), id, { days: options.days ?? 0, startPosition: options.startPosition });
+  }
+
+  async hasArchivedEmail(accountId?: string, options: { days?: number } = {}): Promise<boolean> {
+    const id = accountId || this.data.accountId;
+    return hasArchivedEmailIn(this.archiveIo(id), id, { days: options.days ?? 0 });
+  }
+
+  /**
+   * x:ArchivedItem/set `{ status: "requestRestore" }`: the item leaves the
+   * archive and the message is back in the Inbox, unread and without keywords.
+   */
+  async restoreArchivedItems(ids: string[], accountId?: string): Promise<RestoreResult[]> {
+    const id = accountId || this.data.accountId;
+    const results = ids.map((itemId): RestoreResult => {
+      const index = this.archive.findIndex((a) => a.item.id === itemId && a.item.accountId === id);
+      if (index < 0) return { id: itemId, ok: false, error: 'notFound', type: 'notFound' };
+      const [{ email }] = this.archive.splice(index, 1);
+      const restored = structuredClone(email);
+      this.deriveHeaderFields(restored);
+      this.data.emails.push(withEmlBlob(restored));
+      return { id: itemId, ok: true };
+    });
+    if (results.some((r) => r.ok)) {
+      this.recalcMailboxCounts();
+      this.stateChangeCallback?.({
+        '@type': 'StateChange',
+        changed: { [this.data.accountId]: { Email: generateDemoId('state'), Mailbox: generateDemoId('state') } },
+      });
+    }
+    return results;
   }
 
   // ── Internal helpers ──────────────────────────────────────────
