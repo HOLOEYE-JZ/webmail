@@ -296,6 +296,8 @@ interface EmailComposerProps {
     requireTls?: boolean;
     /** Importance / X-Priority; absent for normal (#970). */
     priority?: MessagePriority;
+    /** The id plugins know this composer by, for onAfterEmailSend. */
+    composerId?: string;
   }) => void | false | Promise<void | false>;
   onScheduledSendCreated?: () => void | Promise<void>;
   onClose?: () => void;
@@ -3667,6 +3669,7 @@ export function EmailComposer({
           requireTls: requireTls || undefined,
           priority: priority !== 'normal' ? priority : undefined,
           delayedUntil: effectiveDelayedUntil,
+          composerId: pluginComposerIdRef.current ?? undefined,
         });
         // Not when nothing went: no host, or one that sent nothing.
         if (draftElsewhere && onSend && outcome !== false) await removeDraftVersion(finalDraftId!, draftLogin, draftAccountAtSend);

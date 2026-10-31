@@ -5228,8 +5228,8 @@ export class JMAPClient implements IJMAPClient {
     // who doesn't.
     const rejectedRecipientsResult = rejected.length ? rejected : undefined;
     return delayedUntil
-      ? { scheduled: true, emailId: createdEmailId, emailSubmissionId, sendAt: serverSendAt, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult }
-      : { scheduled: false, emailId: createdEmailId, emailSubmissionId, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult };
+      ? { scheduled: true, emailId: createdEmailId, emailAccountId: targetAccountId, emailSubmissionId, sendAt: serverSendAt, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult }
+      : { scheduled: false, emailId: createdEmailId, emailAccountId: targetAccountId, emailSubmissionId, submissionAccountId, filingError, rejectedRecipients: rejectedRecipientsResult };
   }
 
   /**
@@ -11254,8 +11254,8 @@ export class JMAPClient implements IJMAPClient {
 
     const rejectedRecipientsResult = rejected.length ? rejected : undefined;
     return delayedUntil
-      ? { scheduled: true, emailId, emailSubmissionId, sendAt: serverSendAt, submissionAccountId, isSmime: true, rejectedRecipients: rejectedRecipientsResult }
-      : { scheduled: false, emailId, emailSubmissionId, submissionAccountId, isSmime: true, rejectedRecipients: rejectedRecipientsResult };
+      ? { scheduled: true, emailId, emailAccountId: this.accountId, emailSubmissionId, sendAt: serverSendAt, submissionAccountId, isSmime: true, rejectedRecipients: rejectedRecipientsResult }
+      : { scheduled: false, emailId, emailAccountId: this.accountId, emailSubmissionId, submissionAccountId, isSmime: true, rejectedRecipients: rejectedRecipientsResult };
   }
 
   /**

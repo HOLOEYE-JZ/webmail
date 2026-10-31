@@ -5509,13 +5509,17 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (!email) return false;
 
       const isFlagged = email.keywords.$flagged || false;
-      if (emailHooks.onBeforeEmailStarToggle.size > 0
-        && !(await emailHooks.onBeforeEmailStarToggle.intercept({ emailIds: [emailId], starred: !isFlagged }))) {
-        return false;
-      }
       // In unified view route to the email's own account client + owner accountId
       // (the reaching client's primary is not the owner for shared sources). (#281)
       const { client: actionClient, accountId } = resolveEmailActionContext(email, client);
+      // The hooks name the account as message-row-actions' click does: only
+      // when it is not the user's own, since ids repeat across accounts.
+      const hookAccountId = accountId && accountId !== actionClient.getAccountId?.() ? accountId : undefined;
+      const hookPayload = { emailIds: [emailId], starred: !isFlagged, ...(hookAccountId ? { accountId: hookAccountId } : {}) };
+      if (emailHooks.onBeforeEmailStarToggle.size > 0
+        && !(await emailHooks.onBeforeEmailStarToggle.intercept(hookPayload))) {
+        return false;
+      }
       await actionClient.toggleStar(emailId, !isFlagged, accountId);
 
       // Update local state
@@ -5535,7 +5539,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           emailId,
         ),
       }));
-      void emailHooks.onEmailStarToggle.emit({ emailIds: [emailId], starred: !isFlagged });
+      void emailHooks.onEmailStarToggle.emit(hookPayload);
       refillAfterKeywordChange(get, client, ['$flagged']);
     } catch (error) {
       set({
