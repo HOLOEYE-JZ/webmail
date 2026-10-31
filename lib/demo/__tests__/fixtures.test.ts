@@ -34,6 +34,7 @@ import { demoAt } from '../demo-utils';
 import type { BusyPeriod } from '@/lib/jmap/types';
 import { useRecoveryStore } from '@/stores/recovery-store';
 import { SUPPORT_TAGS } from '../fixtures/shared-metadata';
+import { SIGNED_EMAIL_ID, SIGNED_TEXT } from '../fixtures/signed';
 import { loadSharedTags, sharedTagsKey, useSharedTagsStore, saveSharedTags } from '@/stores/shared-tags-store';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
@@ -513,5 +514,29 @@ describe('demo fixtures: audience screenshots', () => {
     const names = (await client.getBulwarkMetadata!(SUPPORT_ACCOUNT_ID))!['plugin.team-inbox'] as { people: Record<string, { n: string }> };
     expect(names.people[PRINCIPAL.bob].n).toBe(BOB.name);
     expect((await client.getPrincipals()).find((p) => p.id === PRINCIPAL.bob)?.email).toBe(BOB.email);
+  });
+
+  it('Alice\'s S/MIME signed mail is multipart/signed with smime.p7s, and the raw message behind it matches', async () => {
+    const client = new DemoJMAPClient('work');
+    const email = (await client.getEmail(SIGNED_EMAIL_ID))!;
+    expect(email.from?.[0].email).toBe(ALICE.email);
+    expect(email.headers?.['Content-Type']).toMatch(/^multipart\/signed;.*protocol="application\/pkcs7-signature"/);
+    expect(email.bodyStructure?.type).toBe('multipart/signed');
+    const sigPart = email.bodyStructure?.subParts?.find((p) => p.type === 'application/pkcs7-signature');
+    expect(sigPart?.name).toBe('smime.p7s');
+    expect(email.attachments?.map((a) => a.name)).toEqual(['smime.p7s']);
+
+    // The plugin verifies the raw message the blobId names.
+    const asset = DEMO_ASSETS[email.blobId as keyof typeof DEMO_ASSETS];
+    expect(asset?.path).toBe('/demo/beacon-security-signoff.eml');
+    const eml = fs.readFileSync(path.join(PUBLIC, asset.path)).toString('latin1');
+    expect(eml).toContain(`From: Alice Johnson <${ALICE.email}>`);
+    const boundary = /boundary="([^"]+)"/.exec(eml)![1];
+    const [, entity, signaturePart] = eml.split(`--${boundary}`);
+    // The signed text is the text the viewer shows.
+    expect(entity.split('\r\n\r\n').slice(1).join('\r\n\r\n').replace(/\r\n/g, '\n').trim()).toBe(SIGNED_TEXT.trim());
+    // And its smime.p7s is the attachment's file, byte for byte.
+    const der = Buffer.from(signaturePart.split('\r\n\r\n')[1].replace(/\s+/g, ''), 'base64');
+    expect(der.equals(fs.readFileSync(path.join(PUBLIC, DEMO_ASSETS[sigPart!.blobId as keyof typeof DEMO_ASSETS].path)))).toBe(true);
   });
 });
