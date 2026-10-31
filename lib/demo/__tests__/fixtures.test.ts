@@ -30,13 +30,16 @@ import { MAILBOX_PRESETS } from '@/lib/jmap/share-rights';
 import { principalLabel, shareRecipientNames } from '@/hooks/use-share-recipient-labels';
 import { checkAvailabilityAccess, lookUpAvailability } from '@/lib/jmap/free-busy';
 import { availabilityFor } from '@/components/calendar/participant-availability';
-import { demoAt } from '../demo-utils';
+import { demoAt, demoISODate } from '../demo-utils';
 import type { BusyPeriod } from '@/lib/jmap/types';
 import { useRecoveryStore } from '@/stores/recovery-store';
 import { SUPPORT_TAGS } from '../fixtures/shared-metadata';
 import { SIGNED_EMAIL_ID, SIGNED_TEXT } from '../fixtures/signed';
 import { INVOICE_BLOB, INVOICE_FILE, INVOICE_TOTAL, createSpreehostInvoiceXml } from '../fixtures/invoice';
 import { INVOICE_EMAIL_ID } from '../fixtures/supplier';
+import { FLIGHT_DAY, FLIGHT_EMAIL_ID, FLIGHT_REFERENCE, FLIGHT_SENDER, createFlightReservation } from '../fixtures/travel';
+import { getStructuredMailTrust, structuredHtmlPart } from '@/lib/structured-mail/trust';
+import { loadAirportZones, readStructuredMailDetailed, resolveCards } from '@/lib/structured-mail';
 import { loadSharedTags, sharedTagsKey, useSharedTagsStore, saveSharedTags } from '@/stores/shared-tags-store';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
@@ -569,5 +572,27 @@ describe('demo fixtures: audience screenshots', () => {
     const today = new Date().toLocaleDateString('sv-SE');
     expect(one('IssueDate') < today).toBe(true);
     expect(one('DueDate') > today).toBe(true);
+  });
+
+  it('Tagus Air\'s booking mail carries a flight the booking card trusts and shows', async () => {
+    const client = new DemoJMAPClient('work');
+    const email = (await client.getEmail(FLIGHT_EMAIL_ID))!;
+    expect(email.mailboxIds[MB.inbox]).toBe(true);
+    expect(email.from?.[0].email).toBe(FLIGHT_SENDER.email);
+    expect(email.headers?.['Authentication-Results']).toContain('dkim=pass header.d=tagusair.example');
+    const html = structuredHtmlPart(email)!.value;
+    expect(html).toContain(`<script type="application/ld+json">${JSON.stringify(createFlightReservation())}</script>`);
+    // What the viewer's useStructuredMail does: trust, read, resolve the airport zones.
+    expect(getStructuredMailTrust(email)).toEqual({ trusted: true });
+    const { cards } = readStructuredMailDetailed(html, { mailDate: new Date(email.sentAt ?? email.receivedAt) });
+    const [card] = resolveCards(cards, await loadAirportZones());
+    expect(card?.kind).toBe('flight');
+    if (card?.kind !== 'flight') return;
+    expect(card.reference).toBe(FLIGHT_REFERENCE);
+    expect(card.links.checkin?.url).toContain('tagusair.example');
+    const [leg] = card.legs;
+    expect([leg.carrierCode, leg.number, leg.departure.place.code, leg.arrival?.place.code]).toEqual(['TQ', '482', 'LIS', 'BER']);
+    expect(leg.departure.at).toMatchObject({ date: demoISODate(FLIGHT_DAY).slice(0, 10), time: '17:10:00', zone: 'Europe/Lisbon' });
+    expect(leg.arrival?.at).toMatchObject({ time: '21:35:00', zone: 'Europe/Berlin' });
   });
 });
