@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Zjednotená schránka",
-        "description": "Zobrazovať zlúčené priečinky (Doručené, Odoslané atd.) zo všetkých pripojených účtov",
+        "description": "Zobrazovať zlúčené priečinky (Doručené, Odoslané atď.) aktívneho účtu a jeho zdieľaných priečinkov. Sekcia sa zobrazí, len keď je čo zlučovať: je zapnuté „Naprieč všetkými účtami“ a pripojený je viac ako jeden účet, nižšie je zahrnutá skupinová schránka, alebo je zapnutá Všetka pošta, Neprečítané či S hviezdičkou. Tieto tri sú samostatné voľby, ktoré sa zobrazia až potom, čo ich zapne správca.",
         "cross_account": {
           "label": "Naprieč všetkými účtami",
           "description": "Zlúčiť zjednotenú schránku naprieč všetkými pripojenými účtami namiesto zotrvania v aktívnom účte."

@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Caixa de correio unificada",
-        "description": "Mostrar pastas combinadas (Entrada, Enviados, etc.) de todas as contas conectadas",
+        "description": "Mostrar pastas combinadas (Entrada, Enviados, etc.) da conta ativa e das suas pastas partilhadas. A secção só aparece quando há algo para combinar: «Todas as contas» está ativado com mais de uma conta ligada, uma caixa de grupo está incluída abaixo, ou Todo o correio, Não lido ou Com estrela está ativado. Estas três são opções separadas que só aparecem depois de o administrador as ativar.",
         "cross_account": {
           "label": "Todas as contas",
           "description": "Unifique a caixa de correio em todas as contas conectadas, em vez de permanecer apenas na conta ativa."

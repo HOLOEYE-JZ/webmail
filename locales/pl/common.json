@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Wspólna skrzynka",
-        "description": "Wyświetlaj połączone foldery (Odebrane, Wysłane itp.) ze wszystkich połączonych kont",
+        "description": "Wyświetlaj połączone foldery (Odebrane, Wysłane itp.) aktywnego konta i jego udostępnionych folderów. Sekcja pojawia się tylko wtedy, gdy jest co połączyć: włączone jest łączenie wszystkich kont i połączono więcej niż jedno konto, poniżej uwzględniono skrzynkę grupową albo włączono Całą pocztę, Nieprzeczytane lub Oznaczone gwiazdką. Te trzy to osobne opcje, które pojawiają się dopiero wtedy, gdy włączy je administrator.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

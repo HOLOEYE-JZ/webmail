@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Bústia unificada",
-        "description": "Mostra carpetes combinades (Safata d'entrada, Enviats, etc.) del compte actiu i les seves carpetes compartides.",
+        "description": "Mostra carpetes combinades (Safata d'entrada, Enviats, etc.) del compte actiu i les seves carpetes compartides. La secció només apareix quan hi ha alguna cosa per combinar: «En tots els comptes» activat amb més d'un compte connectat, una safata d'entrada de grup inclosa a sota, o Tot el correu, No llegits o Destacats activat. Aquestes tres són opcions separades que només apareixen quan l'administrador les activa.",
         "cross_account": {
           "label": "En tots els comptes",
           "description": "Combina la bústia unificada de tots els comptes connectats en lloc de limitar-la al compte actiu."

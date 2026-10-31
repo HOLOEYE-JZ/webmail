@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Samlet postkasse",
-        "description": "Vis kombinerte mapper (innboks, sendt osv.) for den aktive kontoen og dens delte mapper.",
+        "description": "Vis kombinerte mapper (innboks, sendt osv.) for den aktive kontoen og dens delte mapper. Delen vises bare når det er noe å kombinere: «På tvers av alle kontoer» er på og mer enn én konto er tilkoblet, en gruppeinnboks er tatt med nedenfor, eller All e-post, Ulest eller Stjernemerket er på. Disse tre er egne valg som bare vises når administratoren slår dem på.",
         "cross_account": {
           "label": "På tvers av alle kontoer",
           "description": "Slå sammen den samlede postkassen på tvers av alle tilkoblede kontoer, i stedet for å begrense den til den aktive kontoen."

@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Boîte aux lettres unifiée",
-        "description": "Afficher les dossiers combinés (Réception, Envoyés, etc.) de tous les comptes connectés",
+        "description": "Afficher les dossiers combinés (Réception, Envoyés, etc.) du compte actif et de ses dossiers partagés. La section n’apparaît que s’il y a quelque chose à combiner : la fusion de tous les comptes est activée avec plus d’un compte connecté, une boîte de groupe est incluse ci-dessous, ou Tout le courrier, Non lus ou Favoris est activé. Ces trois options sont distinctes et n’apparaissent qu’une fois activées par votre administrateur.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

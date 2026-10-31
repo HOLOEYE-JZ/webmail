@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Casella di posta unificata",
-        "description": "Mostra le cartelle combinate (Posta in arrivo, Inviati, ecc.) di tutti gli account collegati",
+        "description": "Mostra le cartelle combinate (Posta in arrivo, Inviati, ecc.) dell'account attivo e delle sue cartelle condivise. La sezione compare solo quando c'è qualcosa da combinare: l'unione di tutti gli account è attiva con più di un account collegato, sotto è inclusa una casella di gruppo, oppure è attivo Tutta la posta, Non letti o Speciali. Queste tre sono opzioni a parte che compaiono solo dopo che l'amministratore le ha attivate.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

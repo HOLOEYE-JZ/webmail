@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Buzón unificado",
-        "description": "Mostrar carpetas combinadas (Entrada, Enviados, etc.) de todas las cuentas conectadas",
+        "description": "Mostrar carpetas combinadas (Entrada, Enviados, etc.) de la cuenta activa y sus carpetas compartidas. La sección solo aparece cuando hay algo que combinar: la combinación de todas las cuentas está activada con más de una cuenta conectada, se incluye abajo un buzón de grupo, o Todo el correo, No leído o Destacado está activado. Esas tres son opciones aparte que solo aparecen cuando tu administrador las activa.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "统一邮箱",
-        "description": "显示所有已连接账户的合并文件夹（收件箱、已发送等）",
+        "description": "显示当前账户及其共享文件夹的合并文件夹（收件箱、已发送等）。只有在有内容可合并时才会显示此部分：开启跨所有账户合并且连接了多个账户、在下方包含群组收件箱，或开启全部邮件、未读或加星标。这三项是单独的选项，需由管理员开启后才会出现。",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

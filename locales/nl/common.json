@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Gecombineerd postvak",
-        "description": "Gecombineerde mappen (Postvak IN, Verzonden, enz.) van alle verbonden accounts weergeven",
+        "description": "Gecombineerde mappen (Postvak IN, Verzonden, enz.) tonen voor het actieve account en zijn gedeelde mappen. Het onderdeel verschijnt alleen als er iets te combineren valt: samenvoegen over alle accounts staat aan en er is meer dan één account verbonden, hieronder is een groepspostvak meegenomen, of Alle e-mail, Ongelezen of Met ster staat aan. Die drie zijn aparte opties die pas verschijnen als je beheerder ze aanzet.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

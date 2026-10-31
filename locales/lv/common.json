@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Apvienotā pastkaste",
-        "description": "Rādīt apvienotās mapes (Iesūtne, Nosūtītie u.c.) no visiem pievienotajiem kontiem",
+        "description": "Rādīt apvienotās mapes (Iesūtne, Nosūtītie u.c.) aktīvajam kontam un tā koplietotajām mapēm. Sadaļa parādās tikai tad, kad ir ko apvienot: ir ieslēgta visu kontu apvienošana un pievienots vairāk nekā viens konts, zemāk ir iekļauta grupas pastkaste, vai ir ieslēgtas Visas vēstules, Nelasītie vai Ar zvaigzni. Šīs trīs ir atsevišķas iespējas, kas parādās tikai pēc tam, kad tās ieslēdz administrators.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

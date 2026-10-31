@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Egységes postafiók",
-        "description": "Összevont mappák (Beérkező, Elküldött, stb.) megjelenítése az összes csatlakoztatott fiók között",
+        "description": "Összevont mappák (Beérkező, Elküldött stb.) megjelenítése az aktív fiókhoz és a megosztott mappáihoz. A szakasz csak akkor jelenik meg, ha van mit összevonni: be van kapcsolva az összes fiók összevonása, és egynél több fiók csatlakozik, lent egy csoportos postafiók is bele van foglalva, vagy be van kapcsolva az Összes levél, az Olvasatlan vagy a Csillagozott. Ez a három külön beállítás, és csak akkor jelenik meg, ha a rendszergazda bekapcsolja.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

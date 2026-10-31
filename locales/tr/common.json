@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "Birleşik Posta Kutusu",
-        "description": "Bağlı tüm hesaplardaki birleşik klasörleri (Gelen Kutusu, Gönderilenler vb.) göster",
+        "description": "Etkin hesabın ve paylaşılan klasörlerinin birleşik klasörlerini (Gelen Kutusu, Gönderilenler vb.) göster. Bölüm yalnızca birleştirilecek bir şey olduğunda görünür: tüm hesapları birleştirme açıksa ve birden fazla hesap bağlıysa, aşağıda bir grup gelen kutusu dahil edilmişse ya da Tüm postalar, Okunmamış veya Yıldızlı açıksa. Bu üçü ayrı seçeneklerdir ve yalnızca yöneticiniz açtıktan sonra görünür.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

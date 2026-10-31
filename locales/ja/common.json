@@ -1503,7 +1503,7 @@
       },
       "unified_mailbox": {
         "label": "統合メールボックス",
-        "description": "接続されたすべてのアカウントの統合フォルダ（受信トレイ、送信済みなど）を表示",
+        "description": "アクティブなアカウントとその共有フォルダーの統合フォルダー（受信トレイ、送信済みなど）を表示します。このセクションは、まとめる対象があるときだけ表示されます。すべてのアカウントの統合がオンで複数のアカウントが接続されている場合、下でグループ受信トレイを含めている場合、またはすべてのメール・未読・スター付きのいずれかがオンの場合です。この 3 つは個別のオプションで、管理者がオンにするまで表示されません。",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Căsuță poștală unificată",
-        "description": "Afișați folderele combinate (Mesaje primite, Mesaje trimise etc.) pentru toate conturile conectate",
+        "description": "Afișați folderele combinate (Mesaje primite, Mesaje trimise etc.) pentru contul activ și folderele sale partajate. Secțiunea apare doar când există ceva de combinat: combinarea tuturor conturilor este activată și sunt conectate mai multe conturi, o căsuță de e-mail de grup este inclusă mai jos, sau Toată poșta, Necitite ori Cu stea este activată. Acestea trei sunt opțiuni separate, care apar doar după ce administratorul le activează.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."

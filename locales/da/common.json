@@ -1506,7 +1506,7 @@
       },
       "unified_mailbox": {
         "label": "Samlet postkasse",
-        "description": "Vis samlede mapper (Indbakke, Sendt osv.) på tværs af alle tilknyttede konti",
+        "description": "Vis samlede mapper (Indbakke, Sendt osv.) for den aktive konto og dens delte mapper. Sektionen vises kun, når der er noget at samle: sammenlægning på tværs af alle konti er slået til med mere end én tilknyttet konto, en gruppepostkasse er inkluderet nedenfor, eller Al post, Ulæste eller Med stjerne er slået til. De tre er særskilte valg, som først vises, når din administrator slår dem til.",
         "cross_account": {
           "label": "Across all accounts",
           "description": "Merge the unified mailbox across every connected account instead of staying within the active account."
