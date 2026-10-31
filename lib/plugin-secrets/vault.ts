@@ -40,7 +40,7 @@ type VaultData = Record<string, Record<string, StoredCredential>>;
 /** Cap on credentials per user, across all plugins. */
 export const MAX_USER_CREDENTIALS = 64;
 
-function vaultDir(): string {
+export function vaultDir(): string {
   return process.env.PLUGIN_SECRETS_DIR
     || path.join(process.env.SETTINGS_DATA_DIR || path.join(process.cwd(), 'data', 'settings'), '..', 'plugin-secrets');
 }

@@ -21,6 +21,9 @@ services:
       # Anonymous telemetry: instance id, consent state, login HMACs (TELEMETRY_DATA_DIR).
       # Persisting this preserves the admin's consent choice and stable instance id across upgrades.
       - bulwark-telemetry:/app/data/telemetry
+      # Credentials users save for plugins, encrypted (PLUGIN_SECRETS_DIR).
+      # Without this volume they are lost whenever the container is recreated.
+      - bulwark-plugin-secrets:/app/data/plugin-secrets
     healthcheck:
       test:
         [
@@ -42,3 +45,4 @@ volumes:
   bulwark-admin:
   bulwark-admin-state:
   bulwark-telemetry:
+  bulwark-plugin-secrets:

@@ -7,7 +7,7 @@ import type { TelemetryStateFile, ConsentState } from './types';
 import { DEFAULT_ENDPOINT } from './types';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
 
-function getDir(): string {
+export function getDir(): string {
   return process.env.TELEMETRY_DATA_DIR ||
     path.join(process.cwd(), 'data', 'telemetry');
 }
