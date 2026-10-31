@@ -28,6 +28,10 @@ import { confirmGroups } from '@/lib/plugin-sandbox/account-kind';
 import { summarizeDelegates } from '@/lib/delegation/delegation';
 import { MAILBOX_PRESETS } from '@/lib/jmap/share-rights';
 import { principalLabel, shareRecipientNames } from '@/hooks/use-share-recipient-labels';
+import { checkAvailabilityAccess, lookUpAvailability } from '@/lib/jmap/free-busy';
+import { availabilityFor } from '@/components/calendar/participant-availability';
+import { demoAt } from '../demo-utils';
+import type { BusyPeriod } from '@/lib/jmap/types';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
 const work = getDemoData('work');
@@ -404,5 +408,29 @@ describe('demo fixtures: audience screenshots', () => {
     expect(shareRecipientNames(own.shareWith, labels)).toEqual([`${ALICE.email} (${ALICE.name})`]);
     const [alice] = summarizeDelegates((await client.getShareTargets()).targets, [client.getAccountId()]);
     expect(alice.calendars.shared).toBe(1);
+  });
+
+  it('inviting Alice, Bob and Priya shows their free/busy: busy, free and tentative at 11:00 today', async () => {
+    const client = new DemoJMAPClient('work');
+    // The gate in components/calendar/participant-availability.tsx.
+    expect(!!client.supportsAvailability?.() && !!client.getPrincipalsAvailability).toBe(true);
+    expect(await checkAvailabilityAccess(client)).toBe(true);
+    const ids = [PRINCIPAL.alice, PRINCIPAL.bob, PRINCIPAL.priya];
+    // Every day of the demo's working week has something, so no one shows "No busy times".
+    for (const day of [0, 1, 2, 3]) {
+      const answers = await lookUpAvailability(client, ids, new Date(demoAt(day, 9)), new Date(demoAt(day, 10)));
+      for (const id of ids) {
+        const answer = answers[id];
+        expect('periods' in answer && answer.periods.length > 0, `${id} on day ${day}`).toBe(true);
+      }
+    }
+    const start = new Date(demoAt(0, 11));
+    const end = new Date(demoAt(0, 12));
+    const answers = await client.getPrincipalsAvailability!(ids, new Date(demoAt(0, 0)), new Date(demoAt(1, 0)));
+    const status = (id: string) => availabilityFor((answers[id] as { periods: BusyPeriod[] }).periods, start, end);
+    expect([status(PRINCIPAL.alice), status(PRINCIPAL.bob), status(PRINCIPAL.priya)]).toEqual(['busy', 'free', 'tentative']);
+    // The team meetings on the calendar count too: everyone is in the Beacon weekly at 10:00.
+    const weekly = (id: string) => availabilityFor((answers[id] as { periods: BusyPeriod[] }).periods, new Date(demoAt(0, 10)), new Date(demoAt(0, 11)));
+    expect(ids.map(weekly)).toEqual(['busy', 'busy', 'busy']);
   });
 });

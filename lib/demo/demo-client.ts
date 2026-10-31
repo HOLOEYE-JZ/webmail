@@ -1,9 +1,12 @@
 import type { IJMAPClient, KeywordDiscoveryResult, KeywordMigration } from '@/lib/jmap/client-interface';
-import type { AccountInfo, Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarRights, CalendarTask, FileNode, FileNodeRights, MailboxRights, Principal, PrincipalListing, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
+import type { AccountInfo, Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, CalendarRights, CalendarTask, BusyPeriod, FileNode, FileNodeRights, MailboxRights, Principal, PrincipalAvailability, PrincipalListing, ScheduledEmail, SendEmailResult, SharedAccount } from '@/lib/jmap/types';
 import type { SieveScript, SieveCapabilities } from '@/lib/jmap/sieve-types';
 import type { ShareChange, ShareChangeResult, ShareTarget } from '@/lib/jmap/share-batch';
 import type { AnyRights, ShareKind } from '@/lib/jmap/share-rights';
 import { createDemoPrincipals } from './fixtures/directory';
+import { createDemoBusyBlocks } from './fixtures/availability';
+import { expandRecurringEvents } from '@/lib/recurrence-expansion';
+import { parseDurationSeconds } from '@/lib/calendar-event-normalization';
 import { getDemoData, demoSharedAccounts, type DemoData, type DemoProfile } from './demo-data';
 import { generateDemoId } from './demo-utils';
 import { DEMO_ASSETS } from './fixtures/assets';
@@ -154,6 +157,7 @@ export class DemoJMAPClient implements IJMAPClient {
         'urn:ietf:params:jmap:sieve': {},
         'urn:ietf:params:jmap:files': {},
         'urn:ietf:params:jmap:principals': {},
+        'urn:ietf:params:jmap:principals:availability': {},
         'urn:ietf:params:jmap:mail:share': {},
       }),
     };
@@ -259,6 +263,55 @@ export class DemoJMAPClient implements IJMAPClient {
       this.setShare(change.kind, change.id, change.principalId, change.rights, change.accountId);
       return { change, ok: true };
     });
+  }
+
+  // ── Free/busy (Principal/getAvailability) ─────────────────────
+
+  supportsAvailability(): boolean { return this.supportsPrincipals(); }
+  async mayGetAvailability(): Promise<boolean> { return this.supportsAvailability(); }
+
+  async getPrincipalAvailability(principalId: string, utcStart: Date, utcEnd: Date): Promise<BusyPeriod[]> {
+    const answer = (await this.getPrincipalsAvailability([principalId], utcStart, utcEnd))[principalId];
+    if (!answer || 'error' in answer) throw Object.assign(new Error('Failed to query availability'), { type: answer?.error ?? 'notFound' });
+    return answer.periods;
+  }
+
+  async getPrincipalsAvailability(principalIds: string[], utcStart: Date, utcEnd: Date): Promise<Record<string, PrincipalAvailability>> {
+    const results: Record<string, PrincipalAvailability> = {};
+    if (!this.supportsAvailability()) return results;
+    for (const id of principalIds) {
+      const principal = this.principals.find((p) => p.id === id);
+      results[id] = principal ? { periods: this.busyPeriods(principal, utcStart, utcEnd) } : { error: 'notFound' };
+    }
+    return results;
+  }
+
+  /**
+   * A principal's busy time in the window: the timed events on the demo
+   * calendars they take part in (Nora: also those of her own calendars
+   * without participants), unless declined or marked free, plus their
+   * blocks in fixtures/availability.ts. No details, as with `showDetails: false`.
+   */
+  private busyPeriods(principal: Principal, utcStart: Date, utcEnd: Date): BusyPeriod[] {
+    const email = principal.email?.toLowerCase();
+    const isSelf = principal.id === this.data.accountId;
+    const counting = new Set(this.data.calendars.filter((c) => c.includeInAvailability !== 'none').map((c) => c.id));
+    const periods: BusyPeriod[] = [];
+    for (const event of expandRecurringEvents(this.data.calendarEvents, utcStart.toISOString(), utcEnd.toISOString())) {
+      if (event.showWithoutTime || event.freeBusyStatus === 'free' || event.status === 'cancelled') continue;
+      if (!Object.keys(event.calendarIds).some((id) => counting.has(id))) continue;
+      const me = Object.values(event.participants ?? {}).find((p) => p.email?.toLowerCase() === email);
+      if (!me && !(isSelf && !event.participants)) continue;
+      if (me?.participationStatus === 'declined') continue;
+      const start = event.utcStart ?? new Date(event.start).toISOString();
+      const end = event.utcEnd ?? new Date(new Date(start).getTime() + (parseDurationSeconds(event.duration) ?? 3600) * 1000).toISOString();
+      const tentative = event.status === 'tentative' || me?.participationStatus === 'tentative' || me?.participationStatus === 'needs-action';
+      periods.push({ utcStart: start, utcEnd: end, busyStatus: tentative ? 'tentative' : 'confirmed' });
+    }
+    periods.push(...createDemoBusyBlocks(principal.id));
+    return periods
+      .filter((p) => new Date(p.utcStart).getTime() < utcEnd.getTime() && new Date(p.utcEnd).getTime() > utcStart.getTime())
+      .sort((a, b) => a.utcStart.localeCompare(b.utcStart));
   }
 
   /** One of Nora's own shareable items, or null (another account's, or unknown). */
