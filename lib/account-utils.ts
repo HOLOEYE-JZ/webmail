@@ -139,6 +139,36 @@ export function getMaxAccounts(): number {
   return isHttp2Available() ? MAX_ACCOUNT_SLOTS : MAX_ACCOUNTS_HTTP1;
 }
 
+/** Minimal shape needed to name an account in a list (structural — avoids importing AccountEntry). */
+export interface NamedAccount {
+  id: string;
+  displayName?: string;
+  label: string;
+  email?: string;
+  username: string;
+}
+
+/**
+ * The bold title and the line under it for an account in a list. Usually the
+ * name over the address. One person signed in to two mailboxes has the same
+ * name, and often the same picture, on both, so the rows only differed in the
+ * small address line: when another account shares the name, the address
+ * becomes the title and the name is left out. A name that is just the address
+ * again is left out too.
+ */
+export function accountRowText(
+  account: NamedAccount,
+  accounts: NamedAccount[],
+): { title: string; subtitle: string | null } {
+  const key = (value: string) => value.trim().toLowerCase();
+  const nameOf = (a: NamedAccount) => a.displayName || a.label;
+  const name = nameOf(account);
+  const address = account.email || account.username;
+  const shared = accounts.some((a) => a.id !== account.id && key(nameOf(a)) === key(name));
+  if (!name || shared || key(name) === key(address)) return { title: address, subtitle: null };
+  return { title: name, subtitle: address };
+}
+
 /** Minimal shape needed to order accounts (structural — avoids importing AccountEntry). */
 export interface OrderableAccount {
   id: string;

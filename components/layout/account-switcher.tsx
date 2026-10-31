@@ -10,7 +10,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { HelpMenuItems } from "@/components/layout/help-links";
-import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds } from "@/lib/account-utils";
+import { getMaxAccounts, sortDefaultFirst, reorderNonDefaultIds, accountRowText } from "@/lib/account-utils";
 import { inboxUnread, totalInboxUnread } from "@/lib/account-inbox-unread";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
@@ -267,7 +267,10 @@ export function AccountSwitcher({
   // primaryIdentity can be an alias (e.g. info@korazo.net) that differs from
   // the actually logged-in account (info@linusrath.de).
   // IDN domains arrive in their ASCII (xn--) form; show them as written (#1100).
-  const displayName = toUnicodeEmail(activeAccount?.displayName || activeAccount?.label || "");
+  // A name another account shares gives way to the address (accountRowText).
+  const activeText = activeAccount ? accountRowText(activeAccount, accounts) : null;
+  const displayName = toUnicodeEmail(activeText?.title || "");
+  const displaySubtitle = toUnicodeEmail(activeText?.subtitle || "");
   const displayEmail = toUnicodeEmail(activeAccount?.email || activeAccount?.username || "");
 
   // Mountain View leads its popover with the account you are already in - large avatar,
@@ -303,7 +306,7 @@ export function AccountSwitcher({
             : "w-full px-2 py-1.5 hover:bg-muted text-start min-w-0",
           className
         )}
-        title={variant !== "expanded" ? (displayName || displayEmail) : undefined}
+        title={variant !== "expanded" ? displayName : undefined}
         aria-label={t("switch_account")}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -316,7 +319,7 @@ export function AccountSwitcher({
               <>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
+                  {displaySubtitle && <p className="text-xs text-muted-foreground truncate">{displaySubtitle}</p>}
                 </div>
                 <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground flex-shrink-0 transition-transform", open && "rotate-180")} />
               </>
@@ -367,8 +370,8 @@ export function AccountSwitcher({
             <div className="flex items-center gap-4 rounded-t-3xl bg-background px-4 pt-4 pb-3" data-mv-account-current="">
               <AccountAvatar account={activeAccount} size="xl" />
               <div className="min-w-0 flex-1">
-                <p className="text-lg leading-6 truncate">{displayName || displayEmail}</p>
-                {displayName && <p className="text-sm text-muted-foreground truncate">{displayEmail}</p>}
+                <p className="text-lg leading-6 truncate">{displayName}</p>
+                {displaySubtitle && <p className="text-sm text-muted-foreground truncate">{displaySubtitle}</p>}
               </div>
             </div>
           )}
@@ -407,6 +410,7 @@ export function AccountSwitcher({
             {listedAccounts.map((account) => {
               const isActive = account.id === activeAccountId;
               const isDraggable = !account.isDefault && accounts.length > 2;
+              const text = accountRowText(account, accounts);
               return (
                 <div
                   key={account.id}
@@ -447,16 +451,18 @@ export function AccountSwitcher({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
                       <span className="text-sm font-medium truncate">
-                        {toUnicodeEmail(account.displayName || account.label)}
+                        {toUnicodeEmail(text.title)}
                       </span>
                       {account.isDefault && (
                         <Star className="w-3 h-3 text-amber-500 flex-shrink-0 fill-amber-500" />
                       )}
                       <UnreadBadge count={unreadFor(account)} />
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {toUnicodeEmail(account.email || account.username)}
-                    </p>
+                    {text.subtitle && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {toUnicodeEmail(text.subtitle)}
+                      </p>
+                    )}
                     {/* Server and connection state: Mountain View keeps the line
                         only for an account in trouble. */}
                     <div className={cn("flex items-center gap-1 mt-0.5", mvPopover && !account.hasError && "hidden")}>

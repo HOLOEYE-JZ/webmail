@@ -6,6 +6,7 @@ import type { ParsedMailto } from "@/lib/protocol-handlers/mailto";
 import type { ParsedWebcal } from "@/lib/protocol-handlers/webcal";
 import type { AccountEntry } from "@/stores/account-store";
 import { cn } from "@/lib/utils";
+import { accountRowText } from "@/lib/account-utils";
 import { Avatar } from "@/components/ui/avatar";
 import { useId } from "react";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -108,6 +109,7 @@ export function ProtocolAccountPicker({
         <div className="max-h-80 overflow-y-auto p-2">
           {accounts.map((account) => {
             const isActive = account.id === activeAccountId;
+            const text = accountRowText(account, accounts);
             let host = account.serverUrl;
             try {
               host = new URL(account.serverUrl).hostname;
@@ -142,7 +144,7 @@ export function ProtocolAccountPicker({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-medium text-foreground">
-                      {account.displayName || account.label}
+                      {text.title}
                     </span>
                     {isActive && (
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.625rem] font-medium text-primary">
@@ -150,7 +152,7 @@ export function ProtocolAccountPicker({
                       </span>
                     )}
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">{account.email || account.username}</p>
+                  {text.subtitle && <p className="truncate text-xs text-muted-foreground">{text.subtitle}</p>}
                   <p className="truncate text-[0.625rem] text-muted-foreground">{host}</p>
                 </div>
               </button>
