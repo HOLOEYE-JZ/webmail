@@ -20,6 +20,7 @@ import { resolveDateLocale } from '../utils';
 import { tablesFor } from './plugin-i18n';
 import { getEffectiveTimeZone } from '../timezone';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
+import { reportFrameActivity } from '@/lib/session-policy/frame-activity';
 import { useSettingsStore, type DateLocale } from '@/stores/settings-store';
 import type {
   SandboxToHost, HostToSandbox, InitMsg, InitPayload, StreamChunkMsg, StreamEndMsg, StreamProgressMsg,
@@ -298,6 +299,10 @@ export class SandboxInstance {
   private rejectInit!: (err: Error) => void;
   private listener: (ev: MessageEvent) => void;
   private destroyed = false;
+  /** The frame has said sandbox-ready. */
+  private ready = false;
+  /** The runtime's activity reports (see ReadyMsg). */
+  private activityPort: MessagePort | null = null;
   /** The frame has answered init-done: its hooks and slots are in place. */
   private initialized = false;
 
@@ -463,6 +468,11 @@ export class SandboxInstance {
 
     switch (msg.type) {
       case 'sandbox-ready':
+        // Only the first one is the runtime's, posted before any plugin code
+        // ran; the plugin could post another, with a port of its own.
+        if (this.ready) return;
+        this.ready = true;
+        this.listenForActivity(ev.ports?.[0]);
         this.resolveReady();
         return;
 
@@ -559,6 +569,19 @@ export class SandboxInstance {
         return;
       }
     }
+  }
+
+  /**
+   * Input in the frame counts for the idle timeout like input in the host
+   * window. The runtime throttles its reports; the session timeout guard
+   * throttles again and decides what counts.
+   */
+  private listenForActivity(port: MessagePort | undefined): void {
+    if (!port) return;
+    this.activityPort = port;
+    port.onmessage = () => {
+      if (!this.destroyed) reportFrameActivity();
+    };
   }
 
   // ─── Public ─────────────────────────────────────────────────
@@ -698,6 +721,8 @@ export class SandboxInstance {
     this.rejectInit(new Error('sandbox destroyed'));
     liveInstances.delete(this);
     window.removeEventListener('message', this.listener);
+    this.activityPort?.close();
+    this.activityPort = null;
     this.iframe.remove();
     for (const { reject } of this.pendingHookInvokes.values()) {
       reject(new Error('sandbox destroyed'));
