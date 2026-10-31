@@ -984,7 +984,7 @@ const DEFAULT_SETTINGS = {
 
   // Sidebar
   colorfulSidebarIcons: true,
-  tintListRowsByTag: true,
+  tintListRowsByTag: false,
   tintListRowsByAccount: false,
   showAccountDot: true,
   showFolderTotalCount: true,
@@ -1496,6 +1496,7 @@ export const useSettingsStore = create<SettingsState>()(
           }
           migrateAnimationsSetting(settings);
           migrateNotificationSoundDefault(settings);
+          migrateTintListRowsDefault(settings);
 
           // Apply settings, noting which keys were taken over for the
           // onSettingsImport hook.
@@ -1897,7 +1898,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 10,
+      version: 11,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -1995,9 +1996,11 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         if (version < 6 || !isPlainRecord(state.preferredIdentityIds)) {
           state.preferredIdentityIds = {};
         }
-        // Before the v8 step: a beep from before explicitSettings existed was
-        // the default then, and must not be taken as chosen below.
+        // Before the v8 step: a beep or a tinted list from before
+        // explicitSettings existed was the default then, and must not be
+        // taken as chosen below.
         migrateNotificationSoundDefault(state);
+        migrateTintListRowsDefault(state);
         // v8: admin policy defaults (#1248) skip settings the user chose.
         // Earlier builds did not record that, so a setting that differs from
         // the build default is taken as chosen.
@@ -2034,6 +2037,18 @@ export function migrateNotificationSoundDefault(state: Record<string, unknown>):
   if (state.notificationSoundChoice !== 'default') return;
   const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('notificationSoundChoice');
   if (!chosen) state.notificationSoundChoice = 'involved';
+}
+
+/**
+ * v11: list rows no longer take their first tag's color by default. A tint
+ * the user never switched on was only the old default and goes; one they
+ * switched on stays. Imports and server copies from older builds still
+ * carry the tint and go through this too.
+ */
+export function migrateTintListRowsDefault(state: Record<string, unknown>): void {
+  if (state.tintListRowsByTag !== true) return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('tintListRowsByTag');
+  if (!chosen) state.tintListRowsByTag = false;
 }
 
 // Helper functions to apply settings to DOM
