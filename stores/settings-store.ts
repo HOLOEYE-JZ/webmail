@@ -577,7 +577,6 @@ interface SettingsState extends AccessibilitySettings {
   swipeLeftAction: SwipeAction; // Mobile: action when a list row is swiped left
 
   // Composer
-  autoSaveDraftInterval: number; // milliseconds
   sendConfirmation: boolean;
   quickReplyEnabled: boolean;
   defaultReplyMode: ReplyMode;
@@ -908,7 +907,6 @@ const DEFAULT_SETTINGS = {
   swipeLeftAction: 'delete' as SwipeAction,
 
   // Composer
-  autoSaveDraftInterval: 60000, // 1 minute
   sendConfirmation: false,
   quickReplyEnabled: true,
   defaultReplyMode: 'reply' as ReplyMode,
@@ -1337,7 +1335,6 @@ export const useSettingsStore = create<SettingsState>()(
           swipeLeftAction: state.swipeLeftAction,
           disableThreading: state.disableThreading,
           trustedSenders: state.trustedSenders,
-          autoSaveDraftInterval: state.autoSaveDraftInterval,
           sendConfirmation: state.sendConfirmation,
           quickReplyEnabled: state.quickReplyEnabled,
           defaultReplyMode: state.defaultReplyMode,
@@ -1997,6 +1994,8 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
           state.protocolOpenMode = state.protocolMailtoOpenMode;
         }
         delete state.protocolMailtoOpenMode;
+        // Never read: drafts save 2 s after the last change.
+        delete state.autoSaveDraftInterval;
         // v4: `dateFormat` was repurposed from 'regional'|'iso'|'custom' to
         // 'smart'|'relative'|'full'. The old setting was never read anywhere,
         // so every persisted value maps to the new default.
