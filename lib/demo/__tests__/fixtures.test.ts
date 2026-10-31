@@ -493,4 +493,25 @@ describe('demo fixtures: audience screenshots', () => {
     const own = await client.discoverKeywords();
     expect(Object.keys(own.keywords).some((k) => SUPPORT_TAGS.some((t) => k === `$label:${t.id}`))).toBe(false);
   });
+
+  it('the team inbox plugin finds Support mail assigned to Nora and to Bob, one thread done, and their names', async () => {
+    const client = new DemoJMAPClient('work');
+    // The plugin's "Assigned to me" filter: `$assigned:` plus the user's account id (user.getSelf).
+    const mine = await client.getEmails(SMB.inbox, SUPPORT_ACCOUNT_ID, 50, 0, `$assigned:${client.getAccountId()}`);
+    expect(mine.emails.map((e) => e.id).sort()).toEqual(['demo-support-tomas', 'demo-support-yusuf-2']);
+    const bobs = await client.getEmails(SMB.inbox, SUPPORT_ACCOUNT_ID, 50, 0, `$assigned:${PRINCIPAL.bob}`);
+    expect(bobs.emails.map((e) => e.id)).toEqual(['demo-support-lena-reset']);
+    // "Open" is everything not $done.
+    const open = await client.getEmails(SMB.inbox, SUPPORT_ACCOUNT_ID, 50, 0, undefined, false, { notKeyword: '$done' });
+    const all = await client.getEmails(SMB.inbox, SUPPORT_ACCOUNT_ID);
+    expect(all.total - open.total).toBe(1);
+    // Keywords the plugin can write: lowercase ids that fit its rule.
+    for (const e of all.emails) {
+      for (const k of Object.keys(e.keywords).filter((k) => k.startsWith('$assigned:'))) expect(k).toMatch(/^\$assigned:[a-z0-9][a-z0-9_.-]{0,100}$/);
+    }
+    // Names for the badges: the group's shared map (plugin.team-inbox) and the directory.
+    const names = (await client.getBulwarkMetadata!(SUPPORT_ACCOUNT_ID))!['plugin.team-inbox'] as { people: Record<string, { n: string }> };
+    expect(names.people[PRINCIPAL.bob].n).toBe(BOB.name);
+    expect((await client.getPrincipals()).find((p) => p.id === PRINCIPAL.bob)?.email).toBe(BOB.email);
+  });
 });

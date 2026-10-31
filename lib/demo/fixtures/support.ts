@@ -2,6 +2,12 @@
  * The shared Support mailbox (support@meridianlabs.example). It belongs to a
  * separate principal that has delegated it to Nora, so it shows up under her
  * own folders as a shared account, and in the merged inbox with its own badge.
+ *
+ * The `$label:` keywords are the team's shared tags (fixtures/shared-metadata.ts).
+ * `$assigned:<principal id>` and `$done` are the team inbox plugin's
+ * (repos/plugins team-inbox/src/lib/keywords.js): Tomás's question is
+ * Nora's, the departed employee's login is Bob's, and Yusuf's thread is
+ * done.
  */
 import type { Email } from '@/lib/jmap/types';
 import { ago, at, authPass, dayName, mail, mid } from './mail';
@@ -16,7 +22,7 @@ export function createDemoSupportEmails(): Email[] {
       id: 'demo-support-tomas', mailbox: SMB.inbox, date: ago(0, 55),
       from: addr(TOMAS), to: [support],
       subject: 'Beacon add-on: can we go to 100 tenants before launch?',
-      keywords: ['$label:billing'],
+      keywords: ['$label:billing', '$assigned:demo-account'],
       text: 'Hello,\n\nOur PO covers fifty tenants on the Beacon add-on. Operations now wants all hundred Lisbon tenants on it from day one. Can the add-on be raised before the launch, and does that change the canary plan Nora mentioned?\n\nThank you,\nTomás Ferreira\nLumen Logistics',
       headers: authPass('lumenlogistics.example'),
     }),
@@ -33,7 +39,7 @@ export function createDemoSupportEmails(): Email[] {
       from: addr(YUSUF), to: [support],
       subject: 'Re: Webhook signature verification in PHP?',
       text: 'That worked, thank you! The timestamp tolerance was the missing piece. You can close this.\n\nYusuf',
-      keywords: ['$seen', '$label:integration'],
+      keywords: ['$seen', '$label:integration', '$assigned:demo-account', '$done'],
       headers: authPass('demir-retail.example'),
       inReplyTo: [mid('demo-support-yusuf-reply')], references: [mid('demo-support-yusuf-1', 'demir-retail.example'), mid('demo-support-yusuf-reply')],
     }),
@@ -50,7 +56,7 @@ export function createDemoSupportEmails(): Email[] {
       from: addr(LENA), to: [support],
       subject: 'Access for a departed employee',
       text: `Hello,\n\nA colleague left us at the end of last month and still has an active login to our Meridian workspace. Could you disable it? The address is j.becker@hoffmann-partner.example. I am the account owner.\n\nThank you,\nLena Hoffmann`,
-      keywords: ['$seen', '$label:accounts'],
+      keywords: ['$seen', '$label:accounts', '$assigned:demo-bob'],
       headers: authPass('hoffmann-partner.example'),
     }),
 
