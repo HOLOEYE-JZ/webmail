@@ -66,6 +66,21 @@ async function revokeImpersonationGrant(
   }
 }
 
+/**
+ * True when this slot's session is the one an impersonation handoff opened
+ * (GET /api/auth/impersonate). Its username is the plain target mailbox, so
+ * nothing in the session itself tells the two apart; the grant cookie does.
+ */
+function isImpersonationSession(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+  slot: number,
+  credentials: SessionCredentials,
+): boolean {
+  if (slot !== 0) return false;
+  const grant = openImpersonationGrant(cookieStore.get(IMPERSONATION_GRANT_COOKIE)?.value);
+  return !!grant && grant.mailbox === credentials.username && grant.serverUrl === credentials.serverUrl;
+}
+
 function getSlot(request: NextRequest): number {
   const raw = request.nextUrl.searchParams.get('slot');
   if (raw === null) return 0;
@@ -254,8 +269,9 @@ export async function GET(request: NextRequest) {
 
     // Only return non-sensitive fields. Use PUT to retrieve full credentials.
     const { serverUrl, username } = credentials;
+    const impersonated = isImpersonationSession(cookieStore, slot, credentials);
     return NextResponse.json(
-      { serverUrl, username, signedInAt: age.signedInAt },
+      { serverUrl, username, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) },
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } },
     );
   } catch (error) {
@@ -306,7 +322,8 @@ export async function PUT(request: NextRequest) {
     });
 
     // The browser counts the maximum session length from the server's time.
-    return NextResponse.json({ ...credentials, signedInAt: age.signedInAt }, {
+    const impersonated = isImpersonationSession(cookieStore, slot, credentials);
+    return NextResponse.json({ ...credentials, signedInAt: age.signedInAt, ...(impersonated ? { impersonated } : {}) }, {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
   } catch (error) {
