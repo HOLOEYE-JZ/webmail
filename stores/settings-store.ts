@@ -805,6 +805,12 @@ interface SettingsState extends AccessibilitySettings {
   ) => void;
   resetToDefaults: () => void;
   /**
+   * Forgets the user's own value for each of `keys`: the setting loses its
+   * "chosen by the user" mark and takes the admin default (policy.defaults)
+   * again, or the built-in one when the admin set none.
+   */
+  resetSettings: (keys: readonly string[]) => void;
+  /**
    * Applies the admin policy (#1248): `policy.defaults` to every setting the
    * user has not chosen, and a locked restriction's value to its setting
    * whatever the user chose. Runs when the policy loads and after every
@@ -1493,6 +1499,26 @@ export const useSettingsStore = create<SettingsState>()(
         applyAdminPolicyPatch();
         applyVisualSettings();
         void settingsHooks.onSettingsReset.emit({});
+      },
+
+      resetSettings: (keys) => {
+        const own = keys.filter((key) => hasOwn(DEFAULT_SETTINGS, key) && key !== 'explicitSettings' && !BOOKKEEPING_SETTING_KEYS.has(key));
+        if (own.length === 0) return;
+        const before = get() as unknown as Record<string, unknown>;
+        const previous = Object.fromEntries(own.map((key) => [key, before[key]]));
+        const dropped = new Set(own);
+        set({
+          ...Object.fromEntries(own.map((key) => [key, builtInDefault(key)])),
+          explicitSettings: get().explicitSettings.filter((key) => !dropped.has(key)),
+        } as Partial<SettingsState>);
+        applyAdminPolicyPatch();
+        applyVisualSettings();
+        const after = get() as unknown as Record<string, unknown>;
+        for (const key of own) {
+          if (after[key] !== previous[key]) {
+            void settingsHooks.onSettingChange.emit({ key, value: after[key], previous: previous[key] });
+          }
+        }
       },
 
       exportSettings: (opts) => {
