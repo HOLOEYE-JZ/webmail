@@ -449,7 +449,7 @@ export interface IJMAPClient {
     // supportsSubmissionExtension).
     // `draftAccountId`: the account `draftId` lives in, so the sent draft is
     // destroyed there (default: the primary account).
-    options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; priority?: MessagePriority; draftAccountId?: string },
+    options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; priority?: MessagePriority; headers?: Record<string, string>; draftAccountId?: string },
   ): Promise<SendEmailResult>;
   /** Whether the submission account advertises an SMTP extension ("DSN", "REQUIRETLS", …). */
   supportsSubmissionExtension?(extension: string, accountId?: string): boolean;

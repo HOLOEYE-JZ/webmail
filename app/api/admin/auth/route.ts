@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { initAdminPassword, verifyAdminPassword, updateLastLogin, isAdminEnabled, getAdminMeta } from '@/lib/admin/password';
-import { setAdminSessionCookie, clearAdminSessionCookie, requireAdminAuth, getClientIP, isSameOriginRequest } from '@/lib/admin/session';
-import { checkRateLimit } from '@/lib/admin/rate-limit';
+import { setAdminSessionCookie, clearAdminSessionCookie, requireAdminAuth, getClientIP, isSameOriginRequest, getAdminDeviceId, setAdminDeviceCookie } from '@/lib/admin/session';
+import { checkRateLimit, checkDeviceRateLimit } from '@/lib/admin/rate-limit';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
@@ -160,6 +160,7 @@ export async function POST(request: NextRequest) {
       }
 
       await setAdminSessionCookie(request);
+      await setAdminDeviceCookie(request);
       await auditLog('admin.login', { method: 'stalwart' }, ip);
       return NextResponse.json({ ok: true });
     }
@@ -170,8 +171,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin dashboard is not configured' }, { status: 404 });
     }
 
-    // Rate limit check
-    const limit = checkRateLimit(ip);
+    // Rate limit check. A browser an admin signed in from before is limited
+    // on its own, so others using up the shared budget can't lock it out.
+    const deviceId = await getAdminDeviceId();
+    const limit = deviceId ? checkDeviceRateLimit(deviceId) : checkRateLimit(ip);
     if (!limit.allowed) {
       const retryAfter = Math.ceil(limit.retryAfterMs / 1000);
       await auditLog('admin.login_blocked', { reason: 'rate_limit' }, ip);
@@ -195,6 +198,7 @@ export async function POST(request: NextRequest) {
     }
 
     await setAdminSessionCookie(request);
+    await setAdminDeviceCookie(request);
     await updateLastLogin();
     await auditLog('admin.login', {}, ip);
 

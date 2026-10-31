@@ -2678,6 +2678,7 @@
       "include_spam": "A levélszemétnek jelölt üzenetek áthelyezése is",
       "attachment_type_placeholder": "pl. pdf, doc, jpg",
       "value_placeholder_multi": "Érték (több érték vesszővel elválasztva)",
+      "regex_placeholder": "Reguláris kifejezés, pl. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Csatolmány",
         "from": "Feladó",
@@ -2699,6 +2700,7 @@
         "starts_with": "kezdődik",
         "ends_with": "végződik",
         "matches": "illeszkedik a mintára",
+        "regex": "illeszkedik a reguláris kifejezésre",
         "greater_than": "nagyobb, mint",
         "less_than": "kisebb, mint",
         "address_is": "címe pontosan",
@@ -2761,6 +2763,7 @@
       "validation_action_forward": "Adja meg a továbbítási címet",
       "validation_action_reject": "Adja meg az elutasító üzenetet",
       "validation_header_name": "A fejlécnevek csak az A-Z betűket, számjegyeket, kötőjeleket és aláhúzásjeleket tartalmazhatják",
+      "validation_regex": "Ez a reguláris kifejezés érvénytelen",
       "templates_section": "Kezdés sablonból",
       "template_newsletters": "Hírlevelek áthelyezése mappába",
       "template_receipts": "Nyugták automatikus archiválása",

@@ -2682,6 +2682,7 @@
       "include_spam": "Flytt også meldinger som er merket som søppelpost",
       "attachment_type_placeholder": "f.eks. pdf, doc, jpg",
       "value_placeholder_multi": "Verdi (skill flere verdier med komma)",
+      "regex_placeholder": "Regulært uttrykk, f.eks. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Vedlegg",
         "from": "Fra",
@@ -2703,6 +2704,7 @@
         "starts_with": "starter med",
         "ends_with": "slutter med",
         "matches": "samsvarer med mønsteret",
+        "regex": "samsvarer med regulært uttrykk",
         "greater_than": "er større enn",
         "less_than": "er mindre enn",
         "address_is": "er adressen",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "Skriv inn en adresse det skal videresendes til",
       "validation_action_reject": "Skriv inn avvisningsmeldingen",
       "validation_header_name": "Navn på meldingshoder kan bare inneholde bokstavene A-Z, sifre, bindestreker og understreker",
+      "validation_regex": "Dette regulære uttrykket er ugyldig",
       "templates_section": "Start med en mal",
       "template_newsletters": "Flytt nyhetsbrev til mappe",
       "template_receipts": "Arkiver kvitteringer automatisk",

@@ -2675,6 +2675,7 @@
       "include_spam": "Mover também as mensagens marcadas como spam",
       "attachment_type_placeholder": "ex.: pdf, doc, jpg",
       "value_placeholder_multi": "Valor (vários separados por vírgulas)",
+      "regex_placeholder": "Expressão regular, ex.: ^Cron|mailman",
       "condition_fields": {
         "attachment": "Anexo",
         "from": "De",
@@ -2696,6 +2697,7 @@
         "starts_with": "começa com",
         "ends_with": "termina com",
         "matches": "corresponde ao padrão",
+        "regex": "corresponde à expressão regular",
         "greater_than": "é maior que",
         "less_than": "é menor que",
         "address_is": "é o endereço",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Digite um endereço para encaminhar",
       "validation_action_reject": "Digite a mensagem de rejeição",
       "validation_header_name": "Os nomes de cabeçalho só podem conter as letras A-Z, algarismos, hífenes e sublinhados",
+      "validation_regex": "Esta expressão regular não é válida",
       "templates_section": "Começar com modelo",
       "template_newsletters": "Mover newsletters para pasta",
       "template_receipts": "Arquivar recibos automaticamente",

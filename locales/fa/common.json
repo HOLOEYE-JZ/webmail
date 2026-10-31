@@ -2682,6 +2682,7 @@
       "include_spam": "پیام‌های علامت‌خورده به‌عنوان هرزنامه هم منتقل شوند",
       "attachment_type_placeholder": "مثال: pdf, doc, jpg",
       "value_placeholder_multi": "مقدار (چندتا با کاما جدا شوند)",
+      "regex_placeholder": "عبارت باقاعده، مثلاً ^Cron|mailman",
       "condition_fields": {
         "attachment": "پیوست",
         "from": "از",
@@ -2703,6 +2704,7 @@
         "starts_with": "شروع می‌شود با",
         "ends_with": "پایان می‌یابد با",
         "matches": "مطابقت با الگو",
+        "regex": "با عبارت باقاعده مطابقت دارد",
         "greater_than": "بزرگتر از",
         "less_than": "کوچکتر از",
         "address_is": "نشانی‌اش این است",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "نشانی‌ای برای هدایت وارد کنید",
       "validation_action_reject": "پیام رد را وارد کنید",
       "validation_header_name": "نام هدر فقط می‌تواند شامل حروف A-Z، ارقام، خط تیره و زیرخط باشد",
+      "validation_regex": "این عبارت باقاعده معتبر نیست",
       "templates_section": "شروع از قالب",
       "template_newsletters": "انتقال خبرنامه‌ها به پوشه",
       "template_receipts": "بایگانی خودکار رسیدها",

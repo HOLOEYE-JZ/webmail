@@ -172,7 +172,7 @@ import type { AttachmentInfo, AttachmentPreview } from "@/lib/plugin-types";
 import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from "@/hooks/use-attachment-drag";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
-import { useNoThirdPartyTraffic } from "@/hooks/use-third-party-mode";
+import { useRemoteContentBlockedByOrg } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
 
@@ -1313,9 +1313,9 @@ export function EmailViewer({
   const tWelcome = useTranslations('welcome');
   const quickReplyEnabled = useSettingsStore((state) => state.quickReplyEnabled);
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
-  // No third-party traffic (#903): remote content never loads, whatever the
-  // policy or trust says, and nothing offers to load it.
-  const remoteBlockedByOrg = useNoThirdPartyTraffic();
+  // No third-party traffic (#903), or the organisation locked "block": remote
+  // content never loads, whatever trust says, and nothing offers to load it.
+  const remoteBlockedByOrg = useRemoteContentBlockedByOrg();
   const tThirdParty = useTranslations('third_party');
   const messageSpacing = useSettingsStore((state) => state.messageSpacing);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);

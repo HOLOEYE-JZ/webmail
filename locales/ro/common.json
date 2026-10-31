@@ -2682,6 +2682,7 @@
       "include_spam": "Mută și mesajele marcate ca spam",
       "attachment_type_placeholder": "de ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valoare (mai multe valori separate prin virgule)",
+      "regex_placeholder": "Expresie regulată, de ex. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Atașament",
         "from": "De la",
@@ -2703,6 +2704,7 @@
         "starts_with": "începe cu",
         "ends_with": "se termină cu",
         "matches": "se potrivește cu modelul",
+        "regex": "se potrivește cu expresia regulată",
         "greater_than": "este mai mare decât",
         "less_than": "este mai mic decât",
         "address_is": "este adresa",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "Introduceți o adresă către care să se redirecționeze",
       "validation_action_reject": "Introduceți mesajul de respingere",
       "validation_header_name": "Numele antetelor pot conține doar literele A-Z, cifre, cratime și liniuțe de subliniere",
+      "validation_regex": "Această expresie regulată nu este validă",
       "templates_section": "Începeți de la șablon",
       "template_newsletters": "Mutați buletinele informative în dosar",
       "template_receipts": "Arhivarea automată a confirmărilor de primire",

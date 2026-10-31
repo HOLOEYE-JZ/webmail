@@ -2675,6 +2675,7 @@
       "include_spam": "Déplacer aussi les messages marqués comme spam",
       "attachment_type_placeholder": "p. ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valeur (plusieurs séparées par des virgules)",
+      "regex_placeholder": "Expression régulière, p. ex. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Pièce jointe",
         "from": "De",
@@ -2696,6 +2697,7 @@
         "starts_with": "commence par",
         "ends_with": "se termine par",
         "matches": "correspond au motif",
+        "regex": "correspond à l'expression régulière",
         "greater_than": "est supérieur à",
         "less_than": "est inférieur à",
         "address_is": "est l'adresse",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Saisissez une adresse de transfert",
       "validation_action_reject": "Saisissez le message de refus",
       "validation_header_name": "Les noms d'en-tête ne peuvent contenir que les lettres A-Z, des chiffres, des traits d'union et des tirets bas",
+      "validation_regex": "Cette expression régulière n'est pas valide",
       "templates_section": "Partir d'un modèle",
       "template_newsletters": "Déplacer les newsletters dans un dossier",
       "template_receipts": "Archiver les reçus automatiquement",

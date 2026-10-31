@@ -2675,6 +2675,7 @@
       "include_spam": "Pārvietot arī ziņas, kas atzīmētas kā mēstules",
       "attachment_type_placeholder": "piem. pdf, doc, jpg",
       "value_placeholder_multi": "Vērtība (vairākas atdalītas ar komatu)",
+      "regex_placeholder": "Regulārā izteiksme, piem., ^Cron|mailman",
       "condition_fields": {
         "attachment": "Pielikums",
         "from": "No",
@@ -2696,6 +2697,7 @@
         "starts_with": "sākas ar",
         "ends_with": "beidzas ar",
         "matches": "atbilst paraugam",
+        "regex": "atbilst regulārajai izteiksmei",
         "greater_than": "lielāks nekā",
         "less_than": "mazāks nekā",
         "address_is": "ir adrese",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Ievadiet adresi, uz kuru pārsūtīt",
       "validation_action_reject": "Ievadiet noraidīšanas ziņojumu",
       "validation_header_name": "Galvenes nosaukumā drīkst būt tikai burti A-Z, cipari, defises un pasvītras",
+      "validation_regex": "Šī regulārā izteiksme nav derīga",
       "templates_section": "Sākt no veidnes",
       "template_newsletters": "Pārvietot ziņu izdevumus uz mapi",
       "template_receipts": "Automātiski arhivēt rēķinus",

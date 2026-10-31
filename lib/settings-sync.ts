@@ -15,7 +15,7 @@ function getKey(): Buffer {
   return createHash('sha256').update(secret).digest();
 }
 
-function getSettingsDir(): string {
+export function getSettingsDir(): string {
   return process.env.SETTINGS_DATA_DIR || path.join(process.cwd(), 'data', 'settings');
 }
 

@@ -2675,6 +2675,7 @@
       "include_spam": "迷惑メールと判定されたメッセージも移動する",
       "attachment_type_placeholder": "例: pdf, doc, jpg",
       "value_placeholder_multi": "値（カンマで複数指定可）",
+      "regex_placeholder": "正規表現（例: ^Cron|mailman）",
       "condition_fields": {
         "attachment": "添付ファイル",
         "from": "差出人",
@@ -2696,6 +2697,7 @@
         "starts_with": "で始まる",
         "ends_with": "で終わる",
         "matches": "パターンに一致",
+        "regex": "正規表現に一致",
         "greater_than": "より大きい",
         "less_than": "より小さい",
         "address_is": "のアドレスが次と一致",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "転送先のアドレスを入力してください",
       "validation_action_reject": "拒否メッセージを入力してください",
       "validation_header_name": "ヘッダー名に使用できるのは英字（A-Z）、数字、ハイフン、アンダースコアのみです",
+      "validation_regex": "この正規表現は無効です",
       "templates_section": "テンプレートから作成",
       "template_newsletters": "ニュースレターをフォルダに移動",
       "template_receipts": "領収書を自動アーカイブ",

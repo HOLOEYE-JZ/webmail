@@ -1,6 +1,8 @@
 /**
  * In-memory rate limiter for admin login.
- * Max 5 attempts per IP per 15 minutes, and 50 across all clients.
+ * Max 5 attempts per IP per 15 minutes, and 50 across all clients. A browser
+ * with the admin device cookie (lib/admin/session.ts) gets 5 per device
+ * instead and stays out of the shared ceiling, which anyone can use up.
  */
 
 const MAX_ATTEMPTS = 5;
@@ -22,14 +24,17 @@ interface RateLimitEntry {
 }
 
 const attempts = new Map<string, RateLimitEntry>();
+const deviceAttempts = new Map<string, RateLimitEntry>();
 let globalAttempts: RateLimitEntry | null = null;
 
 // Clean up expired entries periodically
 setInterval(() => {
   const now = Date.now();
-  for (const [key, entry] of attempts) {
-    if (entry.resetAt <= now) {
-      attempts.delete(key);
+  for (const map of [attempts, deviceAttempts]) {
+    for (const [key, entry] of map) {
+      if (entry.resetAt <= now) {
+        map.delete(key);
+      }
     }
   }
 }, 60_000).unref();
@@ -62,5 +67,27 @@ export function checkRateLimit(ip: string): { allowed: boolean; remaining: numbe
 
   entry.count++;
   globalAttempts.count++;
+  return { allowed: true, remaining: MAX_ATTEMPTS - entry.count, retryAfterMs: 0 };
+}
+
+/**
+ * Check a browser with a valid admin device cookie, by its device id: 5
+ * attempts per 15 minutes, not counted against or stopped by the shared
+ * ceiling.
+ */
+export function checkDeviceRateLimit(deviceId: string): { allowed: boolean; remaining: number; retryAfterMs: number } {
+  const now = Date.now();
+  const entry = deviceAttempts.get(deviceId);
+
+  if (!entry || entry.resetAt <= now) {
+    deviceAttempts.set(deviceId, { count: 1, resetAt: now + WINDOW_MS });
+    return { allowed: true, remaining: MAX_ATTEMPTS - 1, retryAfterMs: 0 };
+  }
+
+  if (entry.count >= MAX_ATTEMPTS) {
+    return { allowed: false, remaining: 0, retryAfterMs: entry.resetAt - now };
+  }
+
+  entry.count++;
   return { allowed: true, remaining: MAX_ATTEMPTS - entry.count, retryAfterMs: 0 };
 }

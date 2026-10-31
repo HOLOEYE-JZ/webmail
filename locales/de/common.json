@@ -2675,6 +2675,7 @@
       "include_spam": "Auch als Spam markierte Nachrichten verschieben",
       "attachment_type_placeholder": "z.B. pdf, doc, jpg",
       "value_placeholder_multi": "Wert (mehrere mit Komma trennen)",
+      "regex_placeholder": "Regulärer Ausdruck, z. B. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Anhang",
         "from": "Von",
@@ -2696,6 +2697,7 @@
         "starts_with": "beginnt mit",
         "ends_with": "endet mit",
         "matches": "entspricht dem Muster",
+        "regex": "passt zum regulären Ausdruck",
         "greater_than": "ist größer als",
         "less_than": "ist kleiner als",
         "address_is": "ist die Adresse",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Geben Sie eine Adresse zum Weiterleiten ein",
       "validation_action_reject": "Geben Sie die Ablehnungsnachricht ein",
       "validation_header_name": "Header-Namen dürfen nur die Buchstaben A-Z, Ziffern, Bindestriche und Unterstriche enthalten",
+      "validation_regex": "Dieser reguläre Ausdruck ist ungültig",
       "templates_section": "Von Vorlage starten",
       "template_newsletters": "Newsletter in Ordner verschieben",
       "template_receipts": "Quittungen automatisch archivieren",

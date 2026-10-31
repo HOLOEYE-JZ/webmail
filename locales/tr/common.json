@@ -2675,6 +2675,7 @@
       "include_spam": "İstenmeyen olarak işaretlenen iletileri de taşı",
       "attachment_type_placeholder": "örn. pdf, doc, jpg",
       "value_placeholder_multi": "Değer (birden fazla virgülle ayrılır)",
+      "regex_placeholder": "Normal ifade, ör. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Ek",
         "from": "Kimden",
@@ -2696,6 +2697,7 @@
         "starts_with": "ile başlar",
         "ends_with": "ile biter",
         "matches": "desenle eşleşir",
+        "regex": "normal ifadeyle eşleşir",
         "greater_than": "büyüktür",
         "less_than": "küçüktür",
         "address_is": "adresi şudur",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "İletilecek bir adres girin",
       "validation_action_reject": "Ret mesajını girin",
       "validation_header_name": "Başlık adları yalnızca A-Z harflerini, rakamları, kısa çizgileri ve alt çizgileri içerebilir",
+      "validation_regex": "Bu normal ifade geçerli değil",
       "templates_section": "Şablondan başla",
       "template_newsletters": "Bültenleri klasöre taşı",
       "template_receipts": "Makbuzları otomatik arşivle",

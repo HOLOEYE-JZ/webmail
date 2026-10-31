@@ -44,6 +44,7 @@ import { parseAuthenticationResults } from "@/lib/email-headers";
 import { IS_LITE_STALWART } from "@/lib/lite";
 import { toStorageQuota, type JMAPQuota, type StorageQuota } from "@/lib/quota";
 import { messagePriorityHeaders, type MessagePriority } from "@/lib/message-priority";
+import { customHeaderProperties } from "@/lib/outgoing/custom-headers";
 import { attachmentParts, HTML_PART_ID, relatedBodyStructure, TEXT_PART_ID, type OutgoingBodyPart } from "./outgoing-body";
 
 // Cap for the follow-up Email/get issued when a displayed body part comes
@@ -1420,6 +1421,8 @@ export interface SubmissionSendOptions {
   requireTls?: boolean;
   /** Importance / X-Priority headers (#970); see lib/message-priority.ts. */
   priority?: MessagePriority;
+  /** Extra headers plugins added; see lib/outgoing/custom-headers.ts. */
+  headers?: Record<string, string>;
   /** The account the replaced draft (`draftId`) lives in; default the primary. */
   draftAccountId?: string;
 }
@@ -4943,6 +4946,7 @@ export class JMAPClient implements IJMAPClient {
     }
 
     Object.assign(emailCreate, messagePriorityHeaders(options?.priority));
+    Object.assign(emailCreate, customHeaderProperties(options?.headers));
 
     // Images the HTML shows by cid: go into a multipart/related beside it,
     // or recipients don't see them (#1451).

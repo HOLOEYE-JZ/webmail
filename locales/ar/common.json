@@ -2682,6 +2682,7 @@
       "include_spam": "نقل الرسائل المصنفة كرسائل مزعجة أيضًا",
       "attachment_type_placeholder": "مثال: pdf, doc, jpg",
       "value_placeholder_multi": "القيمة (عدة قيم مفصولة بفواصل)",
+      "regex_placeholder": "تعبير نمطي، مثل ^Cron|mailman",
       "condition_fields": {
         "attachment": "المرفق",
         "from": "من",
@@ -2703,6 +2704,7 @@
         "starts_with": "يبدأ بـ",
         "ends_with": "ينتهي بـ",
         "matches": "يطابق النمط",
+        "regex": "يطابق التعبير النمطي",
         "greater_than": "أكبر من",
         "less_than": "أصغر من",
         "address_is": "هو العنوان",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "أدخل عنوانًا لإعادة التوجيه إليه",
       "validation_action_reject": "أدخل رسالة الرفض",
       "validation_header_name": "يمكن أن يحتوي اسم الترويسة على الأحرف A-Z والأرقام والشرطات والشرطات السفلية فقط",
+      "validation_regex": "هذا التعبير النمطي غير صالح",
       "templates_section": "البدء من قالب",
       "template_newsletters": "نقل النشرات البريدية إلى مجلد",
       "template_receipts": "أرشفة الإيصالات تلقائيًا",

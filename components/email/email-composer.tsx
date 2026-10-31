@@ -96,6 +96,7 @@ import { personalTemplatesFor } from "@/lib/templates/personal-templates";
 import { notifyIdentitySelected } from "@/stores/identity-store";
 import { usePluginSignature } from "@/hooks/use-plugin-signature";
 import { useOrgSignature, useOrgSignatureIdentity } from "@/hooks/use-org-signature";
+import { remoteContentBlockedByOrg } from "@/hooks/use-third-party-mode";
 import { OrgDisclaimerPreview } from "@/components/email/org-disclaimer-preview";
 // Registers the organisation signature check and the disclaimer on the send path.
 import "@/lib/org/outgoing";
@@ -296,6 +297,8 @@ interface EmailComposerProps {
     requireTls?: boolean;
     /** Importance / X-Priority; absent for normal (#970). */
     priority?: MessagePriority;
+    /** Extra headers plugins added in onTransformOutgoingEmail. */
+    headers?: Record<string, string>;
     /** The id plugins know this composer by, for onAfterEmailSend. */
     composerId?: string;
   }) => void | false | Promise<void | false>;
@@ -745,7 +748,8 @@ export function EmailComposer({
     // Whether the quoted original may show its remote images in the editor:
     // the viewer's rule, minus the per-message "load" click it doesn't know.
     const { externalContentPolicy, isSenderTrusted } = useSettingsStore.getState();
-    const quoteRemoteAllowed = externalContentPolicy === 'allow' || (!!from?.email && isSenderTrusted(from.email));
+    const quoteRemoteAllowed = !remoteContentBlockedByOrg()
+      && (externalContentPolicy === 'allow' || (!!from?.email && isSenderTrusted(from.email)));
 
     const replyHeader = (html: string) => mode === 'reply' || mode === 'replyAll'
       ? markReplyQuoteHeader(html)
@@ -3695,6 +3699,7 @@ export function EmailComposer({
           requestDsn: requestDsn || undefined,
           requireTls: requireTls || undefined,
           priority: priority !== 'normal' ? priority : undefined,
+          headers: outgoing.headers,
           delayedUntil: effectiveDelayedUntil,
           composerId: pluginComposerIdRef.current ?? undefined,
         });
