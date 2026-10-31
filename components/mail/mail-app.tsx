@@ -3779,8 +3779,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleLogout = logout;
 
+  // Mountain View shows an open message in place of the list, so a search
+  // started while reading would fill a list nobody can see. Close the
+  // message first and show the results, as its back button would. (#1468)
+  const showSearchResults = () => {
+    if (!mvShell || cursorOnly || !useEmailStore.getState().selectedEmail) return;
+    selectEmail(null);
+  };
+
   const handleSearch = async (query: string) => {
     if (!client) return;
+    showSearchResults();
     // Nothing the mail view renders from is written before the request has
     // left (see afterRequestDispatch): searchEmails records the query itself,
     // and the history entry only feeds the suggestion dropdown.
@@ -3799,6 +3808,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // dropped rather than ANDed into the query as a full-text term.
   const handleSelectContactSuggestion = async (contact: ContactSuggestion, field: ContactSearchField) => {
     if (!client) return;
+    showSearchResults();
     setSearchQuery("");
     setSearchFilters({ [field]: contact.email });
     await advancedSearch(client);
@@ -3842,6 +3852,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const handleAdvancedSearch = async () => {
     if (!client) return;
+    showSearchResults();
     await advancedSearch(client);
   };
 
