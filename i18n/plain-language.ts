@@ -4,8 +4,8 @@ type Messages = Record<string, unknown>;
 
 /**
  * Plain-language mode (CO-14): simpler wording for settings and error
- *  * messages. English, German and Vietnamese have plain versions; every other locale
- * keeps its normal strings when the setting is on.
+ * messages. English, German and Vietnamese have plain versions; every
+ * other locale keeps its normal strings when the setting is on.
  *
  * The plain strings live in `locales/<code>/plain.json`, outside common.json,
  * so the translation parity test doesn't ask every locale for them. Each file
