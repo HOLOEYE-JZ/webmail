@@ -345,9 +345,13 @@ describe('demo fixtures: audience screenshots', () => {
     });
   });
 
-  it('the out-of-office reply is on for the Lisbon days on the calendar', async () => {
+  it('the out-of-office reply is filled in for the Lisbon days on the calendar, and off', async () => {
     const reply = await new DemoJMAPClient('work').getVacationResponse();
-    expect(reply.isEnabled).toBe(true);
+    // Switched on, the sidebar would say so in every screenshot; the
+    // out-of-office flow turns it on itself.
+    expect(reply.isEnabled).toBe(false);
+    expect(reply.subject).toBe('Out of office: back next week');
+    expect(reply.htmlBody).toContain('Lisbon');
     const trip = work.calendarEvents.find((e) => e.id === 'demo-event-lisbon')!;
     const from = new Date(reply.fromDate!).getTime();
     const to = new Date(reply.toDate!).getTime();

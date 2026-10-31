@@ -2,13 +2,15 @@ import type { VacationResponse } from '@/lib/jmap/types';
 import { demoAt } from '../demo-utils';
 
 /**
- * Switched on for the Lisbon trip (Infra Summit in fixtures/calendars.ts,
+ * Filled in for the Lisbon trip (Infra Summit in fixtures/calendars.ts,
  * days 9 to 12): from the morning flight out to the evening flight back.
+ * Left off: switched on, the sidebar says so in every view, whatever the
+ * dates. Turning it on in Settings shows the filled form.
  */
 export function createDemoVacationResponse(): VacationResponse {
   return {
     id: 'singleton',
-    isEnabled: true,
+    isEnabled: false,
     fromDate: demoAt(9, 6),
     toDate: demoAt(12, 22),
     subject: 'Out of office: back next week',
