@@ -2675,6 +2675,7 @@
       "include_spam": "Перемещать также письма, помеченные как спам",
       "attachment_type_placeholder": "напр. pdf, doc, jpg",
       "value_placeholder_multi": "Значение (несколько через запятую)",
+      "regex_placeholder": "Регулярное выражение, например ^Cron|mailman",
       "condition_fields": {
         "attachment": "Вложение",
         "from": "От",
@@ -2696,6 +2697,7 @@
         "starts_with": "начинается с",
         "ends_with": "заканчивается на",
         "matches": "соответствует шаблону",
+        "regex": "соответствует регулярному выражению",
         "greater_than": "больше чем",
         "less_than": "меньше чем",
         "address_is": "— это адрес",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Введите адрес для пересылки",
       "validation_action_reject": "Введите сообщение об отклонении",
       "validation_header_name": "Имя заголовка может содержать только буквы A-Z, цифры, дефисы и подчёркивания",
+      "validation_regex": "Это регулярное выражение недопустимо",
       "templates_section": "Начать с шаблона",
       "template_newsletters": "Перемещать рассылки в папку",
       "template_receipts": "Автоархивировать квитанции",

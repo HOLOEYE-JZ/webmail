@@ -2682,6 +2682,7 @@
       "include_spam": "Спам гэж тэмдэглэсэн захидлыг мөн зөөх",
       "attachment_type_placeholder": "жишээ нь pdf, doc, jpg",
       "value_placeholder_multi": "Утга (олон тоог таслалаар тусгаарласан)",
+      "regex_placeholder": "Тогтмол илэрхийлэл, ж.нь ^Cron|mailman",
       "condition_fields": {
         "attachment": "Хавсралт",
         "from": "-аас",
@@ -2703,6 +2704,7 @@
         "starts_with": "",
         "ends_with": "",
         "matches": "загварт тохирно",
+        "regex": "тогтмол илэрхийлэлтэй таарч байна",
         "greater_than": " нь",
         "less_than": " нь",
         "address_is": "хаяг нь",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "Дамжуулах хаягаа оруулна уу",
       "validation_action_reject": "Татгалзах мессежээ оруулна уу",
       "validation_header_name": "Толгойн нэрэнд зөвхөн A-Z үсэг, тоо, зураас, доогуур зураас ашиглаж болно",
+      "validation_regex": "Энэ тогтмол илэрхийлэл буруу байна",
       "templates_section": "Загвар",
       "template_newsletters": "Мэдээллийн хуудсыг хавтас руу зөөх",
       "template_receipts": "Автоматаар архивлах баримт",

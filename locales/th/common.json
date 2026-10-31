@@ -5123,6 +5123,7 @@
       "include_spam": "ย้ายข้อความที่ทำเครื่องหมายว่าเป็นสแปมด้วย",
       "attachment_type_placeholder": "เช่น pdf, doc, jpg",
       "value_placeholder_multi": "ค่า (หากมีหลายค่าให้คั่นด้วยเครื่องหมายจุลภาค)",
+      "regex_placeholder": "นิพจน์ทั่วไป เช่น ^Cron|mailman",
       "condition_fields": {
         "attachment": "ไฟล์แนบ",
         "from": "ผู้ส่ง (From)",
@@ -5144,6 +5145,7 @@
         "starts_with": "ขึ้นต้นด้วย",
         "ends_with": "ลงท้ายด้วย",
         "matches": "ตรงตามรูปแบบ",
+        "regex": "ตรงกับนิพจน์ทั่วไป",
         "greater_than": "มากกว่า",
         "less_than": "น้อยกว่า",
         "address_is": "เป็นที่อยู่อีเมล",
@@ -5206,6 +5208,7 @@
       "validation_action_forward": "ป้อนที่อยู่ที่จะส่งต่อไป",
       "validation_action_reject": "ป้อนข้อความปฏิเสธ",
       "validation_header_name": "ชื่อส่วนหัวต้องประกอบด้วยตัวอักษร A-Z, ตัวเลข, เครื่องหมายยัติภังค์ และขีดล่างเท่านั้น",
+      "validation_regex": "นิพจน์ทั่วไปนี้ไม่ถูกต้อง",
       "templates_section": "เริ่มต้นจากเทมเพลต",
       "template_newsletters": "ย้ายจดหมายข่าวไปยังโฟลเดอร์",
       "template_receipts": "เก็บใบเสร็จถาวรอัตโนมัติ",

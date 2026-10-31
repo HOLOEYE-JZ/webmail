@@ -2675,6 +2675,7 @@
       "include_spam": "Переміщувати також листи, позначені як спам",
       "attachment_type_placeholder": "напр. pdf, doc, jpg",
       "value_placeholder_multi": "Значення (декілька через кому)",
+      "regex_placeholder": "Регулярний вираз, напр. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Вкладення",
         "from": "Від",
@@ -2696,6 +2697,7 @@
         "starts_with": "починається з",
         "ends_with": "закінчується на",
         "matches": "відповідає шаблону",
+        "regex": "відповідає регулярному виразу",
         "greater_than": "більше ніж",
         "less_than": "менше ніж",
         "address_is": "— це адреса",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Введіть адресу для пересилання",
       "validation_action_reject": "Введіть повідомлення про відхилення",
       "validation_header_name": "Назва заголовка може містити лише літери A-Z, цифри, дефіси та підкреслення",
+      "validation_regex": "Цей регулярний вираз недійсний",
       "templates_section": "Почніть із шаблону",
       "template_newsletters": "Перемістити інформаційні бюлетені в папку",
       "template_receipts": "Автоматичне архівування квитанцій",

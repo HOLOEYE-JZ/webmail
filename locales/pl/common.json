@@ -2675,6 +2675,7 @@
       "include_spam": "Przenoś również wiadomości oznaczone jako spam",
       "attachment_type_placeholder": "np. pdf, doc, jpg",
       "value_placeholder_multi": "Wartość (kilka oddzielonych przecinkami)",
+      "regex_placeholder": "Wyrażenie regularne, np. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Załącznik",
         "from": "Od",
@@ -2696,6 +2697,7 @@
         "starts_with": "zaczyna się od",
         "ends_with": "kończy się na",
         "matches": "pasuje do wzorca",
+        "regex": "pasuje do wyrażenia regularnego",
         "greater_than": "jest większe niż",
         "less_than": "jest mniejsze niż",
         "address_is": "to adres",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Wpisz adres, na który przekazywać",
       "validation_action_reject": "Wpisz wiadomość odrzucenia",
       "validation_header_name": "Nazwy nagłówków mogą zawierać tylko litery A-Z, cyfry, łączniki i podkreślenia",
+      "validation_regex": "To wyrażenie regularne jest nieprawidłowe",
       "templates_section": "Rozpocznij od szablonu",
       "template_newsletters": "Przenieś newslettery do folderu",
       "template_receipts": "Automatycznie archiwizuj rachunki",

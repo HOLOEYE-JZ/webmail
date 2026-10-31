@@ -2682,6 +2682,7 @@
       "include_spam": "Presúvať aj správy označené ako spam",
       "attachment_type_placeholder": "napr. pdf, doc, jpg",
       "value_placeholder_multi": "Hodnota (viac oddelených čiarkami)",
+      "regex_placeholder": "Regulárny výraz, napr. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Príloha",
         "from": "Od",
@@ -2703,6 +2704,7 @@
         "starts_with": "začína na",
         "ends_with": "končí na",
         "matches": "zodpovedá vzoru",
+        "regex": "zodpovedá regulárnemu výrazu",
         "greater_than": "je väčšia ako",
         "less_than": "je menšia ako",
         "address_is": "je adresa",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "Zadajte adresu, na ktorú sa má preposielať",
       "validation_action_reject": "Zadajte správu o odmietnutí",
       "validation_header_name": "Názvy hlavičiek môžu obsahovať iba písmená A-Z, číslice, spojovníky a podčiarkovníky",
+      "validation_regex": "Tento regulárny výraz nie je platný",
       "templates_section": "Začať zo šablóny",
       "template_newsletters": "Presunúť newslettery do priečinka",
       "template_receipts": "Automaticky archivovať účtenky",

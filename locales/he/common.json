@@ -2614,6 +2614,7 @@
         "starts_with": "מתחיל עם",
         "ends_with": "מסתיים ב",
         "matches": "תואם דפוס",
+        "regex": "תואם לביטוי רגולרי",
         "greater_than": "גדול מ",
         "less_than": "הוא פחות מ",
         "has_any": "קיים",
@@ -2678,6 +2679,7 @@
       "validation_action_forward": "הזן כתובת להעברה",
       "validation_action_reject": "הזן את הודעת הדחייה",
       "validation_header_name": "שמות כותרות יכולים להכיל רק את האותיות A-Z, ספרות, מקפים וקווים תחתונים",
+      "validation_regex": "הביטוי הרגולרי אינו תקין",
       "templates_section": "התחל מהתבנית",
       "template_newsletters": "העבר ניוזלטרים לתיקיה",
       "template_receipts": "העבר קבלות לארכיון אוטומטי",
@@ -2703,6 +2705,7 @@
       },
       "attachment_type_placeholder": "למשל pdf, doc, jpg",
       "value_placeholder_multi": "ערך (מרובים מופרדים בפסיקים)",
+      "regex_placeholder": "ביטוי רגולרי, לדוגמה ^Cron|mailman",
       "origin_external": "חיצוני",
       "managed_by_tooltip": "מנוהל על ידי {source}. ערוך אותו ביישום זה, או השתמש בעורך Sieve הגולמי.",
       "quick_rule_names": {

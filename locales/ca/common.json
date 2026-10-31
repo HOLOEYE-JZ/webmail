@@ -2682,6 +2682,7 @@
       "include_spam": "Mou també els missatges marcats com a correu brossa",
       "attachment_type_placeholder": "p. ex. pdf, doc, jpg",
       "value_placeholder_multi": "Valor (múltiples separats per comes)",
+      "regex_placeholder": "Expressió regular, p. ex. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Fitxer adjunt",
         "from": "De",
@@ -2703,6 +2704,7 @@
         "starts_with": "comença per",
         "ends_with": "acaba amb",
         "matches": "coincideix amb el patró",
+        "regex": "coincideix amb l'expressió regular",
         "greater_than": "és més gran que",
         "less_than": "és menys que",
         "address_is": "és l'adreça",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "Introduïu una adreça on reenviar",
       "validation_action_reject": "Introduïu el missatge de rebuig",
       "validation_header_name": "Els noms de capçalera només poden contenir les lletres A-Z, xifres, guionets i guions baixos",
+      "validation_regex": "Aquesta expressió regular no és vàlida",
       "templates_section": "Comença des d'una plantilla",
       "template_newsletters": "Mou els butlletins a una carpeta",
       "template_receipts": "Arxiva automàticament els rebuts",

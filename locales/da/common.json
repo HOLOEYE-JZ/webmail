@@ -2678,6 +2678,7 @@
       "include_spam": "Flyt også beskeder, der er markeret som spam",
       "attachment_type_placeholder": "f.eks. pdf, doc, jpg",
       "value_placeholder_multi": "Værdi (flere adskilt med komma)",
+      "regex_placeholder": "Regulært udtryk, f.eks. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Vedhæftet fil",
         "from": "Fra",
@@ -2699,6 +2700,7 @@
         "starts_with": "begynder med",
         "ends_with": "slutter med",
         "matches": "matcher mønster",
+        "regex": "matcher regulært udtryk",
         "greater_than": "er større end",
         "less_than": "er mindre end",
         "address_is": "er adressen",
@@ -2761,6 +2763,7 @@
       "validation_action_forward": "Angiv en adresse, der skal videresendes til",
       "validation_action_reject": "Angiv afvisningsbeskeden",
       "validation_header_name": "Headernavne må kun indeholde bogstaverne A-Z, cifre, bindestreger og understregninger",
+      "validation_regex": "Dette regulære udtryk er ugyldigt",
       "templates_section": "Start fra skabelon",
       "template_newsletters": "Flyt nyhedsbreve til mappe",
       "template_receipts": "Auto-arkiver kvitteringer",

@@ -2682,6 +2682,7 @@
       "include_spam": "Liiguta ka rämpspostiks märgitud kirjad",
       "attachment_type_placeholder": "nt pdf, doc, jpg",
       "value_placeholder_multi": "Väärtus (mitu, komadega eraldatud)",
+      "regex_placeholder": "Regulaaravaldis, nt ^Cron|mailman",
       "condition_fields": {
         "attachment": "Manus",
         "from": "Saatja",
@@ -2703,6 +2704,7 @@
         "starts_with": "algab",
         "ends_with": "lõpeb",
         "matches": "vastab mustrile",
+        "regex": "vastab regulaaravaldisele",
         "greater_than": "on suurem kui",
         "less_than": "on väiksem kui",
         "address_is": "on aadress",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "Sisesta aadress, kuhu edasi saata",
       "validation_action_reject": "Sisesta tagasilükkamise sõnum",
       "validation_header_name": "Päise nimes võivad olla ainult tähed A-Z, numbrid, sidekriipsud ja allkriipsud",
+      "validation_regex": "See regulaaravaldis ei ole kehtiv",
       "templates_section": "Alusta mallist",
       "template_newsletters": "Liiguta uudiskirjad kausta",
       "template_receipts": "Arhiveeri kviitungid automaatselt",

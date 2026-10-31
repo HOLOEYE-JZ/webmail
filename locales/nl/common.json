@@ -2675,6 +2675,7 @@
       "include_spam": "Ook berichten verplaatsen die als spam zijn gemarkeerd",
       "attachment_type_placeholder": "bijv. pdf, doc, jpg",
       "value_placeholder_multi": "Waarde (meerdere met komma's gescheiden)",
+      "regex_placeholder": "Reguliere expressie, bijv. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Bijlage",
         "from": "Van",
@@ -2696,6 +2697,7 @@
         "starts_with": "begint met",
         "ends_with": "eindigt met",
         "matches": "komt overeen met patroon",
+        "regex": "komt overeen met reguliere expressie",
         "greater_than": "is groter dan",
         "less_than": "is kleiner dan",
         "address_is": "is het adres",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Vul een adres in om naar door te sturen",
       "validation_action_reject": "Vul het afwijzingsbericht in",
       "validation_header_name": "Headernamen mogen alleen de letters A-Z, cijfers, koppeltekens en underscores bevatten",
+      "validation_regex": "Deze reguliere expressie is ongeldig",
       "templates_section": "Starten vanuit sjabloon",
       "template_newsletters": "Nieuwsbrieven naar map verplaatsen",
       "template_receipts": "Bonnen automatisch archiveren",

@@ -2682,6 +2682,7 @@
       "include_spam": "Also move messages marked as spam",
       "attachment_type_placeholder": "e.g. pdf, doc, jpg",
       "value_placeholder_multi": "Value (multiple separated by commas)",
+      "regex_placeholder": "Regular expression, e.g. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Attachment",
         "from": "From",
@@ -2703,6 +2704,7 @@
         "starts_with": "starts with",
         "ends_with": "ends with",
         "matches": "matches pattern",
+        "regex": "matches regex",
         "greater_than": "is greater than",
         "less_than": "is less than",
         "address_is": "is the address",
@@ -2765,6 +2767,7 @@
       "validation_action_forward": "Enter an address to forward to",
       "validation_action_reject": "Enter the rejection message",
       "validation_header_name": "Header names may only contain the letters A-Z, digits, hyphens and underscores",
+      "validation_regex": "This regular expression is not valid",
       "templates_section": "Start from template",
       "template_newsletters": "Move newsletters to folder",
       "template_receipts": "Auto-archive receipts",

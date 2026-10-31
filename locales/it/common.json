@@ -2675,6 +2675,7 @@
       "include_spam": "Sposta anche i messaggi contrassegnati come spam",
       "attachment_type_placeholder": "es. pdf, doc, jpg",
       "value_placeholder_multi": "Valore (più valori separati da virgole)",
+      "regex_placeholder": "Espressione regolare, ad es. ^Cron|mailman",
       "condition_fields": {
         "attachment": "Allegato",
         "from": "Da",
@@ -2696,6 +2697,7 @@
         "starts_with": "inizia con",
         "ends_with": "termina con",
         "matches": "corrisponde al modello",
+        "regex": "corrisponde all'espressione regolare",
         "greater_than": "è maggiore di",
         "less_than": "è minore di",
         "address_is": "è l'indirizzo",
@@ -2758,6 +2760,7 @@
       "validation_action_forward": "Inserisci un indirizzo a cui inoltrare",
       "validation_action_reject": "Inserisci il messaggio di rifiuto",
       "validation_header_name": "I nomi delle intestazioni possono contenere solo le lettere A-Z, cifre, trattini e trattini bassi",
+      "validation_regex": "Questa espressione regolare non è valida",
       "templates_section": "Parti da un modello",
       "template_newsletters": "Sposta newsletter in cartella",
       "template_receipts": "Archivia ricevute automaticamente",
