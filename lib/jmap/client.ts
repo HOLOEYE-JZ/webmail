@@ -8476,6 +8476,19 @@ export class JMAPClient implements IJMAPClient {
   // for why the fan-out has to probe on suspicion).
   private calendarAccessDenied = new Set<string>();
 
+  /**
+   * Whether `error` from a calendar call to the shared account `accountId`
+   * means it grants no calendar access; if so, it is remembered and skipped
+   * from now on. Any failure of the user's own calendars is the caller's.
+   */
+  private deniesCalendarAccess(accountId: string, error: unknown): boolean {
+    if (accountId === this.getCalendarsAccountId()) return false;
+    if (!isCalendarAccessDenial(jmapErrorType(error), error instanceof Error ? error.message : undefined)) return false;
+    this.calendarAccessDenied.add(accountId);
+    debug.log('calendar', `No calendar access to account ${accountId} - skipping it from now on`);
+    return true;
+  }
+
   // Result of the one-off synthetic-id capability probe, shared by every
   // range query on this client (see supportsSyntheticCalendarIds).
   private syntheticCalendarIdSupport: Promise<boolean> | null = null;
@@ -8655,12 +8668,7 @@ export class JMAPClient implements IJMAPClient {
       // calendar access at all. Remember the rejection and go quiet instead
       // of re-probing - and re-logging - on every range change. Anything
       // else, and any failure of the user's own calendars, is the caller's.
-      const denied = isCalendarAccessDenial(jmapErrorType(error), error instanceof Error ? error.message : undefined);
-      if (targetAccountId && accountId !== this.getCalendarsAccountId() && denied) {
-        this.calendarAccessDenied.add(targetAccountId);
-        debug.log('calendar', `No calendar access to account ${targetAccountId} - skipping it from now on`);
-        return [];
-      }
+      if (targetAccountId && this.deniesCalendarAccess(accountId, error)) return [];
       throw error;
     }
   }
@@ -9397,10 +9405,14 @@ export class JMAPClient implements IJMAPClient {
       debug.groupEnd();
       return tasks;
     } catch (error) {
-      // A refused query or get is a failure, not an empty task list: the
-      // task store keeps showing what it has.
-      debug.error('CalendarTask/fetch failed', error);
+      // A shared account probed on suspicion (see queryCalendarEvents) that
+      // grants no calendar access has no tasks. Any other refused query or
+      // get is a failure, not an empty task list: the task store keeps
+      // showing what it has.
+      const denied = this.deniesCalendarAccess(accountId, error);
+      if (!denied) debug.error('CalendarTask/fetch failed', error);
       debug.groupEnd();
+      if (denied) return [];
       throw error;
     }
   }
