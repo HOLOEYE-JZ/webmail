@@ -274,8 +274,8 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-foreground truncate" title={identity.name} dir="auto">
-                            {identity.name}
+                          <h3 className="font-semibold text-foreground truncate" title={identity.name || toUnicodeEmail(identity.email)} dir="auto">
+                            {identity.name || toUnicodeEmail(identity.email)}
                           </h3>
                           {identities[0]?.id === identity.id && (
                             <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
@@ -283,9 +283,11 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground truncate" title={toUnicodeEmail(identity.email)}>
-                          {toUnicodeEmail(identity.email)}
-                        </p>
+                        {identity.name && (
+                          <p className="text-sm text-muted-foreground truncate" title={toUnicodeEmail(identity.email)}>
+                            {toUnicodeEmail(identity.email)}
+                          </p>
+                        )}
 
                         {/* Additional Info */}
                         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
