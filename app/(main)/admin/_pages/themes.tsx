@@ -80,7 +80,9 @@ export function ThemesPage() {
   const dirty = policyDirty || switched.length > 0;
   useAdminUnsavedChanges('themes', dirty);
 
-  function setFeature(key: 'themesEnabled' | 'userThemesEnabled', value: boolean) {
+  // policy.features.userThemesEnabled stays in saved policies untouched: users
+  // have no way to upload a theme, so it has no switch here.
+  function setFeature(key: 'themesEnabled', value: boolean) {
     setPolicy(prev => ({ ...prev, features: { ...prev.features, [key]: value } }));
     setMessage(null);
   }
@@ -230,7 +232,6 @@ export function ThemesPage() {
 
   const enabledCount = themes.filter(isOn).length;
   const themesEnabled = policy.features.themesEnabled ?? true;
-  const userThemesEnabled = policy.features.userThemesEnabled ?? true;
   const lockColorMode = policy.themePolicy?.lockColorMode === true;
   const disabledBuiltin = policy.themePolicy?.disabledBuiltinThemes || [];
   const disabledInstalled = policy.themePolicy?.disabledThemes || [];
@@ -333,9 +334,6 @@ export function ThemesPage() {
         <SettingsSection id="policy" title="Theme policy" description="Control theme availability and defaults for users.">
           <SettingItem label="Themes" description="Allow users to select and apply themes">
             <ToggleSwitch checked={themesEnabled} onChange={(v) => setFeature('themesEnabled', v)} />
-          </SettingItem>
-          <SettingItem label="Users may upload themes" description="Allow users to upload their own theme files">
-            <ToggleSwitch checked={userThemesEnabled} disabled={!themesEnabled} onChange={(v) => setFeature('userThemesEnabled', v)} />
           </SettingItem>
           <SettingItem label="Default theme" description="Theme applied when users have not chosen one">
             <select
