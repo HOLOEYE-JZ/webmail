@@ -253,6 +253,7 @@ interface EmailViewerProps {
   onMarkConversationEmailRead?: (email: Email) => void;
   /** Mountain View: reply to one message of the conversation. */
   onReplyConversationEmail?: (email: Email) => void;
+  onReplyAllConversationEmail?: (email: Email) => void;
   /** Mountain View: a reply being written in place, shown under the conversation instead of the reply buttons. */
   mvInlineComposer?: React.ReactNode;
   onShowShortcuts?: () => void;
@@ -828,6 +829,7 @@ export function MvExpandedConversationCard({
   onLoadBody,
   onMarkRead,
   onReply,
+  onReplyAll,
   onDownloadAttachment,
   blobSource,
   compact,
@@ -839,6 +841,7 @@ export function MvExpandedConversationCard({
   onLoadBody?: (email: Email) => void;
   onMarkRead?: (email: Email) => void;
   onReply?: (email: Email) => void;
+  onReplyAll?: (email: Email) => void;
   onDownloadAttachment?: ConversationAttachmentHandler;
   blobSource?: EmailBlobContext;
 }) {
@@ -922,6 +925,17 @@ export function MvExpandedConversationCard({
             aria-label={t('reply')}
           >
             <Reply className="w-5 h-5" />
+          </button>
+        )}
+        {onReplyAll && !email.keywords?.$draft && !email.isScheduled && (
+          <button
+            type="button"
+            onClick={() => onReplyAll(email)}
+            className="grid place-items-center w-10 h-10 -my-2 -me-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
+            title={t('tooltips.reply_all')}
+            aria-label={t('reply_all')}
+          >
+            <ReplyAll className="w-5 h-5" />
           </button>
         )}
       </div>
@@ -1304,6 +1318,7 @@ export function EmailViewer({
   onLoadConversationEmail,
   onMarkConversationEmailRead,
   onReplyConversationEmail,
+  onReplyAllConversationEmail,
   mvInlineComposer,
   onShowShortcuts,
   onEditDraft,
@@ -1476,6 +1491,7 @@ export function EmailViewer({
       onLoadBody={onLoadConversationEmail}
       onMarkRead={onMarkConversationEmailRead}
       onReply={onReplyConversationEmail}
+      onReplyAll={onReplyAllConversationEmail}
       blobSource={target.sourceClientAccountId || target.sourceAccountId
         ? resolveEmailBlobContext(target, client)
         : blobSource ?? resolveEmailBlobContext(target, client)}
@@ -5007,6 +5023,17 @@ export function EmailViewer({
                             aria-label={t('reply')}
                           >
                             <Reply className="w-5 h-5" />
+                          </button>
+                        )}
+                        {!isDraft && !isScheduled && onReplyAll && (
+                          <button
+                            type="button"
+                            onClick={onReplyAll}
+                            className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            title={t('tooltips.reply_all')}
+                            aria-label={t('reply_all')}
+                          >
+                            <ReplyAll className="w-5 h-5" />
                           </button>
                         )}
                       </span>
