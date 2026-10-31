@@ -406,7 +406,11 @@ export interface EnableWebPushParams {
   client: IJMAPClient;
   // Optional - falls back to DEFAULT_RELAY_BASE_URL.
   relayBaseUrl?: string;
-  // Free-form label the relay shows in /metrics; never returned in pushes.
+  // Free-form label (callers pass the sign-in name). The relay stores it with
+  // the registration and copies it into every push it forwards: encrypted for
+  // the browser in a Web Push payload, readable to Google and Apple in the FCM
+  // and APNs payloads of the native apps. It is not part of the relay's
+  // /metrics.
   accountLabel?: string;
   // Destroy the recorded server-side subscription and create a brand-new one
   // instead of refreshing the existing record's expiry. Stalwart binds the set
