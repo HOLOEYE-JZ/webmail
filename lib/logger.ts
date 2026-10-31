@@ -10,13 +10,34 @@ const COLORS: Record<LogLevel, string> = {
 };
 const RESET = '\x1b[0m';
 
+type LogFormat = 'text' | 'json';
+
+interface LogSettings {
+  level?: string;
+  format?: string;
+}
+
+// The config manager pushes the resolved logLevel / logFormat (admin config,
+// then LOG_LEVEL / LOG_FORMAT, then default) here after every load and save.
+// Kept on globalThis so every bundle that loads this module sees the same
+// values, like the config manager singleton itself.
+const SETTINGS_KEY = Symbol.for('bulwark.logger.settings');
+type GlobalWithLogSettings = typeof globalThis & { [SETTINGS_KEY]?: LogSettings };
+const g = globalThis as GlobalWithLogSettings;
+
+/** Use these settings instead of LOG_LEVEL / LOG_FORMAT. */
+export function configureLogger(settings: LogSettings): void {
+  g[SETTINGS_KEY] = { ...settings };
+}
+
 function getLevel(): number {
-  const env = process.env.LOG_LEVEL?.toLowerCase() as LogLevel | undefined;
-  return env && env in LEVELS ? LEVELS[env] : LEVELS.info;
+  const configured = (g[SETTINGS_KEY]?.level ?? process.env.LOG_LEVEL)?.toLowerCase() as LogLevel | undefined;
+  return configured && configured in LEVELS ? LEVELS[configured] : LEVELS.info;
 }
 
 function isJson(): boolean {
-  return process.env.LOG_FORMAT?.toLowerCase() === 'json';
+  const configured = (g[SETTINGS_KEY]?.format ?? process.env.LOG_FORMAT)?.toLowerCase() as LogFormat | undefined;
+  return configured === 'json';
 }
 
 function log(level: LogLevel, message: string, extra?: Record<string, unknown>): void {

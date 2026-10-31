@@ -1,5 +1,5 @@
 import { readFile, writeFile, rename } from 'node:fs/promises';
-import { logger } from '@/lib/logger';
+import { configureLogger, logger } from '@/lib/logger';
 import { readFileEnv } from '@/lib/read-file-env';
 import { CONFIG_ENV_MAP, DEFAULT_FEATURE_GATES, DEFAULT_POLICY, DEFAULT_THEME_POLICY, type SettingsPolicy } from './types';
 import { ensureConfigDir, getConfigPath, assertWritable } from './paths';
@@ -43,7 +43,16 @@ class ConfigManager {
       this.policyCache = { ...DEFAULT_POLICY };
     }
     this.loaded = true;
+    this.applyLoggerSettings();
     logger.debug('ConfigManager loaded', { configKeys: Object.keys(this.adminConfig).length });
+  }
+
+  /** Hand the configured log level and format to the logger. */
+  private applyLoggerSettings(): void {
+    configureLogger({
+      level: this.get<string>('logLevel'),
+      format: this.get<string>('logFormat'),
+    });
   }
 
   /** Ensure config is loaded (no-op if already loaded). */
@@ -138,6 +147,7 @@ class ConfigManager {
     assertWritable('update admin config');
     Object.assign(this.adminConfig, updates);
     await this.writeJsonFile('config.json', this.adminConfig);
+    this.applyLoggerSettings();
   }
 
   /**
@@ -147,6 +157,7 @@ class ConfigManager {
     assertWritable('remove admin override');
     delete this.adminConfig[key];
     await this.writeJsonFile('config.json', this.adminConfig);
+    this.applyLoggerSettings();
   }
 
   /**
