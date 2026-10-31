@@ -3,6 +3,7 @@ import { createDemoMailboxes, createDemoSupportMailboxes, createDemoPersonalMail
 import { createDemoEmails } from './fixtures/emails';
 import { createDemoSupportEmails } from './fixtures/support';
 import { createDemoSignedEmails } from './fixtures/signed';
+import { createDemoSupplierEmails } from './fixtures/supplier';
 import { createDemoPersonalEmails, createDemoPersonalIdentities } from './fixtures/personal';
 import { createDemoContacts, createDemoAddressBooks, createDemoPersonalContacts, createDemoPersonalAddressBooks } from './fixtures/contacts';
 import { createDemoCalendars, createDemoCalendarEvents } from './fixtures/calendars';
@@ -107,7 +108,7 @@ export function getDemoData(profile: DemoProfile = 'work'): DemoData {
     self: { name: NORA.name, email: NORA.email },
     mailboxes: withShares(createDemoMailboxes(), createDemoMailboxShares()),
     sharedMailboxes: { [SUPPORT_ACCOUNT_ID]: { name: SUPPORT_ACCOUNT_NAME, mailboxes: createDemoSupportMailboxes() } },
-    emails: [...createDemoEmails(), ...createDemoSignedEmails(), ...createDemoSupportEmails()],
+    emails: [...createDemoEmails(), ...createDemoSignedEmails(), ...createDemoSupplierEmails(), ...createDemoSupportEmails()],
     contacts: createDemoContacts(),
     addressBooks: createDemoAddressBooks(),
     calendars: createDemoCalendars(),

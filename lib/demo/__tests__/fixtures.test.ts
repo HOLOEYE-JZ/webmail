@@ -35,6 +35,8 @@ import type { BusyPeriod } from '@/lib/jmap/types';
 import { useRecoveryStore } from '@/stores/recovery-store';
 import { SUPPORT_TAGS } from '../fixtures/shared-metadata';
 import { SIGNED_EMAIL_ID, SIGNED_TEXT } from '../fixtures/signed';
+import { INVOICE_BLOB, INVOICE_FILE, INVOICE_TOTAL, createSpreehostInvoiceXml } from '../fixtures/invoice';
+import { INVOICE_EMAIL_ID } from '../fixtures/supplier';
 import { loadSharedTags, sharedTagsKey, useSharedTagsStore, saveSharedTags } from '@/stores/shared-tags-store';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
@@ -168,7 +170,7 @@ describe('demo fixtures: files behind the data', () => {
   it('every attachment is backed by an asset', () => {
     for (const e of [...work.emails, ...personal.emails]) {
       for (const att of e.attachments ?? []) {
-        if (att.blobId === GONOGO_INVITE_BLOB) continue;
+        if (att.blobId === GONOGO_INVITE_BLOB || att.blobId === INVOICE_BLOB) continue;
         expect(DEMO_ASSETS[att.blobId as keyof typeof DEMO_ASSETS], `${e.id} -> ${att.name}`).toBeDefined();
       }
     }
@@ -538,5 +540,34 @@ describe('demo fixtures: audience screenshots', () => {
     // And its smime.p7s is the attachment's file, byte for byte.
     const der = Buffer.from(signaturePart.split('\r\n\r\n')[1].replace(/\s+/g, ''), 'base64');
     expect(der.equals(fs.readFileSync(path.join(PUBLIC, DEMO_ASSETS[sigPart!.blobId as keyof typeof DEMO_ASSETS].path)))).toBe(true);
+  });
+
+  it('Spreehost\'s invoice mail carries an XRechnung that adds up and is not overdue', async () => {
+    const client = new DemoJMAPClient('work');
+    const email = (await client.getEmail(INVOICE_EMAIL_ID))!;
+    expect(email.mailboxIds[MB.inbox]).toBe(true);
+    expect(email.from?.[0].email).toBe('billing@spreehost.example');
+    const [att] = email.attachments!;
+    // What the E-Invoices plugin reads: an .xml attachment (its detect.js kindOf).
+    expect(att.name).toBe(INVOICE_FILE);
+    expect(att.name).toMatch(/\.xml$/);
+    const xml = await (await client.fetchBlob(att.blobId)).text();
+    expect(xml).toBe(createSpreehostInvoiceXml());
+    expect(new TextEncoder().encode(xml).length).toBe(att.size);
+
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    const one = (name: string) => doc.getElementsByTagNameNS('*', name)[0]?.textContent ?? '';
+    expect(one('CustomizationID')).toContain('xrechnung_3.0');
+    expect(one('BuyerReference')).not.toBe('');
+    const lines = [...doc.getElementsByTagNameNS('*', 'InvoiceLine')]
+      .map((l) => Number(l.getElementsByTagNameNS('*', 'LineExtensionAmount')[0].textContent));
+    const net = lines.reduce((a, b) => a + b, 0);
+    expect(net.toFixed(2)).toBe(one('TaxExclusiveAmount'));
+    expect((net * 1.19).toFixed(2)).toBe(INVOICE_TOTAL);
+    expect(one('PayableAmount')).toBe(INVOICE_TOTAL);
+    // Dates follow the clock: issued yesterday, due in the future.
+    const today = new Date().toLocaleDateString('sv-SE');
+    expect(one('IssueDate') < today).toBe(true);
+    expect(one('DueDate') > today).toBe(true);
   });
 });

@@ -21,6 +21,7 @@ import { generateDemoId } from './demo-utils';
 import { DEMO_ASSETS } from './fixtures/assets';
 import { GONOGO_INVITE_BLOB } from './fixtures/emails';
 import { createGoNoGoInvitationIcs, GONOGO_EVENT_ID } from './fixtures/calendars';
+import { createSpreehostInvoiceXml, INVOICE_BLOB } from './fixtures/invoice';
 import { ALICE, BOB, SARAH, PRIYA, LISA } from './fixtures/people';
 import { parseAuthenticationResults, parseSpamLLM, parseSpamScore } from '@/lib/email-headers';
 import { compareEmails, type SortLevel } from '@/lib/message-list-order';
@@ -1203,6 +1204,8 @@ export class DemoJMAPClient implements IJMAPClient {
     if (blobId === GONOGO_INVITE_BLOB) {
       return new Blob([createGoNoGoInvitationIcs()], { type: 'text/calendar; method=REQUEST' });
     }
+    // Built on fetch so its dates follow the clock (fixtures/invoice.ts).
+    if (blobId === INVOICE_BLOB) return new Blob([createSpreehostInvoiceXml()], { type: 'application/xml' });
     const emlOf = demoEmlEmailId(blobId);
     const emlEmail = emlOf ? this.data.emails.find((e) => e.id === emlOf) : undefined;
     if (emlEmail) return new Blob([buildDemoEml(emlEmail)], { type: 'message/rfc822' });
