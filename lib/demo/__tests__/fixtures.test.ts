@@ -334,4 +334,16 @@ describe('demo fixtures: audience screenshots', () => {
       title: 'Engineering Lead', department: 'Platform', phone: '+49 30 555 0199', mobile: '',
     });
   });
+
+  it('the out-of-office reply is on for the Lisbon days on the calendar', async () => {
+    const reply = await new DemoJMAPClient('work').getVacationResponse();
+    expect(reply.isEnabled).toBe(true);
+    const trip = work.calendarEvents.find((e) => e.id === 'demo-event-lisbon')!;
+    const from = new Date(reply.fromDate!).getTime();
+    const to = new Date(reply.toDate!).getTime();
+    expect(from).toBeLessThan(to);
+    expect(from).toBeGreaterThanOrEqual(new Date(trip.utcStart!).getTime());
+    expect(to).toBeLessThanOrEqual(new Date(trip.utcEnd!).getTime());
+    expect(reply.textBody).toContain('Lisbon');
+  });
 });
