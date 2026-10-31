@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Проверить звук уведомления",
       "sounds": {
-        "default": "По умолчанию (Сигнал)",
+        "default": "Сигнал",
         "cheerful": "Радостный",
         "involved": "Вовлечённый",
         "swift": "Быстрый жест",

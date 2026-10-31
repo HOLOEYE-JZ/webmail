@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Probar sonido de notificación",
       "sounds": {
-        "default": "Predeterminado (Pitido)",
+        "default": "Pitido",
         "cheerful": "Alegre",
         "involved": "Elaborado",
         "swift": "Gesto rápido",

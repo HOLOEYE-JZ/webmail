@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Testi teavitusheli",
       "sounds": {
-        "default": "Vaikimisi (piiks)",
+        "default": "Piiks",
         "cheerful": "Rõõmus",
         "involved": "Elav",
         "swift": "Kiire liigutus",

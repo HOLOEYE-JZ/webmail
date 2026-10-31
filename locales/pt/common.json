@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Testar som de notificação",
       "sounds": {
-        "default": "Padrão (Bipe)",
+        "default": "Bipe",
         "cheerful": "Alegre",
         "involved": "Elaborado",
         "swift": "Gesto rápido",

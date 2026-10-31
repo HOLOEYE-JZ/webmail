@@ -4070,7 +4070,7 @@
     "notifications": {
       "test_sound": "ทดสอบเสียงแจ้งเตือน",
       "sounds": {
-        "default": "ค่าเริ่มต้น (เสียงบี๊บ)",
+        "default": "เสียงบี๊บ",
         "cheerful": "ร่าเริง (Cheerful)",
         "involved": "กระตือรือร้น (Involved)",
         "swift": "รวดเร็ว (Swift Gesture)",

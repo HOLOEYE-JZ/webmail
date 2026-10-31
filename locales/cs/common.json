@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Otestovat zvuk oznámení",
       "sounds": {
-        "default": "Výchozí (Pípnutí)",
+        "default": "Pípnutí",
         "cheerful": "Veselý",
         "involved": "Dynamický",
         "swift": "Rychlý",

@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Tester le son de notification",
       "sounds": {
-        "default": "Par défaut (Bip)",
+        "default": "Bip",
         "cheerful": "Joyeux",
         "involved": "Élaboré",
         "swift": "Geste rapide",

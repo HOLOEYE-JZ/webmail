@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "测试通知声音",
       "sounds": {
-        "default": "默认（蜂鸣声）",
+        "default": "蜂鸣声",
         "cheerful": "快乐",
         "involved": "沉浸",
         "swift": "轻快手势",

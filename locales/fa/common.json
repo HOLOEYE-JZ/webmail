@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "تست صدای اعلان",
       "sounds": {
-        "default": "پیش‌فرض (بیپ)",
+        "default": "بیپ",
         "cheerful": "شاد",
         "involved": "درگیر",
         "swift": "سریع",

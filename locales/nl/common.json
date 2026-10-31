@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Meldingsgeluid testen",
       "sounds": {
-        "default": "Standaard (Pieptoon)",
+        "default": "Pieptoon",
         "cheerful": "Vrolijk",
         "involved": "Uitgebreid",
         "swift": "Snel gebaar",

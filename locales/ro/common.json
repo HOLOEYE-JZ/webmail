@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Testați sunetul de notificare",
       "sounds": {
-        "default": "Implicit (Bip)",
+        "default": "Bip",
         "cheerful": "Vesel",
         "involved": "Implicat",
         "swift": "Gest rapid",

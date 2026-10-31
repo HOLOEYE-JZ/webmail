@@ -1595,7 +1595,7 @@
     "notifications": {
       "test_sound": "צליל הודעת בדיקה",
       "sounds": {
-        "default": "ברירת מחדל (ביפ)",
+        "default": "ביפ",
         "cheerful": "עליז",
         "involved": "מעורב",
         "swift": "מחווה מהירה",

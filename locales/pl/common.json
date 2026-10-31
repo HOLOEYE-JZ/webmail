@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Przetestuj dźwięk powiadomienia",
       "sounds": {
-        "default": "Domyślny (Beep)",
+        "default": "Beep",
         "cheerful": "Pogodny",
         "involved": "Dynamiczny",
         "swift": "Szybki gest",

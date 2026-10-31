@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Test varslingslyden",
       "sounds": {
-        "default": "Standard (pip)",
+        "default": "Pip",
         "cheerful": "Munter",
         "involved": "Engasjert",
         "swift": "Rask",

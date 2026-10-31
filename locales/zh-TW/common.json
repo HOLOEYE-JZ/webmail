@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "測試通知聲音",
       "sounds": {
-        "default": "預設（蜂鳴聲）",
+        "default": "蜂鳴聲",
         "cheerful": "快樂",
         "involved": "沉浸",
         "swift": "輕快手勢",

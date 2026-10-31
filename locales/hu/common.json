@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Értesítési hang tesztelése",
       "sounds": {
-        "default": "Alapértelmezett (sípolás)",
+        "default": "Sípolás",
         "cheerful": "Vidám",
         "involved": "Lelkes",
         "swift": "Gyors mozdulat",

@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "اختبار صوت الإشعار",
       "sounds": {
-        "default": "افتراضي (تنبيه)",
+        "default": "تنبيه",
         "cheerful": "مرح",
         "involved": "متفاعل",
         "swift": "إيماءة سريعة",

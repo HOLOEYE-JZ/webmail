@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Pārbaudīt paziņojuma skaņu",
       "sounds": {
-        "default": "Noklusējuma (Signāls)",
+        "default": "Signāls",
         "cheerful": "Priecīgs",
         "involved": "Iesaistošs",
         "swift": "Ātrs",

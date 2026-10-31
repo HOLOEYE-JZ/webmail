@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Benachrichtigungston testen",
       "sounds": {
-        "default": "Standard (Piepton)",
+        "default": "Piepton",
         "cheerful": "Fröhlich",
         "involved": "Aufwendig",
         "swift": "Schnelle Geste",

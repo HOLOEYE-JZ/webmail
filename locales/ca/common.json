@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Prova el so de notificació",
       "sounds": {
-        "default": "Per defecte (bip)",
+        "default": "Bip",
         "cheerful": "Alegre",
         "involved": "Elaborat",
         "swift": "Gest ràpid",

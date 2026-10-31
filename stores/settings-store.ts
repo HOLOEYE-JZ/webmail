@@ -942,7 +942,7 @@ const DEFAULT_SETTINGS = {
   // Email Notifications
   emailNotificationsEnabled: true,
   emailNotificationSound: true,
-  notificationSoundChoice: 'default' as NotificationSoundChoice,
+  notificationSoundChoice: 'involved' as NotificationSoundChoice,
   pushNotifyInboxOnly: false,
   notificationMutes: EMPTY_NOTIFICATION_MUTES,
   pushRelayUrl: '',
@@ -1495,6 +1495,7 @@ export const useSettingsStore = create<SettingsState>()(
             settings.protocolOpenMode = settings.protocolMailtoOpenMode;
           }
           migrateAnimationsSetting(settings);
+          migrateNotificationSoundDefault(settings);
 
           // Apply settings, noting which keys were taken over for the
           // onSettingsImport hook.
@@ -1896,7 +1897,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 9,
+      version: 10,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -1994,6 +1995,9 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         if (version < 6 || !isPlainRecord(state.preferredIdentityIds)) {
           state.preferredIdentityIds = {};
         }
+        // Before the v8 step: a beep from before explicitSettings existed was
+        // the default then, and must not be taken as chosen below.
+        migrateNotificationSoundDefault(state);
         // v8: admin policy defaults (#1248) skip settings the user chose.
         // Earlier builds did not record that, so a setting that differs from
         // the build default is taken as chosen.
@@ -2018,6 +2022,18 @@ export function migrateAnimationsSetting(state: Record<string, unknown>): void {
   if (Array.isArray(state.explicitSettings)) {
     state.explicitSettings = (state.explicitSettings as unknown[]).map((key) => (key === 'animationsEnabled' ? 'reduceMotion' : key));
   }
+}
+
+/**
+ * v10: the new mail sound defaults to Involved instead of the beep. A beep
+ * the user never picked was only the old default and moves to Involved; one
+ * they picked stays. Imports and server copies from older builds still
+ * carry the beep and go through this too.
+ */
+export function migrateNotificationSoundDefault(state: Record<string, unknown>): void {
+  if (state.notificationSoundChoice !== 'default') return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('notificationSoundChoice');
+  if (!chosen) state.notificationSoundChoice = 'involved';
 }
 
 // Helper functions to apply settings to DOM

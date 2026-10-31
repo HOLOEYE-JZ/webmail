@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "通知音をテスト",
       "sounds": {
-        "default": "デフォルト（ビープ）",
+        "default": "ビープ",
         "cheerful": "チアフル",
         "involved": "インボルブド",
         "swift": "スウィフトジェスチャー",

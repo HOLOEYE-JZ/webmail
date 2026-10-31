@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Test notifikationslyd",
       "sounds": {
-        "default": "Standard (Bip)",
+        "default": "Bip",
         "cheerful": "Glad",
         "involved": "Engageret",
         "swift": "Hurtig gestus",

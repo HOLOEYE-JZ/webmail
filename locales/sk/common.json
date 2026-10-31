@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Otestovať zvuk oznámenia",
       "sounds": {
-        "default": "Predvolený (Pípnutie)",
+        "default": "Pípnutie",
         "cheerful": "Veselý",
         "involved": "Dynamický",
         "swift": "Rýchly",

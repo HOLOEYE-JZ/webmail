@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "Bildirim sesini test et",
       "sounds": {
-        "default": "Varsayılan (Bip)",
+        "default": "Bip",
         "cheerful": "Neşeli",
         "involved": "Odaklı",
         "swift": "Hızlı Jest",

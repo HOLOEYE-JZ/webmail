@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Test notification sound",
       "sounds": {
-        "default": "Default (Beep)",
+        "default": "Beep",
         "cheerful": "Cheerful",
         "involved": "Involved",
         "swift": "Swift Gesture",

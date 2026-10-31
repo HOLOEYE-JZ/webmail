@@ -1633,7 +1633,7 @@
     "notifications": {
       "test_sound": "Туршилтын мэдэгдлийн дуу",
       "sounds": {
-        "default": "Өгөгдмөл (Дохио)",
+        "default": "Дохио",
         "cheerful": "Хөгжилтэй",
         "involved": "Оролцсон",
         "swift": "Шуурхай зангаа",

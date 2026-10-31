@@ -1630,7 +1630,7 @@
     "notifications": {
       "test_sound": "알림음 테스트",
       "sounds": {
-        "default": "기본 (비프음)",
+        "default": "비프음",
         "cheerful": "밝게",
         "involved": "경쾌하게",
         "swift": "빠르게",
