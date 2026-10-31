@@ -598,7 +598,11 @@ function SidebarSectionHeader({
     : "text-sm font-semibold text-foreground truncate";
 
   // The toggle is one button; Add and Settings are buttons beside it, not
-  // inside it (a button in a button is one control to the keyboard).
+  // inside it (a button in a button is one control to the keyboard). They
+  // stay 24px with a muted hover so they fit the header line and don't run
+  // into the folder row below, whose selection uses the accent colour.
+  // Large targets still get the 44px hit area from the Button.
+  const headerButtonClass = "-my-0.5 h-6 w-6 rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground";
   return (
     <div
       onContextMenu={onContextMenu}
@@ -632,7 +636,7 @@ function SidebarSectionHeader({
         <IconButton
           label={addTitle}
           onClick={onAdd}
-          className="-my-1.5 text-muted-foreground/70 hover:text-foreground"
+          className={headerButtonClass}
         >
           <Plus className="w-3.5 h-3.5" />
         </IconButton>
@@ -641,7 +645,7 @@ function SidebarSectionHeader({
         <IconButton
           label={settingsTitle}
           onClick={onSettings}
-          className="-my-1.5 text-muted-foreground/70 hover:text-foreground"
+          className={headerButtonClass}
         >
           <Settings className="w-3.5 h-3.5" />
         </IconButton>
