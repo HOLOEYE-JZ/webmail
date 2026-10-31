@@ -96,6 +96,16 @@ describe('ui.openEmail', () => {
     expect(first).toEqual(['m1']);
   });
 
+  it('opens at most 30 messages a minute in place', async () => {
+    onOpenEmail(mailPage);
+    for (let i = 0; i < 30; i++) await dispatchApiCall(plugin(), 'ui.openEmail', [{ id: 'm1' }]);
+    await expect(dispatchApiCall(plugin(), 'ui.openEmail', [{ id: 'm1' }])).rejects.toThrow(/at most 30 times a minute/);
+    expect(opened).toHaveLength(30);
+    // Another plugin has its own budget.
+    await dispatchApiCall(plugin({ id: 'p2' }), 'ui.openEmail', [{ id: 'm1' }]);
+    expect(opened).toHaveLength(31);
+  });
+
   it('passes on why the mail page could not open it', async () => {
     onOpenEmail(async () => new Error('the mail page is not ready'));
     await expect(dispatchApiCall(plugin(), 'ui.openEmail', [{ id: 'm1' }])).rejects.toThrow('ui.openEmail: the mail page is not ready');

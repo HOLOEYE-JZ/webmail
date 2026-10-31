@@ -106,6 +106,14 @@ export function proEmailTabOpener(loadingTitle: string): OpenEmailHandler {
 /** Times a minute a plugin may move the tab to a message's link. */
 const LINK_LOADS_PER_MINUTE = 5;
 
+/**
+ * Times a minute a plugin may open a message in place. Opening one takes over
+ * the reader and puts an open composer aside, so a plugin calling this in a
+ * loop would keep the user from reading or writing; a user clicking through a
+ * plugin's list stays well below it.
+ */
+const IN_PLACE_OPENS_PER_MINUTE = 30;
+
 /** Checks the request and opens the message, or throws an error the plugin sees. */
 export async function requestOpenEmail(plugin: InstalledPlugin, input: unknown): Promise<void> {
   const method = 'ui.openEmail';
@@ -120,6 +128,9 @@ export async function requestOpenEmail(plugin: InstalledPlugin, input: unknown):
   }
   const handler = handlers.at(-1);
   if (handler) {
+    if (!withinRate('open-email-in-place', plugin.id, IN_PLACE_OPENS_PER_MINUTE)) {
+      throw new Error(`${method}: at most ${IN_PLACE_OPENS_PER_MINUTE} times a minute`);
+    }
     const outcome = await handler(email);
     if (outcome === 'missing') throw new Error(`${method}: no message "${id}" in the account`);
     if (outcome instanceof Error) throw new Error(`${method}: ${outcome.message}`);
