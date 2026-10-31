@@ -2154,6 +2154,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     requestDsn?: boolean;
     requireTls?: boolean;
     priority?: MessagePriority;
+    headers?: Record<string, string>;
     composerId?: string;
   }) => {
     // Nothing is sent: the composer keeps what only goes once the mail is out.
@@ -2178,7 +2179,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const effectiveMode = pendingDraft?.mode ?? composerMode;
       const originalEmailId = composerSourceEmail?.id;
 
-      const result = await sendEmail(sendClient, data.to, data.subject, data.body, data.cc, data.bcc, data.identityId, data.fromEmail, data.draftId, data.fromName, data.htmlBody, data.attachments, data.inReplyTo, data.references, data.delayedUntil, data.envelopeMailFrom, { requestReadReceipt: data.requestReadReceipt, requestDsn: data.requestDsn, requireTls: data.requireTls, priority: data.priority, localAccountId: data.localAccountId, draftAccountId: data.draftAccountId });
+      const result = await sendEmail(sendClient, data.to, data.subject, data.body, data.cc, data.bcc, data.identityId, data.fromEmail, data.draftId, data.fromName, data.htmlBody, data.attachments, data.inReplyTo, data.references, data.delayedUntil, data.envelopeMailFrom, { requestReadReceipt: data.requestReadReceipt, requestDsn: data.requestDsn, requireTls: data.requireTls, priority: data.priority, headers: data.headers, localAccountId: data.localAccountId, draftAccountId: data.draftAccountId });
       submitted = true;
       announceSent(result, data);
       setShowComposer(false);

@@ -297,6 +297,8 @@ interface EmailComposerProps {
     requireTls?: boolean;
     /** Importance / X-Priority; absent for normal (#970). */
     priority?: MessagePriority;
+    /** Extra headers plugins added in onTransformOutgoingEmail. */
+    headers?: Record<string, string>;
     /** The id plugins know this composer by, for onAfterEmailSend. */
     composerId?: string;
   }) => void | false | Promise<void | false>;
@@ -3697,6 +3699,7 @@ export function EmailComposer({
           requestDsn: requestDsn || undefined,
           requireTls: requireTls || undefined,
           priority: priority !== 'normal' ? priority : undefined,
+          headers: outgoing.headers,
           delayedUntil: effectiveDelayedUntil,
           composerId: pluginComposerIdRef.current ?? undefined,
         });
