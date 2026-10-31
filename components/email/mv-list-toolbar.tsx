@@ -138,6 +138,7 @@ export function MvListToolbar({
     batchMoveToMailbox,
     isUnifiedView,
     unifiedRole,
+    queryTotal,
   } = useEmailStore(useShallow((state) => ({
     emails: state.emails,
     mailboxes: state.mailboxes,
@@ -154,6 +155,7 @@ export function MvListToolbar({
     batchMoveToMailbox: state.batchMoveToMailbox,
     isUnifiedView: state.isUnifiedView,
     unifiedRole: state.unifiedRole,
+    queryTotal: state.totalEmails,
   })));
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -187,7 +189,10 @@ export function MvListToolbar({
   const allSelected = hasSelection && selectionCount === emails.length;
   // Optimistic updates and demo fixtures can briefly leave the server total
   // behind the rows already loaded. Never render an impossible "23 of 22".
-  const displayedTotal = Math.max(totalCount ?? loadedCount, loadedCount);
+  // A unified or cross-account view is no single folder, so it has no folder
+  // count: its total is what the accounts' queries reported (#1471).
+  const knownTotal = totalCount ?? (isUnifiedView ? queryTotal : undefined);
+  const displayedTotal = Math.max(knownTotal ?? loadedCount, loadedCount);
   // The "Unread first" inbox gives each section its own readout instead.
   const sectioned = !!useUnreadFirstSection();
 

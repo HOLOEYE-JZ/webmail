@@ -470,6 +470,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     fetchEmailContent,
     isUnifiedView,
     unifiedRole,
+    listQueryTotal,
     scheduledEmails,
     scheduledTotal,
     scheduledTotalByAccount,
@@ -557,6 +558,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     fetchEmailContent: state.fetchEmailContent,
     isUnifiedView: state.isUnifiedView,
     unifiedRole: state.unifiedRole,
+    listQueryTotal: state.totalEmails,
     scheduledEmails: state.scheduledEmails,
     scheduledTotal: state.scheduledTotal,
     scheduledTotalByAccount: state.scheduledTotalByAccount,
@@ -5636,7 +5638,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onNavigatePrev={handleNavigatePrev}
                     mvPosition={mvShell && selectedEmailIndex >= 0 ? {
                       index: selectedEmailIndex + 1,
-                      total: Math.max(activeEmails.length, mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails ?? 0),
+                      // A unified view has no folder count; its accounts' query totals stand in (#1471).
+                      total: Math.max(activeEmails.length, mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails ?? (isUnifiedView ? listQueryTotal : 0)),
                     } : undefined}
                     mvFolderName={mvShell && !isScheduledView && !isUnifiedView ? currentMailboxName : undefined}
                     mvConversation={mvConversationView ? mvConversation ?? undefined : undefined}
