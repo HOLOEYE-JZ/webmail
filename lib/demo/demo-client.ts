@@ -37,7 +37,7 @@ export const DEMO_SIMULATE_KEY = 'bulwark-demo-simulate';
  *
  * One instance per demo login: `new DemoJMAPClient('work')` is the primary
  * account (with the shared Support mailbox delegated to it), and
- * `new DemoJMAPClient('personal')` the mail-only second account.
+ * `new DemoJMAPClient('personal')` the second account, with mail and contacts.
  */
 export class DemoJMAPClient implements IJMAPClient {
   private data: DemoData;
@@ -117,8 +117,8 @@ export class DemoJMAPClient implements IJMAPClient {
 
   // ── Capabilities ──────────────────────────────────────────────
 
-  /** The personal login is mail only; everything else lives in the work account. */
-  private get mailOnly(): boolean { return this.profile === 'personal'; }
+  /** The personal login has mail and contacts; everything else lives in the work account. */
+  private get isPersonal(): boolean { return this.profile === 'personal'; }
 
   hasAccountCapability(capability: string, _accountId?: string): boolean {
     return capability === 'urn:ietf:params:jmap:submission';
@@ -141,8 +141,8 @@ export class DemoJMAPClient implements IJMAPClient {
       'urn:ietf:params:jmap:submission': { maxDelayedSend: 30 * 24 * 60 * 60, submissionExtensions: { FUTURERELEASE: true } },
       'urn:ietf:params:jmap:vacationresponse': {},
       'urn:ietf:params:jmap:quota': {},
-      ...(this.mailOnly ? {} : {
-        'urn:ietf:params:jmap:contacts': {},
+      'urn:ietf:params:jmap:contacts': {},
+      ...(this.isPersonal ? {} : {
         'urn:ietf:params:jmap:calendars': {},
         'urn:ietf:params:jmap:sieve': {},
         'urn:ietf:params:jmap:files': {},
@@ -161,10 +161,10 @@ export class DemoJMAPClient implements IJMAPClient {
   supportsQuota(): boolean { return true; }
   supportsVacationResponse(): boolean { return true; }
   accountSupports(): boolean { return true; }
-  supportsContacts(): boolean { return !this.mailOnly; }
-  supportsCalendars(): boolean { return !this.mailOnly; }
-  supportsSieve(): boolean { return !this.mailOnly; }
-  supportsFiles(): boolean { return !this.mailOnly; }
+  supportsContacts(): boolean { return true; }
+  supportsCalendars(): boolean { return !this.isPersonal; }
+  supportsSieve(): boolean { return !this.isPersonal; }
+  supportsFiles(): boolean { return !this.isPersonal; }
   supportsPrincipals(): boolean { return false; }
   async getPrincipals(): Promise<never[]> { return []; }
   async setCalendarShare(): Promise<void> { /* demo: no-op */ }

@@ -1765,7 +1765,7 @@ export const useAuthStore = create<AuthState>()(
           const { DemoJMAPClient } = await import('@/lib/demo/demo-client');
           const { seedDemoPreferences } = await import('@/lib/demo/demo-preferences');
           // Two logins: the work account (primary, with the shared Support
-          // mailbox) and a mail-only personal account, so the account
+          // mailbox) and a personal account with mail and contacts, so the account
           // switcher and the merged inbox have more than one source.
           const client = new DemoJMAPClient('work');
           const personal = new DemoJMAPClient('personal');

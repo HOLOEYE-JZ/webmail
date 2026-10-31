@@ -12,7 +12,7 @@ import path from 'node:path';
 import { getDemoData } from '../demo-data';
 import { DemoJMAPClient } from '../demo-client';
 import { DEMO_ASSETS } from '../fixtures/assets';
-import { PORTRAITS, NORA, ALICE, BOB } from '../fixtures/people';
+import { PORTRAITS, NORA, NORA_PERSONAL, ALICE, BOB } from '../fixtures/people';
 import { GONOGO_INVITE_BLOB, GONOGO_UID } from '../fixtures/emails';
 import { GONOGO_EVENT_ID, createGoNoGoInvitationIcs } from '../fixtures/calendars';
 import { SUPPORT_ACCOUNT_ID, SMB, MB } from '../fixtures/mailboxes';
@@ -107,12 +107,13 @@ describe('demo fixtures: structure', () => {
     }
   });
 
-  it('contact groups only list contacts that exist', () => {
-    const ids = new Set(work.contacts.map((c) => c.id));
-    for (const group of work.contacts.filter((c) => c.kind === 'group')) {
+  it.each([['work', work], ['personal', personal]] as const)('%s contact groups only list contacts that exist', (_name, data) => {
+    const ids = new Set(data.contacts.map((c) => c.id));
+    expect(ids.size, 'duplicate contact ids').toBe(data.contacts.length);
+    for (const group of data.contacts.filter((c) => c.kind === 'group')) {
       for (const member of Object.keys(group.members ?? {})) expect(ids.has(member), `${group.id} -> ${member}`).toBe(true);
     }
-    expect(work.contacts.filter((c) => c.kind === 'group').length).toBeGreaterThanOrEqual(3);
+    expect(data.contacts.filter((c) => c.kind === 'group').length).toBeGreaterThanOrEqual(2);
   });
 
   it('people who write to Nora from the cast are in her address books', () => {
@@ -121,6 +122,19 @@ describe('demo fixtures: structure', () => {
       if (p.email === NORA.email) continue;
       expect(contactEmails.has(p.email.toLowerCase()), `${p.name} has a portrait but no contact card`).toBe(true);
     }
+  });
+
+  it('the personal login has the photo of everyone who writes to it, and of Nora on both addresses', () => {
+    // Avatars only look at the open account's cards.
+    const photoOf = (address: string) => personal.contacts
+      .find((c) => Object.values(c.emails ?? {}).some((e) => e.address === address))
+      ?.media?.photo1?.uri;
+    const senders = new Set(personal.emails.flatMap((e) => e.from ?? []).map((a) => a.email));
+    const cast = PORTRAITS.filter((p) => senders.has(p.email));
+    expect(cast.length).toBeGreaterThanOrEqual(5);
+    for (const p of cast) expect(photoOf(p.email), p.name).toBe(`/demo/portraits/${p.portrait}.jpg`);
+    expect(photoOf(NORA_PERSONAL.email)).toBe('/demo/portraits/nora-lindqvist.jpg');
+    expect(photoOf(NORA.email)).toBe('/demo/portraits/nora-lindqvist.jpg');
   });
 });
 
@@ -151,7 +165,7 @@ describe('demo fixtures: files behind the data', () => {
   });
 
   it('contact photos are served locally, not from a third party', () => {
-    for (const c of work.contacts) {
+    for (const c of [...work.contacts, ...personal.contacts]) {
       for (const m of Object.values(c.media ?? {})) expect(m.uri).toMatch(/^\/demo\/portraits\//);
     }
   });
@@ -253,12 +267,13 @@ describe('demo fixtures: features the screenshots show', () => {
     expect(mailboxes.find((m) => m.id === MB.archive2025)?.parentId).toBe(MB.archive);
   });
 
-  it('the personal account is a separate mail-only login', async () => {
+  it('the personal account is a separate login with mail and contacts', async () => {
     const second = new DemoJMAPClient('personal');
     expect(second.getAccountId()).not.toBe(client.getAccountId());
     expect(second.getUsername()).not.toBe(client.getUsername());
     expect(second.supportsCalendars()).toBe(false);
-    expect(second.supportsContacts()).toBe(false);
+    expect(second.supportsContacts()).toBe(true);
+    expect(second.supportsFiles()).toBe(false);
     expect((await second.getMailboxes()).find((m) => m.role === 'inbox')?.unreadEmails).toBeGreaterThan(0);
   });
 
