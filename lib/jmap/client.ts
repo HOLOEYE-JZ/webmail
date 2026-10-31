@@ -5798,34 +5798,68 @@ export class JMAPClient implements IJMAPClient {
       xhr.setRequestHeader('Authorization', this.authHeader);
       xhr.responseType = 'text';
 
-      const onAbort = () => xhr.abort();
-      if (signal) signal.addEventListener('abort', onAbort, { once: true });
-      const cleanup = () => signal?.removeEventListener('abort', onAbort);
-
-      if (onProgress) {
-        // Fire 0% immediately so the UI leaves its initial state even
-        // before the first network packet flushes.
-        onProgress(0, file.size);
-        xhr.upload.onprogress = (ev) => {
-          // ev.total is only meaningful when lengthComputable; fall back
-          // to file.size so callers always get a usable denominator.
-          const total = ev.lengthComputable ? ev.total : file.size;
-          onProgress(ev.loaded, total);
-        };
-      }
-
-      xhr.onload = () => {
+      let settled = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let uploaded = 0;
+      const cleanup = () => {
+        clearTimeout(timer);
+        signal?.removeEventListener('abort', onAbort);
+        xhr.onload = xhr.onerror = xhr.onabort = xhr.ontimeout = null;
+        xhr.upload.onprogress = null;
+      };
+      const settle = (complete: () => void): boolean => {
+        if (settled) return false;
+        settled = true;
         cleanup();
+        complete();
+        return true;
+      };
+      const abortWith = (error: Error) => {
+        // Settle first: abort() may synchronously dispatch an abort event.
+        if (settle(() => reject(error))) xhr.abort();
+      };
+      const onAbort = () => abortWith(new DOMException('Upload aborted', 'AbortError'));
+      const onTimeout = () => abortWith(new RequestTimeoutError(JMAPClient.TRANSFER_TIMEOUT_MS));
+      const resetWatchdog = () => {
+        clearTimeout(timer);
+        // XHR uses this budget for inactivity, unlike fetch's deadline until
+        // response headers. Additional upload bytes renew it; after 100% it
+        // stays armed while waiting for the terminal response.
+        timer = setTimeout(onTimeout, JMAPClient.TRANSFER_TIMEOUT_MS);
+      };
+
+      xhr.upload.onprogress = (ev) => {
+        if (settled) return;
+        if (ev.loaded > uploaded) {
+          uploaded = ev.loaded;
+          resetWatchdog();
+        }
+        // ev.total is only meaningful when lengthComputable; fall back
+        // to file.size so callers always get a usable denominator.
+        onProgress?.(ev.loaded, ev.lengthComputable ? ev.total : file.size);
+      };
+      xhr.onload = () => settle(() => {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(xhr.responseText);
         } else {
           reject(new Error(`Failed to upload file: ${xhr.status} - ${xhr.responseText}`));
         }
-      };
-      xhr.onerror = () => { cleanup(); reject(new Error('Upload network error')); };
-      xhr.onabort = () => { cleanup(); reject(new DOMException('Upload aborted', 'AbortError')); };
+      });
+      xhr.onerror = () => settle(() => reject(new Error('Upload network error')));
+      xhr.onabort = () => settle(() => reject(new DOMException('Upload aborted', 'AbortError')));
+      xhr.ontimeout = onTimeout;
 
-      xhr.send(file);
+      try {
+        signal?.addEventListener('abort', onAbort, { once: true });
+        // Fire 0% immediately so the UI leaves its initial state even
+        // before the first network packet flushes.
+        onProgress?.(0, file.size);
+        if (settled) return;
+        resetWatchdog();
+        xhr.send(file);
+      } catch (error) {
+        settle(() => reject(error));
+      }
     });
   }
 
