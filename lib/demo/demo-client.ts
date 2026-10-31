@@ -8,6 +8,10 @@ import { createDemoBusyBlocks } from './fixtures/availability';
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';
 import { parseDurationSeconds } from '@/lib/calendar-event-normalization';
 import { createDemoArchivedItems, type DemoArchivedItem } from './fixtures/archive';
+import { createDemoSharedMetadata } from './fixtures/shared-metadata';
+import {
+  MAX_METADATA_ENTRY_BYTES, MetadataPatchError, MetadataTooLargeError, MetadataUnsupportedError, metadataValueBytes,
+} from '@/lib/jmap/bulwark-metadata';
 import {
   hasArchivedEmail as hasArchivedEmailIn, listArchivedEmailsPaged,
   type ArchiveIo, type ArchiveListResult, type ArchiveQueryPage, type RestoreResult,
@@ -58,6 +62,10 @@ export class DemoJMAPClient implements IJMAPClient {
   private readonly principals: Principal[];
   /** Mail deleted for good that the server still keeps (Recover deleted items). */
   private archive: DemoArchivedItem[];
+  /** Bulwark's shared Inbox metadata by account and key; only accounts listed here have any. */
+  private metadata: Record<string, Record<string, unknown>>;
+  /** The same for each account's private metadata. */
+  private privateMetadata: Record<string, Record<string, unknown>> = {};
   private blobStore = new Map<string, Blob>();
   private scheduledSubmissions = new Map<string, { id: string; emailId: string; identityId: string; sendAt: string; undoStatus: 'pending' | 'final' | 'canceled'; isSmime: boolean }>();
   private connectionCallback: ((connected: boolean) => void) | null = null;
@@ -70,6 +78,7 @@ export class DemoJMAPClient implements IJMAPClient {
     this.data = getDemoData(profile);
     this.principals = profile === 'personal' ? [] : createDemoPrincipals();
     this.archive = profile === 'personal' ? [] : createDemoArchivedItems(this.data.accountId);
+    this.metadata = profile === 'personal' ? {} : createDemoSharedMetadata();
     // Fixtures carry raw headers the way a server sends them; derive the
     // parsed fields the viewer reads, as JMAPClient.parseEmailHeaders does.
     for (const email of this.data.emails) {
@@ -320,6 +329,67 @@ export class DemoJMAPClient implements IJMAPClient {
     return periods
       .filter((p) => new Date(p.utcStart).getTime() < utcEnd.getTime() && new Date(p.utcEnd).getTime() > utcStart.getTime())
       .sort((a, b) => a.utcStart.localeCompare(b.utcStart));
+  }
+
+  // ── Bulwark data in Inbox metadata (urn:ietf:params:jmap:metadata) ──
+  // Only the Support group keeps any (fixtures/shared-metadata.ts): its
+  // shared tags and the team inbox plugin's names. Keys are without the
+  // `org.bulwarkmail.` namespace, as JMAPClient hands them out.
+
+  supportsBulwarkMetadata(accountId?: string): boolean {
+    return !!accountId && Object.prototype.hasOwnProperty.call(this.metadata, accountId);
+  }
+
+  advertisesBulwarkMetadata(accountId?: string): boolean {
+    return this.supportsBulwarkMetadata(accountId);
+  }
+
+  async getBulwarkMetadata(accountId?: string, options?: { private?: boolean }): Promise<Record<string, unknown> | null> {
+    if (!this.supportsBulwarkMetadata(accountId)) return null;
+    const store = options?.private ? this.privateMetadata : this.metadata;
+    return structuredClone(store[accountId!] ?? {});
+  }
+
+  async setBulwarkMetadata(accountId: string | undefined, key: string, value: unknown, options?: { private?: boolean }): Promise<void> {
+    if (!this.supportsBulwarkMetadata(accountId)) throw new MetadataUnsupportedError();
+    if (value !== null && metadataValueBytes(value) > MAX_METADATA_ENTRY_BYTES) {
+      throw new MetadataTooLargeError(`The entry is larger than ${MAX_METADATA_ENTRY_BYTES} bytes`);
+    }
+    const store = options?.private ? this.privateMetadata : this.metadata;
+    const entries = (store[accountId!] ??= {});
+    if (value === null) delete entries[key];
+    else entries[key] = structuredClone(value);
+    this.notifyMailboxChange(accountId!);
+  }
+
+  /** Sets (null: removes) values inside one entry; a path whose parent is missing fails as on Stalwart. */
+  async patchBulwarkMetadata(accountId: string | undefined, key: string, patches: Array<{ path: string[]; value: unknown }>): Promise<{ newState?: string }> {
+    if (!this.supportsBulwarkMetadata(accountId)) throw new MetadataUnsupportedError();
+    const entries = this.metadata[accountId!];
+    const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+    let result: unknown = structuredClone(entries[key]);
+    for (const { path, value } of patches) {
+      if (path.length === 0) { result = structuredClone(value); continue; }
+      let node: unknown = result;
+      for (const segment of path.slice(0, -1)) node = isObject(node) ? node[segment] : undefined;
+      if (!isObject(node)) throw new MetadataPatchError('A parent of the patched value does not exist');
+      const last = path[path.length - 1];
+      if (value === null) delete node[last];
+      else node[last] = structuredClone(value);
+    }
+    if (result !== null && result !== undefined && metadataValueBytes(result) > MAX_METADATA_ENTRY_BYTES) {
+      throw new MetadataTooLargeError(`The entry is larger than ${MAX_METADATA_ENTRY_BYTES} bytes`);
+    }
+    if (result === null || result === undefined) delete entries[key];
+    else entries[key] = result;
+    return { newState: this.notifyMailboxChange(accountId!) };
+  }
+
+  /** A metadata change bumps the account's Mailbox state, as Stalwart does; returns the new state. */
+  private notifyMailboxChange(accountId: string): string {
+    const state = generateDemoId('state');
+    this.stateChangeCallback?.({ '@type': 'StateChange', changed: { [accountId]: { Mailbox: state } } });
+    return state;
   }
 
   /** One of Nora's own shareable items, or null (another account's, or unknown). */
@@ -583,11 +653,14 @@ export class DemoJMAPClient implements IJMAPClient {
     limit?: number;
     onProgress?: (scanned: number, total: number) => void;
     signal?: AbortSignal;
+    accountId?: string;
   }): Promise<{ keywords: Record<string, number>; scanned: number; total: number; complete: boolean }> {
-    const total = this.data.emails.length;
+    // One account's mail: the Support group's tags are not Nora's own.
+    const emails = this.data.emails.filter(this.inAccount(options?.accountId));
+    const total = emails.length;
     const scanned = Math.min(total, Math.max(0, options?.limit ?? total));
     const keywords: Record<string, number> = {};
-    for (const email of this.data.emails.slice(0, scanned)) {
+    for (const email of emails.slice(0, scanned)) {
       for (const [keyword, isSet] of Object.entries(email.keywords || {})) {
         if (isSet) keywords[keyword] = (keywords[keyword] ?? 0) + 1;
       }

@@ -33,6 +33,8 @@ import { availabilityFor } from '@/components/calendar/participant-availability'
 import { demoAt } from '../demo-utils';
 import type { BusyPeriod } from '@/lib/jmap/types';
 import { useRecoveryStore } from '@/stores/recovery-store';
+import { SUPPORT_TAGS } from '../fixtures/shared-metadata';
+import { loadSharedTags, sharedTagsKey, useSharedTagsStore, saveSharedTags } from '@/stores/shared-tags-store';
 
 const PUBLIC = path.resolve(__dirname, '..', '..', '..', 'public');
 const work = getDemoData('work');
@@ -95,16 +97,20 @@ describe('demo fixtures: structure', () => {
   });
 
   it('every tag on a message has a definition with a palette colour', () => {
-    const defined = new Set(DEMO_KEYWORDS.map((k) => `$label:${k.id}`));
-    for (const k of DEMO_KEYWORDS) expect(KEYWORD_PALETTE[k.color], `colour ${k.color}`).toBeDefined();
-    for (const e of [...work.emails, ...personal.emails]) {
-      for (const keyword of Object.keys(e.keywords)) {
-        if (keyword.startsWith('$label:')) expect(defined.has(keyword), `${e.id} carries undefined tag ${keyword}`).toBe(true);
+    // Nora's own tags on her mail; the Support team's shared tags on Support mail.
+    const isSupport = (e: (typeof work.emails)[number]) => Object.keys(e.mailboxIds).some((id) => id.startsWith('demo-support-'));
+    const own = [...work.emails.filter((e) => !isSupport(e)), ...personal.emails];
+    const team = work.emails.filter(isSupport);
+    for (const [definitions, emails] of [[DEMO_KEYWORDS, own], [SUPPORT_TAGS, team]] as const) {
+      const defined = new Set(definitions.map((k) => `$label:${k.id}`));
+      for (const k of definitions) expect(KEYWORD_PALETTE[k.color], `colour ${k.color}`).toBeDefined();
+      for (const e of emails) {
+        for (const keyword of Object.keys(e.keywords)) {
+          if (keyword.startsWith('$label:')) expect(defined.has(keyword), `${e.id} carries undefined tag ${keyword}`).toBe(true);
+        }
       }
-    }
-    // The sidebar should have something to count for each tag.
-    for (const tag of defined) {
-      expect(work.emails.some((e) => e.keywords[tag]) || personal.emails.some((e) => e.keywords[tag]), `${tag} is never used`).toBe(true);
+      // The sidebar should have something to count for each tag.
+      for (const tag of defined) expect(emails.some((e) => e.keywords[tag]), `${tag} is never used`).toBe(true);
     }
   });
 
@@ -466,5 +472,25 @@ describe('demo fixtures: audience screenshots', () => {
     expect((await client.listArchivedEmails!(undefined, { days: 30 })).items).toHaveLength(3);
     expect((await client.restoreArchivedItems!([items[0].id]))[0]).toMatchObject({ ok: false, type: 'notFound' });
     expect(new DemoJMAPClient('personal').advertisesArchivedItems!()).toBe(false);
+  });
+
+  it('the Support mailbox shows the team\'s shared tags, and a member\'s change is kept', async () => {
+    const client = new DemoJMAPClient('work');
+    const key = sharedTagsKey('fixture-test', SUPPORT_ACCOUNT_ID);
+    await loadSharedTags(key, SUPPORT_ACCOUNT_ID, client);
+    const entry = useSharedTagsStore.getState().entries[key];
+    expect(entry.status).toBe('ready');
+    expect(entry.tags.map((t) => `${t.label}:${t.color}`)).toEqual(['Accounts:orange', 'Billing:green', 'Bug:red', 'Integration:purple']);
+    expect(entry.discovered).toMatchObject({ '$label:billing': 2, '$label:integration': 3 });
+
+    await saveSharedTags(key, SUPPORT_ACCOUNT_ID, client, [{ id: 'bug', value: { label: 'Bug report', color: 'red' } }]);
+    const stored = await client.getBulwarkMetadata!(SUPPORT_ACCOUNT_ID);
+    expect((stored!.tags as { tags: Record<string, { label: string }> }).tags.bug.label).toBe('Bug report');
+    expect((stored!.tags as { tags: Record<string, unknown> }).tags.billing).toBeDefined();
+
+    // Nora's own account keeps none (her templates stay on the device), and its tags don't mix with the team's.
+    expect(client.supportsBulwarkMetadata!(client.getAccountId())).toBe(false);
+    const own = await client.discoverKeywords();
+    expect(Object.keys(own.keywords).some((k) => SUPPORT_TAGS.some((t) => k === `$label:${t.id}`))).toBe(false);
   });
 });
