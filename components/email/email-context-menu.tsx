@@ -214,6 +214,7 @@ export function EmailContextMenu({
   const { tree: moveTree, targetIds: moveTargetIds } = buildMoveTargets(mailboxes, {
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox),
+    emails: showBatchActions ? batchEmails : [email],
   });
 
   // Filter tree to only include branches that contain valid targets

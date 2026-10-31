@@ -26,6 +26,7 @@ export function MoveToDialog({ email, mailboxes, selectedMailbox, onClose, onMov
     () => buildMoveTargets(mailboxes, {
       currentMailboxId: selectedMailbox,
       ownerAccountId: resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox),
+      emails: email ? [email] : [],
     }),
     [email, mailboxes, selectedMailbox],
   );

@@ -56,8 +56,8 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
 
   const ownerAccountId = resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox);
   const { tree: moveTree, targetIds: moveTargetIds } = useMemo(
-    () => buildMoveTargets(mailboxes, { currentMailboxId: selectedMailbox, ownerAccountId }),
-    [mailboxes, selectedMailbox, ownerAccountId],
+    () => buildMoveTargets(mailboxes, { currentMailboxId: selectedMailbox, ownerAccountId, emails: [email] }),
+    [mailboxes, selectedMailbox, ownerAccountId, email],
   );
   const canMove = !!onMoveToMailbox && moveTree.length > 0;
 

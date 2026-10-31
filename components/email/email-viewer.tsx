@@ -1903,8 +1903,12 @@ export function EmailViewer({
   // Move-to dropdown: the message's own account first (#1149)
   const moveOwnerAccountId = resolveMoveOwnerAccountId(email, mailboxes, selectedMailbox);
   const { tree: moveTree, targetIds: moveTargetIds } = useMemo(
-    () => buildMoveTargets(mailboxes, { currentMailboxId: selectedMailbox, ownerAccountId: moveOwnerAccountId }),
-    [mailboxes, selectedMailbox, moveOwnerAccountId],
+    () => buildMoveTargets(mailboxes, {
+      currentMailboxId: selectedMailbox,
+      ownerAccountId: moveOwnerAccountId,
+      emails: email ? [email] : [],
+    }),
+    [mailboxes, selectedMailbox, moveOwnerAccountId, email],
   );
 
   // Close dropdown menus on click outside

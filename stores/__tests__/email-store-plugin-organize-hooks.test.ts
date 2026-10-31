@@ -4,6 +4,7 @@ import { useAuthStore } from '../auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { clearAllHooks, emailHooks } from '@/lib/plugin-hooks';
 import { emailKeyFor } from '@/lib/thread-utils';
+import { SEARCH_SCOPE_ALL_FOLDERS } from '@/lib/search-scope-folders';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
@@ -82,6 +83,8 @@ function openFolder(folderId: string, emails: Email[]) {
     isUnifiedView: false,
     unifiedRole: null,
     crossView: null,
+    searchQuery: '',
+    searchMailboxId: folderId,
     emails,
     selectedEmail: null,
     selectedEmailKeys: new Set(),
@@ -235,6 +238,20 @@ describe('move and archive hooks', () => {
 
     expect(unarchived).toHaveBeenCalledWith({ emailIds: ['e1'], toMailboxId: 'inbox' });
     expect(archived).not.toHaveBeenCalled();
+  });
+
+  it('reports the folder a search hit is in, not the open one (#1452)', async () => {
+    openFolder('archive', [makeEmail('e1', { mailboxIds: { custom: true } })]);
+    useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: SEARCH_SCOPE_ALL_FOLDERS });
+    const after = vi.fn();
+    const archived = vi.fn();
+    emailHooks.onAfterEmailMove.register('t', after);
+    emailHooks.onEmailArchive.register('t', archived);
+
+    expect(await useEmailStore.getState().moveToMailbox(client, 'e1', 'archive')).toBe(true);
+
+    expect(after).toHaveBeenCalledWith({ emailIds: ['e1'], fromMailboxId: 'custom', toMailboxId: 'archive' });
+    expect(archived).toHaveBeenCalledWith({ emailIds: ['e1'] });
   });
 
   it('batch archive asks and reports once for the selection', async () => {

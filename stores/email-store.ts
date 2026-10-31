@@ -18,6 +18,7 @@ import { emailHooks } from "@/lib/plugin-hooks";
 import { scheduleAutoMarkAsRead } from "@/lib/mark-as-read-delay";
 import { allowEmailMove, createMailboxWithHooks, emitEmailMove, idsFromSelectionKeys, keywordChangeLists, mailboxToView, quotaToView } from "@/lib/plugin-mail-hooks";
 import { emailSummary, emailToReadView } from "@/lib/plugin-projection";
+import { emailInMailbox } from "@/lib/move-targets";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import { emailKeyFor, threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import { provideSearchResults, type ProvidedSearchResult } from "@/lib/plugin-search-results";
@@ -2674,26 +2675,14 @@ async function refreshMailboxesForViewingAccount(fallbackClient: IJMAPClient): P
   }
 }
 
-// Whether an email belongs to a given mailbox, for local counter math.
-// Own-account emails carry bare ids (equal to both `id` and `originalId`).
-// As of #281 V3, EVERY client fetch path (getEmails/getEmail/getThreadEmails/
-// searchEmails/advancedSearchEmails) namespaces shared/delegated emails'
-// `mailboxIds` to the store id (`${ownerId}:${origId}`), so the `ids[mailbox.id]`
-// fast path below matches own and shared mailboxes alike - one id space.
-// The `originalId` branches remain as a defensive fallback for any email that
-// still carries a bare owner id (scoped to the owning account via
-// `sourceAccountId === mailbox.accountId` so a bare owner id can't collide with
-// another account's folder). (#281)
 /**
  * The folder messages are moved out of, for the move hooks: the open folder,
  * or in an aggregate view (unified, tag, search across folders) the one
  * folder they all share, else null.
  */
 function moveSourceMailboxId(emails: Array<Pick<Email, 'mailboxIds' | 'sourceAccountId'>>, mailboxes: Mailbox[]): string | null {
-  const { selectedMailbox, selectedKeyword, isUnifiedView } = useEmailStore.getState();
-  if (!selectedKeyword && !isUnifiedView && selectedMailbox && mailboxes.some(mb => mb.id === selectedMailbox)) {
-    return selectedMailbox;
-  }
+  const open = removalFolder(useEmailStore.getState());
+  if (open && mailboxes.some(mb => mb.id === open.id)) return open.id;
   const sources = new Set<string>();
   for (const email of emails) {
     const mailbox = mailboxes.find(mb => emailInMailbox(email, mb));
@@ -2701,25 +2690,6 @@ function moveSourceMailboxId(emails: Array<Pick<Email, 'mailboxIds' | 'sourceAcc
     sources.add(mailbox.id);
   }
   return sources.size === 1 ? [...sources][0] : null;
-}
-
-function emailInMailbox(
-  email: { mailboxIds?: Record<string, boolean>; sourceAccountId?: string },
-  mailbox: Mailbox,
-): boolean {
-  const ids = email.mailboxIds;
-  if (!ids) return false;
-  if (ids[mailbox.id]) return true;
-  if (!mailbox.isShared && mailbox.originalId) return !!ids[mailbox.originalId];
-  if (
-    mailbox.isShared &&
-    mailbox.originalId &&
-    email.sourceAccountId &&
-    email.sourceAccountId === mailbox.accountId
-  ) {
-    return !!ids[mailbox.originalId];
-  }
-  return false;
 }
 
 /**

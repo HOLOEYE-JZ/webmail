@@ -278,6 +278,7 @@ export function MvListToolbar({
   const { tree: moveTree, targetIds: moveTargetIds } = buildMoveTargets(mailboxes, {
     currentMailboxId: selectedMailbox,
     ownerAccountId: resolveMoveOwnerAccountId(selectedEmails[0], mailboxes, selectedMailbox),
+    emails: selectedEmails,
   });
 
   const renderMoveNodes = (nodes: MailboxNode[], depth = 0): React.ReactNode =>
