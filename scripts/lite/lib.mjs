@@ -863,11 +863,17 @@ multiple accounts, calendar, contacts, files, themes, settings export/import,
 password and TOTP login, demo mode, deep links.
 
 Not available in Lite (they need the Node.js server): the admin console and
-setup wizard, plugins and sidebar apps, settings sync across devices, OAuth /
-SSO login, the account security tab (app passwords, 2FA setup), ICS URL
-subscriptions and CalDAV discovery, sender favicons, office (WOPI) editing,
-web push notifications, the update banner, device pairing, and the
-"Default apps" page (registering Lite as the mailto:/webcal: handler).
+setup wizard, plugins and sidebar apps, settings sync across devices, the
+account security tab (app passwords, 2FA setup), ICS URL subscriptions and
+CalDAV discovery, sender favicons, office (WOPI) editing, web push
+notifications, the update banner, device pairing, and the "Default apps" page
+(registering Lite as the mailto:/webcal: handler).
+
+OAuth / SSO login is not in this build. It is in Lite when Stalwart serves it
+as an Application (\`npm run build:lite -- --target=stalwart\`, or the
+\`${STALWART_ZIP_NAME}\` of a release): accounts whose domain signs in at an
+OpenID provider are sent there, and setting the Application's
+\`oauthClientId\` adds **Sign in with SSO**. That bundle's README explains it.
 
 ## Security notes
 
