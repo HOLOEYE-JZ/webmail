@@ -77,7 +77,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
   {
     id: 'connector',
     host: 'connector.bulwarkmail.org',
-    files: ['lib/admin/types.ts', 'lib/connector/registry.ts'],
+    files: ['lib/connector/registry.ts'],
     side: 'server',
     usedBy: 'Links in the docs and the directory that open this instance; the connector asks this server what it can open.',
     off: 'CONNECTOR_ENABLED=false.',

@@ -374,13 +374,12 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   extensionDirectoryChannel: { envVar: 'EXTENSION_DIRECTORY_CHANNEL', type: 'enum', defaultValue: 'stable', enumValues: ['stable', 'beta'] },
   // Connector links (connector.bulwarkmail.org): docs and the extension
   // directory link to a destination, and the reader's own browser resolves it
-  // to their instance. `connectorEnabled` covers both halves - the
-  // /api/connector/capabilities endpoint a connector probes, and the "add this
-  // instance" links the app offers - so a deployment that wants no third-party
-  // hostname anywhere can switch the whole thing off. `connectorUrl` points a
-  // white-label or self-hosted deployment at its own connector.
+  // to their instance. `connectorEnabled` switches off the
+  // /api/connector/capabilities endpoint a connector probes, for deployments
+  // that would rather not answer it. There is no setting for the connector's
+  // address: the instance never builds a connector link, it only answers the
+  // probe and opens /connector/<target>.
   connectorEnabled: { envVar: 'CONNECTOR_ENABLED', type: 'boolean', defaultValue: true },
-  connectorUrl: { envVar: 'CONNECTOR_URL', type: 'url', defaultValue: 'https://connector.bulwarkmail.org' },
   // Fail-closed "no third-party traffic" mode (#903): every built-in outside
   // host in lib/outgoing-hosts.ts is off (telemetry, version check, the
   // built-in push relay, the official extension directory, the connector,
