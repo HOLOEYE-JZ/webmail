@@ -337,6 +337,13 @@ export type MessageSpacing = 'auto' | 'always' | 'edge';
 /** Font used to render text/plain email bodies. */
 export type PlainTextFont = 'mono' | 'sans';
 export type CalendarHoverPreview = 'off' | 'instant' | 'delay-500ms' | 'delay-1s' | 'delay-2s';
+/**
+ * How the month view draws an event with a start time (#1449): a filled bar
+ * like all-day events, its time and title in the calendar colour, or a dot
+ * in the calendar colour before them.
+ */
+export type MonthTimedEventStyle = 'bar' | 'text' | 'dot';
+export const MONTH_TIMED_EVENT_STYLES: readonly MonthTimedEventStyle[] = ['bar', 'text', 'dot'];
 export type SendDelaySeconds = 0 | 10 | 30 | 60;
 export type ProtocolOpenMode = 'active-session' | 'new-tab';
 
@@ -602,6 +609,8 @@ interface SettingsState extends AccessibilitySettings {
   showTimeInMonthView: boolean;
   /** Events as a light tint of their colour with a bar at the start (the Outlook look), not solid blocks. */
   calendarTintedEvents: boolean;
+  /** Month view look of events with a start time (#1449). All-day and multi-day events stay bars. */
+  calendarMonthTimedEvents: MonthTimedEventStyle;
   showWeekNumbers: boolean;
   /** Scroll continuously through months/weeks/days (#759) instead of one period at a time. */
   calendarFreeScroll: boolean;
@@ -920,6 +929,7 @@ const DEFAULT_SETTINGS = {
   // Calendar
   showTimeInMonthView: false,
   calendarTintedEvents: false,
+  calendarMonthTimedEvents: 'bar' as MonthTimedEventStyle,
   showWeekNumbers: false,
   calendarFreeScroll: true,
   calendarHoverPreview: 'delay-500ms' as CalendarHoverPreview,
@@ -1105,6 +1115,7 @@ function isAllowedPolicyValue(key: string, value: unknown, restriction?: Setting
   if (key === 'sendDelaySeconds' && ![0, 10, 30, 60].includes(value as number)) return false;
   if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(value as string)) return false;
   if (key === 'messageListOrderScope' && value !== 'inbox' && value !== 'all') return false;
+  if (key === 'calendarMonthTimedEvents' && !MONTH_TIMED_EVENT_STYLES.includes(value as MonthTimedEventStyle)) return false;
   if (!isAllowedAccessibilityValue(key, value)) return false;
   if (restriction && typeof restriction === 'object') {
     if (Array.isArray(restriction.allowedValues) && !restriction.allowedValues.includes(value)) return false;
@@ -1358,6 +1369,7 @@ export const useSettingsStore = create<SettingsState>()(
           expandedFilterView: state.expandedFilterView,
           showTimeInMonthView: state.showTimeInMonthView,
           calendarTintedEvents: state.calendarTintedEvents,
+          calendarMonthTimedEvents: state.calendarMonthTimedEvents,
           showWeekNumbers: state.showWeekNumbers,
           calendarFreeScroll: state.calendarFreeScroll,
           calendarHoverPreview: state.calendarHoverPreview,
