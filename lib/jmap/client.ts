@@ -4865,12 +4865,27 @@ export class JMAPClient implements IJMAPClient {
             ? identities.find((id) => id.email.toLowerCase() === requestedMailFrom.toLowerCase())
             : undefined;
           if (!matchingIdentity && identityId) {
-            matchingIdentity = identities.find((id) => id.id === identityId);
+            // Identity ids are per account, and the composer's come from the
+            // user's own account. In a shared account the same id can be
+            // another of its addresses, and the server derives MAIL FROM from
+            // that identity (#1450): there the id only counts when it names
+            // the From address.
+            const byId = identities.find((id) => id.id === identityId);
+            if (byId && (targetAccountId === this.accountId || !fromEmail || emailMatchesLogin(byId.email, fromEmail))) {
+              matchingIdentity = byId;
+            }
           }
           if (!matchingIdentity) {
             // Addresses compared as the server does: regardless of case.
             const target = fromEmail || this.username;
             matchingIdentity = identities.find((id) => emailMatchesLogin(id.email, target));
+          }
+          if (!matchingIdentity && fromEmail) {
+            // A sub-addressed From or one covered by a wildcard identity, the
+            // other ways resolveSendAccountId picks an account.
+            const from = parseRecipientString(fromEmail).email.toLowerCase();
+            matchingIdentity = identities.find((id) => identityEmailIsSubAddressOf(id.email, from))
+              ?? identities.find((id) => identityEmailIsWildcardFor(id.email, from));
           }
           finalIdentityId = matchingIdentity?.id || identities[0].id;
           identityReplyTo = matchingIdentity?.replyTo || identities[0].replyTo;
