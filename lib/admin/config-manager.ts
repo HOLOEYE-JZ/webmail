@@ -1,4 +1,4 @@
-import { readFile, writeFile, rename } from 'node:fs/promises';
+import { readFile, writeFile, rename, stat } from 'node:fs/promises';
 import { configureLogger, logger } from '@/lib/logger';
 import { readFileEnv } from '@/lib/read-file-env';
 import { CONFIG_ENV_MAP, DEFAULT_FEATURE_GATES, DEFAULT_POLICY, DEFAULT_THEME_POLICY, type SettingsPolicy } from './types';
@@ -28,23 +28,95 @@ function parseEnvValue(value: string, type: string): unknown {
   }
 }
 
+/** The files load() reads; a change to either is picked up on the next check. */
+const WATCHED_FILES = ['config.json', 'policy.json'] as const;
+type WatchedFile = typeof WATCHED_FILES[number];
+
+/**
+ * How often, at most, the files' stat is compared with what was loaded.
+ * Replicas sharing one config volume see each other's admin changes within
+ * this time, without a restart.
+ */
+const CHANGE_CHECK_INTERVAL_MS = 5_000;
+
+/** Changes whenever the file is replaced or rewritten; null when it is missing. */
+async function fileStamp(filename: string): Promise<string | null> {
+  try {
+    const s = await stat(getConfigPath(filename));
+    return `${s.mtimeMs}:${s.size}:${s.ino}`;
+  } catch {
+    return null;
+  }
+}
+
 class ConfigManager {
   private adminConfig: Record<string, unknown> = {};
   private policyCache: SettingsPolicy = { ...DEFAULT_POLICY };
   private loaded = false;
+  private fileStamps: Partial<Record<WatchedFile, string | null>> = {};
+  private lastChangeCheck = 0;
+  private changeCheck: Promise<void> | null = null;
 
   /** Load admin config and policy from disk. Called once at startup and on reload. */
   async load(): Promise<void> {
-    this.adminConfig = await this.readJsonFile('config.json') || {};
-    const policy = await this.readJsonFile('policy.json');
-    if (policy) {
-      this.policyCache = ConfigManager.completePolicy(policy as Partial<SettingsPolicy>);
-    } else {
-      this.policyCache = { ...DEFAULT_POLICY };
-    }
+    // Stamped before reading, so a write that lands mid-read is seen next time.
+    const stamps = await this.readStamps();
+    this.apply(await this.readJsonFile('config.json'), await this.readJsonFile('policy.json'));
+    this.fileStamps = stamps;
+    this.lastChangeCheck = Date.now();
+    logger.debug('ConfigManager loaded', { configKeys: Object.keys(this.adminConfig).length });
+  }
+
+  private apply(config: Record<string, unknown> | null, policy: Record<string, unknown> | null): void {
+    this.adminConfig = config || {};
+    this.policyCache = policy
+      ? ConfigManager.completePolicy(policy as Partial<SettingsPolicy>)
+      : { ...DEFAULT_POLICY };
     this.loaded = true;
     this.applyLoggerSettings();
-    logger.debug('ConfigManager loaded', { configKeys: Object.keys(this.adminConfig).length });
+  }
+
+  private async readStamps(): Promise<Partial<Record<WatchedFile, string | null>>> {
+    const stamps: Partial<Record<WatchedFile, string | null>> = {};
+    for (const file of WATCHED_FILES) stamps[file] = await fileStamp(file);
+    return stamps;
+  }
+
+  /**
+   * Reload when config.json or policy.json changed on disk since the last
+   * load (another replica on the same volume saved, or someone edited the
+   * file). A file that can't be read or parsed keeps the values in memory
+   * and is tried again at the next check.
+   */
+  private async reloadIfChanged(): Promise<void> {
+    const stamps = await this.readStamps();
+    if (WATCHED_FILES.every((file) => stamps[file] === this.fileStamps[file])) return;
+    try {
+      const [config, policy] = await Promise.all([
+        this.readJsonFileOrThrow('config.json'),
+        this.readJsonFileOrThrow('policy.json'),
+      ]);
+      this.apply(config, policy);
+      this.fileStamps = stamps;
+      logger.info('Admin config changed on disk; reloaded');
+    } catch (error) {
+      logger.warn('Admin config changed on disk but could not be read; keeping the current values', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /** At most every CHANGE_CHECK_INTERVAL_MS: one stat per watched file. */
+  private checkForChanges(): Promise<void> {
+    if (!this.loaded) return Promise.resolve();
+    if (this.changeCheck) return this.changeCheck;
+    const now = Date.now();
+    if (now - this.lastChangeCheck < CHANGE_CHECK_INTERVAL_MS) return Promise.resolve();
+    this.lastChangeCheck = now;
+    this.changeCheck = this.reloadIfChanged().finally(() => {
+      this.changeCheck = null;
+    });
+    return this.changeCheck;
   }
 
   /** Hand the configured log level and format to the logger. */
@@ -55,15 +127,22 @@ class ConfigManager {
     });
   }
 
-  /** Ensure config is loaded (no-op if already loaded). */
+  /**
+   * Ensure config is loaded. Once loaded, waits for the periodic check for
+   * changes on disk when one is due (a stat per file, every few seconds).
+   */
   async ensureLoaded(): Promise<void> {
     if (!this.loaded) await this.load();
+    else await this.checkForChanges();
   }
 
   /**
    * Get a config value. Priority: admin override > env var > default.
    */
   get<T>(key: string, defaultValue?: T): T {
+    // Synchronous callers can't wait: a due check runs in the background and
+    // the next read sees its result.
+    void this.checkForChanges();
     // Admin override (highest priority)
     const mapping = CONFIG_ENV_MAP[key];
     if (key in this.adminConfig) {
@@ -109,6 +188,7 @@ class ConfigManager {
    * Get all config values with source information (for admin UI).
    */
   getAllWithSources(): Record<string, { value: unknown; source: 'admin' | 'env' | 'default' }> {
+    void this.checkForChanges();
     const result: Record<string, { value: unknown; source: 'admin' | 'env' | 'default' }> = {};
     for (const [key, mapping] of Object.entries(CONFIG_ENV_MAP)) {
       if (key in this.adminConfig) {
@@ -145,6 +225,9 @@ class ConfigManager {
    */
   async setAdminConfig(updates: Record<string, unknown>): Promise<void> {
     assertWritable('update admin config');
+    // Start from what is on disk, so a save here doesn't undo a change another
+    // replica saved a moment ago. Same before every write below.
+    await this.reloadIfChanged();
     Object.assign(this.adminConfig, updates);
     await this.writeJsonFile('config.json', this.adminConfig);
     this.applyLoggerSettings();
@@ -155,6 +238,7 @@ class ConfigManager {
    */
   async removeAdminOverride(key: string): Promise<void> {
     assertWritable('remove admin override');
+    await this.reloadIfChanged();
     delete this.adminConfig[key];
     await this.writeJsonFile('config.json', this.adminConfig);
     this.applyLoggerSettings();
@@ -165,6 +249,7 @@ class ConfigManager {
    * /setup routes and the rest of the app.
    */
   isSetupComplete(): boolean {
+    void this.checkForChanges();
     return this.adminConfig.setupComplete === true;
   }
 
@@ -174,6 +259,7 @@ class ConfigManager {
    */
   async markSetupComplete(): Promise<void> {
     assertWritable('mark setup complete');
+    await this.reloadIfChanged();
     this.adminConfig.setupComplete = true;
     await this.writeJsonFile('config.json', this.adminConfig);
   }
@@ -182,6 +268,7 @@ class ConfigManager {
    * Get the current settings policy.
    */
   getPolicy(): SettingsPolicy {
+    void this.checkForChanges();
     return this.policyCache;
   }
 
@@ -259,31 +346,41 @@ class ConfigManager {
   }
 
   /**
-   * Reload config from disk (for manual file edits or multi-instance).
+   * Reload config from disk now. Changes on disk are also picked up on their
+   * own within CHANGE_CHECK_INTERVAL_MS (see checkForChanges).
    */
   async reload(): Promise<void> {
     await this.load();
   }
 
   private async readJsonFile(filename: string): Promise<Record<string, unknown> | null> {
-    const filePath = getConfigPath(filename);
     try {
-      const raw = await readFile(filePath, 'utf-8');
-      return JSON.parse(raw);
+      return await this.readJsonFileOrThrow(filename);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
       logger.warn(`Failed to read ${filename}`, { error: error instanceof Error ? error.message : 'Unknown error' });
       return null;
     }
   }
 
-  private async writeJsonFile(filename: string, data: Record<string, unknown>): Promise<void> {
+  /** null when the file doesn't exist; throws when it can't be read or parsed. */
+  private async readJsonFileOrThrow(filename: string): Promise<Record<string, unknown> | null> {
+    try {
+      return JSON.parse(await readFile(getConfigPath(filename), 'utf-8'));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+      throw error;
+    }
+  }
+
+  private async writeJsonFile(filename: WatchedFile, data: Record<string, unknown>): Promise<void> {
     await ensureConfigDir();
     const targetPath = getConfigPath(filename);
     const tmpPath = targetPath + '.tmp';
     // Owner-only: config.json carries the session secret and OAuth client secrets.
     await writeFile(tmpPath, JSON.stringify(data, null, 2), { encoding: 'utf-8', mode: 0o600 });
     await rename(tmpPath, targetPath);
+    // Our own write is not a change to pick up.
+    this.fileStamps[filename] = await fileStamp(filename);
   }
 }
 
